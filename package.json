@@ -1,0 +1,83 @@
+{
+  "name": "gentelella",
+  "version": "2.0.0",
+  "description": "Gentelella Admin is a free to use Bootstrap admin template",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/puikinsh/gentelella.git"
+  },
+  "keywords": [
+    "css",
+    "js",
+    "html",
+    "template",
+    "admin",
+    "bootstrap",
+    "bootstrap5",
+    "theme",
+    "backend",
+    "responsive",
+    "modern"
+  ],
+  "author": "Aigars Silkalns",
+  "contributors": [
+    "Christian Esperar"
+  ],
+  "license": "MIT",
+  "main": "src/main.js",
+  "bugs": {
+    "url": "https://github.com/puikinsh/gentelella/issues"
+  },
+  "homepage": "https://github.com/puikinsh/gentelella#readme",
+  "devDependencies": {
+    "glob": "^11.0.2",
+    "sass": "^1.89.2",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "@eonasdan/tempus-dominus": "^6.10.4",
+    "@fortawesome/fontawesome-free": "^6.6.0",
+    "@fullcalendar/core": "^6.1.17",
+    "@fullcalendar/daygrid": "^6.1.17",
+    "@fullcalendar/interaction": "^6.1.17",
+    "@fullcalendar/timegrid": "^6.1.17",
+    "@popperjs/core": "^2.11.8",
+    "@simonwep/pickr": "^1.9.1",
+    "autosize": "^6.0.1",
+    "bootstrap": "^5.3.6",
+    "bootstrap-wysiwyg": "^2.0.1",
+    "chart.js": "^4.4.2",
+    "cropperjs": "^2.0.0",
+    "datatables.net": "^2.3.2",
+    "datatables.net-bs5": "^2.3.2",
+    "datatables.net-buttons": "^3.2.3",
+    "datatables.net-buttons-bs5": "^3.2.3",
+    "datatables.net-fixedheader": "^4.0.3",
+    "datatables.net-keytable": "^2.12.1",
+    "datatables.net-responsive": "^3.0.4",
+    "datatables.net-responsive-bs5": "^3.0.4",
+    "datatables.net-scroller": "^2.4.3",
+    "dayjs": "^1.11.13",
+    "dropzone": "^5.9.3",
+    "echarts": "^5.6.0",
+    "flot": "^4.2.6",
+    "inputmask": "^5.0.9",
+    "ion-rangeslider": "^2.3.1",
+    "jquery": "^3.6.1",
+    "jquery-knob": "^1.2.11",
+    "jquery-sparkline": "^2.4.0",
+    "jquery-ui": "^1.14.1",
+    "jszip": "^3.10.1",
+    "leaflet": "^1.9.4",
+    "nprogress": "^0.2.0",
+    "pdfmake": "^0.2.20",
+    "select2": "^4.0.13",
+    "skycons": "^1.0.0",
+    "switchery": "^0.0.2"
+  }
+}

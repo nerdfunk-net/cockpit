@@ -1,0 +1,322 @@
+/**
+ * Authentication Module
+ * Handles login, logout, token management, and protected API calls
+ */
+
+class AuthManager {
+    constructor() {
+        this.baseURL = 'http://localhost:8000/api';
+        this.token = localStorage.getItem('auth_token');
+        this.user = JSON.parse(localStorage.getItem('user_info') || 'null');
+        this.tokenExpiry = localStorage.getItem('token_expiry');
+        
+        // Update user display immediately if we have user data
+        if (this.user && typeof document !== 'undefined') {
+            // Use a small delay to ensure DOM is ready
+            setTimeout(() => this.updateUserDisplay(), 100);
+        }
+    }
+
+    /**
+     * Login user with credentials
+     */
+    async login(username, password) {
+        try {
+            const response = await fetch(`${this.baseURL}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Login failed');
+            }
+
+            const data = await response.json();
+            
+            // Store authentication data
+            this.token = data.access_token;
+            this.user = data.user;
+            this.tokenExpiry = Date.now() + (data.expires_in * 1000);
+
+            localStorage.setItem('auth_token', this.token);
+            localStorage.setItem('user_info', JSON.stringify(this.user));
+            localStorage.setItem('token_expiry', this.tokenExpiry);
+
+            return { success: true, user: this.user };
+        } catch (error) {
+            console.error('Login error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Register new user
+     */
+    async register(username, password, email, fullName) {
+        try {
+            const response = await fetch(`${this.baseURL}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username,
+                    password,
+                    email,
+                    full_name: fullName
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Registration failed');
+            }
+
+            const data = await response.json();
+            
+            // Store authentication data
+            this.token = data.access_token;
+            this.user = data.user;
+            this.tokenExpiry = Date.now() + (data.expires_in * 1000);
+
+            localStorage.setItem('auth_token', this.token);
+            localStorage.setItem('user_info', JSON.stringify(this.user));
+            localStorage.setItem('token_expiry', this.tokenExpiry);
+
+            return { success: true, user: this.user };
+        } catch (error) {
+            console.error('Registration error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Logout user and clear stored data
+     */
+    logout() {
+        console.log('AuthManager: Logging out user'); // Debug log
+        this.token = null;
+        this.user = null;
+        this.tokenExpiry = null;
+        
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_info');
+        localStorage.removeItem('token_expiry');
+        
+        console.log('AuthManager: Cleared localStorage, redirecting to login'); // Debug log
+        // Redirect to login page
+        window.location.href = 'login.html';
+    }
+
+    /**
+     * Check if user is authenticated and token is valid
+     */
+    isAuthenticated() {
+        if (!this.token || !this.tokenExpiry) {
+            return false;
+        }
+
+        // Check if token is expired (with 5-minute buffer)
+        const fiveMinutes = 5 * 60 * 1000;
+        if (Date.now() > (parseInt(this.tokenExpiry) - fiveMinutes)) {
+            this.logout();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get current user information
+     */
+    getCurrentUser() {
+        return this.user;
+    }
+
+    /**
+     * Make authenticated API request
+     */
+    async apiRequest(endpoint, options = {}) {
+        if (!this.isAuthenticated()) {
+            throw new Error('Not authenticated');
+        }
+
+        const config = {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.token}`,
+                ...options.headers
+            }
+        };
+
+        try {
+            const response = await fetch(`${this.baseURL}${endpoint}`, config);
+            
+            if (response.status === 401) {
+                // Token expired or invalid
+                this.logout();
+                throw new Error('Authentication expired');
+            }
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || `HTTP ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API request error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Protect page - redirect to login if not authenticated
+     */
+    requireAuth() {
+        if (!this.isAuthenticated()) {
+            window.location.href = 'login.html';
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Update user display in UI
+     */
+    updateUserDisplay() {
+        if (this.user) {
+            // Update sidebar username
+            const sidebarUsername = document.getElementById('sidebar-username');
+            if (sidebarUsername) {
+                sidebarUsername.textContent = this.user.full_name || this.user.username;
+            }
+
+            // Update navbar username
+            const navbarUsername = document.getElementById('navbar-username');
+            if (navbarUsername) {
+                navbarUsername.textContent = this.user.full_name || this.user.username;
+            }
+
+            // Update welcome message
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.textContent = `Welcome, ${this.user.username}!`;
+            }
+
+            // Legacy support for existing selectors (in case other pages use them)
+            const profileNameElements = document.querySelectorAll('.profile_info h2, .user-profile');
+            profileNameElements.forEach(element => {
+                // Skip elements we've already handled with specific IDs
+                if (element.id === 'sidebar-username') return;
+                
+                if (element.classList.contains('user-profile')) {
+                    // For dropdown toggle, preserve image and structure
+                    const img = element.querySelector('img');
+                    element.innerHTML = '';
+                    if (img) element.appendChild(img);
+                    element.appendChild(document.createTextNode(this.user.full_name || this.user.username));
+                } else {
+                    element.textContent = this.user.full_name || this.user.username;
+                }
+            });
+
+            // Legacy welcome message support
+            const welcomeElements = document.querySelectorAll('.profile_info span:not(#welcome-message)');
+            welcomeElements.forEach(element => {
+                if (element.textContent === 'Welcome,' || element.textContent.startsWith('Welcome,')) {
+                    element.textContent = `Welcome, ${this.user.username}!`;
+                }
+            });
+        } else {
+            // Clear user display when not authenticated
+            const sidebarUsername = document.getElementById('sidebar-username');
+            if (sidebarUsername) {
+                sidebarUsername.textContent = 'Guest User';
+            }
+
+            const navbarUsername = document.getElementById('navbar-username');
+            if (navbarUsername) {
+                navbarUsername.textContent = 'Guest User';
+            }
+
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.textContent = 'Welcome,';
+            }
+        }
+    }
+}
+
+// Create global auth manager instance
+window.authManager = new AuthManager();
+
+// Create global logout function for direct HTML usage
+window.logout = function() {
+    console.log('Global logout function called');
+    if (window.authManager) {
+        window.authManager.logout();
+    } else {
+        // Fallback if authManager isn't available
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+};
+
+// Auto-protect pages (except login page)
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Auth.js: DOMContentLoaded fired'); // Debug log
+    const currentPage = window.location.pathname.split('/').pop();
+    console.log('Auth.js: Current page:', currentPage); // Debug log
+    
+    if (currentPage !== 'login.html' && currentPage !== '') {
+        if (window.authManager.requireAuth()) {
+            window.authManager.updateUserDisplay();
+        }
+    }
+    
+    // Add logout event listeners with multiple selectors
+    const logoutSelectors = [
+        'a[href="login.html"]',
+        'a[title="Logout"]', 
+        'a[href*="login.html"]',
+        '.dropdown-item[href="login.html"]',
+        '#sidebar-logout',
+        '#dropdown-logout'
+    ];
+    
+    console.log('Auth.js: Setting up logout listeners'); // Debug log
+    let logoutLinksFound = 0;
+    
+    logoutSelectors.forEach(selector => {
+        const logoutLinks = document.querySelectorAll(selector);
+        console.log(`Auth.js: Found ${logoutLinks.length} elements for selector '${selector}'`); // Debug log
+        
+        logoutLinks.forEach(link => {
+            // Check if link text contains logout-related words or has logout attributes
+            const linkText = link.textContent.toLowerCase();
+            const isLogoutLink = linkText.includes('log out') || 
+                               linkText.includes('logout') || 
+                               link.getAttribute('title') === 'Logout' ||
+                               link.href.includes('login.html') ||
+                               link.id.includes('logout');
+            
+            if (isLogoutLink) {
+                console.log('Auth.js: Adding logout listener to:', link); // Debug log
+                logoutLinksFound++;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Logout clicked!'); // Debug log
+                    window.authManager.logout();
+                });
+            }
+        });
+    });
+    
+    console.log(`Auth.js: Total logout links configured: ${logoutLinksFound}`); // Debug log
+});
