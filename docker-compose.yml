@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: cockpit-backend
+    restart: unless-stopped
+    environment:
+      # Server Configuration
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8000
+      - DEBUG=false
+      
+      # Nautobot Configuration (REQUIRED - Set these values)
+      - NAUTOBOT_HOST=${NAUTOBOT_HOST:-http://localhost:8080}
+      - NAUTOBOT_TOKEN=${NAUTOBOT_TOKEN:-your-nautobot-token-here}
+      - NAUTOBOT_TIMEOUT=${NAUTOBOT_TIMEOUT:-30}
+      
+      # Authentication Configuration (REQUIRED - Change in production)
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      
+      # CORS Configuration
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:80}
+      - CORS_ALLOW_CREDENTIALS=${CORS_ALLOW_CREDENTIALS:-true}
+      
+      # Logging Configuration
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Docker marker
+      - DOCKER_CONTAINER=1
+    ports:
+      - "8000:8000"
+    networks:
+      - cockpit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: cockpit-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - cockpit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  cockpit-network:
+    driver: bridge
+
+# Example of using external volumes for persistence (optional)
+# volumes:
+#   cockpit-data:
+#     driver: local

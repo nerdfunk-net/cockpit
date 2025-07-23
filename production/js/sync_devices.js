@@ -1,5 +1,7 @@
-const BACKEND_API = 'http://localhost:8000/api/devices';
-const PAGE_SIZE = 10;
+import { CONFIG } from '../../src/config.js';
+
+const BACKEND_API = `${CONFIG.API.BASE_URL}${CONFIG.API.ENDPOINTS.DEVICES}`;
+const PAGE_SIZE = CONFIG.UI.PAGE_SIZE;
 let currentPage = 1;
 let devices = [];
 let rightTableDevices = [];

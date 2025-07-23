@@ -1,48 +1,143 @@
-# Gentelella Admin Template
+# Cockpit - Network Device Management Dashboard
 
-**Modern Bootstrap 5 Admin Dashboard Template with Vite Build System**
+A modern web-based dashboard for managing network devices through Nautobot API integration. Built with the Gentelella Bootstrap admin template and FastAPI backend, this application provides an intuitive interface for network engineers to synchronize, filter, and manage network infrastructure devices.
 
-Gentelella is a powerful, free-to-use Bootstrap 5 admin template that has been completely modernized with Vite, performance optimizations, and the latest web technologies. This template provides a comprehensive foundation for building admin panels, dashboards, and back-end applications.
+## 🚀 Features
 
-![Gentelella Bootstrap Admin Template](https://colorlib.com/wp/wp-content/uploads/sites/2/gentelella-admin-template-preview.jpg "Gentelella Theme Browser Preview")
+### Frontend Dashboard
+- **Modern Bootstrap 5 UI** - Clean, responsive admin interface based on Gentelella template
+- **Device Synchronization** - Interactive dual-pane interface for device selection and management
+- **Advanced Filtering** - Filter devices by name (regex), location, or IP prefix (CIDR)
+- **Real-time Updates** - Dynamic device data fetching with instant feedback
+- **Authentication System** - Secure JWT-based user authentication
+- **Multiple Dashboard Layouts** - 3 different dashboard styles for various use cases
 
-## ✨ What's New in v2.0.0 (Stable Release)
+### Backend API
+- **FastAPI Framework** - High-performance async Python API
+- **Nautobot Integration** - GraphQL queries to fetch device, location, and namespace data
+- **JWT Authentication** - Secure token-based authentication system
+- **CORS Support** - Configured for frontend-backend communication
+- **RESTful Endpoints** - Clean API design for device management operations
 
-- **🚀 Vite Build System** - Lightning-fast development and optimized production builds
-- **📦 Bootstrap 5.3.7** - Latest Bootstrap with modern design system
-- **⚡ Performance Optimized** - 90% smaller initial bundle size with smart code splitting
-- **🔧 Modern JavaScript** - ES6+ modules with dynamic imports
-- **🎯 TypeScript Ready** - Full TypeScript support available
-- **📱 Mobile First** - Responsive design optimized for all devices
-- **🎨 Morris.js Eliminated** - Complete replacement with modern Chart.js
-- **🔧 jQuery Easing Fixed** - All animation errors resolved
+### Device Management
+- **Device Discovery** - Query devices from Nautobot by multiple criteria
+- **Network Synchronization** - Bulk sync network data from devices to Nautobot
+- **Location-based Filtering** - Find devices by location patterns
+- **IP-based Queries** - Search devices by IP prefix/subnet
+- **Batch Operations** - Select and process multiple devices simultaneously
 
-## 📊 Performance Improvements
+## 🛠️ Technology Stack
 
-- **Before**: 779 KB monolithic JavaScript bundle
-- **After**: 79 KB initial load + smart chunk loading
-- **Result**: **90% smaller initial bundle** with **40-70% faster page loads**
+### Frontend
+- **Bootstrap 5** - Modern CSS framework
+- **Vite** - Fast build tool and dev server
+- **JavaScript ES6+** - Modern JavaScript features
+- **jQuery & jQuery UI** - Enhanced user interactions
+- **Chart.js & ECharts** - Data visualization
+- **DataTables** - Advanced table functionality
+- **FontAwesome** - Icon library
 
-## 🚀 Quick Start
+### Backend
+- **FastAPI** - Modern Python web framework
+- **Uvicorn** - ASGI server
+- **JWT Authentication** - JSON Web Token security
+- **Requests** - HTTP client for Nautobot API
+- **CORS Middleware** - Cross-origin request handling
 
-### Prerequisites
+### External Integrations
+- **Nautobot** - Network source of truth platform
+- **GraphQL** - Efficient data querying
 
-- [Node.js](https://nodejs.org/) (v16 or higher)
-- [npm](https://npmjs.com/) or [yarn](https://yarnpkg.com/)
+## 📋 Prerequisites
 
-### Installation
+### For Local Development
+- **Node.js** (v16 or higher)
+- **Python** (3.8 or higher)
+- **Nautobot instance** with GraphQL API access
+- **Modern web browser** (Chrome, Firefox, Safari, Edge)
+
+### For Docker Deployment
+- **Docker** (20.10 or higher)
+- **Docker Compose** (v2.0 or higher)
+- **Nautobot instance** with GraphQL API access
+
+## 🚀 Installation
+
+### Option 1: Docker Deployment (Recommended)
+
+Docker deployment is the easiest way to run Cockpit with all dependencies included.
 
 ```bash
-# Clone the repository
-git clone https://github.com/puikinsh/gentelella.git
-cd gentelella
+# 1. Clone the repository
+git clone <repository-url>
+cd cockpit
 
-# Install dependencies
+# 2. Configure environment variables
+cp .env.docker .env
+# Edit .env file with your Nautobot settings:
+# - NAUTOBOT_HOST=https://your-nautobot-instance.com
+# - NAUTOBOT_TOKEN=your-api-token
+# - SECRET_KEY=your-secret-key
+
+# 3. Start with Docker Compose
+./docker-start.sh
+# Or manually:
+# docker-compose up -d
+```
+
+The application will be available at:
+- **Frontend**: http://localhost
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+
+### Option 2: Local Development Setup
+
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd cockpit
+```
+
+### 2. Frontend Setup
+```bash
+# Install Node.js dependencies
 npm install
 
 # Start development server
 npm run dev
+```
 
+The frontend will be available at `http://localhost:3000`
+
+### 3. Backend Setup
+```bash
+# Navigate to backend directory
+cd backend
+
+# Create virtual environment (recommended)
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Configure environment variables
+cp .env.example .env
+# Edit .env file and update the following required settings:
+# NAUTOBOT_HOST=http://your-nautobot-instance:8080
+# NAUTOBOT_TOKEN=your-api-token
+# SECRET_KEY=your-secret-key-for-production
+
+# Start the backend server
+python start.py
+# Or for development with auto-reload:
+python -m uvicorn main:app --reload
+```
+
+The backend API will be available at `http://localhost:8000` (or your configured port)
+
+### 4. Production Build
+```bash
 # Build for production
 npm run build
 
@@ -50,257 +145,239 @@ npm run build
 npm run preview
 ```
 
-### Development Commands
+## 🐳 Docker Deployment
+
+### Quick Start with Docker
+```bash
+# 1. Clone and configure
+git clone <repository-url>
+cd cockpit
+cp .env.docker .env
+
+# 2. Edit .env file with your settings
+# NAUTOBOT_HOST=https://your-nautobot.example.com
+# NAUTOBOT_TOKEN=your-api-token
+# SECRET_KEY=your-secret-key
+
+# 3. Start containers
+./docker-start.sh
+```
+
+### Docker Commands
+```bash
+# Start containers
+./docker-start.sh
+# or: docker-compose up -d
+
+# Stop containers
+./docker-start.sh stop
+# or: docker-compose down
+
+# View logs
+./docker-start.sh logs
+# or: docker-compose logs -f
+
+# Check status
+./docker-start.sh status
+# or: docker-compose ps
+
+# Restart containers
+./docker-start.sh restart
+```
+
+### Docker Environment Variables
+All configuration is handled via environment variables in Docker:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NAUTOBOT_HOST` | Nautobot URL | `https://nautobot.example.com` |
+| `NAUTOBOT_TOKEN` | API token | `abc123...` |
+| `SECRET_KEY` | JWT secret | `your-secret-key` |
+| `DEBUG` | Debug mode | `false` |
+| `LOG_LEVEL` | Logging level | `INFO` |
+| `CORS_ORIGINS` | Allowed origins | `http://localhost,https://app.com` |
+
+## ⚙️ Configuration
+
+### Backend Configuration
+
+The backend uses environment variables for configuration. Copy the example configuration file and modify it:
 
 ```bash
-# Development with hot reload
-npm run dev
-
-# Production build with optimizations
-npm run build
-
-# Preview production build locally
-npm run preview
+cd backend
+cp .env.example .env
 ```
+
+#### Environment Variables (`.env` file)
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `SERVER_HOST` | Backend server host | `127.0.0.1` | No |
+| `SERVER_PORT` | Backend server port | `8000` | No |
+| `DEBUG` | Enable debug mode | `false` | No |
+| `NAUTOBOT_HOST` | Nautobot instance URL | `http://localhost:8080` | **Yes** |
+| `NAUTOBOT_TOKEN` | Nautobot API token | - | **Yes** |
+| `NAUTOBOT_TIMEOUT` | Request timeout (seconds) | `30` | No |
+| `SECRET_KEY` | JWT signing key | - | **Yes** |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | `30` | No |
+| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `http://localhost:3000,http://localhost:5173` | No |
+| `LOG_LEVEL` | Logging level | `INFO` | No |
+
+#### Example Configuration
+```bash
+# Required Settings
+NAUTOBOT_HOST=https://your-nautobot.example.com
+NAUTOBOT_TOKEN=0123456789abcdef0123456789abcdef01234567
+SECRET_KEY=your-super-secret-key-change-this-in-production
+
+# Optional Settings
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8000
+DEBUG=false
+NAUTOBOT_TIMEOUT=30
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+CORS_ORIGINS=http://localhost:3000,https://your-frontend.example.com
+LOG_LEVEL=INFO
+```
+
+### Frontend Configuration
+
+Frontend configuration is handled in `src/config.js`. You can modify:
+
+- **API_CONFIG**: Backend URL, endpoints, timeouts
+- **UI_CONFIG**: Pagination, table settings, filters
+- **SECURITY_CONFIG**: Token storage, session timeouts
+
+#### Example Frontend Configuration
+```javascript
+// API Configuration
+export const API_CONFIG = {
+  BASE_URL: 'https://api.your-domain.com',  // Your backend URL
+  TIMEOUT: 30000,
+  RETRY_ATTEMPTS: 3
+};
+
+// UI Configuration  
+export const UI_CONFIG = {
+  PAGE_SIZE: 25,  // Items per page
+  FILTERS: {
+    NAME_MIN_LENGTH: 2,  // Minimum characters for name filter
+    LOCATION_MIN_LENGTH: 2
+  }
+};
+```
+
+### Default Users
+The application comes with two default users:
+- **Username:** `admin`, **Password:** `secret`
+- **Username:** `demo`, **Password:** `secret`
+
+> ⚠️ **Security Notice:** Change default passwords and secret key in production!
+
+## 📖 Usage
+
+### Device Synchronization
+1. **Login** to the dashboard using default credentials
+2. **Navigate** to the "Sync Devices" page
+3. **Apply Filters:**
+   - **Name Filter:** Use regex patterns to match device names
+   - **Location Filter:** Search devices by location name
+   - **Prefix Filter:** Use CIDR notation (e.g., `192.168.1.0/24`)
+4. **Select Devices** from the left panel using checkboxes
+5. **Move Selected** devices to the right panel for processing
+6. **Configure Sync** parameters (status, namespace)
+7. **Execute Sync** to update Nautobot with network data
+
+### API Endpoints
+
+#### Authentication
+- `POST /api/auth/login` - User authentication
+- `POST /api/auth/register` - User registration
+- `GET /api/auth/me` - Get current user info
+
+#### Device Management
+- `GET /api/devices` - List devices with optional filtering
+  - `?filter_type=name&filter_value=pattern` - Filter by device name
+  - `?filter_type=location&filter_value=location` - Filter by location
+  - `?filter_type=prefix&filter_value=192.168.1.0/24` - Filter by IP prefix
+
+#### Network Operations
+- `GET /api/namespaces` - List available namespaces
+- `POST /api/sync-network-data` - Sync network data to Nautobot
 
 ## 🏗️ Project Structure
 
 ```
-gentelella/
-├── production/           # HTML templates and static assets
-│   ├── *.html           # 42 pre-built admin pages
-│   └── images/          # Image assets
+cockpit/
+├── backend/              # FastAPI backend
+│   ├── main.py          # Main API application
+│   ├── config.py        # Configuration management
+│   ├── start.py         # Server startup script
+│   ├── requirements.txt # Python dependencies
+│   ├── .env.example     # Example environment config
+│   └── .env             # Environment variables (create from .env.example)
+├── docker/              # Docker configuration
+│   └── nginx.conf       # Nginx configuration for frontend
+├── production/          # Production HTML pages
+│   ├── index.html       # Main dashboard
+│   ├── sync_devices.html # Device sync interface
+│   └── js/              # JavaScript modules
 ├── src/                 # Source files
-│   ├── main-core.js     # Core essentials (79 KB)
-│   ├── main.scss        # Styles entry point
-│   ├── js/              # Custom JavaScript
-│   ├── scss/            # Custom SASS files
-│   └── modules/         # Feature-specific modules
-│       ├── charts.js    # Chart functionality (219 KB)
-│       ├── forms.js     # Form enhancements (200 KB)
-│       ├── tables.js    # DataTables functionality
-│       └── dashboard.js # Dashboard widgets
-├── dist/                # Production build output
+│   ├── main.js          # Main application entry
+│   ├── config.js        # Frontend configuration
+│   ├── main.scss        # Styling
+│   └── modules/         # Reusable modules
+├── docs/                # Documentation
+├── Dockerfile.backend   # Backend Docker configuration
+├── Dockerfile.frontend  # Frontend Docker configuration
+├── docker-compose.yml   # Docker Compose configuration
+├── docker-start.sh      # Docker startup script
+├── .env.docker          # Docker environment template
+├── package.json         # Node.js dependencies
 ├── vite.config.js       # Vite configuration
-└── package.json         # Dependencies and scripts
+└── README.md           # This file
 ```
 
-## 🎯 Smart Loading System
+## 🔧 Development
 
-The template now uses intelligent code splitting:
+### Running in Development Mode
+```bash
+# Terminal 1: Start backend with auto-reload
+cd backend
+cp .env.example .env  # Configure your settings
+python -m uvicorn main:app --reload
 
-- **Core Bundle** (79 KB): Essential libraries loaded on every page
-- **Chart Module** (219 KB): Only loads on pages with charts
-- **Form Module** (200 KB): Only loads on pages with advanced forms
-- **Table Module**: Only loads on pages with DataTables
-- **Dashboard Module**: Only loads dashboard-specific widgets
-
-## 📱 Responsive Design
-
-Built with mobile-first approach:
-- **Phones**: Optimized touch interfaces
-- **Tablets**: Adaptive layouts
-- **Desktops**: Full-featured experience
-- **Large Screens**: Enhanced productivity layouts
-
-## 🛠️ Customization
-
-### Adding New Pages
-
-1. Create HTML file in `production/` directory
-2. Add entry to `vite.config.js` input configuration
-3. Reference appropriate modules for functionality needed
-
-### Custom Styling
-
-```scss
-// src/scss/custom.scss
-.my-custom-component {
-  // Your custom styles
-}
+# Terminal 2: Start frontend
+npm run dev
 ```
 
-### Adding Features
+### Available VS Code Tasks
+- **Run FastAPI backend (Uvicorn)** - Starts the backend server with configuration
 
-```javascript
-// Load modules conditionally
-if (document.querySelector('.chart-container')) {
-  const charts = await loadModule('charts');
-}
-```
-
-## 📦 Available Components
-
-### Dashboard Features
-- **Multiple Dashboard Layouts** - 3 different dashboard designs
-- **Widgets** - Various dashboard widgets and cards
-- **Charts** - Chart.js, ECharts, Sparklines integration
-- **Maps** - Interactive world maps with jVectorMap
-
-### Form Components
-- **Advanced Forms** - Multi-step wizards, validation
-- **Form Elements** - Rich text editors, date pickers
-- **File Upload** - Drag & drop file upload with progress
-- **Input Enhancements** - Autocomplete, tags, switches
-
-### UI Elements
-- **Tables** - DataTables with sorting, filtering, pagination
-- **Typography** - Comprehensive typography system
-- **Icons** - Font Awesome 6
-- **Media Gallery** - Image gallery with lightbox
-- **Calendar** - Full-featured calendar component
-
-### Additional Pages
-- **E-commerce** - Product listings, shopping cart
-- **User Management** - Profiles, contacts, projects
-- **Authentication** - Login, registration pages
-- **Error Pages** - 403, 404, 500 error pages
-
-## 🎨 Built With
-
-### Core Technologies
-- **🚀 Vite 6.3.5** - Ultra-fast ES module build system with 90% smaller bundle size
-- **📦 Bootstrap 5.3.7** - Latest Bootstrap with modern design system
-- **🎨 SASS Modules** - Modern CSS architecture with custom theme variables
-- **jQuery 3.6.1** - DOM manipulation (being phased out)
-
-### Charts & Visualization
-- **Chart.js 4.5.0** - Modern charting library (Morris.js completely removed)
-- **ECharts 5.6.0** - Professional data visualization
-- **Sparklines** - Mini charts and graphs
-- **jVectorMap** - Interactive world maps
-
-### Form & UI Libraries
-- **Select2** - Enhanced select dropdowns
-- **Tempus Dominus** - Bootstrap 5 date/time picker
-- **Ion Range Slider** - Range slider component
-- **Switchery** - iOS-style toggle switches
-- **DataTables** - Advanced table functionality
-
-### Utilities
-- **Day.js** - Lightweight date library
-- **NProgress** - Progress bars for page loading
-- **Autosize** - Auto-resizing textareas
-- **Font Awesome 6** - Icon library
-
-## 🔧 Configuration
-
-### Vite Configuration
-
-The template includes optimized Vite configuration with:
-- Smart code splitting for optimal loading
-- Asset optimization with cache-busting
-- Development server with hot reload
-- Production builds with compression
-
-### Performance Features
-
-- **Tree Shaking** - Removes unused code
-- **Code Splitting** - Loads only what's needed
-- **Caching Strategy** - Optimized for browser caching
-
-## 🚀 Deployment
-
-### Build for Production
-
+### Building for Production
 ```bash
 npm run build
 ```
 
-### Deploy to Various Platforms
+## 📝 License
 
-- **Netlify**: Drag and drop the `dist` folder
-- **Vercel**: Connect your GitHub repository
-- **GitHub Pages**: Use the built-in GitHub Actions
-- **Traditional Hosting**: Upload `dist` folder contents
+This project is based on the Gentelella Admin Template by Colorlib and is available under the MIT License.
 
 ## 🤝 Contributing
 
-We welcome contributions! To contribute:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
+## 📞 Support
 
-### Development Setup
-
-```bash
-git clone https://github.com/your-username/gentelella.git
-cd gentelella
-npm install
-npm run dev
-```
-
-## 📚 Documentation & Demo
-
-- **[Live Demo](https://colorlib.com/polygon/gentelella/index.html)** - See the template in action
-- **[Component Documentation](https://colorlibhq.github.io/gentelella/)** - Detailed component guide
-- **[Performance Guide](PERFORMANCE_OPTIMIZATIONS.md)** - Optimization details
-- **[Componentization Plan](COMPONENTIZATION_GAMEPLAN.md)** - Future modularization
-
-## 💼 Showcase Your Work
-
-We would love to see how you use this awesome admin template. You can notify us about your site, app or service by tweeting to [@colorlib](https://twitter.com/colorlib). Once the list grows long enough we will write a post similar to [this showcase](https://colorlib.com/wp/avada-theme-examples/) to feature the best examples.
-
-## 📦 Installation via Package Managers
-
-```bash
-# npm
-npm install gentelella --save
-
-# yarn  
-yarn add gentelella
-
-# bower (legacy)
-bower install gentelella --save
-```
-
-## 🌍 Community Integrations
-
-Gentelella has been integrated into various frameworks:
-
-- **[Rails](https://github.com/mwlang/gentelella-rails)** - Ruby on Rails integration
-- **[Laravel](https://github.com/Labs64/laravel-boilerplate)** - PHP Laravel boilerplate  
-- **[Django](https://github.com/GiriB/django-gentelella)** - Python Django app
-- **[Angular](https://github.com/kmkatsma/angular2-webpack-starter-gentelella)** - Angular integration
-- **[React](https://github.com/thomaslwq/react-admin)** - React implementation
-- **[Symfony](https://github.com/mamless/Gentella-admin-Symfony-6)** - Symfony 6 integration
-- **[Yii](https://github.com/yiister/yii2-gentelella)** - Yii framework integration
-- **[Flask](https://github.com/afourmy/flask-gentelella)** - Python Flask app
-- **[CakePHP](https://github.com/backstageel/cakephp-gentelella-theme)** - CakePHP integration
-- **[Aurelia](https://github.com/kmkatsma/aurelia-gentelella)** - Aurelia TypeScript integration
-- **[Gentelella RTL](https://github.com/mortezakarimi/gentelella-rtl)** - Right-to-left language support
-
-Let us know if you have done integration for this admin template on other platforms and frameworks and we'll be happy to share your work.
-
-## 🎨 Other Templates and Resources by Colorlib
-
-- **[Free Bootstrap Admin Templates](https://colorlib.com/wp/free-bootstrap-admin-dashboard-templates/)** - Collection of the best free Bootstrap admin dashboard templates
-- **[Free Admin Templates](https://colorlib.com/wp/free-html5-admin-dashboard-templates/)** - Comprehensive list of free HTML5 admin dashboard templates  
-- **[Angular Templates](https://colorlib.com/wp/angularjs-admin-templates/)** - Popular admin templates based on Angular
-- **[WordPress Admin Templates](https://colorlib.com/wp/wordpress-admin-dashboard-themes-plugins/)** - WordPress admin dashboard templates and plugins
-- **[WordPress Themes](https://colorlib.com/wp/free-wordpress-themes/)** - Large selection of free WordPress themes
-- **[Colorlib Blog](https://colorlib.com/)** - Web design and development resources
-
-## 📄 License
-
-Gentelella is licensed under **The MIT License (MIT)**. You can use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software. 
-
-**Attribution Required**: [Colorlib](https://colorlib.com/) must be credited as the original author.
-
-## 👥 Maintainers
-
-- **[Colorlib](https://colorlib.com/)** - Original design and development
-- **[Aigars Silkalns](https://github.com/silkalns)** - Lead developer and maintainer
-
-## 🙏 Acknowledgments
-
-- Bootstrap team for the amazing CSS framework
-- All contributors who have helped improve this template
-- The open-source community for the excellent libraries
+For issues and questions:
+- Check the documentation in the `docs/` folder
+- Review the API integration guide
+- Examine the component reference
 
 ---
 
-**Made with ❤️ by [Colorlib](https://colorlib.com/)**
+**Made with ❤️ for Network Engineers**

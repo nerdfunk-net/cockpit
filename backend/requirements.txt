@@ -1,2 +1,7 @@
 fastapi
 uvicorn
+pydantic[dotenv]
+requests
+pyjwt
+passlib[bcrypt]
+python-multipart

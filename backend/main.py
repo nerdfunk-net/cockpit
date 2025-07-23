@@ -1,20 +1,50 @@
 from fastapi import FastAPI, Request, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBear    # Hash password and store user
+    hashed_password = get_password_hash(password)
+    USERS_DB[username] = {
+        "username": username,
+        "hashed_password": hashed_password,
+        "email": email,
+        "full_name": full_name
+    }
+    
+    # Create access token
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": username}, expires_delta=access_token_expires
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": settings.access_token_expire_minutes * 60,onCredentials
 import requests
 import jwt
 from datetime import datetime, timedelta
 from passlib.hash import bcrypt
 import json
 import os
+import logging
 
-app = FastAPI()
+from config import settings
 
-# Authentication configuration
-SECRET_KEY = "your-secret-key-change-in-production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, settings.log_level),
+    format=settings.log_format
+)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(
+    title="Cockpit API",
+    description="Network Device Management Dashboard API",
+    version="1.0.0",
+    debug=settings.debug
+)
+
+security = HTTPBearer(auto_error=False)
 
 # Simple user storage (in production, use a database)
 USERS_DB = {
@@ -32,20 +62,14 @@ USERS_DB = {
     }
 }
 
-security = HTTPBearer(auto_error=False)
-
-# Allow CORS for local frontend development
+# Configure CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origins,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=settings.cors_allow_methods,
+    allow_headers=settings.cors_allow_headers,
 )
-
-# Nautobot connection settings
-NAUTOBOT_HOST = "http://localhost:8080"
-NAUTOBOT_TOKEN = "0123456789abcdef0123456789abcdef01234567"
 
 # Authentication helper functions
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -82,7 +106,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     try:
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
         return encoded_jwt
     except:
         # Fallback for development without jwt library
@@ -99,8 +123,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         )
     
     try:
-        # Try to decode JWT token
-        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(credentials.credentials, settings.secret_key, algorithms=[settings.algorithm])
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(
@@ -108,15 +131,17 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-    except:
-        # Fallback for development tokens
-        if not credentials.credentials.startswith("token-"):
+    except jwt.PyJWTError:
+        # Fallback for development
+        token_parts = credentials.credentials.split('-')
+        if len(token_parts) >= 3 and token_parts[0] == "token":
+            username = token_parts[1]
+        else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token format",
+                detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        username = credentials.credentials.split("-")[1]
     
     user = USERS_DB.get(username)
     if user is None:
@@ -155,7 +180,7 @@ def login(credentials: dict = Body(...)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
         data={"sub": user["username"]}, expires_delta=access_token_expires
     )
@@ -163,7 +188,7 @@ def login(credentials: dict = Body(...)):
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "expires_in": settings.access_token_expire_minutes * 60,
         "user": {
             "username": user["username"],
             "email": user["email"],
@@ -201,8 +226,15 @@ def register(user_data: dict = Body(...)):
     }
     
     # Return token for immediate login
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
+        data={"sub": username}, expires_delta=access_token_expires
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": settings.access_token_expire_minutes * 60,
         data={"sub": username}, expires_delta=access_token_expires
     )
     
@@ -235,7 +267,7 @@ def get_devices(
 ):
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Token {NAUTOBOT_TOKEN}"
+        "Authorization": f"Token {settings.nautobot_token}"
     }
     payload = None
     # Only use the GraphQL queries provided by the user for all filter types
@@ -260,7 +292,7 @@ def get_devices(
         sys.stdout.flush()
         return JSONResponse(content={"devices": []})
     try:
-        resp = requests.post(f"{NAUTOBOT_HOST}/api/graphql/", json=payload, headers=headers, timeout=10)
+        resp = requests.post(f"{settings.nautobot_host}/api/graphql/", json=payload, headers=headers, timeout=settings.nautobot_timeout)
         resp.raise_for_status()
         data = resp.json()
 
@@ -323,12 +355,12 @@ def get_devices(
 def get_statuses(current_user: dict = Depends(get_current_user)):
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Token {NAUTOBOT_TOKEN}"
+        "Authorization": f"Token {settings.nautobot_token}"
     }
     query = '''query status { statuses { id name } }'''
     payload = {"query": query}
     try:
-        resp = requests.post(f"{NAUTOBOT_HOST}/api/graphql/", json=payload, headers=headers, timeout=10)
+        resp = requests.post(f"{settings.nautobot_host}/api/graphql/", json=payload, headers=headers, timeout=settings.nautobot_timeout)
         resp.raise_for_status()
         data = resp.json()
         statuses = data.get("data", {}).get("statuses", [])
@@ -342,12 +374,12 @@ def get_statuses(current_user: dict = Depends(get_current_user)):
 def get_namespaces(current_user: dict = Depends(get_current_user)):
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Token {NAUTOBOT_TOKEN}"
+        "Authorization": f"Token {settings.nautobot_token}"
     }
     query = '''query namespace { namespaces { id name } }'''
     payload = {"query": query}
     try:
-        resp = requests.post(f"{NAUTOBOT_HOST}/api/graphql/", json=payload, headers=headers, timeout=10)
+        resp = requests.post(f"{settings.nautobot_host}/api/graphql/", json=payload, headers=headers, timeout=settings.nautobot_timeout)
         resp.raise_for_status()
         data = resp.json()
         namespaces = data.get("data", {}).get("namespaces", [])
@@ -359,10 +391,10 @@ def get_namespaces(current_user: dict = Depends(get_current_user)):
 @app.post("/api/sync-network-data")
 def sync_network_data(payload: dict = Body(...), current_user: dict = Depends(get_current_user)):
     # Compose the Nautobot job URL
-    url = f"{NAUTOBOT_HOST}/api/extras/jobs/Sync%20Network%20Data%20From%20Network/run/"
+    url = f"{settings.nautobot_host}/api/extras/jobs/Sync%20Network%20Data%20From%20Network/run/"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Token {NAUTOBOT_TOKEN}"
+        "Authorization": f"Token {settings.nautobot_token}"
     }
     # Add body_format: json as required
     body = {"body_format": "json", "data": payload.get("data", {})}
