@@ -7,7 +7,14 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+# Try to load from backend directory first, then from current directory
+backend_env_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(backend_env_path):
+    load_dotenv(backend_env_path)
+    print(f"Loaded .env from: {backend_env_path}")
+else:
+    load_dotenv()
+    print("Loaded .env from current directory")
 
 def get_env_bool(key: str, default: bool = False) -> bool:
     """Get boolean environment variable."""
@@ -45,6 +52,11 @@ class Settings:
     
     # CORS Configuration
     cors_origins: list = get_env_list('CORS_ORIGINS', ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'])
+    
+    # File storage configuration
+    config_files_directory: str = os.getenv('CONFIG_FILES_DIRECTORY', 'config_files')
+    allowed_file_extensions: list = get_env_list('ALLOWED_FILE_EXTENSIONS', ['.txt', '.conf', '.cfg', '.config', '.ini'])
+    max_file_size_mb: int = int(os.getenv('MAX_FILE_SIZE_MB', '10'))
 
 # Global settings instance
 settings = Settings()

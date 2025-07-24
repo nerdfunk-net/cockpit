@@ -8,6 +8,11 @@ import requests
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 import os
+import difflib
+from pathlib import Path
+import mimetypes
+from datetime import datetime
+from git import Repo, InvalidGitRepositoryError, GitCommandError
 from config_manual import settings
 
 # Initialize FastAPI app
@@ -48,6 +53,23 @@ class DeviceFilter(BaseModel):
     location: Optional[str] = None
     device_type: Optional[str] = None
     status: Optional[str] = None
+
+class FileCompareRequest(BaseModel):
+    left_file: str
+    right_file: str
+
+class FileExportRequest(BaseModel):
+    left_file: str
+    right_file: str
+    format: str = "unified"
+
+class GitCommitRequest(BaseModel):
+    message: str
+    files: Optional[List[str]] = None  # If None, commit all changes
+
+class GitBranchRequest(BaseModel):
+    branch_name: str
+    create: bool = False
 
 # JWT functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -202,6 +224,579 @@ async def login(user_data: UserLogin):
 @app.get("/auth/verify")
 async def verify_auth(current_user: str = Depends(verify_token)):
     return {"username": current_user, "authenticated": True}
+
+# File management endpoints for configuration comparison
+@app.get("/api/files/list")
+async def list_files(current_user: str = Depends(verify_token)):
+    """Get list of configuration files available for comparison"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        
+        # Create directory if it doesn't exist
+        config_dir.mkdir(parents=True, exist_ok=True)
+        
+        # If directory is empty, create sample files for demo
+        if not any(config_dir.iterdir()):
+            create_sample_files(config_dir)
+        
+        files = []
+        
+        # Scan the directory for configuration files
+        for file_path in config_dir.rglob('*'):
+            if file_path.is_file():
+                # Check if file extension is allowed
+                if file_path.suffix.lower() in [ext.lower() for ext in settings.allowed_file_extensions]:
+                    try:
+                        stat = file_path.stat()
+                        relative_path = file_path.relative_to(config_dir)
+                        
+                        files.append({
+                            "filename": file_path.name,
+                            "path": str(relative_path),
+                            "full_path": str(file_path),
+                            "size": stat.st_size,
+                            "modified": datetime.fromtimestamp(stat.st_mtime).isoformat() + "Z",
+                            "type": "configuration",
+                            "extension": file_path.suffix
+                        })
+                    except (OSError, PermissionError) as e:
+                        print(f"Warning: Could not read file {file_path}: {e}")
+                        continue
+        
+        # Sort files by modification time (newest first)
+        files.sort(key=lambda x: x["modified"], reverse=True)
+        
+        return {"files": files, "directory": str(config_dir.absolute())}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list files: {str(e)}"
+        )
+
+def create_sample_files(config_dir: Path):
+    """Create sample configuration files for demo purposes"""
+    sample_files = {
+        "router-config-v1.txt": get_sample_config_content("router-config-v1.txt"),
+        "router-config-v2.txt": get_sample_config_content("router-config-v2.txt"),
+        "switch-config-old.txt": get_sample_config_content("switch-config-old.txt"),
+        "switch-config-new.txt": get_sample_config_content("switch-config-new.txt"),
+        "baseline-config.txt": get_sample_config_content("baseline-config.txt")
+    }
+    
+    for filename, content in sample_files.items():
+        file_path = config_dir / filename
+        try:
+            file_path.write_text(content, encoding='utf-8')
+            print(f"Created sample file: {file_path}")
+        except Exception as e:
+            print(f"Warning: Could not create sample file {filename}: {e}")
+
+@app.post("/api/files/compare")
+async def compare_files(
+    request: FileCompareRequest,
+    current_user: str = Depends(verify_token)
+):
+    """Compare two configuration files"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        
+        # Resolve file paths
+        left_file_path = config_dir / request.left_file
+        right_file_path = config_dir / request.right_file
+        
+        # Security check: ensure files are within the config directory
+        try:
+            left_file_path = left_file_path.resolve()
+            right_file_path = right_file_path.resolve()
+            config_dir_resolved = config_dir.resolve()
+            
+            if not str(left_file_path).startswith(str(config_dir_resolved)):
+                raise HTTPException(status_code=400, detail="Left file path is not allowed")
+            if not str(right_file_path).startswith(str(config_dir_resolved)):
+                raise HTTPException(status_code=400, detail="Right file path is not allowed")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid file paths")
+        
+        # Check if files exist
+        if not left_file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Left file not found: {request.left_file}")
+        if not right_file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Right file not found: {request.right_file}")
+        
+        # Check file size limits
+        max_size = settings.max_file_size_mb * 1024 * 1024
+        if left_file_path.stat().st_size > max_size:
+            raise HTTPException(status_code=413, detail=f"Left file too large (max {settings.max_file_size_mb}MB)")
+        if right_file_path.stat().st_size > max_size:
+            raise HTTPException(status_code=413, detail=f"Right file too large (max {settings.max_file_size_mb}MB)")
+        
+        # Read file contents
+        try:
+            left_content = left_file_path.read_text(encoding='utf-8')
+        except UnicodeDecodeError:
+            # Try with different encodings
+            try:
+                left_content = left_file_path.read_text(encoding='latin-1')
+            except:
+                raise HTTPException(status_code=400, detail="Could not decode left file")
+        
+        try:
+            right_content = right_file_path.read_text(encoding='utf-8')
+        except UnicodeDecodeError:
+            try:
+                right_content = right_file_path.read_text(encoding='latin-1')
+            except:
+                raise HTTPException(status_code=400, detail="Could not decode right file")
+        
+        # Create line-by-line diff
+        left_lines = left_content.splitlines()
+        right_lines = right_content.splitlines()
+        
+        # Process diff into structured format
+        left_result = []
+        right_result = []
+        
+        for i, (left_line, right_line) in enumerate(zip(left_lines, right_lines)):
+            if left_line == right_line:
+                left_result.append({
+                    "line_number": i + 1,
+                    "content": left_line,
+                    "type": "equal"
+                })
+                right_result.append({
+                    "line_number": i + 1, 
+                    "content": right_line,
+                    "type": "equal"
+                })
+            else:
+                left_result.append({
+                    "line_number": i + 1,
+                    "content": left_line,
+                    "type": "replace"
+                })
+                right_result.append({
+                    "line_number": i + 1,
+                    "content": right_line, 
+                    "type": "replace"
+                })
+        
+        # Handle different length files
+        if len(left_lines) > len(right_lines):
+            for i in range(len(right_lines), len(left_lines)):
+                left_result.append({
+                    "line_number": i + 1,
+                    "content": left_lines[i],
+                    "type": "delete"
+                })
+                right_result.append({
+                    "line_number": None,
+                    "content": "",
+                    "type": "empty"
+                })
+        elif len(right_lines) > len(left_lines):
+            for i in range(len(left_lines), len(right_lines)):
+                left_result.append({
+                    "line_number": None,
+                    "content": "",
+                    "type": "empty"
+                })
+                right_result.append({
+                    "line_number": i + 1,
+                    "content": right_lines[i],
+                    "type": "insert"
+                })
+        
+        return {
+            "left_file": request.left_file,
+            "right_file": request.right_file,
+            "left_lines": left_result,
+            "right_lines": right_result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to compare files: {str(e)}"
+        )
+
+@app.post("/api/files/export-diff")
+async def export_diff(
+    request: FileExportRequest,
+    current_user: str = Depends(verify_token)
+):
+    """Export diff in unified format"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        
+        # Resolve file paths
+        left_file_path = config_dir / request.left_file
+        right_file_path = config_dir / request.right_file
+        
+        # Security check: ensure files are within the config directory
+        try:
+            left_file_path = left_file_path.resolve()
+            right_file_path = right_file_path.resolve()
+            config_dir_resolved = config_dir.resolve()
+            
+            if not str(left_file_path).startswith(str(config_dir_resolved)):
+                raise HTTPException(status_code=400, detail="Left file path is not allowed")
+            if not str(right_file_path).startswith(str(config_dir_resolved)):
+                raise HTTPException(status_code=400, detail="Right file path is not allowed")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid file paths")
+        
+        # Check if files exist
+        if not left_file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Left file not found: {request.left_file}")
+        if not right_file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Right file not found: {request.right_file}")
+        
+        # Read file contents
+        try:
+            left_content = left_file_path.read_text(encoding='utf-8')
+            right_content = right_file_path.read_text(encoding='utf-8')
+        except UnicodeDecodeError:
+            try:
+                left_content = left_file_path.read_text(encoding='latin-1')
+                right_content = right_file_path.read_text(encoding='latin-1')
+            except:
+                raise HTTPException(status_code=400, detail="Could not decode files")
+        
+        # Create unified diff
+        diff_lines = list(difflib.unified_diff(
+            left_content.splitlines(keepends=True),
+            right_content.splitlines(keepends=True),
+            fromfile=request.left_file,
+            tofile=request.right_file
+        ))
+        
+        diff_content = ''.join(diff_lines)
+        filename = f"diff_{Path(request.left_file).stem}_vs_{Path(request.right_file).stem}.patch"
+        
+        return {
+            "content": diff_content,
+            "filename": filename,
+            "format": request.format
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to export diff: {str(e)}"
+        )
+
+@app.get("/api/files/config")
+async def get_file_config(current_user: str = Depends(verify_token)):
+    """Get file storage configuration information"""
+    config_dir = Path(settings.config_files_directory)
+    return {
+        "directory": str(config_dir.absolute()),
+        "directory_exists": config_dir.exists(),
+        "allowed_extensions": settings.allowed_file_extensions,
+        "max_file_size_mb": settings.max_file_size_mb,
+        "directory_writable": config_dir.exists() and os.access(config_dir, os.W_OK)
+    }
+
+# Git management endpoints
+@app.get("/api/git/status")
+async def git_status(current_user: str = Depends(verify_token)):
+    """Get Git repository status"""
+    try:
+        repo = get_git_repo()
+        
+        # Get current branch
+        current_branch = str(repo.active_branch) if not repo.head.is_detached else "detached"
+        
+        # Get modified files
+        modified_files = [item.a_path for item in repo.index.diff(None)]
+        
+        # Get untracked files
+        untracked_files = repo.untracked_files
+        
+        # Get staged files
+        staged_files = [item.a_path for item in repo.index.diff("HEAD")]
+        
+        # Get recent commits (last 10)
+        commits = []
+        try:
+            for commit in repo.iter_commits(max_count=10):
+                commits.append({
+                    "hash": commit.hexsha[:8],
+                    "message": commit.message.strip(),
+                    "author": str(commit.author),
+                    "date": commit.committed_datetime.isoformat(),
+                    "files_changed": len(commit.stats.files)
+                })
+        except Exception:
+            # Handle case where there are no commits yet
+            pass
+        
+        return {
+            "current_branch": current_branch,
+            "modified_files": modified_files,
+            "untracked_files": untracked_files,
+            "staged_files": staged_files,
+            "commits": commits,
+            "is_dirty": repo.is_dirty()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get Git status: {str(e)}"
+        )
+
+@app.post("/api/git/commit")
+async def git_commit(
+    request: GitCommitRequest,
+    current_user: str = Depends(verify_token)
+):
+    """Commit changes to Git repository"""
+    try:
+        repo = get_git_repo()
+        
+        # Stage files
+        if request.files:
+            # Stage specific files
+            repo.index.add(request.files)
+        else:
+            # Stage all changes
+            repo.git.add(A=True)
+        
+        # Commit changes
+        commit = repo.index.commit(request.message)
+        
+        return {
+            "success": True,
+            "commit_hash": commit.hexsha[:8],
+            "message": request.message,
+            "files_committed": len(commit.stats.files)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to commit: {str(e)}"
+        )
+
+@app.get("/api/git/branches")
+async def git_branches(current_user: str = Depends(verify_token)):
+    """Get list of Git branches"""
+    try:
+        repo = get_git_repo()
+        
+        branches = []
+        current_branch = str(repo.active_branch) if not repo.head.is_detached else None
+        
+        for branch in repo.branches:
+            branches.append({
+                "name": str(branch),
+                "is_current": str(branch) == current_branch,
+                "last_commit": branch.commit.hexsha[:8],
+                "last_commit_message": branch.commit.message.strip()
+            })
+        
+        return {"branches": branches, "current_branch": current_branch}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get branches: {str(e)}"
+        )
+
+@app.post("/api/git/branch")
+async def git_branch(
+    request: GitBranchRequest,
+    current_user: str = Depends(verify_token)
+):
+    """Create or switch to a Git branch"""
+    try:
+        repo = get_git_repo()
+        
+        if request.create:
+            # Create new branch
+            new_branch = repo.create_head(request.branch_name)
+            new_branch.checkout()
+            return {
+                "success": True,
+                "action": "created",
+                "branch": request.branch_name
+            }
+        else:
+            # Switch to existing branch
+            repo.git.checkout(request.branch_name)
+            return {
+                "success": True,
+                "action": "switched",
+                "branch": request.branch_name
+            }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to manage branch: {str(e)}"
+        )
+
+@app.get("/api/git/diff/{commit_hash}")
+async def git_diff(
+    commit_hash: str,
+    current_user: str = Depends(verify_token)
+):
+    """Get diff for a specific commit"""
+    try:
+        repo = get_git_repo()
+        
+        commit = repo.commit(commit_hash)
+        
+        # Get diff against parent (or empty tree if first commit)
+        if commit.parents:
+            diff = commit.parents[0].diff(commit, create_patch=True)
+        else:
+            diff = commit.diff(repo.git.hash_object('-t', 'tree', '/dev/null'), create_patch=True)
+        
+        diffs = []
+        for d in diff:
+            diffs.append({
+                "file": d.a_path or d.b_path,
+                "change_type": d.change_type,
+                "diff": str(d) if d.create_patch else ""
+            })
+        
+        return {
+            "commit": {
+                "hash": commit.hexsha[:8],
+                "message": commit.message.strip(),
+                "author": str(commit.author),
+                "date": commit.committed_datetime.isoformat()
+            },
+            "diffs": diffs
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get diff: {str(e)}"
+        )
+
+def get_sample_config_content(filename: str) -> str:
+    """Generate sample configuration content for demo purposes"""
+    base_config = """!
+! Configuration file for network device
+!
+version 15.1
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname NetworkDevice
+!
+boot-start-marker
+boot-end-marker
+!
+enable secret 5 $1$XXXX$XXXXXXXXXXXXXXXXXXXXXXXXX
+!
+username admin privilege 15 secret 5 $1$XXXX$XXXXXXXXXXXXXXXXXXXXXXXXX
+!
+interface GigabitEthernet0/0
+ description Connection to Core Switch
+ ip address 192.168.1.1 255.255.255.0
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/1
+ description Management Interface
+ ip address 10.0.1.10 255.255.255.0
+ duplex auto
+ speed auto
+!
+router ospf 1
+ router-id 1.1.1.1
+ network 192.168.1.0 0.0.0.255 area 0
+ network 10.0.1.0 0.0.0.255 area 0
+!
+ip route 0.0.0.0 0.0.0.0 192.168.1.254
+!
+access-list 10 permit 10.0.1.0 0.0.0.255
+access-list 10 permit 192.168.1.0 0.0.0.255
+!
+snmp-server community public RO
+snmp-server location "Network Closet A"
+snmp-server contact "admin@company.com"
+!
+line con 0
+ login local
+line vty 0 4
+ access-class 10 in
+ login local
+ transport input ssh
+!
+end"""
+    
+    # Modify content based on filename to create differences
+    if "v2" in filename or "new" in filename:
+        modified_config = base_config.replace(
+            "ip address 192.168.1.1 255.255.255.0",
+            "ip address 192.168.1.2 255.255.255.0"
+        ).replace(
+            "router-id 1.1.1.1",
+            "router-id 1.1.1.2"
+        ).replace(
+            "snmp-server location \"Network Closet A\"",
+            "snmp-server location \"Network Closet B\""
+        )
+        # Add a new interface in v2
+        modified_config += "\n!\ninterface GigabitEthernet0/2\n description Additional Port\n shutdown\n!"
+        return modified_config
+    elif "switch" in filename:
+        return base_config.replace("NetworkDevice", "CoreSwitch").replace(
+            "hostname NetworkDevice",
+            "hostname CoreSwitch"
+        ).replace(
+            "router ospf 1",
+            "!\n! Switch configuration - no OSPF"
+        ).replace(
+            " router-id 1.1.1.1\n network 192.168.1.0 0.0.0.255 area 0\n network 10.0.1.0 0.0.0.255 area 0",
+            ""
+        )
+    elif "baseline" in filename:
+        return base_config.replace(
+            "snmp-server community public RO",
+            "! SNMP disabled for security"
+        ).replace(
+            "snmp-server location \"Network Closet A\"\nsnmp-server contact \"admin@company.com\"",
+            ""
+        )
+    
+    return base_config
+
+def get_git_repo():
+    """Get Git repository instance for the config directory"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        repo = Repo(config_dir)
+        return repo
+    except InvalidGitRepositoryError:
+        # Try to initialize a new repo
+        try:
+            config_dir = Path(settings.config_files_directory)
+            config_dir.mkdir(parents=True, exist_ok=True)
+            repo = Repo.init(config_dir)
+            return repo
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to initialize Git repository: {str(e)}"
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Git repository error: {str(e)}"
+        )
 
 # Device management endpoints
 @app.get("/api/devices")
