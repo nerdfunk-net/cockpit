@@ -1,414 +1,333 @@
-from fastapi import FastAPI, Request, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBear    # Hash password and store user
-    hashed_password = get_password_hash(password)
-    USERS_DB[username] = {
-        "username": username,
-        "hashed_password": hashed_password,
-        "email": email,
-        "full_name": full_name
-    }
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    access_token = create_access_token(
-        data={"sub": username}, expires_delta=access_token_expires
-    )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "expires_in": settings.access_token_expire_minutes * 60,onCredentials
-import requests
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
 import jwt
-from datetime import datetime, timedelta
-from passlib.hash import bcrypt
-import json
+import requests
+from datetime import datetime, timedelta, timezone
+from passlib.context import CryptContext
 import os
-import logging
+from config_manual import settings
 
-from config import settings
-
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, settings.log_level),
-    format=settings.log_format
-)
-logger = logging.getLogger(__name__)
-
+# Initialize FastAPI app
 app = FastAPI(
-    title="Cockpit API",
-    description="Network Device Management Dashboard API",
-    version="1.0.0",
-    debug=settings.debug
+    title="Cockpit Network Management Dashboard",
+    description="A comprehensive dashboard for managing network devices via Nautobot",
+    version="1.0.0"
 )
 
-security = HTTPBearer(auto_error=False)
-
-# Simple user storage (in production, use a database)
-USERS_DB = {
-    "admin": {
-        "username": "admin",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # "secret"
-        "email": "admin@example.com",
-        "full_name": "Administrator"
-    },
-    "demo": {
-        "username": "demo",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # "secret"
-        "email": "demo@example.com", 
-        "full_name": "Demo User"
-    }
-}
-
-# Configure CORS middleware
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=settings.cors_allow_credentials,
-    allow_methods=settings.cors_allow_methods,
-    allow_headers=settings.cors_allow_headers,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Authentication helper functions
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against its hash"""
-    try:
-        return bcrypt.verify(plain_password, hashed_password)
-    except:
-        # Fallback for simple comparison during development
-        return plain_password == "secret"
+# Security
+security = HTTPBearer()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def get_password_hash(password: str) -> str:
-    """Hash a password"""
-    try:
-        return bcrypt.hash(password)
-    except:
-        # Fallback for development
-        return password
+# Pydantic models
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
-def authenticate_user(username: str, password: str):
-    """Authenticate user credentials"""
-    user = USERS_DB.get(username)
-    if not user:
-        return False
-    if not verify_password(password, user["hashed_password"]):
-        return False
-    return user
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
 
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    """Create JWT access token"""
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class DeviceFilter(BaseModel):
+    location: Optional[str] = None
+    device_type: Optional[str] = None
+    status: Optional[str] = None
+
+# JWT functions
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     to_encode.update({"exp": expire})
-    try:
-        encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-        return encoded_jwt
-    except:
-        # Fallback for development without jwt library
-        username = data.get("sub", "unknown")
-        return f"token-{username}-{datetime.utcnow().timestamp()}"
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    return encoded_jwt
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get current authenticated user from token"""
-    if not credentials:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
     try:
-        payload = jwt.decode(credentials.credentials, settings.secret_key, algorithms=[settings.algorithm])
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
+                detail="Could not validate credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        return username
     except jwt.PyJWTError:
-        # Fallback for development
-        token_parts = credentials.credentials.split('-')
-        if len(token_parts) >= 3 and token_parts[0] == "token":
-            username = token_parts[1]
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    
-    user = USERS_DB.get(username)
-    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
+            detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return user
 
+# Nautobot API helper functions
+def nautobot_request(endpoint: str, method: str = "GET", data: dict = None) -> dict:
+    """Make a request to Nautobot API"""
+    url = f"{settings.nautobot_url.rstrip('/')}/api/{endpoint.lstrip('/')}"
+    headers = {
+        "Authorization": f"Token {settings.nautobot_token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    
+    try:
+        if method.upper() == "GET":
+            response = requests.get(url, headers=headers, timeout=30)
+        elif method.upper() == "POST":
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+        elif method.upper() == "PUT":
+            response = requests.put(url, headers=headers, json=data, timeout=30)
+        elif method.upper() == "DELETE":
+            response = requests.delete(url, headers=headers, timeout=30)
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+        
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Nautobot API error: {str(e)}"
+        )
 
+def nautobot_graphql_query(query: str, variables: dict = None) -> dict:
+    """Execute a GraphQL query against Nautobot"""
+    url = f"{settings.nautobot_url.rstrip('/')}/api/graphql/"
+    headers = {
+        "Authorization": f"Token {settings.nautobot_token}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {"query": query}
+    if variables:
+        payload["variables"] = variables
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Nautobot GraphQL error: {str(e)}"
+        )
 
-from fastapi import Query, Body
-import ipaddress
-from typing import Optional
-import sys
+# Root endpoint
+@app.get("/")
+async def root():
+    return {
+        "message": "Cockpit Network Management Dashboard API",
+        "version": "1.0.0",
+        "status": "running",
+        "nautobot_url": settings.nautobot_url
+    }
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    try:
+        # Test Nautobot connectivity
+        nautobot_request("dcim/devices/?limit=1")
+        return {
+            "status": "healthy",
+            "nautobot_connection": "ok",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "nautobot_connection": "failed",
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
 
 # Authentication endpoints
-@app.post("/api/auth/login")
-def login(credentials: dict = Body(...)):
-    """Authenticate user and return access token"""
-    username = credentials.get("username")
-    password = credentials.get("password")
-    
-    if not username or not password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username and password required"
+@app.post("/auth/login", response_model=Token)
+async def login(user_data: UserLogin):
+    # For demo purposes, using simple hardcoded auth
+    # In production, this should validate against a proper user database
+    if user_data.username == settings.demo_username and user_data.password == settings.demo_password:
+        access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+        access_token = create_access_token(
+            data={"sub": user_data.username}, expires_delta=access_token_expires
         )
-    
-    user = authenticate_user(username, password)
-    if not user:
+        return {"access_token": access_token, "token_type": "bearer"}
+    else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    access_token = create_access_token(
-        data={"sub": user["username"]}, expires_delta=access_token_expires
-    )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "expires_in": settings.access_token_expire_minutes * 60,
-        "user": {
-            "username": user["username"],
-            "email": user["email"],
-            "full_name": user["full_name"]
-        }
-    }
 
-@app.post("/api/auth/register")
-def register(user_data: dict = Body(...)):
-    """Register a new user"""
-    username = user_data.get("username")
-    password = user_data.get("password")
-    email = user_data.get("email")
-    full_name = user_data.get("full_name", "")
-    
-    if not username or not password or not email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username, password, and email required"
-        )
-    
-    if username in USERS_DB:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already exists"
-        )
-    
-    # Hash password and store user
-    hashed_password = get_password_hash(password)
-    USERS_DB[username] = {
-        "username": username,
-        "hashed_password": hashed_password,
-        "email": email,
-        "full_name": full_name
-    }
-    
-    # Return token for immediate login
-    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    access_token = create_access_token(
-        data={"sub": username}, expires_delta=access_token_expires
-    )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "expires_in": settings.access_token_expire_minutes * 60,
-        data={"sub": username}, expires_delta=access_token_expires
-    )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        "user": {
-            "username": username,
-            "email": email,
-            "full_name": full_name
-        }
-    }
+@app.get("/auth/verify")
+async def verify_auth(current_user: str = Depends(verify_token)):
+    return {"username": current_user, "authenticated": True}
 
-@app.get("/api/auth/me")
-def get_current_user_info(current_user: dict = Depends(get_current_user)):
-    """Get current user information"""
-    return {
-        "username": current_user["username"],
-        "email": current_user["email"],
-        "full_name": current_user["full_name"]
-    }
-
-# Protected routes - add authentication dependency
+# Device management endpoints
 @app.get("/api/devices")
-def get_devices(
-    filter_type: Optional[str] = Query(None), 
-    filter_value: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user)
+async def get_devices(
+    limit: int = 50,
+    offset: int = 0,
+    current_user: str = Depends(verify_token)
 ):
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Token {settings.nautobot_token}"
-    }
-    payload = None
-    # Only use the GraphQL queries provided by the user for all filter types
-    if filter_type == "name" and filter_value and len(filter_value) >= 3:
-        # Use ONLY the provided GraphQL query for device name
-        query = '''query single_device($device_filter: [String]) {\n  devices(name__re: $device_filter) {\n    id\n    name\n    role { name }\n    location { name }\n    primary_ip4 { address }\n    status { name }\n  }\n}'''
-        variables = {"device_filter": [filter_value]}
-        payload = {"query": query, "variables": variables}
-    elif filter_type == "location" and filter_value and len(filter_value) >= 3:
-        # Use ONLY the provided GraphQL query for location
-        query = '''query devives_in_location($location_filter: [String]) {\n  locations(name__re: $location_filter) {\n    name\n    devices {\n      id\n      name\n      role { name }\n      location { name }\n      primary_ip4 { address }\n      status { name }\n    }\n  }\n}'''
-        variables = {"location_filter": [filter_value]}
-        payload = {"query": query, "variables": variables}
-    elif filter_type == "prefix" and filter_value and filter_value.count('.') == 3:
-        # Use ONLY the provided GraphQL query for prefix
-        query = '''query devices_by_ip_prefix($prefix_filter: [String]) {\n  prefixes(within_include: $prefix_filter) {\n    prefix\n    ip_addresses {\n      primary_ip4_for {\n        id\n        name\n        role { name }\n        location { name }\n        primary_ip4 { address }\n        status { name }\n      }\n    }\n  }\n}'''
-        variables = {"prefix_filter": [filter_value]}
-        payload = {"query": query, "variables": variables}
-    else:
-        # No valid filter provided, return empty list
-        print(f"[DEBUG] Invalid or missing filter_type/filter_value: filter_type={filter_type}, filter_value={filter_value}")
-        sys.stdout.flush()
-        return JSONResponse(content={"devices": []})
+    """Get list of devices from Nautobot"""
     try:
-        resp = requests.post(f"{settings.nautobot_host}/api/graphql/", json=payload, headers=headers, timeout=settings.nautobot_timeout)
-        resp.raise_for_status()
-        data = resp.json()
-
-        if filter_type == "prefix":
-            # Extract devices from primary_ip4_for, avoid duplicates
-            devices = []
-            seen_ids = set()
-            for prefix in data.get("data", {}).get("prefixes", []):
-                for ip in prefix.get("ip_addresses", []):
-                    devs = ip.get("primary_ip4_for")
-                    if isinstance(devs, list):
-                        for dev in devs:
-                            if dev and dev.get("id") and dev["id"] not in seen_ids:
-                                devices.append({
-                                    "id": dev.get("id"),
-                                    "name": dev.get("name"),
-                                    "role": dev.get("role"),
-                                    "location": dev.get("location"),
-                                    "primary_ip4": dev.get("primary_ip4"),
-                                    "status": dev.get("status")
-                                })
-                                seen_ids.add(dev["id"])
-                    elif isinstance(devs, dict):
-                        dev = devs
-                        if dev and dev.get("id") and dev["id"] not in seen_ids:
-                            devices.append({
-                                "id": dev.get("id"),
-                                "name": dev.get("name"),
-                                "role": dev.get("role"),
-                                "location": dev.get("location"),
-                                "primary_ip4": dev.get("primary_ip4"),
-                                "status": dev.get("status")
-                            })
-                            seen_ids.add(dev["id"])
-        elif filter_type == "location":
-            # Extract devices from locations, avoid duplicates
-            devices = []
-            seen_ids = set()
-            for loc in data.get("data", {}).get("locations", []):
-                for dev in loc.get("devices", []):
-                    if dev and dev.get("id") and dev["id"] not in seen_ids:
-                        devices.append({
-                            "id": dev.get("id"),
-                            "name": dev.get("name"),
-                            "role": dev.get("role"),
-                            "location": dev.get("location"),
-                            "primary_ip4": dev.get("primary_ip4"),
-                            "status": dev.get("status")
-                        })
-                        seen_ids.add(dev["id"])
-        else:
-            devices = data.get("data", {}).get("devices", [])
-        return JSONResponse(content={"devices": devices})
+        endpoint = f"dcim/devices/?limit={limit}&offset={offset}"
+        result = nautobot_request(endpoint)
+        return result
     except Exception as e:
-        print(f"[ERROR] Exception in get_devices: {e}")
-        sys.stdout.flush()
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch devices: {str(e)}"
+        )
 
-@app.get("/api/statuses")
-def get_statuses(current_user: dict = Depends(get_current_user)):
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Token {settings.nautobot_token}"
-    }
-    query = '''query status { statuses { id name } }'''
-    payload = {"query": query}
+@app.get("/api/devices/{device_id}")
+async def get_device(device_id: str, current_user: str = Depends(verify_token)):
+    """Get specific device details from Nautobot"""
     try:
-        resp = requests.post(f"{settings.nautobot_host}/api/graphql/", json=payload, headers=headers, timeout=settings.nautobot_timeout)
-        resp.raise_for_status()
-        data = resp.json()
-        statuses = data.get("data", {}).get("statuses", [])
-        # Return list of {id, name}
-        return JSONResponse(content={"statuses": statuses})
+        endpoint = f"dcim/devices/{device_id}/"
+        result = nautobot_request(endpoint)
+        return result
     except Exception as e:
-        print(f"[ERROR] Exception in get_statuses: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch device {device_id}: {str(e)}"
+        )
 
-@app.get("/api/namespaces")
-def get_namespaces(current_user: dict = Depends(get_current_user)):
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Token {settings.nautobot_token}"
-    }
-    query = '''query namespace { namespaces { id name } }'''
-    payload = {"query": query}
+@app.post("/api/devices/search")
+async def search_devices(
+    filters: DeviceFilter,
+    current_user: str = Depends(verify_token)
+):
+    """Search devices with filters"""
     try:
-        resp = requests.post(f"{settings.nautobot_host}/api/graphql/", json=payload, headers=headers, timeout=settings.nautobot_timeout)
-        resp.raise_for_status()
-        data = resp.json()
-        namespaces = data.get("data", {}).get("namespaces", [])
-        return JSONResponse(content={"namespaces": namespaces})
+        query_params = []
+        if filters.location:
+            query_params.append(f"location={filters.location}")
+        if filters.device_type:
+            query_params.append(f"device_type={filters.device_type}")
+        if filters.status:
+            query_params.append(f"status={filters.status}")
+        
+        query_string = "&".join(query_params)
+        endpoint = f"dcim/devices/?{query_string}" if query_string else "dcim/devices/"
+        
+        result = nautobot_request(endpoint)
+        return result
     except Exception as e:
-        print(f"[ERROR] Exception in get_namespaces: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to search devices: {str(e)}"
+        )
 
-@app.post("/api/sync-network-data")
-def sync_network_data(payload: dict = Body(...), current_user: dict = Depends(get_current_user)):
-    # Compose the Nautobot job URL
-    url = f"{settings.nautobot_host}/api/extras/jobs/Sync%20Network%20Data%20From%20Network/run/"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Token {settings.nautobot_token}"
-    }
-    # Add body_format: json as required
-    body = {"body_format": "json", "data": payload.get("data", {})}
-    print("[DEBUG] Nautobot Sync Request URL:", url)
-    print("[DEBUG] Nautobot Sync Request Headers:", headers)
-    print("[DEBUG] Nautobot Sync Request Body:", body)
-    sys.stdout.flush()
+# Location endpoints
+@app.get("/api/locations")
+async def get_locations(current_user: str = Depends(verify_token)):
+    """Get list of locations from Nautobot"""
     try:
-        resp = requests.post(url, json=body, headers=headers, timeout=30)
-        resp.raise_for_status()
-        print("[DEBUG] Nautobot Sync Response:", resp.text)
-        sys.stdout.flush()
-        return JSONResponse(content=resp.json())
+        result = nautobot_request("dcim/locations/")
+        return result
     except Exception as e:
-        print(f"[ERROR] Exception in sync_network_data: {e}")
-        sys.stdout.flush()
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch locations: {str(e)}"
+        )
+
+# Device types endpoints
+@app.get("/api/device-types")
+async def get_device_types(current_user: str = Depends(verify_token)):
+    """Get list of device types from Nautobot"""
+    try:
+        result = nautobot_request("dcim/device-types/")
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch device types: {str(e)}"
+        )
+
+# Interface endpoints
+@app.get("/api/devices/{device_id}/interfaces")
+async def get_device_interfaces(device_id: str, current_user: str = Depends(verify_token)):
+    """Get interfaces for a specific device"""
+    try:
+        endpoint = f"dcim/interfaces/?device_id={device_id}"
+        result = nautobot_request(endpoint)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch interfaces for device {device_id}: {str(e)}"
+        )
+
+# GraphQL endpoint for complex queries
+@app.post("/api/graphql")
+async def graphql_query(
+    query_data: dict,
+    current_user: str = Depends(verify_token)
+):
+    """Execute GraphQL query against Nautobot"""
+    try:
+        query = query_data.get("query")
+        variables = query_data.get("variables", {})
+        
+        if not query:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="GraphQL query is required"
+            )
+        
+        result = nautobot_graphql_query(query, variables)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"GraphQL query failed: {str(e)}"
+        )
+
+# Statistics endpoint
+@app.get("/api/stats")
+async def get_statistics(current_user: str = Depends(verify_token)):
+    """Get dashboard statistics"""
+    try:
+        # Get device counts by status
+        devices = nautobot_request("dcim/devices/")
+        locations = nautobot_request("dcim/locations/")
+        device_types = nautobot_request("dcim/device-types/")
+        
+        stats = {
+            "total_devices": devices.get("count", 0),
+            "total_locations": locations.get("count", 0),
+            "total_device_types": device_types.get("count", 0),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return stats
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch statistics: {str(e)}"
+        )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=settings.port)

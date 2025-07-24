@@ -6,7 +6,8 @@ Docker-compatible with environment variable override support.
 
 import os
 from typing import List, Optional
-from pydantic import BaseSettings, validator, Field
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -68,8 +69,8 @@ class Settings(BaseSettings):
     )
     
     # CORS Configuration
-    cors_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:5173"], 
+    cors_origins: str = Field(
+        default="http://localhost:3000,http://localhost:5173", 
         env="CORS_ORIGINS",
         description="Allowed CORS origins (comma-separated)"
     )
@@ -109,33 +110,39 @@ class Settings(BaseSettings):
     )
     
     
-    @validator('cors_origins', pre=True)
+    @field_validator('cors_origins', mode='before')
+    @classmethod  
     def parse_cors_origins(cls, v):
-        """Parse CORS origins from comma-separated string or list."""
+        """Parse CORS origins from comma-separated string."""
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(',') if origin.strip()]
-        return v
+            origins = [origin.strip() for origin in v.split(',') if origin.strip()]
+            return origins if origins else ["http://localhost:3000"]
+        return v if v else ["http://localhost:3000"]
     
-    @validator('cors_allow_methods', pre=True)
+    @field_validator('cors_allow_methods', mode='before')
+    @classmethod
     def parse_cors_methods(cls, v):
         """Parse CORS methods from comma-separated string or list."""
         if isinstance(v, str):
             return [method.strip() for method in v.split(',') if method.strip()]
         return v
     
-    @validator('cors_allow_headers', pre=True)
+    @field_validator('cors_allow_headers', mode='before')
+    @classmethod
     def parse_cors_headers(cls, v):
         """Parse CORS headers from comma-separated string or list."""
         if isinstance(v, str):
             return [header.strip() for header in v.split(',') if header.strip()]
         return v
     
-    @validator('nautobot_host')
+    @field_validator('nautobot_host')
+    @classmethod
     def validate_nautobot_host(cls, v):
         """Ensure nautobot_host doesn't end with a slash."""
         return v.rstrip('/')
     
-    @validator('secret_key')
+    @field_validator('secret_key')  
+    @classmethod
     def validate_secret_key(cls, v):
         """Ensure secret key is not the default in production."""
         if not os.getenv('DEBUG', '').lower() == 'true':
@@ -147,19 +154,19 @@ class Settings(BaseSettings):
                     raise ValueError("Secret key must be changed for production use")
         return v
     
-    @validator('nautobot_token')
+    @field_validator('nautobot_token')
+    @classmethod
     def validate_nautobot_token(cls, v):
         """Warn if using default Nautobot token."""
         if v == "your-nautobot-token-here":
             print("WARNING: Using default Nautobot token. Please set NAUTOBOT_TOKEN environment variable.")
         return v
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        # Environment variables take precedence over .env file
-        env_prefix = ""
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "extra": "ignore"
+    }
 
 
 # Global settings instance

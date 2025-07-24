@@ -5,7 +5,7 @@
 
 class AuthManager {
     constructor() {
-        this.baseURL = 'http://localhost:8000/api';
+        this.baseURL = 'http://localhost:8000';
         this.token = localStorage.getItem('auth_token');
         this.user = JSON.parse(localStorage.getItem('user_info') || 'null');
         this.tokenExpiry = localStorage.getItem('token_expiry');

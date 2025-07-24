@@ -3,6 +3,22 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: '.',
   publicDir: 'production',
+  plugins: [
+    // Custom plugin to redirect root to index.html
+    {
+      name: 'redirect-root',
+      configureServer(server) {
+        server.middlewares.use('/', (req, res, next) => {
+          if (req.url === '/') {
+            res.writeHead(302, { Location: '/index.html' });
+            res.end();
+            return;
+          }
+          next();
+        });
+      }
+    }
+  ],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
@@ -98,7 +114,7 @@ export default defineConfig({
     target: 'es2022'
   },
   server: {
-    open: '/production/index.html',
+    open: '/',
     port: 3000
   },
   optimizeDeps: {

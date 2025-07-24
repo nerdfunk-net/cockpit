@@ -12,7 +12,33 @@
 
     <!-- Vite Entry Point - will bundle all styles -->
     <script type="module" src="/src/main-minimal.js"></script>
+    <script>
+      // Robust authentication check
+      (function() {
+        console.log('Checking authentication...');
+        
+        // Check if we have a valid token
+        const token = localStorage.getItem('auth_token');
+        console.log('Token found:', !!token);
+        
+        if (!token) {
+          console.log('No token found, redirecting to login');
+          // Use absolute path to ensure proper redirect
+          window.location.href = '/login.html';
+          return;
+        }
+        
+        console.log('Token found, user authenticated');
+      })();
+    </script>
     <script src="js/auth.js"></script>
+    <script>
+      // Initialize auth manager when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        window.authManager = new AuthManager();
+        console.log('AuthManager initialized');
+      });
+    </script>
   </head>
 
   <body class="nav-md page-index">
