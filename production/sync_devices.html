@@ -86,8 +86,26 @@
               <nav class="nav navbar-nav">
               <ul class="navbar-right">
                 <li class="nav-item dropdown open" style="padding-left: 15px;">
-                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false"><span id="navbar-username">Loading...</span>
+                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span id="navbar-username">Loading...</span>
                   </a>
+                  <script>
+                    // Immediate username update if user info is available
+                    (function() {
+                      const userInfo = localStorage.getItem('user_info');
+                      if (userInfo) {
+                        try {
+                          const user = JSON.parse(userInfo);
+                          const element = document.getElementById('navbar-username');
+                          if (element && user) {
+                            element.textContent = user.full_name || user.username || 'User';
+                          }
+                        } catch (e) {
+                          console.log('Error parsing user info:', e);
+                        }
+                      }
+                    })();
+                  </script>
                   <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
                     <a class="dropdown-item"  href="javascript:;"> Profile</a>
                       <a class="dropdown-item"  href="javascript:;">

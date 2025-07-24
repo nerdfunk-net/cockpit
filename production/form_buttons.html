@@ -45,7 +45,15 @@
         color: #fff;
       }
     </style>
-</head>
+    <script src="js/auth.js"></script>
+    <script>
+      // Initialize auth manager when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        window.authManager = new AuthManager();
+        console.log('AuthManager initialized');
+      });
+    </script>
+  </head>
 
 <body class="nav-md">
   <div class="container body">
@@ -190,7 +198,9 @@
               <nav class="nav navbar-nav">
               <ul class="navbar-right">
                 <li class="nav-item dropdown open" style="padding-left: 15px;">
-                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false"><span id="navbar-username">Loading...</span>
+                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span id="navbar-username">Loading...</span>
+                  
                   </a>
                   <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
                     <a class="dropdown-item"  href="javascript:;"> Profile</a>

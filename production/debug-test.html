@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Gentelella | Debug Test</title>
     <script type="module" src="/src/main-minimal.js"></script>
+      <script src="js/auth.js"></script>
+    <script>
+      // Initialize auth manager when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        window.authManager = new AuthManager();
+        console.log('AuthManager initialized');
+      });
+    </script>
   </head>
   <body class="nav-md page-index">
     <div class="container body">

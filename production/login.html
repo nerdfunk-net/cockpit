@@ -8,10 +8,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="images/favicon.ico" type="image/ico" />
 
-    <title>Login - Gentelella</title>    
+    <title>Login - Cockpit</title>    
     
     <!-- Vite Entry Point - will bundle all styles -->
     <script type="module" src="/src/main-minimal.js"></script>
+    
+    <!-- Include authentication manager early -->
+    <script src="js/auth.js"></script>
+    <script>
+      // Initialize global auth manager
+      window.authManager = new AuthManager();
+    </script>
     
     <style>
       .login-bg {
@@ -133,7 +140,7 @@
               <div class="text-center mb-4">
                 <div class="d-flex align-items-center justify-content-center mb-3">
                   <i class="fas fa-paw brand-logo"></i>
-                  <h3 class="mb-0 fw-bold text-dark">Gentelella</h3>
+                  <h3 class="mb-0 fw-bold text-dark">Cockpit!</h3>
                 </div>
                 <p class="text-muted">Create your new account</p>
               </div>
@@ -291,7 +298,10 @@
               
               // Redirect after brief delay
               setTimeout(() => {
-                window.location.href = 'index.html';
+                // Check if there's a redirect URL in the query params, otherwise go to index
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectTo = urlParams.get('redirect') || 'index.html';
+                window.location.href = redirectTo;
               }, 1000);
             } else {
               throw new Error(result.error);
@@ -370,13 +380,6 @@
           }
         });
       });
-    </script>
-    
-    <!-- Include authentication manager -->
-    <script src="js/auth.js"></script>
-    <script>
-      // Initialize global auth manager
-      window.authManager = new AuthManager();
     </script>
   </body>
 </html>

@@ -160,8 +160,15 @@ async def health_check():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
+# Enhanced response model for login
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    expires_in: int
+    user: Dict[str, Any]
+
 # Authentication endpoints
-@app.post("/auth/login", response_model=Token)
+@app.post("/auth/login", response_model=LoginResponse)
 async def login(user_data: UserLogin):
     # For demo purposes, using simple hardcoded auth
     # In production, this should validate against a proper user database
@@ -170,7 +177,21 @@ async def login(user_data: UserLogin):
         access_token = create_access_token(
             data={"sub": user_data.username}, expires_delta=access_token_expires
         )
-        return {"access_token": access_token, "token_type": "bearer"}
+        
+        # Create user data object
+        user_info = {
+            "username": user_data.username,
+            "full_name": "Administrator",  # You can customize this
+            "email": "admin@cockpit.local",
+            "role": "admin"
+        }
+        
+        return {
+            "access_token": access_token, 
+            "token_type": "bearer",
+            "expires_in": settings.access_token_expire_minutes * 60,  # Convert to seconds
+            "user": user_info
+        }
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

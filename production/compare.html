@@ -23,8 +23,8 @@
         
         if (!token) {
           console.log('No token found, redirecting to login');
-          // Use absolute path to ensure proper redirect
-          window.location.href = '/login.html';
+          // Use correct path for Vite dev server on port 3000
+          window.location.href = '/production/login.html';
           return;
         }
         
@@ -37,6 +37,53 @@
       document.addEventListener('DOMContentLoaded', function() {
         window.authManager = new AuthManager();
         console.log('AuthManager initialized');
+        
+        // Force update display after a short delay to ensure DOM is ready
+        setTimeout(function() {
+          if (window.authManager && window.authManager.user) {
+            window.authManager.updateUserDisplay();
+            console.log('Force updated user display');
+          }
+        }, 500);
+        
+        // Listen for storage changes (when user logs in from another tab/window)
+        window.addEventListener('storage', function(e) {
+          if (e.key === 'user_info' || e.key === 'auth_token') {
+            console.log('Storage changed, refreshing auth manager');
+            // Reinitialize auth manager to pick up new user data
+            window.authManager = new AuthManager();
+            if (window.authManager.user) {
+              window.authManager.updateUserDisplay();
+              console.log('Updated display after storage change');
+            }
+          }
+        });
+        
+        // Check for recent login and refresh display
+        const checkRecentLogin = () => {
+          const userInfo = localStorage.getItem('user_info');
+          const token = localStorage.getItem('auth_token');
+          
+          if (userInfo && token && window.authManager) {
+            try {
+              const user = JSON.parse(userInfo);
+              if (user && (user.username !== 'Guest' && user.username !== '')) {
+                // Update auth manager with fresh data
+                window.authManager.user = user;
+                window.authManager.token = token;
+                window.authManager.updateUserDisplay();
+                console.log('Refreshed display with login data:', user.username);
+              }
+            } catch (e) {
+              console.log('Error parsing fresh user info:', e);
+            }
+          }
+        };
+        
+        // Check periodically for login updates
+        setTimeout(checkRecentLogin, 1000);
+        setTimeout(checkRecentLogin, 2000);
+        setTimeout(checkRecentLogin, 3000);
       });
     </script>
   </head>
@@ -62,6 +109,54 @@
                 <h2 id="sidebar-username">Loading...</h2>
               </div>
             </div>
+            <script>
+              // Immediate sidebar username update if user info is available
+              (function() {
+                console.log('=== SIDEBAR UPDATE DEBUG ===');
+                
+                const updateSidebar = () => {
+                  const userInfo = localStorage.getItem('user_info');
+                  console.log('User info for sidebar:', userInfo);
+                  
+                  const sidebarElement = document.getElementById('sidebar-username');
+                  const welcomeElement = document.getElementById('welcome-message');
+                  console.log('Sidebar element found:', !!sidebarElement);
+                  console.log('Welcome element found:', !!welcomeElement);
+                  
+                  if (userInfo && sidebarElement) {
+                    try {
+                      const user = JSON.parse(userInfo);
+                      console.log('Parsed user for sidebar:', user);
+                      sidebarElement.textContent = user.full_name || user.username || 'User';
+                      if (welcomeElement) {
+                        welcomeElement.textContent = `Welcome, ${user.username || 'User'}!`;
+                      }
+                      console.log('Updated sidebar successfully');
+                    } catch (e) {
+                      console.log('Error parsing user info for sidebar:', e);
+                      sidebarElement.textContent = 'Guest';
+                      if (welcomeElement) {
+                        welcomeElement.textContent = 'Welcome, Guest!';
+                      }
+                    }
+                  } else if (sidebarElement) {
+                    sidebarElement.textContent = 'Guest';
+                    if (welcomeElement) {
+                      welcomeElement.textContent = 'Welcome, Guest!';
+                    }
+                    console.log('No user info, set sidebar to Guest');
+                  }
+                };
+                
+                // Update immediately
+                updateSidebar();
+                
+                // Update again after short delays to catch login updates
+                setTimeout(updateSidebar, 1000);
+                setTimeout(updateSidebar, 2000);
+                setTimeout(updateSidebar, 3000);
+              })();
+            </script>
             <!-- /menu profile quick info -->
 
             <br />
@@ -121,9 +216,49 @@
               <nav class="nav navbar-nav">
               <ul class="navbar-right">
                 <li class="nav-item dropdown open" style="padding-left: 15px;">
-                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false"><span id="navbar-username">Loading...</span>
+                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <span id="navbar-username">Loading...</span>
                   </a>
+                  <script>
+                    // Immediate username update if user info is available
+                    (function() {
+                      console.log('=== USERNAME UPDATE DEBUG ===');
+                      
+                      const updateNavbar = () => {
+                        const userInfo = localStorage.getItem('user_info');
+                        const token = localStorage.getItem('auth_token');
+                        console.log('User info:', userInfo);
+                        console.log('Token:', token);
+                        
+                        const element = document.getElementById('navbar-username');
+                        console.log('Element found:', !!element);
+                        
+                        if (userInfo && element) {
+                          try {
+                            const user = JSON.parse(userInfo);
+                            console.log('Parsed user:', user);
+                            const displayName = user.full_name || user.username || 'User';
+                            element.textContent = displayName;
+                            console.log('Set username to:', displayName);
+                          } catch (e) {
+                            console.log('Error parsing user info:', e);
+                            element.textContent = 'Guest';
+                          }
+                        } else if (element) {
+                          element.textContent = 'Guest';
+                          console.log('No user info, set to Guest');
+                        }
+                      };
+                      
+                      // Update immediately
+                      updateNavbar();
+                      
+                      // Update again after short delays to catch login updates
+                      setTimeout(updateNavbar, 1000);
+                      setTimeout(updateNavbar, 2000);
+                      setTimeout(updateNavbar, 3000);
+                    })();
+                  </script>
                   <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
                     <a class="dropdown-item"  href="javascript:;"> Profile</a>
                       <a class="dropdown-item"  href="javascript:;">

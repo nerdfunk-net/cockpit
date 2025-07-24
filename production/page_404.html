@@ -43,6 +43,14 @@
         border-color: #86b7fe;
       }
     </style>
+      <script src="js/auth.js"></script>
+    <script>
+      // Initialize auth manager when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        window.authManager = new AuthManager();
+        console.log('AuthManager initialized');
+      });
+    </script>
   </head>
 
   <body class="error-bg">
