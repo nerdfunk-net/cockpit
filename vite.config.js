@@ -99,7 +99,11 @@ export default defineConfig({
         level2: 'production/level2.html',
         sidebar_test: 'production/sidebar_test.html',
         map: 'production/map.html',
-        xx: 'production/xx.html'
+        xx: 'production/xx.html',
+        
+        // New additions
+        compare: 'production/compare.html',
+        sync_devices: 'production/sync_devices.html'
       }
     },
     minify: 'terser',
@@ -115,7 +119,19 @@ export default defineConfig({
   },
   server: {
     open: '/',
-    port: 3000
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/auth': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   optimizeDeps: {
     include: [

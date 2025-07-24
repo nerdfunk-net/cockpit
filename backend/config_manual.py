@@ -44,7 +44,7 @@ class Settings:
     demo_password: str = os.getenv('DEMO_PASSWORD', 'admin')
     
     # CORS Configuration
-    cors_origins: list = get_env_list('CORS_ORIGINS', ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000'])
+    cors_origins: list = get_env_list('CORS_ORIGINS', ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'])
 
 # Global settings instance
 settings = Settings()

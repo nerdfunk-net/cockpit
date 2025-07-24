@@ -19,13 +19,12 @@
         <div class="col-md-3 left_col">
           <div class="left_col scroll-view">
             <div class="navbar nav_title" style="border: 0;">
-              <a href="index.html" class="site_title"><i class="fas fa-paw"></i> <span>Gentelella Alela!</span></a>
+              <a href="index.html" class="site_title"><i class="fas fa-paw"></i> <span>Cockpit!</span></a>
             </div>
             <div class="clearfix"></div>
             <!-- menu profile quick info -->
             <div class="profile clearfix">
               <div class="profile_pic">
-                <img src="images/img.jpg" alt="..." class="img-circle profile_img">
               </div>
               <div class="profile_info">
                 <span id="welcome-message">Welcome,</span>
@@ -39,13 +38,19 @@
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
-                  <li><a href="index2.html"><i class="fas fa-home"></i> Home</a></li>
+                  <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
                   <li><a><i class="fas fa-rocket"></i> Onboarding <span class="fas fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="#onboard-device">Onboard Device</a></li>
-                      <li><a href="sync_devices.html">Sync Devices</a></li>
+                      <li><a href="sync_devices.html" class="current-page">Sync Devices</a></li>
                     </ul>
-                  <li><a><i class="fas fa-cogs"></i> Configs</a></li>
+                  </li>
+                  <li><a><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="backup.html">Backup</a></li>
+                      <li><a href="compare.html">Compare</a></li>
+                    </ul>
+                  </li>
                 </ul>
               </div>
               <div class="menu_section">
@@ -81,8 +86,7 @@
               <nav class="nav navbar-nav">
               <ul class="navbar-right">
                 <li class="nav-item dropdown open" style="padding-left: 15px;">
-                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="images/img.jpg" alt="" id="user-avatar"><span id="navbar-username">Loading...</span>
+                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false"><span id="navbar-username">Loading...</span>
                   </a>
                   <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
                     <a class="dropdown-item"  href="javascript:;"> Profile</a>
@@ -101,7 +105,6 @@
                   <ul class="dropdown-menu list-unstyled msg_list" role="menu" aria-labelledby="navbarDropdown1">
                     <li class="nav-item">
                       <a class="dropdown-item">
-                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
                         <span>
                           <span>John Smith</span>
                           <span class="time">3 mins ago</span>

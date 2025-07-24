@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="images/favicon.ico" type="image/ico" />
+
+    <title>Config Compare - Cockpit</title>
+
+    <!-- Vite Entry Point - will bundle all styles -->
+    <script type="module" src="/src/main-minimal.js"></script>
+    <script>
+      // Robust authentication check
+      (function() {
+        console.log('Checking authentication...');
+        
+        // Check if we have a valid token
+        const token = localStorage.getItem('auth_token');
+        console.log('Token found:', !!token);
+        
+        if (!token) {
+          console.log('No token found, redirecting to login');
+          // Use absolute path to ensure proper redirect
+          window.location.href = '/login.html';
+          return;
+        }
+        
+        console.log('Token found, user authenticated');
+      })();
+    </script>
+    <script src="js/auth.js"></script>
+    <script>
+      // Initialize auth manager when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        window.authManager = new AuthManager();
+        console.log('AuthManager initialized');
+      });
+    </script>
+  </head>
+
+  <body class="nav-md">
+    <div class="container body">
+      <div class="main_container">
+        <div class="col-md-3 left_col">
+          <div class="left_col scroll-view">
+            <div class="navbar nav_title" style="border: 0;">
+              <a href="index.html" class="site_title"><i class="fas fa-paw"></i> <span>Cockpit!</span></a>
+            </div>
+
+            <div class="clearfix"></div>
+
+            <!-- menu profile quick info -->
+            <div class="profile clearfix">
+              <div class="profile_pic">
+                <!-- Profile image removed -->
+              </div>
+              <div class="profile_info">
+                <span id="welcome-message">Welcome,</span>
+                <h2 id="sidebar-username">Loading...</h2>
+              </div>
+            </div>
+            <!-- /menu profile quick info -->
+
+            <br />
+
+            <!-- sidebar menu -->
+            <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+              <div class="menu_section">
+                <h3>General</h3>
+                <ul class="nav side-menu">
+                  <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                  <li><a><i class="fas fa-rocket"></i> Onboarding <span class="fas fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="#onboard-device">Onboard Device</a></li>
+                      <li><a href="sync_devices.html">Sync Devices</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="backup.html">Backup</a></li>
+                      <li><a href="compare.html" class="current-page">Compare</a></li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+              <div class="menu_section">
+                <!-- Live On section removed as requested -->
+              </div>
+
+            </div>
+            <!-- /sidebar menu -->
+
+            <!-- /menu footer buttons -->
+            <div class="sidebar-footer hidden-small">
+              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Settings">
+                <span class="fas fa-cog" aria-hidden="true"></span>
+              </a>
+              <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
+                <span class="fas fa-expand" aria-hidden="true"></span>
+              </a>
+              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Lock">
+                <span class="fas fa-eye-slash" aria-hidden="true"></span>
+              </a>
+              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Logout" href="login.html">
+                <span class="fas fa-power-off" aria-hidden="true"></span>
+              </a>
+            </div>
+            <!-- /menu footer buttons -->
+          </div>
+        </div>
+
+        <!-- top navigation -->
+        <div class="top_nav">
+          <div class="nav_menu">
+              <div class="nav toggle">
+                <a id="menu_toggle"><i class="fas fa-bars"></i></a>
+              </div>
+              <nav class="nav navbar-nav">
+              <ul class="navbar-right">
+                <li class="nav-item dropdown open" style="padding-left: 15px;">
+                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false"><span id="navbar-username">Loading...</span>
+                    <span id="navbar-username">Loading...</span>
+                  </a>
+                  <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item"  href="javascript:;"> Profile</a>
+                      <a class="dropdown-item"  href="javascript:;">
+                        <span class="badge bg-red float-end">50%</span>
+                        <span>Settings</span>
+                      </a>
+                  <a class="dropdown-item"  href="javascript:;">Help</a>
+                    <a class="dropdown-item"  href="login.html"><i class="fas fa-sign-out-alt float-end"></i> Log Out</a>
+                  </div>
+                </li>
+
+                <li role="presentation" class="nav-item dropdown open">
+                  <a href="javascript:;" class="dropdown-toggle info-number" id="navbarDropdown1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-envelope"></i>
+                    <span class="badge bg-green">6</span>
+                  </a>
+                  <ul class="dropdown-menu list-unstyled msg_list" role="menu" aria-labelledby="navbarDropdown1">
+                    <li class="nav-item">
+                      <a class="dropdown-item">
+                        <span>
+                          <span>John Smith</span>
+                          <span class="time">3 mins ago</span>
+                        </span>
+                        <span class="message">
+                          Film festivals used to be do-or-die moments for movie makers. They were where...
+                        </span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="dropdown-item">
+                        <span>
+                          <span>John Smith</span>
+                          <span class="time">3 mins ago</span>
+                        </span>
+                        <span class="message">
+                          Film festivals used to be do-or-die moments for movie makers. They were where...
+                        </span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="dropdown-item">
+                        <span>
+                          <span>John Smith</span>
+                          <span class="time">3 mins ago</span>
+                        </span>
+                        <span class="message">
+                          Film festivals used to be do-or-die moments for movie makers. They were where...
+                        </span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="dropdown-item">
+                        <span>
+                          <span>John Smith</span>
+                          <span class="time">3 mins ago</span>
+                        </span>
+                        <span class="message">
+                          Film festivals used to be do-or-die moments for movie makers. They were where...
+                        </span>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <div class="text-center">
+                        <a class="dropdown-item">
+                          <strong>See All Alerts</strong>
+                          <i class="fas fa-angle-right"></i>
+                        </a>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+        <!-- /top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main" style="height: 100vh; overflow-y: auto;">
+          <!-- page title -->
+          <div class="">
+            <div class="page-title">
+              <div class="title_left">
+                <h3>Compare configurations</h3>
+              </div>
+
+              <div class="title_right">
+                <div class="col-md-5 col-sm-5 form-group float-end top_search">
+                  <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search for configurations...">
+                    <span class="input-group-btn">
+                      <button class="btn btn-secondary" type="button">Go!</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="clearfix"></div>
+
+          <!-- File Selection Section -->
+          <div class="row">
+            <div class="col-md-12 col-sm-12">
+              <div class="x_panel">
+                <div class="x_title">
+                  <h2>File Selection <small>Choose files to compare</small></h2>
+                  <ul class="nav navbar-right panel_toolbox">
+                    <li><a class="collapse-link"><i class="fas fa-chevron-down"></i></a></li>
+                  </ul>
+                  <div class="clearfix"></div>
+                </div>
+                <div class="x_content" style="display: none;">
+                  <div class="row">
+                    <!-- Left File Selection -->
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="leftFileSelect">Source File (Left)</label>
+                        <div class="input-group">
+                          <select class="form-control" id="leftFileSelect">
+                            <option value="">Select a file...</option>
+                          </select>
+                          <span class="input-group-text">
+                            <i class="fas fa-folder"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Right File Selection -->
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="rightFileSelect">Target File (Right)</label>
+                        <div class="input-group">
+                          <select class="form-control" id="rightFileSelect">
+                            <option value="">Select a file...</option>
+                          </select>
+                          <span class="input-group-text">
+                            <i class="fas fa-folder"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Compare Button and Controls -->
+                  <div class="row">
+                    <div class="col-md-12">
+                      <div class="text-center" style="margin-top: 15px;">
+                        <button class="btn btn-primary" id="compareBtn" disabled>
+                          <i class="fas fa-exchange-alt"></i> Compare Files
+                        </button>
+                        <button class="btn btn-secondary ms-2" id="refreshBtn">
+                          <i class="fas fa-sync"></i> Refresh Files
+                        </button>
+                        <button class="btn btn-success ms-2" id="exportBtn" disabled>
+                          <i class="fas fa-download"></i> Export Diff
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparison Results Section -->
+          <div class="row" id="comparisonSection" style="display: none;">
+            <div class="col-md-12 col-sm-12">
+              <div class="x_panel">
+                <div class="x_title">
+                  <h2>Comparison Results <small id="comparisonStats">Comparing files...</small></h2>
+                  <ul class="nav navbar-right panel_toolbox" style="display: flex; align-items: center; gap: 8px;">
+                    <li>
+                      <div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-outline-secondary" id="prevDiffBtn" disabled>
+                          <i class="fas fa-chevron-up"></i> Previous
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="nextDiffBtn" disabled>
+                          <i class="fas fa-chevron-down"></i> Next
+                        </button>
+                      </div>
+                    </li>
+                    <li>
+                      <button class="btn btn-sm btn-outline-secondary" id="toggleUnchangedBtn">
+                        <i class="fas fa-eye-slash"></i> Hide Unchanged
+                      </button>
+                    </li>
+                    <li>
+                      <div class="btn-group" role="group" style="display: flex; align-items: center;">
+                        <label class="btn btn-sm btn-outline-secondary" style="font-size: 11px; padding: 6px 8px; margin: 0; border-right: none; display: flex; align-items: center; height: 31px;">
+                          <i class="fas fa-text-height me-1"></i> Size:
+                        </label>
+                        <select class="form-select btn-sm" id="fontSizeSelect" style="font-size: 11px; padding: 6px 8px; height: 31px; border-left: 1px solid #dee2e6;">
+                          <option value="10">XS</option>
+                          <option value="11">S</option>
+                          <option value="12" selected>M</option>
+                          <option value="13">L</option>
+                          <option value="14">XL</option>
+                        </select>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="collapse-link"><i class="fas fa-chevron-up"></i></a>
+                    </li>
+                  </ul>
+                  <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                  <!-- Diff Display Container -->
+                  <div class="diff-container">
+                    <div class="diff-header">
+                      <div class="diff-column diff-left">
+                        <h5 id="leftFileName">Source File</h5>
+                      </div>
+                      <div class="diff-column diff-right">
+                        <h5 id="rightFileName">Target File</h5>
+                      </div>
+                    </div>
+                    
+                    <div class="diff-content" id="diffContent">
+                      <div class="diff-loading text-center" style="padding: 50px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-3">Select files to start comparison...</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom CSS for Diff Display -->
+          <style>
+            .diff-container {
+              border: 1px solid #e6e9ed;
+              border-radius: 5px;
+              overflow: hidden;
+              height: calc(100vh - 80px);
+            }
+            
+            .diff-header {
+              display: flex;
+              background: #f8f9fa;
+              border-bottom: 1px solid #e6e9ed;
+            }
+            
+            .diff-column {
+              flex: 1;
+              padding: 4px 10px;
+              border-right: 1px solid #e6e9ed;
+            }
+            
+            .diff-column:last-child {
+              border-right: none;
+            }
+            
+            .diff-column h5 {
+              margin: 0;
+              font-size: 13px;
+              font-weight: 600;
+              color: #495057;
+            }
+            
+            .diff-content {
+              height: calc(100vh - 120px);
+              max-height: none;
+              min-height: calc(100vh - 120px);
+              overflow-y: auto;
+              position: relative;
+            }
+            
+            .diff-row {
+              display: flex;
+              font-family: 'Courier New', monospace;
+              font-size: var(--diff-font-size, 12px);
+              line-height: var(--diff-line-height, 1.1);
+              border-bottom: 1px solid #f1f3f4;
+            }
+            
+            .diff-line {
+              flex: 1;
+              padding: 1px 6px;
+              white-space: pre;
+              border-right: 1px solid #f1f3f4;
+              position: relative;
+            }
+            
+            .diff-line:last-child {
+              border-right: none;
+            }
+            
+            .diff-line-number {
+              display: inline-block;
+              width: 40px;
+              color: #6c757d;
+              text-align: right;
+              margin-right: 6px;
+              user-select: none;
+              font-size: calc(var(--diff-font-size, 12px) - 1px);
+            }
+            
+            .diff-line-content {
+              display: inline;
+            }
+            
+            /* Diff Colors */
+            .diff-added {
+              background-color: #d4edda;
+              border-left: 3px solid #28a745;
+            }
+            
+            .diff-removed {
+              background-color: #f8d7da;
+              border-left: 3px solid #dc3545;
+            }
+            
+            .diff-modified {
+              background-color: #e2e3e5;
+              border-left: 3px solid #6c757d;
+            }
+            
+            .diff-unchanged {
+              background-color: #ffffff;
+            }
+            
+            .diff-char-added {
+              background-color: #28a745;
+              color: white;
+              padding: 1px 2px;
+              border-radius: 2px;
+            }
+            
+            .diff-char-removed {
+              background-color: #dc3545;
+              color: white;
+              padding: 1px 2px;
+              border-radius: 2px;
+            }
+            
+            .diff-hidden {
+              display: none;
+            }
+            
+            .diff-expand {
+              background-color: #f8f9fa;
+              text-align: center;
+              cursor: pointer;
+              color: #007bff;
+              font-style: italic;
+              padding: 8px;
+            }
+            
+            .diff-expand:hover {
+              background-color: #e9ecef;
+            }
+            
+            /* Sync Scrolling */
+            .diff-content::-webkit-scrollbar {
+              width: 8px;
+            }
+            
+            .diff-content::-webkit-scrollbar-track {
+              background: #f1f1f1;
+            }
+            
+            .diff-content::-webkit-scrollbar-thumb {
+              background: #c1c1c1;
+              border-radius: 4px;
+            }
+            
+            .diff-content::-webkit-scrollbar-thumb:hover {
+              background: #a8a8a8;
+            }
+          </style>
+
+          <!-- JavaScript for Compare Functionality -->
+          <script>
+            class ConfigCompare {
+              constructor() {
+                this.files = [];
+                this.currentDiffs = [];
+                this.currentDiffIndex = 0;
+                this.hideUnchanged = false;
+                this.init();
+              }
+
+              init() {
+                // Initialize event listeners
+                document.getElementById('refreshBtn').addEventListener('click', () => this.loadFiles());
+                document.getElementById('compareBtn').addEventListener('click', () => this.compareFiles());
+                document.getElementById('exportBtn').addEventListener('click', () => this.exportDiff());
+                document.getElementById('prevDiffBtn').addEventListener('click', () => this.navigateDiff(-1));
+                document.getElementById('nextDiffBtn').addEventListener('click', () => this.navigateDiff(1));
+                document.getElementById('toggleUnchangedBtn').addEventListener('click', () => this.toggleUnchanged());
+                document.getElementById('fontSizeSelect').addEventListener('change', (e) => this.changeFontSize(e.target.value));
+                
+                // File selection change handlers
+                document.getElementById('leftFileSelect').addEventListener('change', () => this.updateCompareButton());
+                document.getElementById('rightFileSelect').addEventListener('change', () => this.updateCompareButton());
+
+                // Auto-expand file selection on load
+                setTimeout(() => {
+                  const collapseLink = document.querySelector('.collapse-link');
+                  if (collapseLink) {
+                    collapseLink.click();
+                  }
+                }, 100);
+
+                // Load files on page load
+                this.loadFiles();
+                
+                // Load saved font size preference
+                this.loadFontSizePreference();
+              }
+
+              loadFontSizePreference() {
+                const savedSize = localStorage.getItem('diff_font_size') || '12';
+                document.getElementById('fontSizeSelect').value = savedSize;
+                this.changeFontSize(savedSize);
+              }
+
+              changeFontSize(size) {
+                const fontSize = parseInt(size);
+                const lineHeight = fontSize <= 11 ? 1.0 : (fontSize <= 12 ? 1.1 : 1.2);
+                
+                // Update CSS custom properties
+                document.documentElement.style.setProperty('--diff-font-size', fontSize + 'px');
+                document.documentElement.style.setProperty('--diff-line-height', lineHeight);
+                
+                // Save preference
+                localStorage.setItem('diff_font_size', size);
+                
+                console.log(`Font size changed to ${fontSize}px with line-height ${lineHeight}`);
+              }
+
+              async loadFiles() {
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  if (!token) {
+                    this.showError('Please log in to access files');
+                    setTimeout(() => {
+                      window.location.href = '/login.html';
+                    }, 2000);
+                    return;
+                  }
+                  
+                  const response = await fetch('/api/files/list', {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+                  const data = await response.json();
+                  
+                  if (response.status === 401) {
+                    localStorage.removeItem('auth_token');
+                    this.showError('Session expired. Please log in again.');
+                    setTimeout(() => {
+                      window.location.href = '/login.html';
+                    }, 2000);
+                    return;
+                  }
+                  
+                  if (response.ok) {
+                    this.files = data.files;
+                    this.populateFileSelects();
+                    console.log('Files loaded:', this.files.length);
+                  } else {
+                    this.showError('Failed to load files: ' + (data.detail || 'Unknown error'));
+                  }
+                } catch (error) {
+                  this.showError('Error loading files: ' + error.message);
+                }
+              }
+
+              populateFileSelects() {
+                const leftSelect = document.getElementById('leftFileSelect');
+                const rightSelect = document.getElementById('rightFileSelect');
+                
+                // Clear existing options
+                leftSelect.innerHTML = '<option value="">Select a file...</option>';
+                rightSelect.innerHTML = '<option value="">Select a file...</option>';
+                
+                // Add file options
+                this.files.forEach(file => {
+                  const option1 = new Option(file.filename, file.path);
+                  const option2 = new Option(file.filename, file.path);
+                  leftSelect.add(option1);
+                  rightSelect.add(option2);
+                });
+              }
+
+              updateCompareButton() {
+                const leftFile = document.getElementById('leftFileSelect').value;
+                const rightFile = document.getElementById('rightFileSelect').value;
+                const compareBtn = document.getElementById('compareBtn');
+                
+                compareBtn.disabled = !leftFile || !rightFile || leftFile === rightFile;
+              }
+
+              async compareFiles() {
+                const leftFile = document.getElementById('leftFileSelect').value;
+                const rightFile = document.getElementById('rightFileSelect').value;
+                
+                if (!leftFile || !rightFile) {
+                  this.showError('Please select both files to compare');
+                  return;
+                }
+
+                // Show loading state
+                this.showLoading();
+                
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch('/api/files/compare', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      left_file: leftFile,
+                      right_file: rightFile
+                    })
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (response.ok) {
+                    this.displayComparison(data);
+                  } else {
+                    this.showError('Comparison failed: ' + (data.detail || 'Unknown error'));
+                  }
+                } catch (error) {
+                  this.showError('Error comparing files: ' + error.message);
+                }
+              }
+
+              displayComparison(comparison) {
+                // Update file names
+                document.getElementById('leftFileName').textContent = comparison.left_file;
+                document.getElementById('rightFileName').textContent = comparison.right_file;
+                
+                // Calculate stats from the data
+                let additions = 0, deletions = 0, modifications = 0;
+                comparison.left_lines.forEach(line => {
+                  if (line.type === 'insert') additions++;
+                  else if (line.type === 'delete') deletions++;
+                  else if (line.type === 'replace') modifications++;
+                });
+                
+                // Update stats
+                const stats = `${additions} additions, ${deletions} deletions, ${modifications} modifications`;
+                document.getElementById('comparisonStats').textContent = stats;
+                
+                // Render diff
+                this.renderDiff(comparison);
+                
+                // Show comparison section
+                document.getElementById('comparisonSection').style.display = 'block';
+                
+                // Enable export button
+                document.getElementById('exportBtn').disabled = false;
+                
+                // Setup navigation
+                this.setupDiffNavigation(comparison);
+              }
+
+              renderDiff(diffData) {
+                const container = document.getElementById('diffContent');
+                container.innerHTML = '';
+                
+                this.currentDiffs = [];
+                
+                // Render side-by-side comparison
+                const maxLines = Math.max(diffData.left_lines.length, diffData.right_lines.length);
+                
+                for (let i = 0; i < maxLines; i++) {
+                  const leftLine = diffData.left_lines[i] || { line_number: null, content: '', type: 'empty' };
+                  const rightLine = diffData.right_lines[i] || { line_number: null, content: '', type: 'empty' };
+                  
+                  const row = document.createElement('div');
+                  row.className = 'diff-row';
+                  
+                  // Left side
+                  const leftDiv = document.createElement('div');
+                  leftDiv.className = `diff-line ${this.getDiffClass(leftLine.type)}`;
+                  leftDiv.innerHTML = this.formatLine(leftLine.line_number, leftLine.content, leftLine.type, 'left');
+                  
+                  // Right side
+                  const rightDiv = document.createElement('div');
+                  rightDiv.className = `diff-line ${this.getDiffClass(rightLine.type)}`;
+                  rightDiv.innerHTML = this.formatLine(rightLine.line_number, rightLine.content, rightLine.type, 'right');
+                  
+                  row.appendChild(leftDiv);
+                  row.appendChild(rightDiv);
+                  container.appendChild(row);
+                  
+                  // Track diff locations for navigation
+                  if (leftLine.type !== 'equal' && leftLine.type !== 'empty') {
+                    this.currentDiffs.push({
+                      element: row,
+                      type: leftLine.type,
+                      index: this.currentDiffs.length
+                    });
+                  }
+                }
+                
+                // Setup sync scrolling
+                this.setupSyncScrolling();
+                
+                // Update navigation buttons
+                this.updateNavigationButtons();
+              }
+
+              getDiffClass(type) {
+                switch (type) {
+                  case 'insert': return 'diff-added';
+                  case 'delete': return 'diff-removed';
+                  case 'replace': return 'diff-modified';
+                  case 'equal': return 'diff-unchanged';
+                  default: return 'diff-unchanged';
+                }
+              }
+
+              formatLine(lineNumber, content, type, side) {
+                const lineNumSpan = `<span class="diff-line-number">${lineNumber || ''}</span>`;
+                const contentSpan = `<span class="diff-line-content">${this.escapeHtml(content || '')}</span>`;
+                return lineNumSpan + contentSpan;
+              }
+
+              escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+              }
+
+              setupSyncScrolling() {
+                const container = document.getElementById('diffContent');
+                // Sync scrolling is handled by CSS flexbox layout
+              }
+
+              setupDiffNavigation(diffData) {
+                this.currentDiffIndex = 0;
+                this.updateNavigationButtons();
+              }
+
+              navigateDiff(direction) {
+                if (this.currentDiffs.length === 0) return;
+                
+                this.currentDiffIndex += direction;
+                
+                if (this.currentDiffIndex < 0) {
+                  this.currentDiffIndex = this.currentDiffs.length - 1;
+                } else if (this.currentDiffIndex >= this.currentDiffs.length) {
+                  this.currentDiffIndex = 0;
+                }
+                
+                // Scroll to current diff
+                const diff = this.currentDiffs[this.currentDiffIndex];
+                diff.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Highlight current diff temporarily
+                diff.element.style.outline = '2px solid #007bff';
+                setTimeout(() => {
+                  diff.element.style.outline = '';
+                }, 2000);
+                
+                this.updateNavigationButtons();
+              }
+
+              updateNavigationButtons() {
+                const prevBtn = document.getElementById('prevDiffBtn');
+                const nextBtn = document.getElementById('nextDiffBtn');
+                
+                const hasDeltas = this.currentDiffs.length > 0;
+                prevBtn.disabled = !hasDeltas;
+                nextBtn.disabled = !hasDeltas;
+                
+                if (hasDeltas) {
+                  prevBtn.title = `Previous difference (${this.currentDiffIndex + 1}/${this.currentDiffs.length})`;
+                  nextBtn.title = `Next difference (${this.currentDiffIndex + 1}/${this.currentDiffs.length})`;
+                }
+              }
+
+              toggleUnchanged() {
+                this.hideUnchanged = !this.hideUnchanged;
+                const toggleBtn = document.getElementById('toggleUnchangedBtn');
+                const unchangedLines = document.querySelectorAll('.diff-unchanged');
+                
+                if (this.hideUnchanged) {
+                  unchangedLines.forEach(line => line.parentElement.classList.add('diff-hidden'));
+                  toggleBtn.innerHTML = '<i class="fas fa-eye"></i> Show Unchanged';
+                } else {
+                  unchangedLines.forEach(line => line.parentElement.classList.remove('diff-hidden'));
+                  toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> Hide Unchanged';
+                }
+              }
+
+              async exportDiff() {
+                try {
+                  const leftFile = document.getElementById('leftFileSelect').value;
+                  const rightFile = document.getElementById('rightFileSelect').value;
+                  const token = localStorage.getItem('auth_token');
+                  
+                  const response = await fetch('/api/files/export-diff', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      left_file: leftFile,
+                      right_file: rightFile,
+                      format: 'unified'
+                    })
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (response.ok) {
+                    // Create and download the file
+                    const blob = new Blob([data.content], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = data.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                  } else {
+                    this.showError('Export failed: ' + (data.detail || 'Unknown error'));
+                  }
+                } catch (error) {
+                  this.showError('Export failed: ' + error.message);
+                }
+              }
+
+              showLoading() {
+                const container = document.getElementById('diffContent');
+                container.innerHTML = `
+                  <div class="diff-loading text-center" style="padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-3">Comparing files...</p>
+                  </div>
+                `;
+                document.getElementById('comparisonSection').style.display = 'block';
+              }
+
+              showError(message) {
+                const container = document.getElementById('diffContent');
+                container.innerHTML = `
+                  <div class="text-center" style="padding: 50px;">
+                    <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                    <p class="mt-3 text-danger">${message}</p>
+                  </div>
+                `;
+                document.getElementById('comparisonSection').style.display = 'block';
+              }
+            }
+
+            // Initialize when DOM is loaded
+            document.addEventListener('DOMContentLoaded', function() {
+              new ConfigCompare();
+            });
+          </script>
+
+        </div>
+        <!-- /page content -->
+
+        <!-- footer content -->
+        <footer>
+          <div class="float-end">
+            Cockpit - Network Management Dashboard
+          </div>
+          <div class="clearfix"></div>
+        </footer>
+        <!-- /footer content -->
+      </div>
+    </div>
+  </body>
+</html>

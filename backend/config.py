@@ -69,11 +69,19 @@ class Settings(BaseSettings):
     )
     
     # CORS Configuration
-    cors_origins: str = Field(
+    cors_origins_str: str = Field(
         default="http://localhost:3000,http://localhost:5173", 
         env="CORS_ORIGINS",
         description="Allowed CORS origins (comma-separated)"
     )
+    
+    @property
+    def cors_origins(self) -> List[str]:
+        """Parse CORS origins from comma-separated string."""
+        if isinstance(self.cors_origins_str, str):
+            origins = [origin.strip() for origin in self.cors_origins_str.split(',') if origin.strip()]
+            return origins if origins else ["http://localhost:3000"]
+        return ["http://localhost:3000"]
     cors_allow_credentials: bool = Field(
         default=True, 
         env="CORS_ALLOW_CREDENTIALS",
@@ -110,15 +118,6 @@ class Settings(BaseSettings):
     )
     
     
-    @field_validator('cors_origins', mode='before')
-    @classmethod  
-    def parse_cors_origins(cls, v):
-        """Parse CORS origins from comma-separated string."""
-        if isinstance(v, str):
-            origins = [origin.strip() for origin in v.split(',') if origin.strip()]
-            return origins if origins else ["http://localhost:3000"]
-        return v if v else ["http://localhost:3000"]
-    
     @field_validator('cors_allow_methods', mode='before')
     @classmethod
     def parse_cors_methods(cls, v):
@@ -145,13 +144,13 @@ class Settings(BaseSettings):
     @classmethod
     def validate_secret_key(cls, v):
         """Ensure secret key is not the default in production."""
-        if not os.getenv('DEBUG', '').lower() == 'true':
-            if v == "your-secret-key-change-in-production":
-                # Only warn in Docker, don't fail
-                if os.getenv('DOCKER_CONTAINER'):
-                    print("WARNING: Using default secret key in production!")
-                else:
-                    raise ValueError("Secret key must be changed for production use")
+        # Allow default secret key in development mode
+        if os.getenv('DEBUG', '').lower() == 'true':
+            return v
+        # For production, generate a secure key if default is used
+        if v == "your-secret-key-change-in-production":
+            import secrets
+            return secrets.token_urlsafe(32)
         return v
     
     @field_validator('nautobot_token')
@@ -165,7 +164,8 @@ class Settings(BaseSettings):
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
-        "extra": "ignore"
+        "extra": "ignore",
+        "env_nested_delimiter": "__"
     }
 
 
