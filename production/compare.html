@@ -365,40 +365,130 @@
             <div class="col-md-12 col-sm-12">
               <div class="x_panel">
                 <div class="x_title">
-                  <h2>File Selection <small>Choose files to compare</small></h2>
+                  <h2>Configuration Comparison <small>Choose files or Git commits to compare</small></h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li><a class="collapse-link"><i class="fas fa-chevron-down"></i></a></li>
                   </ul>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content" style="display: none;">
-                  <div class="row">
-                    <!-- Left File Selection -->
-                    <div class="col-md-6">
+                  
+                  <!-- Comparison Mode Selection -->
+                  <div class="row mb-3">
+                    <div class="col-md-12">
                       <div class="form-group">
-                        <label for="leftFileSelect">Source File (Left)</label>
-                        <div class="input-group">
-                          <select class="form-control" id="leftFileSelect">
-                            <option value="">Select a file...</option>
-                          </select>
-                          <span class="input-group-text">
-                            <i class="fas fa-folder"></i>
-                          </span>
+                        <label class="control-label">Comparison Mode</label>
+                        <div class="btn-group w-100" role="group" id="comparisonModeToggle">
+                          <input type="radio" class="btn-check" name="comparisonMode" id="fileMode" value="files" checked>
+                          <label class="btn btn-outline-primary" for="fileMode">
+                            <i class="fas fa-folder"></i> Files
+                          </label>
+                          <input type="radio" class="btn-check" name="comparisonMode" id="gitMode" value="git">
+                          <label class="btn btn-outline-primary" for="gitMode">
+                            <i class="fas fa-code-branch"></i> Git Commits
+                          </label>
                         </div>
                       </div>
                     </div>
-                    
-                    <!-- Right File Selection -->
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="rightFileSelect">Target File (Right)</label>
-                        <div class="input-group">
-                          <select class="form-control" id="rightFileSelect">
-                            <option value="">Select a file...</option>
-                          </select>
-                          <span class="input-group-text">
-                            <i class="fas fa-folder"></i>
-                          </span>
+                  </div>
+
+                  <!-- File Comparison Mode -->
+                  <div id="fileComparisonMode">
+                    <div class="row">
+                      <!-- Left File Selection -->
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="leftFileSelect">Source File (Left)</label>
+                          <div class="input-group">
+                            <select class="form-control" id="leftFileSelect">
+                              <option value="">Select a file...</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-folder"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Right File Selection -->
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label for="rightFileSelect">Target File (Right)</label>
+                          <div class="input-group">
+                            <select class="form-control" id="rightFileSelect">
+                              <option value="">Select a file...</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-folder"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Git Comparison Mode -->
+                  <div id="gitComparisonMode" style="display: none;">
+                    <div class="row">
+                      <!-- Git Branch Selection -->
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="gitBranchSelect">Branch</label>
+                          <div class="input-group">
+                            <select class="form-control" id="gitBranchSelect">
+                              <option value="">Select branch...</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-code-branch"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Left Commit Selection -->
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="leftCommitSelect">Source Commit (Left)</label>
+                          <div class="input-group">
+                            <select class="form-control" id="leftCommitSelect">
+                              <option value="">Select commit...</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-code-commit"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Right Commit Selection -->
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="rightCommitSelect">Target Commit (Right)</label>
+                          <div class="input-group">
+                            <select class="form-control" id="rightCommitSelect">
+                              <option value="">Select commit...</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-code-commit"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- File Selection within Git Mode -->
+                    <div class="row">
+                      <div class="col-md-12">
+                        <div class="form-group">
+                          <label for="gitFileSelect">File to Compare (from selected commits)</label>
+                          <div class="input-group">
+                            <select class="form-control" id="gitFileSelect">
+                              <option value="">Select a file to compare between commits...</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-file-code"></i>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -409,13 +499,16 @@
                     <div class="col-md-12">
                       <div class="text-center" style="margin-top: 15px;">
                         <button class="btn btn-primary" id="compareBtn" disabled>
-                          <i class="fas fa-exchange-alt"></i> Compare Files
+                          <i class="fas fa-exchange-alt"></i> Compare
                         </button>
                         <button class="btn btn-secondary ms-2" id="refreshBtn">
-                          <i class="fas fa-sync"></i> Refresh Files
+                          <i class="fas fa-sync"></i> Refresh
                         </button>
                         <button class="btn btn-success ms-2" id="exportBtn" disabled>
                           <i class="fas fa-download"></i> Export Diff
+                        </button>
+                        <button class="btn btn-info ms-2" id="gitStatusBtn" style="display: none;">
+                          <i class="fas fa-info-circle"></i> Git Status
                         </button>
                       </div>
                     </div>
@@ -643,22 +736,52 @@
                 this.currentDiffs = [];
                 this.currentDiffIndex = 0;
                 this.hideUnchanged = false;
+                this.gitData = {
+                  branches: [],
+                  commits: [],
+                  currentBranch: null,
+                  status: null
+                };
                 this.init();
               }
 
               init() {
                 // Initialize event listeners
-                document.getElementById('refreshBtn').addEventListener('click', () => this.loadFiles());
-                document.getElementById('compareBtn').addEventListener('click', () => this.compareFiles());
+                document.getElementById('refreshBtn').addEventListener('click', () => this.handleRefresh());
+                document.getElementById('compareBtn').addEventListener('click', () => this.handleCompare());
                 document.getElementById('exportBtn').addEventListener('click', () => this.exportDiff());
                 document.getElementById('prevDiffBtn').addEventListener('click', () => this.navigateDiff(-1));
                 document.getElementById('nextDiffBtn').addEventListener('click', () => this.navigateDiff(1));
                 document.getElementById('toggleUnchangedBtn').addEventListener('click', () => this.toggleUnchanged());
                 document.getElementById('fontSizeSelect').addEventListener('change', (e) => this.changeFontSize(e.target.value));
+                document.getElementById('gitStatusBtn').addEventListener('click', () => this.showGitStatus());
                 
                 // File selection change handlers
                 document.getElementById('leftFileSelect').addEventListener('change', () => this.updateCompareButton());
                 document.getElementById('rightFileSelect').addEventListener('change', () => this.updateCompareButton());
+
+                // Git selection change handlers
+                document.getElementById('leftCommitSelect').addEventListener('change', () => {
+                  this.populateGitFiles();
+                  this.updateCompareButton();
+                });
+                document.getElementById('rightCommitSelect').addEventListener('change', () => {
+                  this.populateGitFiles();
+                  this.updateCompareButton();
+                });
+                document.getElementById('gitFileSelect').addEventListener('change', () => this.updateCompareButton());
+                
+                document.getElementById('gitBranchSelect').addEventListener('change', async (e) => {
+                  const selectedBranch = e.target.value;
+                  if (selectedBranch) {
+                    await this.loadCommitsForBranch(selectedBranch);
+                  }
+                });
+
+                // Comparison mode toggle
+                document.querySelectorAll('input[name="comparisonMode"]').forEach(radio => {
+                  radio.addEventListener('change', (e) => this.handleModeChange(e.target.value));
+                });
 
                 // Auto-expand file selection on load
                 setTimeout(() => {
@@ -668,11 +791,187 @@
                   }
                 }, 100);
 
-                // Load files on page load
+                // Load files and Git data on page load
                 this.loadFiles();
+                this.loadGitStatus();
                 
                 // Load saved font size preference
                 this.loadFontSizePreference();
+              }
+
+              handleModeChange(mode) {
+                const fileMode = document.getElementById('fileComparisonMode');
+                const gitMode = document.getElementById('gitComparisonMode');
+                const gitStatusBtn = document.getElementById('gitStatusBtn');
+
+                if (mode === 'files') {
+                  fileMode.style.display = 'block';
+                  gitMode.style.display = 'none';
+                  gitStatusBtn.style.display = 'none';
+                } else if (mode === 'git') {
+                  fileMode.style.display = 'none';
+                  gitMode.style.display = 'block';
+                  gitStatusBtn.style.display = 'inline-block';
+                }
+                this.updateCompareButton();
+              }
+
+              handleRefresh() {
+                const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
+                if (mode === 'files') {
+                  this.loadFiles();
+                } else {
+                  this.loadGitStatus();
+                }
+              }
+
+              handleCompare() {
+                const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
+                if (mode === 'files') {
+                  this.compareFiles();
+                } else {
+                  this.compareGitCommits();
+                }
+              }
+
+              async loadGitStatus() {
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  if (!token) return;
+                  
+                  const response = await fetch('http://localhost:8000/api/git/status', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  
+                  if (response.ok) {
+                    this.gitData.status = await response.json();
+                    this.gitData.currentBranch = this.gitData.status.current_branch;
+                    this.gitData.commits = this.gitData.status.commits || [];
+                    
+                    await this.populateGitBranches();
+                    this.populateGitCommits();
+                    
+                    console.log('Git status loaded:', this.gitData.status);
+                  } else {
+                    // Git not available, disable Git mode
+                    const gitModeRadio = document.getElementById('gitMode');
+                    gitModeRadio.disabled = true;
+                    gitModeRadio.parentElement.classList.add('disabled');
+                  }
+                } catch (error) {
+                  console.error('Error loading Git status:', error);
+                }
+              }
+
+              async populateGitBranches() {
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch('http://localhost:8000/api/git/branches', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+
+                  if (response.ok) {
+                    const branchData = await response.json();
+                    this.gitData.branches = branchData.branches;
+                    this.gitData.currentBranch = branchData.current_branch;
+                    
+                    const branchSelect = document.getElementById('gitBranchSelect');
+                    
+                    branchSelect.innerHTML = '<option value="">Select branch...</option>';
+                    this.gitData.branches.forEach(branch => {
+                      const isCurrentBranch = branch.is_current;
+                      const option = new Option(
+                        `${branch.name}${isCurrentBranch ? ' (current)' : ''}`, 
+                        branch.name, 
+                        isCurrentBranch, 
+                        isCurrentBranch
+                      );
+                      branchSelect.add(option);
+                    });
+                  }
+                } catch (error) {
+                  console.error('Error loading Git branches:', error);
+                }
+              }
+
+              populateGitCommits() {
+                const leftSelect = document.getElementById('leftCommitSelect');
+                const rightSelect = document.getElementById('rightCommitSelect');
+                
+                leftSelect.innerHTML = '<option value="">Select commit...</option>';
+                rightSelect.innerHTML = '<option value="">Select commit...</option>';
+
+                if (this.gitData.commits && this.gitData.commits.length > 0) {
+                  this.gitData.commits.forEach(commit => {
+                    const shortHash = commit.hash.substring(0, 8);
+                    const shortMessage = commit.message.length > 50 
+                      ? commit.message.substring(0, 50) + '...' 
+                      : commit.message;
+                    const optionText = `${shortHash} - ${shortMessage}`;
+                    
+                    const option1 = new Option(optionText, commit.hash);
+                    const option2 = new Option(optionText, commit.hash);
+                    option1.title = commit.message;
+                    option2.title = commit.message;
+                    
+                    leftSelect.add(option1);
+                    rightSelect.add(option2);
+                  });
+
+                  // Auto-select first two commits for comparison
+                  if (this.gitData.commits.length >= 2) {
+                    leftSelect.value = this.gitData.commits[1].hash; // Older commit
+                    rightSelect.value = this.gitData.commits[0].hash; // Newer commit
+                  }
+                }
+
+                this.populateGitFiles();
+                this.updateCompareButton();
+              }
+
+              async loadCommitsForBranch(branch) {
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch(`http://localhost:8000/api/git/commits/${branch}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+
+                  if (response.ok) {
+                    this.gitData.commits = await response.json();
+                    this.populateGitCommits();
+                  }
+                } catch (error) {
+                  console.error('Error loading commits for branch:', error);
+                }
+              }
+
+              async populateGitFiles() {
+                try {
+                  const leftCommit = document.getElementById('leftCommitSelect').value;
+                  const rightCommit = document.getElementById('rightCommitSelect').value;
+                  const gitFileSelect = document.getElementById('gitFileSelect');
+                  
+                  if (!leftCommit && !rightCommit) return;
+
+                  const commitHash = rightCommit || leftCommit || 'HEAD';
+                  const token = localStorage.getItem('auth_token');
+                  
+                  const response = await fetch(`http://localhost:8000/api/git/files/${commitHash}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+
+                  if (response.ok) {
+                    const files = await response.json();
+                    gitFileSelect.innerHTML = '<option value="">Select a file to compare between commits...</option>';
+                    
+                    files.forEach(file => {
+                      const option = new Option(file, file);
+                      gitFileSelect.add(option);
+                    });
+                  }
+                } catch (error) {
+                  console.error('Error loading Git files:', error);
+                }
               }
 
               loadFontSizePreference() {
@@ -706,7 +1005,7 @@
                     return;
                   }
                   
-                  const response = await fetch('/api/files/list', {
+                  const response = await fetch('http://localhost:8000/api/files/list', {
                     headers: {
                       'Authorization': `Bearer ${token}`
                     }
@@ -723,7 +1022,7 @@
                   }
                   
                   if (response.ok) {
-                    this.files = data.files;
+                    this.files = data.files || data;
                     this.populateFileSelects();
                     console.log('Files loaded:', this.files.length);
                   } else {
@@ -732,6 +1031,189 @@
                 } catch (error) {
                   this.showError('Error loading files: ' + error.message);
                 }
+              }
+
+              populateFileSelects() {
+                const leftSelect = document.getElementById('leftFileSelect');
+                const rightSelect = document.getElementById('rightFileSelect');
+                
+                // Clear existing options
+                leftSelect.innerHTML = '<option value="">Select a file...</option>';
+                rightSelect.innerHTML = '<option value="">Select a file...</option>';
+                
+                // Add file options - handle both old and new API response formats
+                this.files.forEach(file => {
+                  const filename = file.filename || file;
+                  const filepath = file.path || file;
+                  const option1 = new Option(filename, filepath);
+                  const option2 = new Option(filename, filepath);
+                  leftSelect.add(option1);
+                  rightSelect.add(option2);
+                });
+              }
+
+              async compareFiles() {
+                const leftFile = document.getElementById('leftFileSelect').value;
+                const rightFile = document.getElementById('rightFileSelect').value;
+                
+                if (!leftFile || !rightFile) {
+                  this.showError('Please select both files to compare');
+                  return;
+                }
+
+                // Show loading state
+                this.showLoading();
+                
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch('http://localhost:8000/api/files/compare', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      file1: leftFile,
+                      file2: rightFile
+                    })
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (response.ok) {
+                    this.displayComparison(data, `${leftFile} vs ${rightFile}`);
+                  } else {
+                    this.showError('Comparison failed: ' + (data.detail || 'Unknown error'));
+                  }
+                } catch (error) {
+                  this.showError('Error comparing files: ' + error.message);
+                }
+              }
+
+              async compareGitCommits() {
+                const leftCommit = document.getElementById('leftCommitSelect').value;
+                const rightCommit = document.getElementById('rightCommitSelect').value;
+                const gitFile = document.getElementById('gitFileSelect').value;
+
+                if (!leftCommit || !rightCommit || !gitFile) {
+                  this.showError('Please select both commits and a file to compare');
+                  return;
+                }
+
+                // Show loading state
+                this.showLoading();
+                
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch('http://localhost:8000/api/git/diff', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      commit1: leftCommit,
+                      commit2: rightCommit,
+                      file_path: gitFile
+                    })
+                  });
+                  
+                  const result = await response.json();
+                  
+                  if (response.ok) {
+                    // Convert Git diff format to comparison format
+                    const formattedResult = this.formatGitDiff(result, gitFile, leftCommit, rightCommit);
+                    const leftCommitShort = leftCommit.substring(0, 8);
+                    const rightCommitShort = rightCommit.substring(0, 8);
+                    this.displayComparison(formattedResult, `${gitFile}: ${leftCommitShort} → ${rightCommitShort}`);
+                  } else {
+                    this.showError('Git comparison failed: ' + (result.detail || 'Unknown error'));
+                  }
+                } catch (error) {
+                  this.showError('Error comparing Git commits: ' + error.message);
+                }
+              }
+
+              formatGitDiff(gitResult, fileName, leftCommit, rightCommit) {
+                // The backend now returns data in the same format as file comparison
+                // Check if we have the new format with left_lines and right_lines
+                if (gitResult.left_lines && gitResult.right_lines) {
+                  // New format - use directly
+                  return {
+                    left_file: gitResult.left_file,
+                    right_file: gitResult.right_file,
+                    left_lines: gitResult.left_lines,
+                    right_lines: gitResult.right_lines
+                  };
+                }
+                
+                // Fallback to old format processing for backward compatibility
+                const leftLines = [];
+                const rightLines = [];
+                
+                if (gitResult.diff_lines && Array.isArray(gitResult.diff_lines)) {
+                  let leftLineNum = 1;
+                  let rightLineNum = 1;
+                  
+                  gitResult.diff_lines.forEach(line => {
+                    if (line.startsWith('-')) {
+                      // Deleted line
+                      leftLines.push({
+                        line_number: leftLineNum++,
+                        content: line.substring(1),
+                        type: 'delete'
+                      });
+                      rightLines.push({
+                        line_number: null,
+                        content: '',
+                        type: 'empty'
+                      });
+                    } else if (line.startsWith('+')) {
+                      // Added line
+                      leftLines.push({
+                        line_number: null,
+                        content: '',
+                        type: 'empty'
+                      });
+                      rightLines.push({
+                        line_number: rightLineNum++,
+                        content: line.substring(1),
+                        type: 'insert'
+                      });
+                    } else if (line.startsWith(' ')) {
+                      // Unchanged line
+                      leftLines.push({
+                        line_number: leftLineNum++,
+                        content: line.substring(1),
+                        type: 'equal'
+                      });
+                      rightLines.push({
+                        line_number: rightLineNum++,
+                        content: line.substring(1),
+                        type: 'equal'
+                      });
+                    }
+                  });
+                } else {
+                  // No differences or files are identical
+                  leftLines.push({
+                    line_number: 1,
+                    content: 'Files are identical or no differences found',
+                    type: 'equal'
+                  });
+                  rightLines.push({
+                    line_number: 1,
+                    content: 'Files are identical or no differences found',
+                    type: 'equal'
+                  });
+                }
+                
+                return {
+                  left_file: `${fileName} (${leftCommit.substring(0, 8)})`,
+                  right_file: `${fileName} (${rightCommit.substring(0, 8)})`,
+                  left_lines: leftLines,
+                  right_lines: rightLines
+                };
               }
 
               populateFileSelects() {
@@ -752,11 +1234,24 @@
               }
 
               updateCompareButton() {
-                const leftFile = document.getElementById('leftFileSelect').value;
-                const rightFile = document.getElementById('rightFileSelect').value;
+                const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
                 const compareBtn = document.getElementById('compareBtn');
+                let canCompare = false;
+
+                if (mode === 'files') {
+                  const leftFile = document.getElementById('leftFileSelect').value;
+                  const rightFile = document.getElementById('rightFileSelect').value;
+                  canCompare = leftFile && rightFile && leftFile !== rightFile;
+                  compareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare Files';
+                } else if (mode === 'git') {
+                  const leftCommit = document.getElementById('leftCommitSelect').value;
+                  const rightCommit = document.getElementById('rightCommitSelect').value;
+                  const gitFile = document.getElementById('gitFileSelect').value;
+                  canCompare = leftCommit && rightCommit && gitFile && leftCommit !== rightCommit;
+                  compareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare Commits';
+                }
                 
-                compareBtn.disabled = !leftFile || !rightFile || leftFile === rightFile;
+                compareBtn.disabled = !canCompare;
               }
 
               async compareFiles() {
@@ -797,10 +1292,10 @@
                 }
               }
 
-              displayComparison(comparison) {
+              displayComparison(comparison, title = null) {
                 // Update file names
-                document.getElementById('leftFileName').textContent = comparison.left_file;
-                document.getElementById('rightFileName').textContent = comparison.right_file;
+                document.getElementById('leftFileName').textContent = title ? title.split(' vs ')[0] || title.split(': ')[0] : comparison.left_file;
+                document.getElementById('rightFileName').textContent = title ? title.split(' vs ')[1] || title.split(': ')[1] || title.split(' → ')[1] : comparison.right_file;
                 
                 // Calculate stats from the data
                 let additions = 0, deletions = 0, modifications = 0;
@@ -825,6 +1320,94 @@
                 
                 // Setup navigation
                 this.setupDiffNavigation(comparison);
+              }
+
+              async showGitStatus() {
+                if (!this.gitData.status) {
+                  await this.loadGitStatus();
+                }
+
+                let statusHtml = `
+                  <div class="modal fade" id="gitStatusModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Git Repository Status</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="document.getElementById('gitStatusModal').remove()"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="row">
+                            <div class="col-md-6">
+                              <h6>Current Branch:</h6>
+                              <p class="text-primary">${this.gitData.status?.current_branch || 'Unknown'}</p>
+                              
+                              <h6>Repository Status:</h6>
+                              <p class="${this.gitData.status?.is_dirty ? 'text-warning' : 'text-success'}">
+                                ${this.gitData.status?.is_dirty ? 'Modified files present' : 'Clean working directory'}
+                              </p>
+                            </div>
+                            <div class="col-md-6">
+                              <h6>Available Branches:</h6>
+                              <ul class="list-unstyled">
+                                ${this.gitData.branches.map(branch => 
+                                  `<li class="${branch === this.gitData.currentBranch ? 'text-primary fw-bold' : ''}">${branch}</li>`
+                                ).join('')}
+                              </ul>
+                            </div>
+                          </div>
+                          
+                          <h6>Recent Commits:</h6>
+                          <div class="table-responsive">
+                            <table class="table table-sm">
+                              <thead>
+                                <tr>
+                                  <th>Hash</th>
+                                  <th>Message</th>
+                                  <th>Author</th>
+                                  <th>Date</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                ${this.gitData.commits.slice(0, 10).map(commit => `
+                                  <tr>
+                                    <td><code>${commit.hash.substring(0, 8)}</code></td>
+                                    <td>${commit.message}</td>
+                                    <td>${commit.author}</td>
+                                    <td>${new Date(commit.date).toLocaleDateString()}</td>
+                                  </tr>
+                                `).join('')}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" onclick="document.getElementById('gitStatusModal').remove()">Close</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+
+                // Remove existing modal and add new one
+                const existingModal = document.getElementById('gitStatusModal');
+                if (existingModal) {
+                  existingModal.remove();
+                }
+                document.body.insertAdjacentHTML('beforeend', statusHtml);
+                
+                // Show the modal
+                const modal = document.getElementById('gitStatusModal');
+                modal.style.display = 'block';
+                modal.classList.add('show');
+                
+                // Add backdrop
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                backdrop.onclick = () => {
+                  modal.remove();
+                  backdrop.remove();
+                };
+                document.body.appendChild(backdrop);
               }
 
               renderDiff(diffData) {

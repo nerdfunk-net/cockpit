@@ -176,11 +176,23 @@ async def health_check():
         }
     except Exception as e:
         return {
-            "status": "unhealthy",
+            "status": "error",
             "nautobot_connection": "failed",
             "error": str(e),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+
+@app.get("/api/test-early")
+async def test_early_endpoint():
+    """Test endpoint placed early in file"""
+    return {"message": "Early test endpoint working", "timestamp": datetime.now().isoformat()}
+
+@app.get("/api/git/status-early")
+async def git_status_early():
+    """Early Git status endpoint"""
+    return {"message": "Early Git endpoint working", "timestamp": datetime.now().isoformat()}
+
+# Helper functions
 
 # Enhanced response model for login
 class LoginResponse(BaseModel):
@@ -683,6 +695,234 @@ async def git_diff(
             detail=f"Failed to get diff: {str(e)}"
         )
 
+@app.get("/api/git/commits/{branch_name}")
+async def git_commits(
+    branch_name: str,
+    current_user: str = Depends(verify_token)
+):
+    """Get commits for a specific branch"""
+    try:
+        repo = get_git_repo()
+        
+        # Check if branch exists
+        if branch_name not in [ref.name for ref in repo.refs]:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Branch '{branch_name}' not found"
+            )
+        
+        # Get commits from the branch
+        commits = []
+        for commit in repo.iter_commits(branch_name, max_count=50):
+            commits.append({
+                "hash": commit.hexsha,
+                "message": commit.message.strip(),
+                "author": str(commit.author),
+                "date": commit.committed_datetime.isoformat(),
+                "files_changed": len(list(commit.stats.files.keys()))
+            })
+        
+        return commits
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get commits: {str(e)}"
+        )
+
+@app.get("/api/git/files/{commit_hash}")
+async def git_files(
+    commit_hash: str,
+    current_user: str = Depends(verify_token)
+):
+    """Get list of files in a specific commit"""
+    try:
+        repo = get_git_repo()
+        
+        # Get the commit
+        commit = repo.commit(commit_hash)
+        
+        # Get all files in the commit
+        files = []
+        for item in commit.tree.traverse():
+            if item.type == 'blob':  # Only files, not directories
+                files.append(item.path)
+        
+        # Filter for configuration files based on allowed extensions
+        config_extensions = settings.allowed_file_extensions
+        config_files = [
+            f for f in files 
+            if any(f.endswith(ext) for ext in config_extensions)
+        ]
+        
+        return sorted(config_files)
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get files: {str(e)}"
+        )
+
+@app.post("/api/git/diff")
+async def git_diff_compare(
+    request: dict,
+    current_user: str = Depends(verify_token)
+):
+    """Compare files between two Git commits"""
+    try:
+        commit1 = request.get("commit1")
+        commit2 = request.get("commit2") 
+        file_path = request.get("file_path")
+        
+        if not all([commit1, commit2, file_path]):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="commit1, commit2, and file_path are required"
+            )
+        
+        repo = get_git_repo()
+        
+        # Get the commits
+        commit_obj1 = repo.commit(commit1)
+        commit_obj2 = repo.commit(commit2)
+        
+        # Get file content from both commits
+        try:
+            file_content1 = commit_obj1.tree[file_path].data_stream.read().decode('utf-8')
+        except KeyError:
+            file_content1 = ""
+            
+        try:
+            file_content2 = commit_obj2.tree[file_path].data_stream.read().decode('utf-8')
+        except KeyError:
+            file_content2 = ""
+        
+        # Generate diff
+        diff_lines = []
+        import difflib
+        
+        lines1 = file_content1.splitlines(keepends=True)
+        lines2 = file_content2.splitlines(keepends=True)
+        
+        for line in difflib.unified_diff(lines1, lines2, n=3):
+            diff_lines.append(line.rstrip('\n'))
+        
+        # Calculate stats
+        additions = sum(1 for line in diff_lines if line.startswith('+') and not line.startswith('+++'))
+        deletions = sum(1 for line in diff_lines if line.startswith('-') and not line.startswith('---'))
+        
+        # Prepare full file content for comparison display
+        file1_lines = []
+        file2_lines = []
+        
+        lines1_list = file_content1.splitlines()
+        lines2_list = file_content2.splitlines()
+        
+        # Use difflib.SequenceMatcher to get line-by-line comparison
+        matcher = difflib.SequenceMatcher(None, lines1_list, lines2_list)
+        
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if tag == 'equal':
+                # Lines are the same
+                for i in range(i1, i2):
+                    file1_lines.append({
+                        "line_number": i + 1,
+                        "content": lines1_list[i],
+                        "type": "equal"
+                    })
+                for j in range(j1, j2):
+                    file2_lines.append({
+                        "line_number": j + 1,
+                        "content": lines2_list[j],
+                        "type": "equal"
+                    })
+            elif tag == 'delete':
+                # Lines deleted from file1
+                for i in range(i1, i2):
+                    file1_lines.append({
+                        "line_number": i + 1,
+                        "content": lines1_list[i],
+                        "type": "delete"
+                    })
+                # Add empty lines to file2 to align
+                for _ in range(i1, i2):
+                    file2_lines.append({
+                        "line_number": None,
+                        "content": "",
+                        "type": "empty"
+                    })
+            elif tag == 'insert':
+                # Lines inserted into file2
+                for j in range(j1, j2):
+                    file2_lines.append({
+                        "line_number": j + 1,
+                        "content": lines2_list[j],
+                        "type": "insert"
+                    })
+                # Add empty lines to file1 to align
+                for _ in range(j1, j2):
+                    file1_lines.append({
+                        "line_number": None,
+                        "content": "",
+                        "type": "empty"
+                    })
+            elif tag == 'replace':
+                # Lines changed
+                max_lines = max(i2 - i1, j2 - j1)
+                for k in range(max_lines):
+                    if k < (i2 - i1):
+                        file1_lines.append({
+                            "line_number": i1 + k + 1,
+                            "content": lines1_list[i1 + k],
+                            "type": "delete"
+                        })
+                    else:
+                        file1_lines.append({
+                            "line_number": None,
+                            "content": "",
+                            "type": "empty"
+                        })
+                    
+                    if k < (j2 - j1):
+                        file2_lines.append({
+                            "line_number": j1 + k + 1,
+                            "content": lines2_list[j1 + k],
+                            "type": "insert"
+                        })
+                    else:
+                        file2_lines.append({
+                            "line_number": None,
+                            "content": "",
+                            "type": "empty"
+                        })
+        
+        return {
+            "commit1": commit1[:8],
+            "commit2": commit2[:8],
+            "file_path": file_path,
+            "diff_lines": diff_lines,  # Keep for backward compatibility
+            "left_file": f"{file_path} ({commit1[:8]})",
+            "right_file": f"{file_path} ({commit2[:8]})",
+            "left_lines": file1_lines,
+            "right_lines": file2_lines,
+            "stats": {
+                "additions": additions,
+                "deletions": deletions,
+                "changes": additions + deletions,
+                "total_lines": len(diff_lines)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to compare commits: {str(e)}"
+        )
+
 def get_sample_config_content(filename: str) -> str:
     """Generate sample configuration content for demo purposes"""
     base_config = """!
@@ -797,6 +1037,28 @@ def get_git_repo():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Git repository error: {str(e)}"
         )
+
+@app.get("/api/debug/git")
+async def debug_git(current_user: str = Depends(verify_token)):
+    """Debug Git setup"""
+    try:
+        repo = get_git_repo()
+        return {
+            "status": "success",
+            "repo_path": repo.working_dir,
+            "branch": repo.active_branch.name
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+
+@app.get("/api/test")
+async def test_endpoint():
+    """Simple test endpoint"""
+    return {"message": "Test endpoint working", "timestamp": datetime.now().isoformat()}
 
 # Device management endpoints
 @app.get("/api/devices")
