@@ -3,13 +3,14 @@
 .gitignore
 .gitattributes
 
-# Documentation
+# Documentation (keep OFFLINE_SETUP.md for container builds)
 README.md
 README_CN.md
-*.md
-docs/
 changelog.md
 IMPROVEMENTS_TRACKER.md
+docs/
+# Keep OFFLINE_SETUP.md
+!OFFLINE_SETUP.md
 
 # Node.js
 node_modules/

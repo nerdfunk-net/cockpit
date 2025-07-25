@@ -1,0 +1,38 @@
+# Static file serving for offline deployment (No build process)
+FROM nginx:alpine
+
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
+# Copy static production files directly
+COPY production /usr/share/nginx/html
+
+# Copy custom Nginx configuration for offline mode
+COPY docker/nginx-offline.conf /etc/nginx/nginx.conf
+
+# Copy startup script for runtime configuration
+COPY docker/startup.sh /usr/local/bin/startup.sh
+RUN chmod +x /usr/local/bin/startup.sh
+
+# Create a non-root user for security
+RUN addgroup -g 1001 -S appuser && \
+    adduser -S -D -H -u 1001 -h /var/cache/nginx -s /sbin/nologin -G appuser -g appuser appuser && \
+    chown -R appuser:appuser /usr/share/nginx/html && \
+    chown -R appuser:appuser /var/cache/nginx && \
+    chown -R appuser:appuser /var/log/nginx && \
+    chown -R appuser:appuser /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown appuser:appuser /var/run/nginx.pid
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:80/ || exit 1
+
+# Start nginx directly (since we run as non-root, startup script may have permission issues)
+CMD ["nginx", "-g", "daemon off;"]

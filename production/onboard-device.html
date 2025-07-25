@@ -12,8 +12,20 @@
 
     <!-- Vite Entry Point - will bundle all styles -->
     <script type="module" src="/src/main-minimal.js"></script>
+    
     <!-- Configuration -->
     <script src="js/config.js"></script>
+    <!-- Container configuration (if in container mode) -->
+    <script>
+      // Load container config if in container environment
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const script = document.createElement('script');
+        script.src = 'js/config-container.js';
+        document.head.appendChild(script);
+      }
+    </script>
+    <!-- Offline Manager -->
+    <script src="js/offline-manager.js"></script>
     <script>
       // Robust authentication check
       (function() {
@@ -652,24 +664,39 @@
 
         async fetchData(endpoint) {
           const token = localStorage.getItem('auth_token');
-          const fullUrl = CockpitConfig.getApiUrl(endpoint);
           
           if (CockpitConfig.debug.enabled) {
-            console.log(`Fetching data from: ${fullUrl}`);
+            console.log(`Fetching data from: ${endpoint}`);
           }
           
-          const response = await fetch(fullUrl, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+          try {
+            // Use offline-capable fetch
+            const response = await window.offlineFetch(endpoint, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            if (!response.ok) {
+              throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
             }
-          });
 
-          if (!response.ok) {
-            throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
+            return await response.json();
+          } catch (error) {
+            console.warn(`Failed to fetch ${endpoint}, using offline fallback:`, error);
+            
+            // Use config fallback for specific endpoints
+            const endpointKey = endpoint.split('/').pop();
+            const fallbackData = CockpitConfig.getFallbackData(endpointKey);
+            
+            if (fallbackData && fallbackData.length > 0) {
+              console.log(`Using fallback data for ${endpointKey}:`, fallbackData);
+              return fallbackData;
+            }
+            
+            throw error;
           }
-
-          return await response.json();
         }
 
         populateSelect(selectId, data) {

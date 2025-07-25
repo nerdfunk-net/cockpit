@@ -1,0 +1,116 @@
+# Docker Compose for Cockpit (Offline-ready)
+version: '3.8'
+
+services:
+  cockpit-frontend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: cockpit-frontend
+    ports:
+      - "80:80"
+      - "443:443"  # If HTTPS is needed
+    environment:
+      # Backend API URL - adjust for your setup
+      - COCKPIT_API_URL=http://cockpit-backend:8000
+      # Container mode settings
+      - COCKPIT_CONTAINER_MODE=true
+      - COCKPIT_DEBUG=false
+      # Nginx settings
+      - NGINX_WORKER_PROCESSES=auto
+      - NGINX_WORKER_CONNECTIONS=1024
+    volumes:
+      # Optional: Mount custom nginx config
+      # - ./docker/nginx-custom.conf:/etc/nginx/nginx.conf:ro
+      # Optional: Mount SSL certificates
+      # - ./certs:/etc/ssl/certs:ro
+      # Optional: Mount logs
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - cockpit-network
+    depends_on:
+      - cockpit-backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.example.description=Cockpit Frontend (Offline-ready)"
+      - "com.example.service=frontend"
+
+  cockpit-backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cockpit-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Nautobot connection
+      - NAUTOBOT_HOST=https://your-nautobot.internal
+      - NAUTOBOT_TOKEN=your-nautobot-api-token
+      - NAUTOBOT_TIMEOUT=30
+      # Security
+      - SECRET_KEY=your-super-secret-key-change-this-in-production
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      # Server settings
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8000
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      # CORS for frontend
+      - CORS_ORIGINS=http://cockpit-frontend,http://localhost
+    volumes:
+      # Optional: Mount logs
+      - ./logs/backend:/app/logs
+      # Optional: Mount config
+      # - ./backend/.env:/app/.env:ro
+    networks:
+      - cockpit-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "com.example.description=Cockpit Backend API"
+      - "com.example.service=backend"
+
+  # Optional: Reverse proxy with SSL termination
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: cockpit-proxy
+    ports:
+      - "443:443"
+    volumes:
+      - ./docker/proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/ssl:ro
+    networks:
+      - cockpit-network
+    depends_on:
+      - cockpit-frontend
+    restart: unless-stopped
+    profiles:
+      - "with-proxy"  # Use: docker-compose --profile with-proxy up
+
+networks:
+  cockpit-network:
+    driver: bridge
+    name: cockpit-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  nginx_logs:
+    driver: local
+  backend_logs:
+    driver: local
+
+# For development/testing with no internet access
+# Use: docker-compose -f docker-compose.yml -f docker-compose.offline.yml up

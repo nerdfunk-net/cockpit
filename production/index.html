@@ -12,6 +12,20 @@
 
     <!-- Vite Entry Point - will bundle all styles -->
     <script type="module" src="/src/main-minimal.js"></script>
+    
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+    <!-- Container configuration (if in container mode) -->
+    <script>
+      // Load container config if in container environment
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const script = document.createElement('script');
+        script.src = 'js/config-container.js';
+        document.head.appendChild(script);
+      }
+    </script>
+    <!-- Offline Manager -->
+    <script src="js/offline-manager.js"></script>
     <script>
       // Robust authentication check
       (function() {
