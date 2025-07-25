@@ -267,12 +267,11 @@ export const UI_CONFIG = {
 };
 ```
 
-### Default Users
-The application comes with two default users:
-- **Username:** `admin`, **Password:** `secret`
-- **Username:** `demo`, **Password:** `secret`
+### Default Login Credentials
+The application comes with a default admin user:
+- **Username:** `admin`, **Password:** `admin`
 
-> ⚠️ **Security Notice:** Change default passwords and secret key in production!
+> ⚠️ **Security Notice:** Change default password and secret key in production!
 
 ## 📖 Usage
 

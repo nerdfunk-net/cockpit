@@ -35,6 +35,7 @@ class Settings:
     host: str = os.getenv('SERVER_HOST', '127.0.0.1')
     port: int = int(os.getenv('SERVER_PORT', '8000'))
     debug: bool = get_env_bool('DEBUG', True)
+    log_level: str = os.getenv('LOG_LEVEL', 'INFO')
     
     # Nautobot Configuration
     nautobot_url: str = os.getenv('NAUTOBOT_HOST', 'http://localhost:8080')
