@@ -5,6 +5,9 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import jwt
 import requests
+import re
+import ipaddress
+import logging
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 import os
@@ -13,7 +16,11 @@ from pathlib import Path
 import mimetypes
 from datetime import datetime
 from git import Repo, InvalidGitRepositoryError, GitCommandError
-from .config_manual import settings
+from config_manual import settings
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -23,7 +30,6 @@ app = FastAPI(
 )
 
 # CORS middleware
-print(f"Setting up CORS with origins: {settings.cors_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -35,9 +41,7 @@ app.add_middleware(
 # Add request logging middleware
 @app.middleware("http")
 async def log_requests(request, call_next):
-    print(f"Request: {request.method} {request.url} - Origin: {request.headers.get('origin', 'None')}")
     response = await call_next(request)
-    print(f"Response: {response.status_code}")
     return response
 
 # Security
@@ -154,9 +158,14 @@ def nautobot_graphql_query(query: str, variables: dict = None) -> dict:
     
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=30)
+        
+        if not response.ok:
+            logger.error(f"GraphQL Response Text: {response.text}")
+        
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
+        logger.error(f"GraphQL Request Exception: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Nautobot GraphQL error: {str(e)}"
@@ -176,8 +185,19 @@ async def root():
 @app.get("/health")
 async def health_check():
     try:
-        # Test Nautobot connectivity
-        nautobot_request("dcim/devices/?limit=1")
+        # Test Nautobot connectivity using GraphQL
+        query = """
+        query healthCheck {
+          devices(limit: 1) {
+            id
+            name
+          }
+        }
+        """
+        result = nautobot_graphql_query(query)
+        if "errors" in result:
+            raise Exception(f"GraphQL errors: {result['errors']}")
+        
         return {
             "status": "healthy",
             "nautobot_connection": "ok",
@@ -256,6 +276,317 @@ async def login(user_data: UserLogin):
 async def verify_auth(current_user: str = Depends(verify_token)):
     return {"username": current_user, "authenticated": True}
 
+# Nautobot API endpoints
+@app.get("/api/nautobot/locations")
+async def get_nautobot_locations(current_user: str = Depends(verify_token)):
+    """Get list of all locations from Nautobot"""
+    query = """
+    query locations {
+      locations {
+        id
+        name
+      }
+    }
+    """
+    try:
+        result = nautobot_graphql_query(query)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["locations"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch locations: {str(e)}"
+        )
+
+@app.get("/api/nautobot/namespaces")
+async def get_nautobot_namespaces(current_user: str = Depends(verify_token)):
+    """Get list of all namespaces from Nautobot"""
+    query = """
+    query namespace {
+      namespaces {
+        id
+        name
+      }
+    }
+    """
+    try:
+        result = nautobot_graphql_query(query)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["namespaces"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch namespaces: {str(e)}"
+        )
+
+@app.get("/api/nautobot/roles")
+async def get_nautobot_roles(current_user: str = Depends(verify_token)):
+    """Get list of all device roles from Nautobot"""
+    query = """
+    query roles {
+      roles {
+        id
+        name
+      }
+    }
+    """
+    try:
+        result = nautobot_graphql_query(query)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["roles"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch roles: {str(e)}"
+        )
+
+@app.get("/api/nautobot/platforms")
+async def get_nautobot_platforms(current_user: str = Depends(verify_token)):
+    """Get list of all platforms from Nautobot"""
+    query = """
+    query platforms {
+      platforms {
+        id
+        name
+      }
+    }
+    """
+    try:
+        result = nautobot_graphql_query(query)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["platforms"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch platforms: {str(e)}"
+        )
+
+@app.get("/api/nautobot/statuses")
+async def get_nautobot_statuses(current_user: str = Depends(verify_token)):
+    """Get list of all statuses from Nautobot"""
+    query = """
+    query status {
+      statuses {
+        id
+        name
+      }
+    }
+    """
+    try:
+        result = nautobot_graphql_query(query)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["statuses"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch statuses: {str(e)}"
+        )
+
+@app.get("/api/nautobot/secret-groups")
+async def get_nautobot_secret_groups(current_user: str = Depends(verify_token)):
+    """Get list of all secret groups from Nautobot"""
+    query = """
+    query secrets_groups {
+      secrets_groups {
+        id
+        name
+      }
+    }
+    """
+    try:
+        result = nautobot_graphql_query(query)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["secrets_groups"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch secret groups: {str(e)}"
+        )
+
+# Pydantic models for device onboarding
+class CheckIPRequest(BaseModel):
+    ip_address: str
+
+class DeviceOnboardRequest(BaseModel):
+    ip_address: str
+    location_id: str
+    namespace_id: str
+    role_id: str
+    status_id: str
+    platform_id: str
+    secret_groups_id: str
+    interface_status_id: str
+    ip_address_status_id: str
+    port: int = 22
+    timeout: int = 30
+
+class SyncNetworkDataRequest(BaseModel):
+    data: Dict[str, Any]
+
+@app.post("/api/nautobot/check-ip")
+async def check_ip_in_nautobot(request: CheckIPRequest, current_user: str = Depends(verify_token)):
+    """Check if an IP address exists in Nautobot"""
+    query = """
+    query device ($ip_address: [String]) {
+      ip_addresses(address: $ip_address) {
+        primary_ip4_for {
+          name
+        }
+      }
+    }
+    """
+    variables = {"ip_address": [request.ip_address]}
+    
+    try:
+        result = nautobot_graphql_query(query, variables)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        
+        ip_addresses = result["data"]["ip_addresses"]
+        if ip_addresses:
+            device = ip_addresses[0]["primary_ip4_for"]
+            return {
+                "exists": True,
+                "device": device[0] if device else None
+            }
+        else:
+            return {"exists": False, "device": None}
+            
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to check IP address: {str(e)}"
+        )
+
+@app.post("/api/nautobot/devices/onboard")
+async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depends(verify_token)):
+    """Onboard a device to Nautobot"""
+    # Prepare the data for the Nautobot job
+    job_data = {
+        "location": request.location_id,
+        "ip_addresses": request.ip_address,
+        "secrets_group": request.secret_groups_id,
+        "device_role": request.role_id,
+        "namespace": request.namespace_id,
+        "device_status": request.status_id,
+        "interface_status": request.interface_status_id,
+        "ip_address_status": request.ip_address_status_id,
+        "platform": request.platform_id,
+        "port": request.port,
+        "timeout": request.timeout,
+        "update_devices_without_primary_ip": False
+    }
+    
+    try:
+        # Make the request to the Nautobot job endpoint
+        url = f"{settings.nautobot_url.rstrip('/')}/api/extras/jobs/Sync%20Devices%20From%20Network/run/"
+        headers = {
+            "Authorization": f"Token {settings.nautobot_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            url, 
+            headers=headers, 
+            json={"data": job_data}, 
+            timeout=30
+        )
+        response.raise_for_status()
+        result = response.json()
+        
+        return {
+            "success": True,
+            "job_id": result.get("id", "unknown"),
+            "message": result.get("message", "Device onboarding job started successfully")
+        }
+        
+    except requests.RequestException as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to start onboarding job: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error during device onboarding: {str(e)}"
+        )
+
+@app.post("/api/nautobot/sync-network-data")
+async def sync_network_data(request: SyncNetworkDataRequest, current_user: str = Depends(verify_token)):
+    """Sync network data from selected devices to Nautobot"""
+    try:
+        # Make the request to the Nautobot job endpoint for network sync
+        url = f"{settings.nautobot_url.rstrip('/')}/api/extras/jobs/Sync%20Network%20Data%20From%20Network/run/"
+        headers = {
+            "Authorization": f"Token {settings.nautobot_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # The request.data already contains the data structure we need
+        # Frontend sends: { data: { devices: [...], ... } }
+        # We need to send: { data: { devices: [...], ... } }
+        payload = {"data": request.data}
+        
+        response = requests.post(
+            url, 
+            headers=headers, 
+            json=payload, 
+            timeout=30
+        )
+        
+        if not response.ok:
+            logger.error(f"Sync job failed - Status: {response.status_code}, Response: {response.text}")
+        
+        response.raise_for_status()
+        result = response.json()
+        
+        return {
+            "success": True,
+            "job_id": result.get("id", "unknown"),
+            "message": result.get("message", "Network data sync job started successfully")
+        }
+        
+    except requests.RequestException as e:
+        logger.error(f"Sync job request failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to start network sync job: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Error during network data sync: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error during network data sync: {str(e)}"
+        )
+
+# File management endpoints for configuration comparison
 # File management endpoints for configuration comparison
 @app.get("/api/files/list")
 async def list_files(current_user: str = Depends(verify_token)):
@@ -290,8 +621,8 @@ async def list_files(current_user: str = Depends(verify_token)):
                             "type": "configuration",
                             "extension": file_path.suffix
                         })
-                    except (OSError, PermissionError) as e:
-                        print(f"Warning: Could not read file {file_path}: {e}")
+                    except (OSError, PermissionError):
+                        # Skip files that can't be read
                         continue
         
         # Sort files by modification time (newest first)
@@ -319,9 +650,9 @@ def create_sample_files(config_dir: Path):
         file_path = config_dir / filename
         try:
             file_path.write_text(content, encoding='utf-8')
-            print(f"Created sample file: {file_path}")
-        except Exception as e:
-            print(f"Warning: Could not create sample file {filename}: {e}")
+        except Exception:
+            # Skip files that can't be created
+            pass
 
 @app.post("/api/files/compare")
 async def compare_files(
@@ -1135,37 +1466,258 @@ async def test_endpoint():
     return {"message": "Test endpoint working", "timestamp": datetime.now().isoformat()}
 
 # Device management endpoints
-@app.get("/api/devices")
+@app.get("/api/nautobot/devices")
 async def get_devices(
     limit: int = 50,
     offset: int = 0,
+    filter_type: Optional[str] = None,
+    filter_value: Optional[str] = None,
     current_user: str = Depends(verify_token)
 ):
-    """Get list of devices from Nautobot"""
+    """Get list of devices from Nautobot with optional filtering"""
     try:
-        endpoint = f"dcim/devices/?limit={limit}&offset={offset}"
-        result = nautobot_request(endpoint)
-        return result
+        # Build GraphQL query based on filters
+        query_filters = ""
+        variables = {}
+        
+        if filter_type and filter_value:
+            if filter_type == 'name':
+                # Use name filtering with regex support - correct Nautobot syntax
+                query = """
+                query single_device($device_filter: [String]) {
+                  devices(name__re: $device_filter) {
+                    id
+                    name
+                    role {
+                      name
+                    }
+                    location {
+                      name
+                    }
+                    primary_ip4 {
+                      address
+                    }
+                    status {
+                      name
+                    }
+                  }
+                }
+                """
+                variables = {"device_filter": [filter_value]}
+                
+                result = nautobot_graphql_query(query, variables)
+                if "errors" in result:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"GraphQL errors: {result['errors']}"
+                    )
+                
+                devices = result["data"]["devices"]
+                
+                return {
+                    "devices": devices[offset:offset+limit],
+                    "count": len(devices),
+                    "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
+                    "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
+                }
+                
+            elif filter_type == 'location':
+                # Use location filtering - correct Nautobot syntax
+                query = """
+                query devices_in_location($location_filter: [String]) {
+                  locations(name__re: $location_filter) {
+                    name
+                    devices {
+                      id
+                      name
+                      role {
+                        name
+                      }
+                      location {
+                        name
+                      }
+                      primary_ip4 {
+                        address
+                      }
+                      status {
+                        name
+                      }
+                    }
+                  }
+                }
+                """
+                variables = {"location_filter": [filter_value]}
+                
+                result = nautobot_graphql_query(query, variables)
+                if "errors" in result:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"GraphQL errors: {result['errors']}"
+                    )
+                
+                # Extract devices from locations
+                devices = []
+                for location in result["data"]["locations"]:
+                    devices.extend(location["devices"])
+                
+                return {
+                    "devices": devices[offset:offset+limit],
+                    "count": len(devices),
+                    "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
+                    "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
+                }
+                
+            elif filter_type == 'prefix':
+                # Use prefix filtering - correct Nautobot syntax
+                query = """
+                query devices_by_ip_prefix($prefix_filter: [String]) {
+                  prefixes(within_include: $prefix_filter) {
+                    prefix
+                    ip_addresses {
+                      primary_ip4_for {
+                        id
+                        name
+                        role {
+                          name
+                        }
+                        location {
+                          name
+                        }
+                        primary_ip4 {
+                          address
+                        }
+                        status {
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+                """
+                variables = {"prefix_filter": [filter_value]}
+                
+                result = nautobot_graphql_query(query, variables)
+                if "errors" in result:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"GraphQL errors: {result['errors']}"
+                    )
+                
+                # Extract unique devices from prefixes
+                devices_dict = {}
+                for prefix in result["data"]["prefixes"]:
+                    for ip_addr in prefix["ip_addresses"]:
+                        if ip_addr["primary_ip4_for"]:
+                            for device in ip_addr["primary_ip4_for"]:
+                                devices_dict[device["id"]] = device
+                
+                devices = list(devices_dict.values())
+                
+                return {
+                    "devices": devices[offset:offset+limit],
+                    "count": len(devices),
+                    "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
+                    "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
+                }
+        
+        # Standard device query when no filters are provided
+        query = """
+        query all_devices {
+          devices {
+            id
+            name
+            role {
+              name
+            }
+            location {
+              name
+            }
+            primary_ip4 {
+              address
+            }
+            status {
+              name
+            }
+          }
+        }
+        """
+        
+        result = nautobot_graphql_query(query)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        
+        devices = result["data"]["devices"]
+        
+        # Apply pagination to the results
+        paginated_devices = devices[offset:offset+limit]
+        
+        return {
+            "devices": paginated_devices,
+            "count": len(devices),
+            "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
+            "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching devices: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch devices: {str(e)}"
+        )
+        
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch devices: {str(e)}"
         )
 
-@app.get("/api/devices/{device_id}")
+@app.get("/api/nautobot/devices/{device_id}")
 async def get_device(device_id: str, current_user: str = Depends(verify_token)):
     """Get specific device details from Nautobot"""
     try:
-        endpoint = f"dcim/devices/{device_id}/"
-        result = nautobot_request(endpoint)
-        return result
+        query = """
+        query getDevice($deviceId: ID!) {
+          device(id: $deviceId) {
+            id
+            name
+            primary_ip4 {
+              address
+            }
+            location {
+              name
+            }
+            role {
+              name
+            }
+            platform {
+              name
+            }
+            status {
+              name
+            }
+          }
+        }
+        """
+        variables = {"deviceId": device_id}
+        result = nautobot_graphql_query(query, variables)
+        
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        
+        return result["data"]["device"]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch device {device_id}: {str(e)}"
         )
 
-@app.post("/api/devices/search")
+@app.post("/api/nautobot/devices/search")
 async def search_devices(
     filters: DeviceFilter,
     current_user: str = Depends(verify_token)
@@ -1191,21 +1743,8 @@ async def search_devices(
             detail=f"Failed to search devices: {str(e)}"
         )
 
-# Location endpoints
-@app.get("/api/locations")
-async def get_locations(current_user: str = Depends(verify_token)):
-    """Get list of locations from Nautobot"""
-    try:
-        result = nautobot_request("dcim/locations/")
-        return result
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch locations: {str(e)}"
-        )
-
 # Device types endpoints
-@app.get("/api/device-types")
+@app.get("/api/nautobot/device-types")
 async def get_device_types(current_user: str = Depends(verify_token)):
     """Get list of device types from Nautobot"""
     try:
@@ -1218,7 +1757,7 @@ async def get_device_types(current_user: str = Depends(verify_token)):
         )
 
 # Interface endpoints
-@app.get("/api/devices/{device_id}/interfaces")
+@app.get("/api/nautobot/devices/{device_id}/interfaces")
 async def get_device_interfaces(device_id: str, current_user: str = Depends(verify_token)):
     """Get interfaces for a specific device"""
     try:

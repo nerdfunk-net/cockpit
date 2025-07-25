@@ -260,7 +260,7 @@
     6. Sync VRFs (parameter is named sync_vrfs) as checkbox
  * the body must contain a dict called 'data' that contains the following properties:
 
-        "devices": device_name,
+        "devices": device_id,
         "default_prefix_status": status,
         "interface_status": status,
         "ip_address_status": status,

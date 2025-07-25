@@ -296,14 +296,14 @@ The application comes with two default users:
 - `GET /api/auth/me` - Get current user info
 
 #### Device Management
-- `GET /api/devices` - List devices with optional filtering
+- `GET /api/nautobot/devices` - List devices with optional filtering
   - `?filter_type=name&filter_value=pattern` - Filter by device name
   - `?filter_type=location&filter_value=location` - Filter by location
   - `?filter_type=prefix&filter_value=192.168.1.0/24` - Filter by IP prefix
 
 #### Network Operations
-- `GET /api/namespaces` - List available namespaces
-- `POST /api/sync-network-data` - Sync network data to Nautobot
+- `GET /api/nautobot/namespaces` - List available namespaces
+- `POST /api/nautobot/sync-network-data` - Sync network data to Nautobot
 
 ## 🏗️ Project Structure
 

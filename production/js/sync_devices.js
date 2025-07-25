@@ -6,12 +6,94 @@ let currentPage = 1;
 let devices = [];
 let rightTableDevices = [];
 
-const leftTableBody = document.getElementById('left-table-body');
-const rightTableBody = document.getElementById('right-table-body');
-const toRightBtn = document.getElementById('to-right');
-const toLeftBtn = document.getElementById('to-left');
+let leftTableBody, rightTableBody, toRightBtn, toLeftBtn;
+
+// Initialize DOM elements and event listeners after page loads
+function initializeDOMElements() {
+  leftTableBody = document.getElementById('left-table-body');
+  rightTableBody = document.getElementById('right-table-body');
+  toRightBtn = document.getElementById('to-right');
+  toLeftBtn = document.getElementById('to-left');
+  
+  console.log('[DEBUG] DOM elements initialized:', {
+    leftTableBody: !!leftTableBody,
+    rightTableBody: !!rightTableBody,
+    toRightBtn: !!toRightBtn,
+    toLeftBtn: !!toLeftBtn
+  });
+
+  // Set up button event listeners
+  setupButtonEventListeners();
+}
+
+function setupButtonEventListeners() {
+  if (toRightBtn) {
+    console.log('[DEBUG] Setting up toRightBtn event listener');
+    toRightBtn.addEventListener('click', () => {
+      console.log('[DEBUG] toRightBtn clicked');
+      // Get all checked checkboxes in the left table
+      if (!leftTableBody) {
+        console.error('[ERROR] leftTableBody not found when moving devices right');
+        return;
+      }
+      const checked = leftTableBody.querySelectorAll('input[type="checkbox"]:checked:not(#select-all-left)');
+      console.log('[DEBUG] Found checked checkboxes in left table:', checked.length);
+      
+      const selectedIds = Array.from(checked).map(cb => cb.getAttribute('data-device-id')).filter(Boolean);
+      console.log('[DEBUG] Selected device IDs:', selectedIds);
+      
+      // Find device objects by id
+      const selectedDevices = devices.filter(d => selectedIds.includes(d.id));
+      console.log('[DEBUG] Selected devices:', selectedDevices);
+      
+      // Add to right table if not already present
+      let addedCount = 0;
+      for (const dev of selectedDevices) {
+        if (!rightTableDevices.find(d => d.id === dev.id)) {
+          rightTableDevices.push(dev);
+          addedCount++;
+        }
+      }
+      console.log('[DEBUG] Added', addedCount, 'devices to right table');
+      
+      // Uncheck the selected items
+      checked.forEach(cb => cb.checked = false);
+      
+      renderTable();
+    });
+  } else {
+    console.error('[ERROR] toRightBtn element not found!');
+  }
+
+  if (toLeftBtn) {
+    console.log('[DEBUG] Setting up toLeftBtn event listener');
+    toLeftBtn.addEventListener('click', () => {
+      console.log('[DEBUG] toLeftBtn clicked');
+      // Get all checked checkboxes in the right table
+      if (!rightTableBody) {
+        console.error('[ERROR] rightTableBody not found when moving devices left');
+        return;
+      }
+      const checked = rightTableBody.querySelectorAll('input[type="checkbox"]:checked:not(#select-all-right)');
+      console.log('[DEBUG] Found checked checkboxes in right table:', checked.length);
+      
+      const selectedIds = Array.from(checked).map(cb => cb.getAttribute('data-device-id')).filter(Boolean);
+      console.log('[DEBUG] Selected device IDs to remove:', selectedIds);
+      
+      // Remove selected devices from rightTableDevices
+      const beforeCount = rightTableDevices.length;
+      rightTableDevices = rightTableDevices.filter(d => !selectedIds.includes(d.id));
+      console.log('[DEBUG] Removed', beforeCount - rightTableDevices.length, 'devices from right table');
+      
+      renderTable();
+    });
+  } else {
+    console.error('[ERROR] toLeftBtn element not found!');
+  }
+}
 
 async function fetchDevices(filterType = null, filterValue = null) {
+  console.log('[DEBUG] fetchDevices called with:', { filterType, filterValue });
   try {
     let url = BACKEND_API;
     if (filterType === 'name' && filterValue && filterValue.length >= 3) {
@@ -22,8 +104,10 @@ async function fetchDevices(filterType = null, filterValue = null) {
       url = BACKEND_API + '?filter_type=prefix&filter_value=' + encodeURIComponent(filterValue);
     }
     
+    console.log('[DEBUG] Making API request to:', url);
+    
     // Use authenticated API request
-    const data = await window.authManager.apiRequest(url.replace('http://localhost:8000/api', ''));
+    const data = await window.authManager.apiRequest(url.replace('http://localhost:8000', ''));
     console.log('[DEBUG] Received data from backend:', data);
     
     if (!data.devices) {
@@ -49,6 +133,13 @@ function showError(message) {
 
 function renderTable() {
   console.log('[DEBUG] renderTable called with devices:', devices);
+  console.log('[DEBUG] leftTableBody element:', leftTableBody);
+  
+  if (!leftTableBody) {
+    console.error('[ERROR] leftTableBody element not found!');
+    return;
+  }
+  
   leftTableBody.innerHTML = '';
   const start = (currentPage - 1) * PAGE_SIZE;
   const end = start + PAGE_SIZE;
@@ -70,12 +161,18 @@ function renderTable() {
   // Select-all logic for left table
   const selectAllLeft = document.getElementById('select-all-left');
   if (selectAllLeft) {
+    // Remove any existing event listeners to prevent duplicates
+    selectAllLeft.removeEventListener('change', selectAllLeftHandler);
     selectAllLeft.checked = false;
-    selectAllLeft.addEventListener('change', function() {
-      const checkboxes = leftTableBody.querySelectorAll('.row-checkbox-left');
-      checkboxes.forEach(cb => { cb.checked = selectAllLeft.checked; });
-    });
+    selectAllLeft.addEventListener('change', selectAllLeftHandler);
   }
+}
+
+// Separate handler function to avoid duplicates
+function selectAllLeftHandler() {
+  const selectAllLeft = document.getElementById('select-all-left');
+  const checkboxes = leftTableBody.querySelectorAll('.row-checkbox-left');
+  checkboxes.forEach(cb => { cb.checked = selectAllLeft.checked; });
 }
 
 function renderRightTable() {
@@ -103,39 +200,18 @@ function renderRightTable() {
   // Select-all logic for right table
   const selectAllRight = document.getElementById('select-all-right');
   if (selectAllRight) {
+    // Remove any existing event listeners to prevent duplicates
+    selectAllRight.removeEventListener('change', selectAllRightHandler);
     selectAllRight.checked = false;
-    selectAllRight.addEventListener('change', function() {
-      const checkboxes = rightTableBody.querySelectorAll('.row-checkbox-right');
-      checkboxes.forEach(cb => { cb.checked = selectAllRight.checked; });
-    });
+    selectAllRight.addEventListener('change', selectAllRightHandler);
   }
 }
-if (toRightBtn) {
-  toRightBtn.addEventListener('click', () => {
-    // Get all checked checkboxes in the left table
-    const checked = leftTableBody.querySelectorAll('input[type="checkbox"]:checked');
-    const selectedIds = Array.from(checked).map(cb => cb.getAttribute('data-device-id'));
-    // Find device objects by id
-    const selectedDevices = devices.filter(d => selectedIds.includes(d.id));
-    // Add to right table if not already present
-    for (const dev of selectedDevices) {
-      if (!rightTableDevices.find(d => d.id === dev.id)) {
-        rightTableDevices.push(dev);
-      }
-    }
-    renderTable();
-  });
-}
 
-if (toLeftBtn) {
-  toLeftBtn.addEventListener('click', () => {
-    // Get all checked checkboxes in the right table
-    const checked = rightTableBody.querySelectorAll('input[type="checkbox"]:checked');
-    const selectedIds = Array.from(checked).map(cb => cb.getAttribute('data-device-id'));
-    // Remove selected devices from rightTableDevices
-    rightTableDevices = rightTableDevices.filter(d => !selectedIds.includes(d.id));
-    renderTable();
-  });
+// Separate handler function to avoid duplicates
+function selectAllRightHandler() {
+  const selectAllRight = document.getElementById('select-all-right');
+  const checkboxes = rightTableBody.querySelectorAll('.row-checkbox-right');
+  checkboxes.forEach(cb => { cb.checked = selectAllRight.checked; });
 }
 
 function renderPagination() {
@@ -244,11 +320,11 @@ async function fetchAndPopulateStatuses() {
   const statusSelect = document.getElementById('sync-status');
   if (!statusSelect) return;
   try {
-    const data = await window.authManager.apiRequest('/statuses');
-    if (!data.statuses) throw new Error('No statuses returned');
+    const data = await window.authManager.apiRequest('/api/nautobot/statuses');
+    if (!data || !Array.isArray(data)) throw new Error('No statuses returned');
     statusSelect.innerHTML = '<option value="">Select status</option>';
     let activeId = null;
-    for (const status of data.statuses) {
+    for (const status of data) {
       const opt = document.createElement('option');
       opt.value = status.id;
       opt.textContent = status.name;
@@ -258,6 +334,7 @@ async function fetchAndPopulateStatuses() {
     // Set default to Active if present
     if (activeId) statusSelect.value = activeId;
   } catch (e) {
+    console.error('Failed to fetch statuses:', e);
     statusSelect.innerHTML = '<option value="">Failed to load statuses</option>';
   }
 }
@@ -267,11 +344,11 @@ async function fetchAndPopulateNamespaces() {
   const nsSelect = document.getElementById('sync-namespace');
   if (!nsSelect) return;
   try {
-    const data = await window.authManager.apiRequest('/namespaces');
-    if (!data.namespaces) throw new Error('No namespaces returned');
+    const data = await window.authManager.apiRequest('/api/nautobot/namespaces');
+    if (!data || !Array.isArray(data)) throw new Error('No namespaces returned');
     nsSelect.innerHTML = '<option value="">Select namespace</option>';
     let globalId = null;
-    for (const ns of data.namespaces) {
+    for (const ns of data) {
       const opt = document.createElement('option');
       opt.value = ns.id;
       opt.textContent = ns.name;
@@ -281,11 +358,17 @@ async function fetchAndPopulateNamespaces() {
     // Set default to Global if present
     if (globalId) nsSelect.value = globalId;
   } catch (e) {
+    console.error('Failed to fetch namespaces:', e);
     nsSelect.innerHTML = '<option value="">Failed to load namespaces</option>';
   }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  console.log('[DEBUG] DOMContentLoaded event fired');
+  
+  // Initialize DOM elements first
+  initializeDOMElements();
+  
   // Do NOT fetch devices initially. Show empty tables.
   renderTable();
   renderRightTable();
@@ -396,18 +479,27 @@ document.getElementById('sync-network-form').addEventListener('submit', async fu
   const syncSoftware = document.getElementById('sync-software-version').checked;
   const syncVlans = document.getElementById('sync-vlans').checked;
   const syncVrfs = document.getElementById('sync-vrfs').checked;
-  // Collect selected device IDs from right table
+  // Collect selected device IDs from right table (Nautobot needs UUIDs, not names)
   const rightTableBody = document.getElementById('right-table-body');
-  const deviceIds = Array.from(rightTableBody.querySelectorAll('tr')).map(row => {
-    const cb = row.querySelector('input[type="checkbox"]');
-    return cb ? cb.getAttribute('data-device-id') : null;
-  }).filter(Boolean);
+  const deviceIds = [];
+  
+  // Get device IDs from the right table rows
+  Array.from(rightTableBody.querySelectorAll('tr')).forEach(row => {
+    const checkbox = row.querySelector('input[type="checkbox"]');
+    if (checkbox && checkbox.getAttribute('data-device-id')) {
+      deviceIds.push(checkbox.getAttribute('data-device-id'));
+    }
+  });
+  
   if (deviceIds.length === 0) {
     alert('Please select at least one device to sync.');
     return;
   }
+  
+  console.log('[DEBUG] Device IDs to sync:', deviceIds);
+  
   const data = {
-    devices: deviceIds,
+    devices: deviceIds, // Send device UUIDs, not names
     default_prefix_status: status,
     interface_status: status,
     ip_address_status: status,
@@ -418,12 +510,20 @@ document.getElementById('sync-network-form').addEventListener('submit', async fu
     sync_vrfs: syncVrfs
   };
   try {
-    const result = await window.authManager.apiRequest('/sync-network-data', {
+    console.log('[DEBUG] Sending sync request with data:', { data });
+    const result = await window.authManager.apiRequest('/api/nautobot/sync-network-data', {
       method: 'POST',
       body: JSON.stringify({ data })
     });
-    alert('Sync request sent successfully!');
+    console.log('[DEBUG] Sync request result:', result);
+    
+    if (result.success) {
+      alert(`Sync request sent successfully! Job ID: ${result.job_id}`);
+    } else {
+      alert('Sync request failed: ' + (result.message || 'Unknown error'));
+    }
   } catch (err) {
+    console.error('[ERROR] Sync request failed:', err);
     alert('Sync failed: ' + err.message);
   }
 });

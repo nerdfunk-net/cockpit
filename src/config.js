@@ -13,12 +13,12 @@ export const API_CONFIG = {
   
   // API endpoints
   ENDPOINTS: {
-    DEVICES: '/api/devices',
+    DEVICES: '/api/nautobot/devices',
     AUTH_LOGIN: '/api/auth/login',
     AUTH_REGISTER: '/api/auth/register',
     AUTH_ME: '/api/auth/me',
-    NAMESPACES: '/api/namespaces',
-    SYNC_NETWORK: '/api/sync-network-data'
+    NAMESPACES: '/api/nautobot/namespaces',
+    SYNC_NETWORK: '/api/nautobot/sync-network-data'
   },
   
   // Request timeout in milliseconds
