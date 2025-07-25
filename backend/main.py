@@ -942,6 +942,61 @@ async def git_diff_compare(
             detail=f"Failed to compare commits: {str(e)}"
         )
 
+@app.get("/api/git/file-history/{file_path:path}")
+async def get_file_last_change(
+    file_path: str,
+    current_user: str = Depends(verify_token)
+):
+    """Get the last change information for a specific file"""
+    try:
+        repo = get_git_repo()
+        
+        # Get the commit history for the specific file
+        commits = list(repo.iter_commits(paths=file_path, max_count=1))
+        
+        if not commits:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No commits found for file: {file_path}"
+            )
+        
+        last_commit = commits[0]
+        
+        # Check if file exists in the last commit
+        try:
+            file_content = (last_commit.tree / file_path).data_stream.read().decode('utf-8')
+            file_exists = True
+        except:
+            file_exists = False
+        
+        return {
+            "file_path": file_path,
+            "file_exists": file_exists,
+            "last_commit": {
+                "hash": last_commit.hexsha,
+                "short_hash": last_commit.hexsha[:8],
+                "message": last_commit.message.strip(),
+                "author": {
+                    "name": last_commit.author.name,
+                    "email": last_commit.author.email
+                },
+                "committer": {
+                    "name": last_commit.committer.name,
+                    "email": last_commit.committer.email
+                },
+                "date": last_commit.committed_datetime.isoformat(),
+                "timestamp": int(last_commit.committed_datetime.timestamp())
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get file history: {str(e)}"
+        )
+
 def get_sample_config_content(filename: str) -> str:
     """Generate sample configuration content for demo purposes"""
     base_config = """!

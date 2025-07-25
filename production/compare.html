@@ -494,6 +494,42 @@
                     </div>
                   </div>
                   
+                  <!-- File History Information - Shared between both modes -->
+                  <div class="row" id="fileHistorySection" style="display: none; margin-top: 15px;">
+                    <div class="col-md-12">
+                      <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                          <h6 class="mb-0">
+                            <i class="fas fa-clock"></i> File History Information
+                          </h6>
+                          <button type="button" class="btn btn-sm btn-outline-secondary" id="closeHistoryBtn" title="Close History">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </div>
+                        <div class="card-body">
+                          <div class="row">
+                            <div class="col-md-6">
+                              <div id="leftFileHistory">
+                                <h6 class="text-muted">Source File</h6>
+                                <div id="leftFileHistoryContent">
+                                  <p class="text-muted"><i>Select a file to view its history</i></p>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div id="rightFileHistory">
+                                <h6 class="text-muted">Target File</h6>
+                                <div id="rightFileHistoryContent">
+                                  <p class="text-muted"><i>Select a file to view its history</i></p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <!-- Compare Button and Controls -->
                   <div class="row">
                     <div class="col-md-12">
@@ -726,6 +762,37 @@
             .diff-content::-webkit-scrollbar-thumb:hover {
               background: #a8a8a8;
             }
+            
+            /* File History Styles */
+            .file-history-info {
+              font-size: 13px;
+            }
+            
+            .file-history-info p {
+              margin-bottom: 5px;
+            }
+            
+            .file-history-info strong {
+              color: #495057;
+            }
+            
+            .file-history-info code {
+              background-color: #f8f9fa;
+              padding: 2px 4px;
+              border-radius: 3px;
+              font-size: 12px;
+            }
+            
+            #fileHistorySection .card {
+              border: 1px solid #e3e6f0;
+              box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            }
+            
+            #fileHistorySection .card-header {
+              background-color: #f8f9fc;
+              border-bottom: 1px solid #e3e6f0;
+              padding: 0.75rem 1.25rem;
+            }
           </style>
 
           <!-- JavaScript for Compare Functionality -->
@@ -755,21 +822,33 @@
                 document.getElementById('toggleUnchangedBtn').addEventListener('click', () => this.toggleUnchanged());
                 document.getElementById('fontSizeSelect').addEventListener('change', (e) => this.changeFontSize(e.target.value));
                 document.getElementById('gitStatusBtn').addEventListener('click', () => this.showGitStatus());
+                document.getElementById('closeHistoryBtn').addEventListener('click', () => this.closeFileHistory());
                 
                 // File selection change handlers
-                document.getElementById('leftFileSelect').addEventListener('change', () => this.updateCompareButton());
-                document.getElementById('rightFileSelect').addEventListener('change', () => this.updateCompareButton());
+                document.getElementById('leftFileSelect').addEventListener('change', () => {
+                  this.updateCompareButton();
+                  this.loadFileHistory('left');
+                });
+                document.getElementById('rightFileSelect').addEventListener('change', () => {
+                  this.updateCompareButton();
+                  this.loadFileHistory('right');
+                });
 
                 // Git selection change handlers
                 document.getElementById('leftCommitSelect').addEventListener('change', () => {
                   this.populateGitFiles();
                   this.updateCompareButton();
+                  this.loadGitFileHistory();
                 });
                 document.getElementById('rightCommitSelect').addEventListener('change', () => {
                   this.populateGitFiles();
                   this.updateCompareButton();
+                  this.loadGitFileHistory();
                 });
-                document.getElementById('gitFileSelect').addEventListener('change', () => this.updateCompareButton());
+                document.getElementById('gitFileSelect').addEventListener('change', () => {
+                  this.updateCompareButton();
+                  this.loadGitFileHistory();
+                });
                 
                 document.getElementById('gitBranchSelect').addEventListener('change', async (e) => {
                   const selectedBranch = e.target.value;
@@ -808,10 +887,12 @@
                   fileMode.style.display = 'block';
                   gitMode.style.display = 'none';
                   gitStatusBtn.style.display = 'none';
+                  this.updateFileHistoryVisibility();
                 } else if (mode === 'git') {
                   fileMode.style.display = 'none';
                   gitMode.style.display = 'block';
                   gitStatusBtn.style.display = 'inline-block';
+                  this.updateGitFileHistoryVisibility();
                 }
                 this.updateCompareButton();
               }
@@ -1031,6 +1112,195 @@
                 } catch (error) {
                   this.showError('Error loading files: ' + error.message);
                 }
+              }
+
+              async loadFileHistory(side) {
+                const fileSelect = document.getElementById(side === 'left' ? 'leftFileSelect' : 'rightFileSelect');
+                const historyContent = document.getElementById(side === 'left' ? 'leftFileHistoryContent' : 'rightFileHistoryContent');
+                const selectedFile = fileSelect.value;
+
+                if (!selectedFile) {
+                  historyContent.innerHTML = '<p class="text-muted"><i>Select a file to view its history</i></p>';
+                  this.updateFileHistoryVisibility();
+                  return;
+                }
+
+                // Show loading state
+                historyContent.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading file history...</p>';
+
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch(`http://localhost:8000/api/git/file-history/${encodeURIComponent(selectedFile)}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+
+                  const data = await response.json();
+
+                  if (response.ok) {
+                    const commit = data.last_commit;
+                    const commitDate = new Date(commit.date);
+                    const timeAgo = this.getTimeAgo(commitDate);
+
+                    historyContent.innerHTML = `
+                      <div class="file-history-info">
+                        <p><strong>Last Modified:</strong> ${timeAgo}</p>
+                        <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
+                        <p><strong>Author:</strong> ${commit.author.name}</p>
+                        <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
+                        <p><strong>Message:</strong> ${commit.message}</p>
+                        ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
+                      </div>
+                    `;
+                  } else {
+                    historyContent.innerHTML = `<p class="text-warning">Could not load history: ${data.detail}</p>`;
+                  }
+                } catch (error) {
+                  historyContent.innerHTML = `<p class="text-danger">Error loading history: ${error.message}</p>`;
+                }
+
+                this.updateFileHistoryVisibility();
+              }
+
+              updateFileHistoryVisibility() {
+                const leftFile = document.getElementById('leftFileSelect').value;
+                const rightFile = document.getElementById('rightFileSelect').value;
+                const historySection = document.getElementById('fileHistorySection');
+                
+                // Reset headers for file mode
+                const leftHeader = document.querySelector('#leftFileHistory h6');
+                const rightHeader = document.querySelector('#rightFileHistory h6');
+                leftHeader.textContent = 'Source File';
+                rightHeader.textContent = 'Target File';
+                
+                // Show history section if at least one file is selected
+                if (leftFile || rightFile) {
+                  historySection.style.display = 'block';
+                } else {
+                  historySection.style.display = 'none';
+                }
+              }
+
+              async loadGitFileHistory() {
+                const leftCommit = document.getElementById('leftCommitSelect').value;
+                const rightCommit = document.getElementById('rightCommitSelect').value;
+                const gitFile = document.getElementById('gitFileSelect').value;
+                
+                // Update the section headers for Git mode
+                const leftHeader = document.querySelector('#leftFileHistory h6');
+                const rightHeader = document.querySelector('#rightFileHistory h6');
+                leftHeader.textContent = leftCommit ? `Source Commit (${leftCommit.substring(0, 8)})` : 'Source Commit';
+                rightHeader.textContent = rightCommit ? `Target Commit (${rightCommit.substring(0, 8)})` : 'Target Commit';
+                
+                // Clear both sides first
+                this.clearFileHistory('left');
+                this.clearFileHistory('right');
+                
+                if (!gitFile) {
+                  this.updateGitFileHistoryVisibility();
+                  return;
+                }
+
+                // Load history for both commits if they're selected
+                if (leftCommit) {
+                  await this.loadGitCommitFileHistory('left', leftCommit, gitFile);
+                }
+                if (rightCommit) {
+                  await this.loadGitCommitFileHistory('right', rightCommit, gitFile);
+                }
+                
+                this.updateGitFileHistoryVisibility();
+              }
+
+              async loadGitCommitFileHistory(side, commitHash, filePath) {
+                const historyContent = document.getElementById(side === 'left' ? 'leftFileHistoryContent' : 'rightFileHistoryContent');
+                
+                // Show loading state
+                historyContent.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading file history...</p>';
+
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch(`http://localhost:8000/api/git/file-history/${encodeURIComponent(filePath)}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+
+                  const data = await response.json();
+
+                  if (response.ok) {
+                    const commit = data.last_commit;
+                    const commitDate = new Date(commit.date);
+                    const timeAgo = this.getTimeAgo(commitDate);
+
+                    // Check if the selected commit is the same as the last commit
+                    const isSelectedCommit = commitHash.startsWith(commit.short_hash) || commit.hash.startsWith(commitHash);
+                    const commitLabel = isSelectedCommit ? 'Selected Commit' : 'Latest Change';
+
+                    historyContent.innerHTML = `
+                      <div class="file-history-info">
+                        <p><strong>${commitLabel}:</strong> ${timeAgo}</p>
+                        <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
+                        <p><strong>Author:</strong> ${commit.author.name}</p>
+                        <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
+                        <p><strong>Message:</strong> ${commit.message}</p>
+                        ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
+                        ${!isSelectedCommit ? `<p class="text-info"><i class="fas fa-info-circle"></i> Note: This shows the most recent change, not the selected commit (${commitHash.substring(0, 8)})</p>` : ''}
+                      </div>
+                    `;
+                  } else {
+                    historyContent.innerHTML = `<p class="text-warning">Could not load history: ${data.detail}</p>`;
+                  }
+                } catch (error) {
+                  historyContent.innerHTML = `<p class="text-danger">Error loading history: ${error.message}</p>`;
+                }
+              }
+
+              clearFileHistory(side) {
+                const historyContent = document.getElementById(side === 'left' ? 'leftFileHistoryContent' : 'rightFileHistoryContent');
+                historyContent.innerHTML = '<p class="text-muted"><i>Select a file to view its history</i></p>';
+              }
+
+              closeFileHistory() {
+                const historySection = document.getElementById('fileHistorySection');
+                historySection.style.display = 'none';
+                
+                // Clear both sides
+                this.clearFileHistory('left');
+                this.clearFileHistory('right');
+              }
+
+              updateGitFileHistoryVisibility() {
+                const gitFile = document.getElementById('gitFileSelect').value;
+                const historySection = document.getElementById('fileHistorySection');
+                
+                // Show history section if a Git file is selected
+                if (gitFile) {
+                  historySection.style.display = 'block';
+                } else {
+                  historySection.style.display = 'none';
+                }
+              }
+
+              getTimeAgo(date) {
+                const now = new Date();
+                const diff = now - date;
+                const seconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+                const weeks = Math.floor(days / 7);
+                const months = Math.floor(days / 30);
+                const years = Math.floor(days / 365);
+
+                if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`;
+                if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
+                if (weeks > 0) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+                if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+                if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+                return 'Just now';
               }
 
               populateFileSelects() {
