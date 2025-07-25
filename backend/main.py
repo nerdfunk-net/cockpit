@@ -13,7 +13,7 @@ from pathlib import Path
 import mimetypes
 from datetime import datetime
 from git import Repo, InvalidGitRepositoryError, GitCommandError
-from config_manual import settings
+from .config_manual import settings
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -23,13 +23,22 @@ app = FastAPI(
 )
 
 # CORS middleware
+print(f"Setting up CORS with origins: {settings.cors_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request, call_next):
+    print(f"Request: {request.method} {request.url} - Origin: {request.headers.get('origin', 'None')}")
+    response = await call_next(request)
+    print(f"Response: {response.status_code}")
+    return response
 
 # Security
 security = HTTPBearer()
@@ -191,6 +200,16 @@ async def test_early_endpoint():
 async def git_status_early():
     """Early Git status endpoint"""
     return {"message": "Early Git endpoint working", "timestamp": datetime.now().isoformat()}
+
+# Root endpoint
+@app.get("/")
+async def root():
+    return {"message": "Cockpit API is running", "timestamp": datetime.now().isoformat()}
+
+# Test CORS endpoint
+@app.get("/test-cors")
+async def test_cors():
+    return {"message": "CORS is working", "origins": settings.cors_origins}
 
 # Helper functions
 

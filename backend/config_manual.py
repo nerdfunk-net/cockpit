@@ -51,7 +51,14 @@ class Settings:
     demo_password: str = os.getenv('DEMO_PASSWORD', 'admin')
     
     # CORS Configuration
-    cors_origins: list = get_env_list('CORS_ORIGINS', ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'])
+    cors_origins: list = get_env_list('CORS_ORIGINS', [
+        'http://localhost:3000', 
+        'http://localhost:3001', 
+        'http://localhost:5173', 
+        'http://127.0.0.1:3000', 
+        'http://127.0.0.1:3001', 
+        'http://127.0.0.1:5173'
+    ])
     
     # File storage configuration
     config_files_directory: str = os.getenv('CONFIG_FILES_DIRECTORY', 'config_files')

@@ -1350,7 +1350,7 @@
                               <h6>Available Branches:</h6>
                               <ul class="list-unstyled">
                                 ${this.gitData.branches.map(branch => 
-                                  `<li class="${branch === this.gitData.currentBranch ? 'text-primary fw-bold' : ''}">${branch}</li>`
+                                  `<li class="${branch.is_current ? 'text-primary fw-bold' : ''}">${branch.name}${branch.is_current ? ' (current)' : ''}</li>`
                                 ).join('')}
                               </ul>
                             </div>

@@ -143,6 +143,22 @@ export default defineConfig({
     ],
     force: true
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        // Suppress deprecation warnings from Bootstrap and third-party dependencies
+        quietDeps: true,
+        // Silence specific deprecated features
+        silenceDeprecations: [
+          'color-functions',
+          'global-builtin',
+          'import',
+          'mixed-decls',
+          'color-module-compat'
+        ]
+      }
+    }
+  },
   resolve: {
     alias: {
       jquery: 'jquery'
