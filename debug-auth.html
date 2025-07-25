@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Debug</title>
+</head>
+<body>
+    <h1>Authentication Debug</h1>
+    <div id="token-info"></div>
+    <button onclick="checkToken()">Check Token</button>
+    <button onclick="testAPI()">Test API</button>
+    <div id="results"></div>
+
+    <script>
+        function checkToken() {
+            const token = localStorage.getItem('auth_token');
+            document.getElementById('token-info').innerHTML = token ? 
+                `<p>Token exists: ${token.substring(0, 50)}...</p>` : 
+                '<p>No token found in localStorage</p>';
+        }
+
+        async function testAPI() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                document.getElementById('results').innerHTML = '<p>No token available</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/api/nautobot/locations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                document.getElementById('results').innerHTML = 
+                    `<p>API Response: ${JSON.stringify(data, null, 2)}</p>`;
+            } catch (error) {
+                document.getElementById('results').innerHTML = 
+                    `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        checkToken();
+    </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Onboard Form</title>
+</head>
+<body>
+    <h1>Debug Onboard Form Issues</h1>
+    
+    <div>
+        <h2>Test IP Validation</h2>
+        <input type="text" id="test-ip" placeholder="Enter IP" value="192.168.1.100">
+        <button onclick="testIP()">Test IP Validation</button>
+        <div id="ip-result"></div>
+    </div>
+
+    <div>
+        <h2>Test Backend Endpoints</h2>
+        <button onclick="testCheckIP()">Test Check IP Endpoint</button>
+        <button onclick="testDropdowns()">Test Dropdown Endpoints</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div>
+        <h2>Form Field Status</h2>
+        <button onclick="checkFormFields()">Check Form Fields</button>
+        <div id="form-result"></div>
+    </div>
+
+    <script>
+        // Set auth token first
+        localStorage.setItem('auth_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MzQ2MDkyN30.n58MeEeNzlrouNgCH3z34kPY73aBOkQ4z3GtMHdypRw');
+
+        function testIP() {
+            const ip = document.getElementById('test-ip').value;
+            const regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            const isValid = regex.test(ip);
+            document.getElementById('ip-result').innerHTML = 
+                `<p>IP: ${ip} - Valid: ${isValid}</p>`;
+        }
+
+        async function testCheckIP() {
+            const token = localStorage.getItem('auth_token');
+            try {
+                const response = await fetch('http://localhost:8000/api/nautobot/check-ip', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ip_address: '192.168.1.100' })
+                });
+                
+                const result = await response.json();
+                document.getElementById('api-result').innerHTML = 
+                    `<h3>Check IP Result:</h3><pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('api-result').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testDropdowns() {
+            const token = localStorage.getItem('auth_token');
+            try {
+                const response = await fetch('http://localhost:8000/api/nautobot/locations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                document.getElementById('api-result').innerHTML = 
+                    `<h3>Locations Result:</h3><pre>${JSON.stringify(result.slice(0, 3), null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('api-result').innerHTML = 
+                    `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        function checkFormFields() {
+            // Open the onboard page in a new window and check its form
+            const newWindow = window.open('http://localhost:3000/onboard-device.html', '_blank');
+            
+            setTimeout(() => {
+                try {
+                    const form = newWindow.document.getElementById('onboard_form');
+                    const requiredFields = form.querySelectorAll('[required]');
+                    let result = '<h3>Required Fields Status:</h3><ul>';
+                    
+                    requiredFields.forEach(field => {
+                        result += `<li>${field.id}: "${field.value}" (${field.value ? 'filled' : 'empty'})</li>`;
+                    });
+                    result += '</ul>';
+                    
+                    document.getElementById('form-result').innerHTML = result;
+                } catch (e) {
+                    document.getElementById('form-result').innerHTML = 
+                        `<p style="color: red;">Error accessing form: ${e.message}</p>`;
+                }
+            }, 3000); // Wait 3 seconds for page to load
+        }
+    </script>
+</body>
+</html>

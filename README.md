@@ -242,36 +242,186 @@ LOG_LEVEL=INFO
 
 ### Frontend Configuration
 
-Frontend configuration is handled in `src/config.js`. You can modify:
+Frontend configuration is handled in `production/js/config.js`. This file contains environment-specific settings for API URLs, endpoints, and debugging options.
 
-- **API_CONFIG**: Backend URL, endpoints, timeouts
-- **UI_CONFIG**: Pagination, table settings, filters
-- **SECURITY_CONFIG**: Token storage, session timeouts
+#### Configuration File Location
+- **File:** `production/js/config.js`
+- **Purpose:** Centralized configuration for frontend-backend communication
+- **Scope:** URL management, environment detection, debug settings
 
-#### Example Frontend Configuration
+#### Configuration Variables
+
+| Variable | Description | Default | Environment |
+|----------|-------------|---------|-------------|
+| `api.baseUrl` | Backend API base URL | Auto-detected based on protocol | All |
+| `frontend.baseUrl` | Frontend base URL | Auto-detected from current host | All |
+| `environment.isDevelopment` | Development mode flag | Auto-detected from hostname | All |
+| `debug.enabled` | Enable debug logging | `true` in development | All |
+
+#### Configuration Options
+
+**Option 1: Auto-detection (Default)**
 ```javascript
-// API Configuration
-export const API_CONFIG = {
-  BASE_URL: 'https://api.your-domain.com',  // Your backend URL
-  TIMEOUT: 30000,
-  RETRY_ATTEMPTS: 3
-};
+api: {
+  baseUrl: window.location.protocol === 'https:' 
+    ? 'https://localhost:8000'  // Use HTTPS in production
+    : 'http://localhost:8000',  // Use HTTP in development
+}
+```
 
-// UI Configuration  
-export const UI_CONFIG = {
-  PAGE_SIZE: 25,  // Items per page
-  FILTERS: {
-    NAME_MIN_LENGTH: 2,  // Minimum characters for name filter
-    LOCATION_MIN_LENGTH: 2
+**Option 2: Host-based detection**
+```javascript
+api: {
+  // Alternative: detect from current host
+  baseUrl: `${window.location.protocol}//${window.location.hostname}:8000`,
+}
+```
+
+**Option 3: Environment-specific URLs**
+```javascript
+api: {
+  baseUrl: window.location.hostname === 'localhost' 
+    ? 'http://localhost:8000'                    // Development
+    : 'https://api.your-domain.com',            // Production
+}
+```
+
+#### Production Deployment Configuration
+
+For production deployment, edit `production/js/config.js`:
+
+1. **Update the API base URL** to point to your production backend:
+```javascript
+const CockpitConfig = {
+  api: {
+    baseUrl: 'https://api.your-domain.com',  // Your production backend URL
+    // ... rest of configuration
   }
 };
 ```
+
+2. **Configure HTTPS** for secure environments:
+```javascript
+api: {
+  baseUrl: window.location.protocol === 'https:' 
+    ? 'https://api.your-domain.com'     // Production HTTPS
+    : 'http://localhost:8000',          // Development HTTP
+}
+```
+
+3. **Environment-specific settings**:
+```javascript
+// Production example
+api: {
+  baseUrl: 'https://api.production.com',
+}
+
+// Staging example  
+api: {
+  baseUrl: 'https://api.staging.com',
+}
+
+// Development example
+api: {
+  baseUrl: 'http://localhost:8000',
+}
+```
+
+#### Helper Functions
+
+The configuration provides helper functions for URL generation:
+
+```javascript
+// Get full API URL for any endpoint
+const loginUrl = CockpitConfig.getApiUrl('/auth/login');
+// Returns: https://api.your-domain.com/auth/login
+
+// Get frontend URL with path
+const dashboardUrl = CockpitConfig.getFrontendUrl('/dashboard.html');
+// Returns: https://your-frontend.com/dashboard.html
+```
+
+#### Environment Detection
+
+The configuration automatically detects the environment:
+
+```javascript
+// Check environment
+if (CockpitConfig.environment.isDevelopment) {
+  console.log('Running in development mode');
+}
+
+// Debug logging (enabled automatically in development)
+if (CockpitConfig.debug.enabled) {
+  console.log('Debug mode enabled');
+}
+```
+
+#### Files That Use Configuration
+
+The following files automatically use the configuration from `config.js`:
+
+- `production/onboard-device.html` - Device onboarding form
+- `production/js/auth.js` - Authentication system  
+- `production/login.html` - Login page
+- Any other frontend components that make API calls
+
+> **Note:** The configuration file must be included in HTML pages before other JavaScript files that depend on it.
 
 ### Default Login Credentials
 The application comes with a default admin user:
 - **Username:** `admin`, **Password:** `admin`
 
 > ⚠️ **Security Notice:** Change default password and secret key in production!
+
+## 🚀 Deployment Checklist
+
+### Before Production Deployment
+
+**Backend Configuration (`backend/.env`):**
+1. ✅ Set `NAUTOBOT_HOST` to your Nautobot instance URL
+2. ✅ Set `NAUTOBOT_TOKEN` to your API token  
+3. ✅ Generate and set a secure `SECRET_KEY`
+4. ✅ Set `DEBUG=false` for production
+5. ✅ Configure `CORS_ORIGINS` with your frontend domains
+6. ✅ Set appropriate `LOG_LEVEL` (INFO or WARNING)
+
+**Frontend Configuration (`production/js/config.js`):**
+1. ✅ Update `api.baseUrl` to your production backend URL
+2. ✅ Ensure HTTPS is used in production environments
+3. ✅ Verify all endpoint paths are correct
+4. ✅ Test configuration with helper functions
+
+**Security Settings:**
+1. ✅ Change default admin password (`admin`/`admin`)
+2. ✅ Use strong, unique `SECRET_KEY` for JWT signing
+3. ✅ Enable HTTPS for production deployments
+4. ✅ Configure appropriate CORS origins
+5. ✅ Disable debug mode in production
+
+**Example Production Configuration:**
+
+`backend/.env`:
+```bash
+NAUTOBOT_HOST=https://nautobot.company.com
+NAUTOBOT_TOKEN=your-secure-api-token-here
+SECRET_KEY=your-very-secure-secret-key-for-jwt-signing
+DEBUG=false
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8000
+CORS_ORIGINS=https://cockpit.company.com,https://dashboard.company.com
+LOG_LEVEL=INFO
+```
+
+`production/js/config.js`:
+```javascript
+const CockpitConfig = {
+  api: {
+    baseUrl: 'https://api.cockpit.company.com',  // Your production API
+    // ... rest of configuration
+  }
+};
+```
 
 ## 📖 Usage
 

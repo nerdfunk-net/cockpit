@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UUID Test</title>
+</head>
+<body>
+    <h1>UUID Collection Test</h1>
+    <button onclick="testFormData()">Test Form Data Collection</button>
+    <div id="results"></div>
+
+    <script>
+        function testFormData() {
+            // Get auth token
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                document.getElementById('results').innerHTML = '<p style="color: red;">No auth token found. Please login first.</p>';
+                return;
+            }
+
+            // Test fetching roles data
+            fetch('http://localhost:8000/api/nautobot/roles', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let html = '<h2>Roles Data (UUID vs Name):</h2><ul>';
+                data.slice(0, 5).forEach(item => {
+                    html += `<li><strong>UUID:</strong> ${item.id} → <strong>Name:</strong> ${item.name}</li>`;
+                });
+                html += '</ul>';
+                
+                // Find the "network" role specifically
+                const networkRole = data.find(item => item.name === 'network');
+                if (networkRole) {
+                    html += `<h3>Network Role UUID: <code>${networkRole.id}</code></h3>`;
+                }
+                
+                document.getElementById('results').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('results').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>

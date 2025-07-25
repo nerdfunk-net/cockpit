@@ -5,7 +5,8 @@
 
 class AuthManager {
     constructor() {
-        this.baseURL = 'http://localhost:8000';
+        // Use configuration if available, fallback to localhost
+        this.baseURL = window.CockpitConfig ? window.CockpitConfig.api.baseUrl : 'http://localhost:8000';
         this.token = localStorage.getItem('auth_token');
         this.user = JSON.parse(localStorage.getItem('user_info') || 'null');
         this.tokenExpiry = localStorage.getItem('token_expiry');
