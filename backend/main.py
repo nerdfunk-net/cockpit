@@ -1280,6 +1280,299 @@ async def get_statistics(current_user: str = Depends(verify_token)):
             detail=f"Failed to fetch statistics: {str(e)}"
         )
 
+# Git-related endpoints
+@app.get("/api/git/status")
+async def get_git_status(current_user: str = Depends(verify_token)):
+    """Get Git repository status"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        repo = Repo(config_dir)
+        
+        # Get branch info
+        current_branch = repo.active_branch.name
+        
+        # Get status
+        status_info = {
+            "branch": current_branch,
+            "is_dirty": repo.is_dirty(),
+            "untracked_files": repo.untracked_files,
+            "modified_files": [item.a_path for item in repo.index.diff(None)],
+            "staged_files": [item.a_path for item in repo.index.diff("HEAD")],
+        }
+        
+        return status_info
+    except (InvalidGitRepositoryError, GitCommandError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Git repository not found or invalid: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Git status error: {str(e)}"
+        )
+
+@app.get("/api/git/branches")
+async def get_git_branches(current_user: str = Depends(verify_token)):
+    """Get Git repository branches"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        repo = Repo(config_dir)
+        
+        branches = [branch.name for branch in repo.branches]
+        return branches
+    except (InvalidGitRepositoryError, GitCommandError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Git repository not found or invalid: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Git branches error: {str(e)}"
+        )
+
+@app.get("/api/git/commits")
+async def get_git_commits(branch: str = "main", limit: int = 50, current_user: str = Depends(verify_token)):
+    """Get Git commits for a branch"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        repo = Repo(config_dir)
+        
+        commits = []
+        for commit in repo.iter_commits(branch, max_count=limit):
+            commits.append({
+                "hash": commit.hexsha,
+                "short_hash": commit.hexsha[:8],
+                "message": commit.message.strip(),
+                "author": {
+                    "name": commit.author.name,
+                    "email": commit.author.email
+                },
+                "date": commit.committed_datetime.isoformat(),
+                "files_changed": len(commit.stats.files)
+            })
+        
+        return commits
+    except (InvalidGitRepositoryError, GitCommandError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Git repository not found or branch '{branch}' not found: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Git commits error: {str(e)}"
+        )
+
+@app.get("/api/git/files/{commit_hash}")
+async def get_git_files(commit_hash: str, current_user: str = Depends(verify_token)):
+    """Get files from a specific Git commit"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        repo = Repo(config_dir)
+        
+        commit = repo.commit(commit_hash)
+        files = []
+        
+        for item in commit.tree.traverse():
+            if item.type == 'blob':  # Only files, not directories
+                files.append(item.path)
+        
+        return sorted(files)
+    except (InvalidGitRepositoryError, GitCommandError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Git repository not found or commit '{commit_hash}' not found: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Git files error: {str(e)}"
+        )
+
+@app.get("/api/git/file-history/{file_path:path}")
+async def get_file_last_change(file_path: str, current_user: str = Depends(verify_token)):
+    """Get the last change information for a specific file"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        repo = Repo(config_dir)
+        
+        # Get the most recent commit that modified this file
+        commits = list(repo.iter_commits(paths=file_path, max_count=1))
+        
+        if not commits:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No commits found for file: {file_path}"
+            )
+        
+        latest_commit = commits[0]
+        
+        # Check if file exists in the latest commit
+        file_exists = True
+        try:
+            latest_commit.tree[file_path]
+        except KeyError:
+            file_exists = False
+        
+        return {
+            "file_path": file_path,
+            "file_exists": file_exists,
+            "last_commit": {
+                "hash": latest_commit.hexsha,
+                "short_hash": latest_commit.hexsha[:8],
+                "message": latest_commit.message.strip(),
+                "author": {
+                    "name": latest_commit.author.name,
+                    "email": latest_commit.author.email
+                },
+                "date": latest_commit.committed_datetime.isoformat()
+            }
+        }
+    except (InvalidGitRepositoryError, GitCommandError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Git repository not found: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Git file history error: {str(e)}"
+        )
+
+@app.get("/api/git/file-complete-history/{file_path:path}")
+async def get_file_complete_history(file_path: str, from_commit: str = None, current_user: str = Depends(verify_token)):
+    """Get the complete history of a file from a specific commit backwards to its creation"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        repo = Repo(config_dir)
+        
+        # Start from the specified commit or HEAD
+        start_commit = from_commit if from_commit else "HEAD"
+        
+        # Get all commits that modified this file
+        commits = list(repo.iter_commits(start_commit, paths=file_path))
+        
+        if not commits:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No commits found for file: {file_path}"
+            )
+        
+        history_commits = []
+        
+        for i, commit in enumerate(commits):
+            # Determine change type
+            change_type = "M"  # Modified (default)
+            
+            if i == len(commits) - 1:
+                # This is the first commit where the file appeared
+                change_type = "A"  # Added
+            else:
+                # Check if the file was deleted in this commit
+                try:
+                    commit.tree[file_path]
+                except KeyError:
+                    change_type = "D"  # Deleted
+            
+            history_commits.append({
+                "hash": commit.hexsha,
+                "short_hash": commit.hexsha[:8],
+                "message": commit.message.strip(),
+                "author": {
+                    "name": commit.author.name,
+                    "email": commit.author.email
+                },
+                "date": commit.committed_datetime.isoformat(),
+                "change_type": change_type
+            })
+        
+        return {
+            "file_path": file_path,
+            "from_commit": start_commit,
+            "total_commits": len(history_commits),
+            "commits": history_commits
+        }
+        
+    except (InvalidGitRepositoryError, GitCommandError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Git repository not found or commit not found: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Git file complete history error: {str(e)}"
+        )
+
+@app.post("/api/git/diff")
+async def get_git_diff(
+    request: Dict[str, Any],
+    current_user: str = Depends(verify_token)
+):
+    """Get diff between two Git commits for a specific file"""
+    try:
+        config_dir = Path(settings.config_files_directory)
+        repo = Repo(config_dir)
+        
+        left_commit = request.get("left_commit")
+        right_commit = request.get("right_commit")
+        file_path = request.get("file_path")
+        
+        if not all([left_commit, right_commit, file_path]):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing required parameters: left_commit, right_commit, file_path"
+            )
+        
+        # Get the commits
+        left_commit_obj = repo.commit(left_commit)
+        right_commit_obj = repo.commit(right_commit)
+        
+        # Get file content from both commits
+        try:
+            left_content = left_commit_obj.tree[file_path].data_stream.read().decode('utf-8')
+        except KeyError:
+            left_content = ""
+        
+        try:
+            right_content = right_commit_obj.tree[file_path].data_stream.read().decode('utf-8')
+        except KeyError:
+            right_content = ""
+        
+        # Generate diff
+        left_lines = left_content.splitlines(keepends=True)
+        right_lines = right_content.splitlines(keepends=True)
+        
+        diff = list(difflib.unified_diff(
+            left_lines, 
+            right_lines,
+            fromfile=f"{file_path} ({left_commit[:8]})",
+            tofile=f"{file_path} ({right_commit[:8]})",
+            lineterm=""
+        ))
+        
+        return {
+            "left_commit": left_commit,
+            "right_commit": right_commit,
+            "file_path": file_path,
+            "diff": diff,
+            "left_content": left_content,
+            "right_content": right_content
+        }
+        
+    except (InvalidGitRepositoryError, GitCommandError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Git repository not found or commits not found: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Git diff error: {str(e)}"
+        )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=settings.port)

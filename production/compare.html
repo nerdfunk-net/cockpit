@@ -387,6 +387,10 @@
                           <label class="btn btn-outline-primary" for="gitMode">
                             <i class="fas fa-code-branch"></i> Git Commits
                           </label>
+                          <input type="radio" class="btn-check" name="comparisonMode" id="historyMode" value="history">
+                          <label class="btn btn-outline-primary" for="historyMode">
+                            <i class="fas fa-history"></i> File History
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -488,6 +492,85 @@
                             <span class="input-group-text">
                               <i class="fas fa-file-code"></i>
                             </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- File History Mode -->
+                  <div id="fileHistoryMode" style="display: none;">
+                    <div class="row">
+                      <!-- Branch Selection -->
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="historyBranchSelect">Branch</label>
+                          <div class="input-group">
+                            <select class="form-control" id="historyBranchSelect">
+                              <option value="main">main</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-code-branch"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Commit Selection -->
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="historyCommitSelect">Commit</label>
+                          <div class="input-group">
+                            <select class="form-control" id="historyCommitSelect">
+                              <option value="">Select commit...</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-code-commit"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- File Selection -->
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="historyFileSelect">File</label>
+                          <div class="input-group">
+                            <select class="form-control" id="historyFileSelect">
+                              <option value="">Select file...</option>
+                            </select>
+                            <span class="input-group-text">
+                              <i class="fas fa-file-code"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Show History Button -->
+                    <div class="row">
+                      <div class="col-md-12">
+                        <div class="text-center" style="margin-top: 15px;">
+                          <button class="btn btn-primary" id="showHistoryBtn" disabled>
+                            <i class="fas fa-history"></i> Show History
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- File History Display -->
+                    <div class="row" id="fileHistoryDisplay" style="display: none; margin-top: 20px;">
+                      <div class="col-md-12">
+                        <div class="card">
+                          <div class="card-header">
+                            <h6 class="mb-0">
+                              <i class="fas fa-clock"></i> File History: <span id="historyFileName"></span>
+                            </h6>
+                          </div>
+                          <div class="card-body">
+                            <div id="historyContent">
+                              <!-- History timeline will be populated here -->
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -793,6 +876,98 @@
               border-bottom: 1px solid #e3e6f0;
               padding: 0.75rem 1.25rem;
             }
+            
+            /* Timeline styles for File History mode */
+            .timeline {
+              position: relative;
+              padding: 0;
+              margin: 0;
+            }
+            
+            .timeline-header {
+              margin-bottom: 1rem;
+              padding-bottom: 0.5rem;
+              border-bottom: 1px solid #e3e6f0;
+            }
+            
+            .timeline-item {
+              position: relative;
+              padding: 1rem 0 1rem 3rem;
+              border-left: 2px solid #e3e6f0;
+            }
+            
+            .timeline-item:last-child {
+              border-left-color: transparent;
+            }
+            
+            .timeline-item.timeline-current {
+              border-left-color: #007bff;
+            }
+            
+            .timeline-marker {
+              position: absolute;
+              left: -0.6rem;
+              top: 1.2rem;
+              width: 1.2rem;
+              height: 1.2rem;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: 0.6rem;
+              border: 2px solid white;
+              box-shadow: 0 0 0 2px #e3e6f0;
+            }
+            
+            .timeline-item.timeline-current .timeline-marker {
+              box-shadow: 0 0 0 2px #007bff;
+            }
+            
+            .timeline-content {
+              background: #f8f9fc;
+              border: 1px solid #e3e6f0;
+              border-radius: 0.35rem;
+              padding: 1rem;
+              margin-left: 0.5rem;
+            }
+            
+            .timeline-item.timeline-current .timeline-content {
+              background: #e7f3ff;
+              border-color: #007bff;
+            }
+            
+            .timeline-title {
+              color: #5a5c69;
+              font-weight: 600;
+            }
+            
+            .timeline-time {
+              font-size: 0.875rem;
+            }
+            
+            .timeline-body {
+              color: #6c757d;
+            }
+            
+            .timeline-body p {
+              margin-bottom: 0.5rem;
+            }
+            
+            .timeline-body p:last-child {
+              margin-bottom: 0;
+            }
+            
+            .timeline-actions {
+              margin-top: 0.75rem;
+              padding-top: 0.75rem;
+              border-top: 1px solid #e3e6f0;
+            }
+            
+            .timeline-actions .btn {
+              font-size: 0.75rem;
+              padding: 0.25rem 0.5rem;
+            }
           </style>
 
           <!-- JavaScript for Compare Functionality -->
@@ -857,6 +1032,24 @@
                   }
                 });
 
+                // File History mode selection change handlers
+                document.getElementById('historyBranchSelect').addEventListener('change', async (e) => {
+                  const selectedBranch = e.target.value;
+                  if (selectedBranch) {
+                    await this.loadHistoryCommitsForBranch(selectedBranch);
+                  }
+                });
+                document.getElementById('historyCommitSelect').addEventListener('change', () => {
+                  this.populateHistoryFiles();
+                  this.updateShowHistoryButton();
+                });
+                document.getElementById('historyFileSelect').addEventListener('change', () => {
+                  this.updateShowHistoryButton();
+                });
+                document.getElementById('showHistoryBtn').addEventListener('click', () => {
+                  this.showFileHistory();
+                });
+
                 // Comparison mode toggle
                 document.querySelectorAll('input[name="comparisonMode"]').forEach(radio => {
                   radio.addEventListener('change', (e) => this.handleModeChange(e.target.value));
@@ -879,20 +1072,35 @@
               }
 
               handleModeChange(mode) {
+                console.log('Mode changed to:', mode);
+                
                 const fileMode = document.getElementById('fileComparisonMode');
                 const gitMode = document.getElementById('gitComparisonMode');
+                const historyMode = document.getElementById('fileHistoryMode');
                 const gitStatusBtn = document.getElementById('gitStatusBtn');
 
                 if (mode === 'files') {
                   fileMode.style.display = 'block';
                   gitMode.style.display = 'none';
+                  historyMode.style.display = 'none';
                   gitStatusBtn.style.display = 'none';
                   this.updateFileHistoryVisibility();
                 } else if (mode === 'git') {
                   fileMode.style.display = 'none';
                   gitMode.style.display = 'block';
+                  historyMode.style.display = 'none';
                   gitStatusBtn.style.display = 'inline-block';
                   this.updateGitFileHistoryVisibility();
+                } else if (mode === 'history') {
+                  fileMode.style.display = 'none';
+                  gitMode.style.display = 'none';
+                  historyMode.style.display = 'block';
+                  gitStatusBtn.style.display = 'none';
+                  
+                  // Add small delay to ensure DOM is ready
+                  setTimeout(() => {
+                    this.initializeHistoryMode();
+                  }, 100);
                 }
                 this.updateCompareButton();
               }
@@ -952,23 +1160,42 @@
                   });
 
                   if (response.ok) {
-                    const branchData = await response.json();
-                    this.gitData.branches = branchData.branches;
-                    this.gitData.currentBranch = branchData.current_branch;
+                    const data = await response.json();
+                    console.log('Git branches data:', data);
+                    
+                    // Handle different response formats
+                    let branches = [];
+                    if (Array.isArray(data)) {
+                      // Direct array of strings
+                      branches = data;
+                    } else if (data.branches && Array.isArray(data.branches)) {
+                      // Array of branch objects with name property
+                      branches = data.branches.map(branch => 
+                        typeof branch === 'string' ? branch : branch.name
+                      );
+                    } else {
+                      // Fallback to empty array
+                      branches = [];
+                    }
+                    
+                    this.gitData.branches = branches;
                     
                     const branchSelect = document.getElementById('gitBranchSelect');
                     
                     branchSelect.innerHTML = '<option value="">Select branch...</option>';
-                    this.gitData.branches.forEach(branch => {
-                      const isCurrentBranch = branch.is_current;
-                      const option = new Option(
-                        `${branch.name}${isCurrentBranch ? ' (current)' : ''}`, 
-                        branch.name, 
-                        isCurrentBranch, 
-                        isCurrentBranch
-                      );
+                    branches.forEach(branch => {
+                      const option = new Option(branch, branch);
                       branchSelect.add(option);
                     });
+                    
+                    // Auto-select the main branch if available
+                    if (branches.includes('main')) {
+                      branchSelect.value = 'main';
+                      await this.loadCommitsForBranch('main');
+                    } else if (branches.length > 0) {
+                      branchSelect.value = branches[0];
+                      await this.loadCommitsForBranch(branches[0]);
+                    }
                   }
                 } catch (error) {
                   console.error('Error loading Git branches:', error);
@@ -1003,10 +1230,12 @@
                   if (this.gitData.commits.length >= 2) {
                     leftSelect.value = this.gitData.commits[1].hash; // Older commit
                     rightSelect.value = this.gitData.commits[0].hash; // Newer commit
+                    
+                    // Populate files after selecting commits
+                    this.populateGitFiles();
                   }
                 }
-
-                this.populateGitFiles();
+                
                 this.updateCompareButton();
               }
 
@@ -1234,9 +1463,18 @@
                     const commitDate = new Date(commit.date);
                     const timeAgo = this.getTimeAgo(commitDate);
 
-                    // Check if the selected commit is the same as the last commit
-                    const isSelectedCommit = commitHash.startsWith(commit.short_hash) || commit.hash.startsWith(commitHash);
-                    const commitLabel = isSelectedCommit ? 'Selected Commit' : 'Latest Change';
+                    // Check if the selected commit is the same as the last commit that modified the file
+                    // Compare both full hash and short hash, handling both directions
+                    const selectedShort = commitHash.substring(0, 8);
+                    const lastCommitShort = commit.short_hash || commit.hash.substring(0, 8);
+                    const isSelectedCommit = (
+                      commitHash === commit.hash || 
+                      selectedShort === lastCommitShort ||
+                      commitHash === commit.short_hash ||
+                      (commit.hash && commit.hash.startsWith(commitHash))
+                    );
+                    
+                    const commitLabel = isSelectedCommit ? 'Selected Commit' : 'Last Modified';
 
                     historyContent.innerHTML = `
                       <div class="file-history-info">
@@ -1246,7 +1484,7 @@
                         <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
                         <p><strong>Message:</strong> ${commit.message}</p>
                         ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
-                        ${!isSelectedCommit ? `<p class="text-info"><i class="fas fa-info-circle"></i> Note: This shows the most recent change, not the selected commit (${commitHash.substring(0, 8)})</p>` : ''}
+                        ${!isSelectedCommit ? `<p class="text-info"><i class="fas fa-info-circle"></i> Note: File unchanged in selected commit (${selectedShort}). Showing last modification.</p>` : ''}
                       </div>
                     `;
                   } else {
@@ -1301,6 +1539,382 @@
                 if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
                 if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
                 return 'Just now';
+              }
+
+              // File History Mode Methods
+              async initializeHistoryMode() {
+                console.log('Initializing File History mode...');
+                
+                // Load branches for history mode
+                await this.loadHistoryBranches();
+                // Note: loadHistoryBranches now handles loading commits for the selected branch
+                
+                console.log('File History mode initialization complete');
+              }
+
+              async loadHistoryBranches() {
+                console.log('Loading branches for history mode...');
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch('http://localhost:8000/api/git/branches', {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+
+                  if (response.ok) {
+                    const data = await response.json();
+                    console.log('Loaded branches data:', data);
+                    
+                    // Handle different response formats
+                    let branches = [];
+                    if (Array.isArray(data)) {
+                      // Direct array of strings
+                      branches = data;
+                    } else if (data.branches && Array.isArray(data.branches)) {
+                      // Array of branch objects with name property
+                      branches = data.branches.map(branch => 
+                        typeof branch === 'string' ? branch : branch.name
+                      );
+                    } else {
+                      // Fallback to empty array
+                      branches = [];
+                    }
+                    console.log('Processing branches:', branches);
+                    
+                    const branchSelect = document.getElementById('historyBranchSelect');
+                    
+                    // Clear existing options
+                    branchSelect.innerHTML = '';
+                    
+                    // Add branch options
+                    let defaultBranch = 'main';
+                    branches.forEach(branch => {
+                      const option = new Option(branch, branch);
+                      branchSelect.add(option);
+                    });
+                    
+                    // Set default branch value explicitly
+                    if (branches.includes('main')) {
+                      branchSelect.value = 'main';
+                      console.log('Set branch to main');
+                    } else if (branches.length > 0) {
+                      branchSelect.value = branches[0];
+                      defaultBranch = branches[0];
+                      console.log('Set branch to:', branches[0]);
+                    }
+                    
+                    // Load commits for the selected branch
+                    if (branchSelect.value) {
+                      await this.loadHistoryCommitsForBranch(branchSelect.value);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error loading branches for history mode:', error);
+                }
+              }
+
+              async loadHistoryCommitsForBranch(branch) {
+                console.log('Loading commits for branch:', branch);
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch(`http://localhost:8000/api/git/commits?branch=${encodeURIComponent(branch)}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+
+                  if (response.ok) {
+                    const commits = await response.json();
+                    console.log('Loaded commits:', commits.length);
+                    const commitSelect = document.getElementById('historyCommitSelect');
+                    
+                    // Clear existing options
+                    commitSelect.innerHTML = '<option value="">Select commit...</option>';
+                    
+                    // Add commit options
+                    let latestCommitHash = null;
+                    commits.forEach((commit, index) => {
+                      const shortMessage = commit.message.length > 50 ? 
+                        commit.message.substring(0, 50) + '...' : 
+                        commit.message;
+                      const option = new Option(
+                        `${commit.short_hash} - ${shortMessage}`, 
+                        commit.hash
+                      );
+                      commitSelect.add(option);
+                      
+                      // Store the latest commit hash for selection
+                      if (index === 0) {
+                        latestCommitHash = commit.hash;
+                      }
+                    });
+                    
+                    // Select the latest commit explicitly
+                    if (latestCommitHash) {
+                      commitSelect.value = latestCommitHash;
+                      console.log('Set commit to:', latestCommitHash);
+                      
+                      // Auto-populate files for the latest commit
+                      await this.populateHistoryFiles();
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error loading commits for history mode:', error);
+                }
+              }
+
+              async populateHistoryFiles() {
+                const commitHash = document.getElementById('historyCommitSelect').value;
+                console.log('Populating files for commit:', commitHash);
+                if (!commitHash) return;
+
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch(`http://localhost:8000/api/git/files/${encodeURIComponent(commitHash)}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+
+                  if (response.ok) {
+                    const files = await response.json();
+                    console.log('Loaded files:', files.length);
+                    const fileSelect = document.getElementById('historyFileSelect');
+                    
+                    // Clear existing options
+                    fileSelect.innerHTML = '<option value="">Select file...</option>';
+                    
+                    // Add file options
+                    files.forEach(file => {
+                      const option = new Option(file, file);
+                      fileSelect.add(option);
+                    });
+                    
+                    console.log('File select populated with', files.length, 'files');
+                  }
+                } catch (error) {
+                  console.error('Error loading files for history mode:', error);
+                }
+                
+                this.updateShowHistoryButton();
+              }
+
+              updateShowHistoryButton() {
+                const branch = document.getElementById('historyBranchSelect').value;
+                const commit = document.getElementById('historyCommitSelect').value;
+                const file = document.getElementById('historyFileSelect').value;
+                const button = document.getElementById('showHistoryBtn');
+                
+                button.disabled = !(branch && commit && file);
+              }
+
+              async showFileHistory() {
+                const branch = document.getElementById('historyBranchSelect').value;
+                const commit = document.getElementById('historyCommitSelect').value;
+                const filePath = document.getElementById('historyFileSelect').value;
+                
+                if (!branch || !commit || !filePath) return;
+
+                const historyDisplay = document.getElementById('fileHistoryDisplay');
+                const historyContent = document.getElementById('historyContent');
+                const fileName = document.getElementById('historyFileName');
+                
+                fileName.textContent = filePath;
+                historyContent.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading file history...</p>';
+                historyDisplay.style.display = 'block';
+
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch(`http://localhost:8000/api/git/file-complete-history/${encodeURIComponent(filePath)}?from_commit=${encodeURIComponent(commit)}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+
+                  if (response.ok) {
+                    const history = await response.json();
+                    // Pass the selected commit hash to the render function
+                    this.renderFileHistory(history, commit);
+                  } else {
+                    const error = await response.json();
+                    historyContent.innerHTML = `<p class="text-danger">Error loading file history: ${error.detail}</p>`;
+                  }
+                } catch (error) {
+                  historyContent.innerHTML = `<p class="text-danger">Error loading file history: ${error.message}</p>`;
+                }
+              }
+
+              renderFileHistory(history, selectedCommitHash) {
+                const historyContent = document.getElementById('historyContent');
+                
+                if (!history.commits || history.commits.length === 0) {
+                  historyContent.innerHTML = '<p class="text-muted">No history found for this file.</p>';
+                  return;
+                }
+
+                let historyHtml = `
+                  <div class="timeline">
+                    <div class="timeline-header">
+                      <p class="text-muted mb-3">
+                        <i class="fas fa-info-circle"></i> 
+                        Showing ${history.commits.length} commit${history.commits.length > 1 ? 's' : ''} 
+                        from <strong>${history.from_commit.substring(0, 8)}</strong> backwards to file creation
+                      </p>
+                    </div>
+                `;
+
+                history.commits.forEach((commit, index) => {
+                  const commitDate = new Date(commit.date);
+                  const timeAgo = this.getTimeAgo(commitDate);
+                  const isLast = index === history.commits.length - 1;
+                  
+                  // Check if this commit is the selected one
+                  const isSelectedCommit = (
+                    commit.hash === selectedCommitHash ||
+                    commit.short_hash === selectedCommitHash.substring(0, 8) ||
+                    selectedCommitHash.startsWith(commit.hash) ||
+                    selectedCommitHash.startsWith(commit.short_hash)
+                  );
+                  
+                  let changeType = 'modified';
+                  let changeIcon = 'fas fa-edit';
+                  let changeColor = 'primary';
+                  
+                  if (isLast) {
+                    changeType = 'added';
+                    changeIcon = 'fas fa-plus';
+                    changeColor = 'success';
+                  }
+                  
+                  if (commit.change_type === 'D') {
+                    changeType = 'deleted';
+                    changeIcon = 'fas fa-trash';
+                    changeColor = 'danger';
+                  }
+
+                  historyHtml += `
+                    <div class="timeline-item ${isSelectedCommit ? 'timeline-current' : ''}">
+                      <div class="timeline-marker bg-${changeColor}">
+                        <i class="${changeIcon}"></i>
+                      </div>
+                      <div class="timeline-content">
+                        <div class="timeline-header">
+                          <h6 class="timeline-title mb-1">
+                            File ${changeType} 
+                            ${isSelectedCommit ? '<span class="badge bg-info ms-2">Selected Commit</span>' : ''}
+                          </h6>
+                          <p class="timeline-time text-muted mb-2">
+                            <i class="fas fa-clock"></i> ${timeAgo} (${commitDate.toLocaleString()})
+                          </p>
+                        </div>
+                        <div class="timeline-body">
+                          <p class="mb-1"><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
+                          <p class="mb-1"><strong>Author:</strong> ${commit.author.name}</p>
+                          <p class="mb-2"><strong>Message:</strong> ${commit.message}</p>
+                          <div class="timeline-actions">
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="configCompare.compareHistoryCommit('${commit.hash}', '${commit.short_hash}')"
+                                    title="Show changes made in this commit">
+                              <i class="fas fa-exchange-alt"></i> Compare
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                });
+
+                historyHtml += '</div>';
+                historyContent.innerHTML = historyHtml;
+              }
+
+              async compareHistoryCommit(commitHash, shortHash) {
+                // Get the current file path from the history display
+                const fileName = document.getElementById('historyFileName').textContent;
+                if (!fileName) {
+                  this.showError('No file selected for comparison');
+                  return;
+                }
+
+                // Show loading state
+                this.showLoading();
+
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  
+                  // Get the file history to find the parent commit
+                  const historyResponse = await fetch(`http://localhost:8000/api/git/file-complete-history/${encodeURIComponent(fileName)}?from_commit=${encodeURIComponent(commitHash)}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+
+                  if (historyResponse.ok) {
+                    const historyData = await historyResponse.json();
+                    
+                    // Find the current commit and the next one (parent) in the history
+                    let currentIndex = -1;
+                    for (let i = 0; i < historyData.commits.length; i++) {
+                      if (historyData.commits[i].hash === commitHash || historyData.commits[i].short_hash === shortHash) {
+                        currentIndex = i;
+                        break;
+                      }
+                    }
+                    
+                    if (currentIndex === -1) {
+                      this.showError('Could not find commit in history');
+                      return;
+                    }
+                    
+                    // Get parent commit (next in history array, or create empty for first commit)
+                    let parentCommit = null;
+                    if (currentIndex < historyData.commits.length - 1) {
+                      parentCommit = historyData.commits[currentIndex + 1].hash;
+                    } else {
+                      // This is the first commit for this file, compare with empty
+                      parentCommit = null;
+                    }
+                    
+                    // Use the existing diff API
+                    const diffResponse = await fetch('http://localhost:8000/api/git/diff', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({
+                        commit1: parentCommit, // Parent (older)
+                        commit2: commitHash,   // Current (newer)
+                        file_path: fileName
+                      })
+                    });
+
+                    if (diffResponse.ok) {
+                      const diffData = await diffResponse.json();
+                      
+                      // Format the diff data for display
+                      const formattedDiff = this.formatGitDiff(diffData, fileName, parentCommit || 'empty', commitHash);
+                      
+                      // Display the comparison
+                      this.displayComparison(formattedDiff, `Commit ${shortHash}: ${fileName}`);
+                      
+                      // Scroll to comparison section
+                      document.getElementById('comparisonSection').scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    } else {
+                      const error = await diffResponse.json();
+                      this.showError(`Failed to load commit diff: ${error.detail || 'Unknown error'}`);
+                    }
+                  } else {
+                    const error = await historyResponse.json();
+                    this.showError(`Failed to load file history for diff: ${error.detail || 'Unknown error'}`);
+                  }
+                } catch (error) {
+                  this.showError(`Error loading commit diff: ${error.message}`);
+                }
               }
 
               populateFileSelects() {
@@ -1519,9 +2133,20 @@
                   const gitFile = document.getElementById('gitFileSelect').value;
                   canCompare = leftCommit && rightCommit && gitFile && leftCommit !== rightCommit;
                   compareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare Commits';
+                } else if (mode === 'history') {
+                  // In history mode, the compare button is not used (Show History button is used instead)
+                  canCompare = false;
+                  compareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare';
                 }
                 
                 compareBtn.disabled = !canCompare;
+                
+                // Hide compare button in history mode
+                if (mode === 'history') {
+                  compareBtn.style.display = 'none';
+                } else {
+                  compareBtn.style.display = 'inline-block';
+                }
               }
 
               async compareFiles() {
@@ -1603,7 +2228,7 @@
                       <div class="modal-content">
                         <div class="modal-header">
                           <h5 class="modal-title">Git Repository Status</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="document.getElementById('gitStatusModal').remove()"></button>
+                          <button type="button" class="btn-close" id="closeGitStatusModal"></button>
                         </div>
                         <div class="modal-body">
                           <div class="row">
@@ -1651,7 +2276,7 @@
                           </div>
                         </div>
                         <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" onclick="document.getElementById('gitStatusModal').remove()">Close</button>
+                          <button type="button" class="btn btn-secondary" id="closeGitStatusModalBtn">Close</button>
                         </div>
                       </div>
                     </div>
@@ -1661,8 +2286,15 @@
                 // Remove existing modal and add new one
                 const existingModal = document.getElementById('gitStatusModal');
                 if (existingModal) {
-                  existingModal.remove();
+                  this.closeGitStatusModal();
                 }
+                
+                // Remove any existing backdrop
+                const existingBackdrop = document.querySelector('.modal-backdrop');
+                if (existingBackdrop) {
+                  existingBackdrop.remove();
+                }
+                
                 document.body.insertAdjacentHTML('beforeend', statusHtml);
                 
                 // Show the modal
@@ -1673,11 +2305,48 @@
                 // Add backdrop
                 const backdrop = document.createElement('div');
                 backdrop.className = 'modal-backdrop fade show';
-                backdrop.onclick = () => {
-                  modal.remove();
-                  backdrop.remove();
-                };
+                backdrop.id = 'gitStatusBackdrop';
                 document.body.appendChild(backdrop);
+                
+                // Add event listeners for close functionality
+                const closeBtn = document.getElementById('closeGitStatusModal');
+                const closeFooterBtn = document.getElementById('closeGitStatusModalBtn');
+                
+                closeBtn.addEventListener('click', () => this.closeGitStatusModal());
+                closeFooterBtn.addEventListener('click', () => this.closeGitStatusModal());
+                backdrop.addEventListener('click', () => this.closeGitStatusModal());
+                
+                // Close on escape key
+                const escapeHandler = (e) => {
+                  if (e.key === 'Escape') {
+                    this.closeGitStatusModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                  }
+                };
+                document.addEventListener('keydown', escapeHandler);
+              }
+
+              closeGitStatusModal() {
+                const modal = document.getElementById('gitStatusModal');
+                const backdrop = document.getElementById('gitStatusBackdrop');
+                
+                if (modal) {
+                  modal.remove();
+                }
+                
+                if (backdrop) {
+                  backdrop.remove();
+                }
+                
+                // Also remove any other modal backdrops that might be left behind
+                const allBackdrops = document.querySelectorAll('.modal-backdrop');
+                allBackdrops.forEach(bd => bd.remove());
+                
+                // Remove the modal-open class from body if it exists
+                document.body.classList.remove('modal-open');
+                
+                // Reset body padding-right that Bootstrap sometimes adds
+                document.body.style.paddingRight = '';
               }
 
               renderDiff(diffData) {
@@ -1710,14 +2379,18 @@
                   row.appendChild(rightDiv);
                   container.appendChild(row);
                   
-                  // Track diff locations for navigation
-                  if (leftLine.type !== 'equal' && leftLine.type !== 'empty') {
-                    this.currentDiffs.push({
-                      element: row,
-                      type: leftLine.type,
-                      index: this.currentDiffs.length
-                    });
-                  }
+                  // Track diff locations for navigation and export
+                  // Store all lines for export, including unchanged ones
+                  const diffType = this.getDiffType(leftLine.type, rightLine.type);
+                  this.currentDiffs.push({
+                    element: row,
+                    type: diffType,
+                    left: leftLine.content || '',
+                    right: rightLine.content || '',
+                    leftLineNumber: leftLine.line_number,
+                    rightLineNumber: rightLine.line_number,
+                    index: this.currentDiffs.length
+                  });
                 }
                 
                 // Setup sync scrolling
@@ -1734,6 +2407,23 @@
                   case 'replace': return 'diff-modified';
                   case 'equal': return 'diff-unchanged';
                   default: return 'diff-unchanged';
+                }
+              }
+
+              getDiffType(leftType, rightType) {
+                // Determine unified diff type based on left and right line types
+                if (leftType === 'equal' && rightType === 'equal') {
+                  return 'unchanged';
+                } else if (leftType === 'delete' && rightType === 'empty') {
+                  return 'removed';
+                } else if (leftType === 'empty' && rightType === 'insert') {
+                  return 'added';
+                } else if (leftType === 'replace' || rightType === 'replace') {
+                  return 'modified';
+                } else if (leftType === 'delete' && rightType === 'insert') {
+                  return 'modified';
+                } else {
+                  return 'unchanged';
                 }
               }
 
@@ -1760,18 +2450,21 @@
               }
 
               navigateDiff(direction) {
-                if (this.currentDiffs.length === 0) return;
+                // Get only the changed lines (not unchanged ones) for navigation
+                const changedDiffs = this.currentDiffs.filter(diff => diff.type !== 'unchanged');
+                
+                if (changedDiffs.length === 0) return;
                 
                 this.currentDiffIndex += direction;
                 
                 if (this.currentDiffIndex < 0) {
-                  this.currentDiffIndex = this.currentDiffs.length - 1;
-                } else if (this.currentDiffIndex >= this.currentDiffs.length) {
+                  this.currentDiffIndex = changedDiffs.length - 1;
+                } else if (this.currentDiffIndex >= changedDiffs.length) {
                   this.currentDiffIndex = 0;
                 }
                 
                 // Scroll to current diff
-                const diff = this.currentDiffs[this.currentDiffIndex];
+                const diff = changedDiffs[this.currentDiffIndex];
                 diff.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
                 // Highlight current diff temporarily
@@ -1787,14 +2480,43 @@
                 const prevBtn = document.getElementById('prevDiffBtn');
                 const nextBtn = document.getElementById('nextDiffBtn');
                 
-                const hasDeltas = this.currentDiffs.length > 0;
+                // Use only changed diffs for navigation count
+                const changedDiffs = this.currentDiffs.filter(diff => diff.type !== 'unchanged');
+                const hasDeltas = changedDiffs.length > 0;
+                
                 prevBtn.disabled = !hasDeltas;
                 nextBtn.disabled = !hasDeltas;
                 
                 if (hasDeltas) {
-                  prevBtn.title = `Previous difference (${this.currentDiffIndex + 1}/${this.currentDiffs.length})`;
-                  nextBtn.title = `Next difference (${this.currentDiffIndex + 1}/${this.currentDiffs.length})`;
+                  prevBtn.title = `Previous difference (${this.currentDiffIndex + 1}/${changedDiffs.length})`;
+                  nextBtn.title = `Next difference (${this.currentDiffIndex + 1}/${changedDiffs.length})`;
                 }
+              }
+
+              showLoading() {
+                const diffContent = document.getElementById('diffContent');
+                diffContent.innerHTML = `
+                  <div class="diff-loading text-center" style="padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-3">Loading comparison...</p>
+                  </div>
+                `;
+                
+                // Show the comparison section
+                document.getElementById('comparisonSection').style.display = 'block';
+              }
+
+              showError(message) {
+                const diffContent = document.getElementById('diffContent');
+                diffContent.innerHTML = `
+                  <div class="diff-loading text-center" style="padding: 50px;">
+                    <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                    <p class="mt-3 text-danger">${message}</p>
+                  </div>
+                `;
+                
+                // Show the comparison section
+                document.getElementById('comparisonSection').style.display = 'block';
               }
 
               toggleUnchanged() {
@@ -1813,42 +2535,153 @@
 
               async exportDiff() {
                 try {
-                  const leftFile = document.getElementById('leftFileSelect').value;
-                  const rightFile = document.getElementById('rightFileSelect').value;
-                  const token = localStorage.getItem('auth_token');
+                  // Check if we have diff content to export
+                  if (!this.currentDiffs || this.currentDiffs.length === 0) {
+                    this.showError('No diff content to export. Please run a comparison first.');
+                    return;
+                  }
+
+                  // Get the file names for the export
+                  const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
+                  let leftFileName = 'source';
+                  let rightFileName = 'target';
+                  let exportFileName = 'diff.patch';
+
+                  if (mode === 'files') {
+                    leftFileName = document.getElementById('leftFileSelect').value || 'source';
+                    rightFileName = document.getElementById('rightFileSelect').value || 'target';
+                  } else if (mode === 'git') {
+                    const leftCommit = document.getElementById('leftCommitSelect').value;
+                    const rightCommit = document.getElementById('rightCommitSelect').value;
+                    const gitFile = document.getElementById('gitFileSelect').value;
+                    
+                    leftFileName = gitFile ? `${gitFile}@${leftCommit?.substring(0, 8) || 'source'}` : 'source';
+                    rightFileName = gitFile ? `${gitFile}@${rightCommit?.substring(0, 8) || 'target'}` : 'target';
+                  }
+
+                  // Create a meaningful filename
+                  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+                  exportFileName = `diff_${leftFileName.replace(/[^\w.-]/g, '_')}_vs_${rightFileName.replace(/[^\w.-]/g, '_')}_${timestamp}.patch`;
+
+                  // Generate unified diff format from current diff data
+                  let unifiedDiff = this.generateUnifiedDiff(leftFileName, rightFileName);
+
+                  if (!unifiedDiff.trim()) {
+                    this.showError('No differences found to export.');
+                    return;
+                  }
+
+                  // Create and download the file
+                  const blob = new Blob([unifiedDiff], { type: 'text/plain;charset=utf-8' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = exportFileName;
+                  a.style.display = 'none';
+                  document.body.appendChild(a);
+                  a.click();
                   
-                  const response = await fetch('/api/files/export-diff', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                      left_file: leftFile,
-                      right_file: rightFile,
-                      format: 'unified'
-                    })
-                  });
-                  
-                  const data = await response.json();
-                  
-                  if (response.ok) {
-                    // Create and download the file
-                    const blob = new Blob([data.content], { type: 'text/plain' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = data.filename;
-                    document.body.appendChild(a);
-                    a.click();
+                  // Cleanup
+                  setTimeout(() => {
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
-                  } else {
-                    this.showError('Export failed: ' + (data.detail || 'Unknown error'));
-                  }
+                  }, 100);
+
+                  this.showSuccess(`Diff exported as ${exportFileName}`);
+
                 } catch (error) {
+                  console.error('Export error:', error);
                   this.showError('Export failed: ' + error.message);
                 }
+              }
+
+              showSuccess(message) {
+                // Show success message in the comparison stats area
+                const statsElement = document.getElementById('comparisonStats');
+                const originalText = statsElement.textContent;
+                
+                statsElement.innerHTML = `<i class="fas fa-check-circle text-success"></i> ${message}`;
+                statsElement.style.color = '#28a745';
+                
+                // Restore original text after 3 seconds
+                setTimeout(() => {
+                  statsElement.textContent = originalText;
+                  statsElement.style.color = '';
+                }, 3000);
+              }
+
+              generateUnifiedDiff(leftFileName, rightFileName) {
+                if (!this.currentDiffs || this.currentDiffs.length === 0) {
+                  return '';
+                }
+
+                const timestamp = new Date().toISOString();
+                let unifiedDiff = `--- ${leftFileName}\t${timestamp}\n`;
+                unifiedDiff += `+++ ${rightFileName}\t${timestamp}\n`;
+
+                let leftLineNum = 1;
+                let rightLineNum = 1;
+                let hunkStart = null;
+                let hunkLines = [];
+
+                for (let i = 0; i < this.currentDiffs.length; i++) {
+                  const diff = this.currentDiffs[i];
+                  
+                  if (diff.type === 'unchanged') {
+                    // If we have a hunk in progress, output it
+                    if (hunkStart !== null) {
+                      unifiedDiff += this.formatHunk(hunkStart, hunkLines, leftLineNum, rightLineNum);
+                      hunkStart = null;
+                      hunkLines = [];
+                    }
+                    leftLineNum++;
+                    rightLineNum++;
+                  } else {
+                    // Start a new hunk if needed
+                    if (hunkStart === null) {
+                      hunkStart = { left: leftLineNum, right: rightLineNum };
+                      
+                      // Add context lines before the change
+                      const contextBefore = Math.max(0, i - 3);
+                      for (let j = contextBefore; j < i; j++) {
+                        if (this.currentDiffs[j] && this.currentDiffs[j].type === 'unchanged') {
+                          hunkLines.push(` ${this.currentDiffs[j].left || this.currentDiffs[j].right || ''}`);
+                        }
+                      }
+                    }
+
+                    // Add the changed line
+                    if (diff.type === 'removed') {
+                      hunkLines.push(`-${diff.left || ''}`);
+                      leftLineNum++;
+                    } else if (diff.type === 'added') {
+                      hunkLines.push(`+${diff.right || ''}`);
+                      rightLineNum++;
+                    } else if (diff.type === 'modified') {
+                      hunkLines.push(`-${diff.left || ''}`);
+                      hunkLines.push(`+${diff.right || ''}`);
+                      leftLineNum++;
+                      rightLineNum++;
+                    }
+                  }
+                }
+
+                // Output any remaining hunk
+                if (hunkStart !== null) {
+                  unifiedDiff += this.formatHunk(hunkStart, hunkLines, leftLineNum, rightLineNum);
+                }
+
+                return unifiedDiff;
+              }
+
+              formatHunk(hunkStart, hunkLines, endLeftLine, endRightLine) {
+                const leftCount = endLeftLine - hunkStart.left;
+                const rightCount = endRightLine - hunkStart.right;
+                
+                let hunk = `@@ -${hunkStart.left},${leftCount} +${hunkStart.right},${rightCount} @@\n`;
+                hunk += hunkLines.join('\n') + '\n';
+                
+                return hunk;
               }
 
               showLoading() {
@@ -1874,9 +2707,12 @@
               }
             }
 
+            // Global reference for onclick handlers
+            let configCompare;
+
             // Initialize when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
-              new ConfigCompare();
+              configCompare = new ConfigCompare();
             });
           </script>
 
