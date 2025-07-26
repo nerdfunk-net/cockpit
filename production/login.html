@@ -30,8 +30,18 @@
     <!-- Include authentication manager early -->
     <script src="js/auth.js"></script>
     <script>
-      // Initialize global auth manager
-      window.authManager = new AuthManager();
+      // Defer initialization until DOM is ready and all scripts loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        // Ensure CockpitConfig is available
+        if (typeof CockpitConfig === 'undefined') {
+          console.error('CockpitConfig not available');
+          return;
+        }
+        
+        // Initialize global auth manager
+        window.authManager = new AuthManager();
+        console.log('AuthManager initialized with baseURL:', window.authManager.baseURL);
+      });
     </script>
     
     <style>
@@ -291,6 +301,12 @@
         // Login form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
           e.preventDefault();
+          
+          // Check if authManager is available
+          if (!window.authManager) {
+            alert('Login failed: Authentication system not ready. Please refresh the page.');
+            return;
+          }
           
           const submitBtn = this.querySelector('button[type="submit"]');
           const originalText = submitBtn.innerHTML;

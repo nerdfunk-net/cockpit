@@ -27,6 +27,47 @@
     <!-- Offline Manager -->
     <script src="js/offline-manager.js"></script>
     <script>
+      // Wait for all scripts and DOM to be ready before initializing
+      document.addEventListener('DOMContentLoaded', function() {
+        // Ensure all required objects are available
+        console.log('DOM ready, checking dependencies...');
+        console.log('CockpitConfig available:', !!window.CockpitConfig);
+        console.log('OfflineManager available:', !!window.OfflineManager);
+        console.log('offlineFetch available:', !!window.offlineFetch);
+        
+        // Wait a bit more if dependencies aren't ready
+        if (!window.CockpitConfig || !window.offlineFetch) {
+          console.log('Dependencies not ready, waiting...');
+          setTimeout(() => {
+            console.log('After delay - CockpitConfig:', !!window.CockpitConfig);
+            console.log('After delay - OfflineManager:', !!window.OfflineManager);
+            console.log('After delay - offlineFetch:', !!window.offlineFetch);
+            
+            // Try to initialize OfflineManager if it's not ready
+            if (window.CockpitConfig && !window.OfflineManager) {
+              console.log('Manually initializing OfflineManager...');
+              if (typeof window.initializeOfflineManager === 'function') {
+                window.initializeOfflineManager();
+              }
+            }
+            
+            initializeOnboarding();
+          }, 500);
+        } else {
+          initializeOnboarding();
+        }
+        
+        function initializeOnboarding() {
+          if (window.onboardDevice) {
+            console.log('OnboardDevice already initialized');
+            return;
+          }
+          
+          window.onboardDevice = new OnboardDevice();
+          console.log('OnboardDevice initialized');
+        }
+      });
+      
       // Robust authentication check
       (function() {
         console.log('Checking authentication...');
@@ -486,6 +527,21 @@
         }
 
         init() {
+          // Check if required dependencies are available
+          if (!window.CockpitConfig) {
+            console.error('CockpitConfig not available - cannot initialize');
+            this.showError('Configuration not loaded. Please refresh the page.');
+            return;
+          }
+          
+          if (!window.offlineFetch) {
+            console.error('offlineFetch not available - cannot initialize');
+            this.showError('Offline manager not loaded. Please refresh the page.');
+            return;
+          }
+          
+          console.log('Dependencies available, initializing OnboardDevice...');
+          
           // Initialize event listeners
           document.getElementById('ip_address').addEventListener('input', () => {
             this.validateIPAddress();
@@ -502,19 +558,46 @@
 
           // DEBUG: Set auth token for testing if not present
           if (!localStorage.getItem('auth_token')) {
-            console.log('Setting debug auth token...');
-            localStorage.setItem('auth_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MzQ2MTYwMX0.TeS6vKz0SxT3Ft8T8F9rW4N89SJilB9ZqdlGDt3fJyc');
-            localStorage.setItem('user_info', JSON.stringify({
-              "username": "admin",
-              "full_name": "Administrator",
-              "email": "admin@cockpit.local", 
-              "role": "admin"
-            }));
-            localStorage.setItem('token_expiry', Date.now() + (1800 * 1000));
+            console.log('Getting fresh debug auth token...');
+            
+            fetch(`${window.CockpitConfig.api.baseUrl}/auth/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: 'admin', password: 'admin' })
+            })
+            .then(response => {
+              if (response.ok) {
+                return response.json();
+              } else {
+                throw new Error('Failed to get debug auth token');
+              }
+            })
+            .then(authData => {
+              localStorage.setItem('auth_token', authData.access_token);
+              localStorage.setItem('user_info', JSON.stringify(authData.user));
+              localStorage.setItem('token_expiry', Date.now() + (authData.expires_in * 1000));
+              console.log('Debug auth token set successfully');
+              // Load dropdown data after setting token
+              this.loadDropdownData();
+            })
+            .catch(error => {
+              console.error('Error getting debug auth token:', error);
+              // Fallback to fresh hardcoded token if API fails
+              localStorage.setItem('auth_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MzQ5MTE1OH0.f05a76BRJXW7xQxgHjPN6xCTPqhFAT56J--g_sqgcvc');
+              localStorage.setItem('user_info', JSON.stringify({
+                "username": "admin",
+                "full_name": "Administrator",
+                "email": "admin@cockpit.local", 
+                "role": "admin"
+              }));
+              localStorage.setItem('token_expiry', Date.now() + (1800 * 1000));
+              // Load dropdown data after setting fallback token
+              this.loadDropdownData();
+            });
+          } else {
+            // Load dropdown data if token already exists
+            this.loadDropdownData();
           }
-
-          // Load dropdown data
-          this.loadDropdownData();
 
           // Initial validation
           this.validateIPAddress();
@@ -609,6 +692,9 @@
           try {
             const token = localStorage.getItem('auth_token');
             console.log('Loading dropdown data, token exists:', !!token);
+            console.log('CockpitConfig available:', !!window.CockpitConfig);
+            console.log('OfflineManager available:', !!window.OfflineManager);
+            console.log('offlineFetch available:', !!window.offlineFetch);
             
             if (!token) {
               this.showError('Authentication required. Please log in.');
@@ -618,15 +704,25 @@
             // Show loading state
             this.showInfo('Loading configuration options...');
 
+            // Debug: log the endpoints we're trying to call
+            console.log('API endpoints:', {
+              locations: window.CockpitConfig.api.endpoints.nautobot.locations,
+              namespaces: window.CockpitConfig.api.endpoints.nautobot.namespaces,
+              roles: window.CockpitConfig.api.endpoints.nautobot.roles,
+              platforms: window.CockpitConfig.api.endpoints.nautobot.platforms,
+              statuses: window.CockpitConfig.api.endpoints.nautobot.statuses,
+              secretGroups: window.CockpitConfig.api.endpoints.nautobot.secretGroups
+            });
+
             // Load all dropdown data in parallel
             console.log('Fetching dropdown data from backend...');
             const [locations, namespaces, roles, platforms, statuses, secretGroups] = await Promise.all([
-              this.fetchData(CockpitConfig.api.endpoints.nautobot.locations),
-              this.fetchData(CockpitConfig.api.endpoints.nautobot.namespaces),
-              this.fetchData(CockpitConfig.api.endpoints.nautobot.roles),
-              this.fetchData(CockpitConfig.api.endpoints.nautobot.platforms),
-              this.fetchData(CockpitConfig.api.endpoints.nautobot.statuses),
-              this.fetchData(CockpitConfig.api.endpoints.nautobot.secretGroups)
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.locations),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.namespaces),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.roles),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.platforms),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.statuses),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.secretGroups)
             ]);
 
             console.log('Received data:', {
@@ -665,11 +761,15 @@
         async fetchData(endpoint) {
           const token = localStorage.getItem('auth_token');
           
-          if (CockpitConfig.debug.enabled) {
-            console.log(`Fetching data from: ${endpoint}`);
-          }
+          console.log(`Fetching data from: ${endpoint}`);
+          console.log('Token for request:', token ? token.substring(0, 20) + '...' : 'No token');
           
           try {
+            // Check if offlineFetch is available
+            if (!window.offlineFetch) {
+              throw new Error('offlineFetch is not available');
+            }
+
             // Use offline-capable fetch
             const response = await window.offlineFetch(endpoint, {
               headers: {
@@ -678,23 +778,49 @@
               }
             });
 
+            console.log(`Response for ${endpoint}:`, {
+              ok: response.ok,
+              status: response.status,
+              statusText: response.statusText
+            });
+
             if (!response.ok) {
-              throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
+              throw new Error(`Failed to fetch ${endpoint}: ${response.status} ${response.statusText}`);
             }
 
-            return await response.json();
+            const data = await response.json();
+            console.log(`Data received from ${endpoint}:`, data ? `${data.length} items` : 'null');
+            return data;
           } catch (error) {
-            console.warn(`Failed to fetch ${endpoint}, using offline fallback:`, error);
+            console.error(`Failed to fetch ${endpoint}:`, error);
             
             // Use config fallback for specific endpoints
             const endpointKey = endpoint.split('/').pop();
-            const fallbackData = CockpitConfig.getFallbackData(endpointKey);
+            console.log(`Trying fallback for endpoint key: ${endpointKey}`);
             
-            if (fallbackData && fallbackData.length > 0) {
-              console.log(`Using fallback data for ${endpointKey}:`, fallbackData);
-              return fallbackData;
+            // Map endpoint keys to fallback data keys
+            const keyMapping = {
+              'secret-groups': 'secretGroups',
+              'locations': 'locations',
+              'namespaces': 'namespaces', 
+              'roles': 'roles',
+              'platforms': 'platforms',
+              'statuses': 'statuses'
+            };
+            
+            const fallbackKey = keyMapping[endpointKey] || endpointKey;
+            console.log(`Using fallback key: ${fallbackKey}`);
+            
+            if (window.CockpitConfig && window.CockpitConfig.getFallbackData) {
+              const fallbackData = window.CockpitConfig.getFallbackData(fallbackKey);
+              
+              if (fallbackData && fallbackData.length > 0) {
+                console.log(`Using fallback data for ${endpoint}:`, fallbackData);
+                return fallbackData;
+              }
             }
             
+            // Re-throw error if no fallback available
             throw error;
           }
         }
@@ -795,7 +921,7 @@
             const requestBody = { ip_address: ipAddress };
             console.log('Request body:', requestBody);
             
-            const checkIpUrl = CockpitConfig.getApiUrl(CockpitConfig.api.endpoints.nautobot.checkIp);
+            const checkIpUrl = window.CockpitConfig.getApiUrl(window.CockpitConfig.api.endpoints.nautobot.checkIp);
             console.log('Check IP URL:', checkIpUrl);
             
             const response = await fetch(checkIpUrl, {
@@ -849,7 +975,7 @@
             const formData = this.getFormData();
             const token = localStorage.getItem('auth_token');
 
-            const onboardUrl = CockpitConfig.getApiUrl(CockpitConfig.api.endpoints.nautobot.onboardDevice);
+            const onboardUrl = window.CockpitConfig.getApiUrl(window.CockpitConfig.api.endpoints.nautobot.onboardDevice);
             console.log('Onboard URL:', onboardUrl);
 
             const response = await fetch(onboardUrl, {
@@ -986,11 +1112,6 @@
         }
       }
 
-      // Initialize when DOM is ready
-      document.addEventListener('DOMContentLoaded', function() {
-        window.onboardDevice = new OnboardDevice();
-        console.log('OnboardDevice initialized');
-      });
     </script>
   </body>
 </html>

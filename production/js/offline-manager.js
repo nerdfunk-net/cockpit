@@ -5,11 +5,30 @@ class OfflineManager {
   constructor(config = window.CockpitConfig) {
     this.config = config;
     this.isInitialized = false;
+    
+    // Only init if config is available
+    if (this.config) {
+      this.init();
+    } else {
+      console.warn('OfflineManager: CockpitConfig not available, deferring initialization');
+    }
+  }
+
+  // Method to initialize later if config wasn't available
+  initializeWithConfig(config) {
+    if (this.isInitialized) return;
+    
+    this.config = config;
     this.init();
   }
 
   init() {
     if (this.isInitialized) return;
+    
+    if (!this.config) {
+      console.warn('OfflineManager: Cannot initialize without config');
+      return;
+    }
 
     // Set up service worker for caching (if available)
     if ('serviceWorker' in navigator) {
@@ -33,6 +52,11 @@ class OfflineManager {
   }
 
   setupNetworkMonitoring() {
+    if (!this.config || !this.config.environment) {
+      console.warn('OfflineManager: Cannot setup network monitoring without config');
+      return;
+    }
+    
     // Update connection status
     const updateStatus = () => {
       const wasOffline = this.config.environment.isOffline;
@@ -190,13 +214,41 @@ class OfflineManager {
   }
 }
 
-// Create global instance
-window.OfflineManager = new OfflineManager();
+// Initialize when DOM and config are ready
+window.initializeOfflineManager = function() {
+  if (window.OfflineManager && window.OfflineManager.isInitialized) {
+    return; // Already initialized
+  }
+  
+  if (window.CockpitConfig) {
+    // Create global instance with config
+    window.OfflineManager = new OfflineManager(window.CockpitConfig);
+    
+    // Enhanced fetch function for components to use
+    window.offlineFetch = (endpoint, options) => {
+      if (!window.OfflineManager) {
+        console.error('OfflineManager not available');
+        return Promise.reject(new Error('OfflineManager not available'));
+      }
+      return window.OfflineManager.fetch(endpoint, options);
+    };
+    
+    console.log('✅ OfflineManager initialized with config');
+  } else {
+    console.warn('⚠️ CockpitConfig not available, cannot initialize OfflineManager');
+  }
+}
 
-// Enhanced fetch function for components to use
-window.offlineFetch = (endpoint, options) => {
-  return window.OfflineManager.fetch(endpoint, options);
-};
+// Try to initialize immediately if config is available
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    // DOM is still loading, wait for it
+    document.addEventListener('DOMContentLoaded', window.initializeOfflineManager);
+  } else {
+    // DOM is already loaded, try to initialize
+    window.initializeOfflineManager();
+  }
+}
 
 // Export for module use
 if (typeof module !== 'undefined' && module.exports) {

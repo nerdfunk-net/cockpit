@@ -58,7 +58,7 @@ const CockpitConfig = {
   environment: {
     isDevelopment: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
     isProduction: window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1',
-    isContainer: typeof window !== 'undefined' && (window.COCKPIT_CONTAINER_MODE === true || document.body.classList.contains('container-mode')),
+    isContainer: typeof window !== 'undefined' && (window.COCKPIT_CONTAINER_MODE === true || (document.body && document.body.classList.contains('container-mode'))),
     isOffline: !navigator.onLine
   },
 

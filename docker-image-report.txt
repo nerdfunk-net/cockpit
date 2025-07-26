@@ -1,0 +1,28 @@
+Cockpit Offline Container Build Report
+=====================================
+
+Build Date: Sa 26 Jul 2025 02:04:11 CEST
+Image Name: cockpit-frontend:offline-latest
+Image Size: 60.1MB
+Git Commit: ec3abf4
+
+Static Assets:
+- FontAwesome CSS: ✅
+- WebFonts:        8 files
+- Config Files:        2 files
+- Offline Manager: ✅
+- Service Worker: ✅
+
+Container Features:
+- Offline-ready: ✅
+- Auto-configuration: ✅  
+- Static asset caching: ✅
+- Service worker: ✅
+- Health checks: ✅
+- Non-root user: ✅
+
+Usage:
+  docker run -d -p 80:80 -e COCKPIT_API_URL=http://backend:8000 cockpit-frontend:offline-latest
+
+Docker Compose:
+  docker-compose -f docker-compose.offline.yml up
