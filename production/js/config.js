@@ -46,6 +46,7 @@ const CockpitConfig = {
         ipAddressStatuses: '/api/nautobot/statuses/ipaddress',
         combinedStatuses: '/api/nautobot/statuses/combined',
         secretGroups: '/api/nautobot/secret-groups',
+        stats: '/api/nautobot/stats',
         checkIp: '/api/nautobot/check-ip',
         onboardDevice: '/api/nautobot/devices/onboard'
       }
