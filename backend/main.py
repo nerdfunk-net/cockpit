@@ -1296,16 +1296,41 @@ async def git_commits(
 @app.get("/api/git/files/{commit_hash}")
 async def git_files(
     commit_hash: str,
+    file_path: str = None,
     current_user: str = Depends(verify_token)
 ):
-    """Get list of files in a specific commit"""
+    """Get list of files in a specific commit or file content if file_path is provided"""
     try:
         repo = get_git_repo()
         
         # Get the commit
         commit = repo.commit(commit_hash)
         
-        # Get all files in the commit
+        # If file_path is provided, return file content
+        if file_path:
+            try:
+                # Get file content from the commit
+                file_blob = commit.tree[file_path]
+                file_content = file_blob.data_stream.read().decode('utf-8')
+                
+                return {
+                    "path": file_path,
+                    "content": file_content,
+                    "size": len(file_content),
+                    "commit": commit_hash
+                }
+            except KeyError:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"File '{file_path}' not found in commit {commit_hash}"
+                )
+            except UnicodeDecodeError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"File '{file_path}' is not a text file"
+                )
+        
+        # Otherwise, return list of files
         files = []
         for item in commit.tree.traverse():
             if item.type == 'blob':  # Only files, not directories

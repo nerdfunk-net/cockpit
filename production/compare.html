@@ -1084,13 +1084,18 @@
               padding: 0.25rem 0.5rem;
             }
             
+            /* File Search Container - Ensure proper positioning context */
+            .form-group {
+              position: relative;
+            }
+            
             /* File Search Results Styling */
             .file-search-results {
               position: absolute;
               top: 100%;
               left: 0;
               right: 0;
-              z-index: 9999;
+              z-index: 10000;
               max-height: 400px;
               overflow-y: auto;
               background: white;
@@ -2894,11 +2899,18 @@
                           <p class="mb-1"><strong>Author:</strong> ${commit.author.name}</p>
                           <p class="mb-2"><strong>Message:</strong> ${commit.message}</p>
                           <div class="timeline-actions">
-                            <button class="btn btn-sm btn-outline-primary" 
-                                    onclick="configCompare.compareHistoryCommit('${commit.hash}', '${commit.short_hash}')"
-                                    title="Show changes made in this commit">
-                              <i class="fas fa-exchange-alt"></i> Compare
-                            </button>
+                            ${isLast ? 
+                              `<button class="btn btn-sm btn-outline-info" 
+                                      onclick="configCompare.viewHistoryFile('${commit.hash}', '${commit.short_hash}')"
+                                      title="View file content at this commit">
+                                <i class="fas fa-file-alt"></i> View File
+                              </button>` :
+                              `<button class="btn btn-sm btn-outline-primary" 
+                                      onclick="configCompare.compareHistoryCommit('${commit.hash}', '${commit.short_hash}')"
+                                      title="Show changes made in this commit">
+                                <i class="fas fa-exchange-alt"></i> Compare
+                              </button>`
+                            }
                           </div>
                         </div>
                       </div>
@@ -2995,6 +3007,68 @@
                   }
                 } catch (error) {
                   this.showError(`Error loading commit diff: ${error.message}`);
+                }
+              }
+
+              async viewHistoryFile(commitHash, shortHash) {
+                // Get the current file path from the history display
+                const fileName = document.getElementById('historyFileName').textContent;
+                if (!fileName) {
+                  this.showError('No file selected to view');
+                  return;
+                }
+
+                // Show loading state
+                this.showLoading();
+
+                try {
+                  const token = localStorage.getItem('auth_token');
+                  const response = await fetch(`http://localhost:8000/api/git/files/${commitHash}?file_path=${encodeURIComponent(fileName)}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`
+                    }
+                  });
+
+                  if (response.ok) {
+                    const fileData = await response.json();
+                    
+                    // Display file content using a simple approach
+                    const displayData = {
+                      left_file: `${fileName} (${shortHash})`,
+                      right_file: `File Content`,
+                      left_lines: [],
+                      right_lines: []
+                    };
+
+                    // Convert file content to lines for display
+                    const lines = fileData.content ? fileData.content.split('\n') : ['<empty file>'];
+                    lines.forEach((line, index) => {
+                      displayData.left_lines.push({
+                        line_number: index + 1,
+                        content: line,
+                        type: 'equal'
+                      });
+                      // Add the same line to right side to make it display properly
+                      displayData.right_lines.push({
+                        line_number: index + 1,
+                        content: line,
+                        type: 'equal'
+                      });
+                    });
+
+                    this.displayComparison(displayData, `File Content: ${fileName} (${shortHash})`);
+                    
+                    // Scroll to comparison section
+                    document.getElementById('comparisonSection').scrollIntoView({ 
+                      behavior: 'smooth',
+                      block: 'start'
+                    });
+                  } else {
+                    const error = await response.json();
+                    this.showError(`Failed to load file content: ${error.detail || 'Unknown error'}`);
+                  }
+                } catch (error) {
+                  this.showError(`Error loading file content: ${error.message}`);
                 }
               }
 
