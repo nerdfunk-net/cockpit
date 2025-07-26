@@ -117,7 +117,7 @@
 
 # To get a list of statuses of a specified content type in nautobot use a graphql query and make a REST API call. 
   * A GraphQL Query must be encapsulated in a JSON payload with the query key and sent with a POST request.
-  * You can use the parameter content_type to get the statuses of a content_type: valid choices are: dcim.device, dcim.interface, dcim.location, ipam.ipaddress, ipam.prefix
+  * You can use the parameter content_type to get the statuses of a content_type: valid choices are: dcim.device, dcim.interface, ipam.ipaddress, dcim.location, ipam.prefix
   * use this query:
     query status (
       $content_type: [String]

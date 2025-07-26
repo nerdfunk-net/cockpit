@@ -701,18 +701,22 @@
               namespaces: window.CockpitConfig.api.endpoints.nautobot.namespaces,
               roles: window.CockpitConfig.api.endpoints.nautobot.roles,
               platforms: window.CockpitConfig.api.endpoints.nautobot.platforms,
-              statuses: window.CockpitConfig.api.endpoints.nautobot.statuses,
+              deviceStatuses: window.CockpitConfig.api.endpoints.nautobot.deviceStatuses,
+              interfaceStatuses: window.CockpitConfig.api.endpoints.nautobot.interfaceStatuses,
+              ipAddressStatuses: window.CockpitConfig.api.endpoints.nautobot.ipAddressStatuses,
               secretGroups: window.CockpitConfig.api.endpoints.nautobot.secretGroups
             });
 
-            // Load all dropdown data in parallel
+            // Load all dropdown data in parallel - using specific status endpoints
             console.log('Fetching dropdown data from backend...');
-            const [locations, namespaces, roles, platforms, statuses, secretGroups] = await Promise.all([
+            const [locations, namespaces, roles, platforms, deviceStatuses, interfaceStatuses, ipAddressStatuses, secretGroups] = await Promise.all([
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.locations),
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.namespaces),
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.roles),
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.platforms),
-              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.statuses),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.deviceStatuses),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.interfaceStatuses),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.ipAddressStatuses),
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.secretGroups)
             ]);
 
@@ -721,18 +725,20 @@
               namespaces: namespaces.length, 
               roles: roles.length,
               platforms: platforms.length,
-              statuses: statuses.length,
+              deviceStatuses: deviceStatuses.length,
+              interfaceStatuses: interfaceStatuses.length,
+              ipAddressStatuses: ipAddressStatuses.length,
               secretGroups: secretGroups.length
             });
 
-            // Populate dropdowns
+            // Populate dropdowns with specific status types
             this.populateSelect('location', locations);
             this.populateSelect('namespace', namespaces);
             this.populateSelect('device_role', roles);
             this.populateSelect('platform', platforms);
-            this.populateSelect('device_status', statuses);
-            this.populateSelect('interface_status', statuses);
-            this.populateSelect('ip_address_status', statuses);
+            this.populateSelect('device_status', deviceStatuses);
+            this.populateSelect('interface_status', interfaceStatuses);
+            this.populateSelect('ip_address_status', ipAddressStatuses);
             this.populateSelect('secret_group', secretGroups);
 
             this.hideStatusMessages();

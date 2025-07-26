@@ -379,7 +379,7 @@ async def get_nautobot_platforms(current_user: str = Depends(verify_token)):
 
 @app.get("/api/nautobot/statuses")
 async def get_nautobot_statuses(current_user: str = Depends(verify_token)):
-    """Get list of all statuses from Nautobot"""
+    """Get list of all statuses from Nautobot (deprecated - use specific endpoints)"""
     query = """
     query status {
       statuses {
@@ -400,6 +400,138 @@ async def get_nautobot_statuses(current_user: str = Depends(verify_token)):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Failed to fetch statuses: {str(e)}"
+        )
+
+@app.get("/api/nautobot/statuses/device")
+async def get_nautobot_device_statuses(current_user: str = Depends(verify_token)):
+    """Get list of device statuses from Nautobot"""
+    query = """
+    query status (
+      $content_type: [String]
+    ) {
+      statuses(content_types: $content_type) {
+        id
+        name
+        content_types {
+          model
+        }
+      }
+    }
+    """
+    variables = {
+        "content_type": ["dcim.device"]
+    }
+    try:
+        result = nautobot_graphql_query(query, variables)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["statuses"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch device statuses: {str(e)}"
+        )
+
+@app.get("/api/nautobot/statuses/interface")
+async def get_nautobot_interface_statuses(current_user: str = Depends(verify_token)):
+    """Get list of interface statuses from Nautobot"""
+    query = """
+    query status (
+      $content_type: [String]
+    ) {
+      statuses(content_types: $content_type) {
+        id
+        name
+        content_types {
+          model
+        }
+      }
+    }
+    """
+    variables = {
+        "content_type": ["dcim.interface"]
+    }
+    try:
+        result = nautobot_graphql_query(query, variables)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["statuses"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch interface statuses: {str(e)}"
+        )
+
+@app.get("/api/nautobot/statuses/ipaddress")
+async def get_nautobot_ipaddress_statuses(current_user: str = Depends(verify_token)):
+    """Get list of IP address statuses from Nautobot"""
+    query = """
+    query status (
+      $content_type: [String]
+    ) {
+      statuses(content_types: $content_type) {
+        id
+        name
+        content_types {
+          model
+        }
+      }
+    }
+    """
+    variables = {
+        "content_type": ["ipam.ipaddress"]
+    }
+    try:
+        result = nautobot_graphql_query(query, variables)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["statuses"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch IP address statuses: {str(e)}"
+        )
+
+@app.get("/api/nautobot/statuses/combined")
+async def get_nautobot_combined_statuses(current_user: str = Depends(verify_token)):
+    """Get list of statuses for device, interface, and IP address content types"""
+    query = """
+    query status (
+      $content_type: [String]
+    ) {
+      statuses(content_types: $content_type) {
+        id
+        name
+        content_types {
+          model
+        }
+      }
+    }
+    """
+    variables = {
+        "content_type": ["dcim.device", "dcim.interface", "ipam.ipaddress", "ipam.prefix"]
+    }
+    try:
+        result = nautobot_graphql_query(query, variables)
+        if "errors" in result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"GraphQL errors: {result['errors']}"
+            )
+        return result["data"]["statuses"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch combined statuses: {str(e)}"
         )
 
 @app.get("/api/nautobot/secret-groups")

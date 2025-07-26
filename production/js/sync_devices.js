@@ -320,7 +320,7 @@ async function fetchAndPopulateStatuses() {
   const statusSelect = document.getElementById('sync-status');
   if (!statusSelect) return;
   try {
-    const data = await window.authManager.apiRequest('/api/nautobot/statuses');
+    const data = await window.authManager.apiRequest('/api/nautobot/statuses/device');
     if (!data || !Array.isArray(data)) throw new Error('No statuses returned');
     statusSelect.innerHTML = '<option value="">Select status</option>';
     let activeId = null;
@@ -334,7 +334,7 @@ async function fetchAndPopulateStatuses() {
     // Set default to Active if present
     if (activeId) statusSelect.value = activeId;
   } catch (e) {
-    console.error('Failed to fetch statuses:', e);
+    console.error('Failed to fetch device statuses:', e);
     statusSelect.innerHTML = '<option value="">Failed to load statuses</option>';
   }
 }
