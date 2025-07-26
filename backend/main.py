@@ -21,6 +21,7 @@ from config_manual import settings
 # Import settings management
 from settings_manager import settings_manager
 from connection_tester import connection_tester
+from git_manager import git_manager, GitManager
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -1632,13 +1633,16 @@ end"""
 def get_git_repo():
     """Get Git repository instance for the config directory"""
     try:
-        config_dir = Path(settings.config_files_directory)
+        # Use GitManager's base path instead of settings.config_files_directory
+        git_manager = GitManager()
+        config_dir = Path(git_manager.base_path)
         repo = Repo(config_dir)
         return repo
     except InvalidGitRepositoryError:
         # Try to initialize a new repo
         try:
-            config_dir = Path(settings.config_files_directory)
+            git_manager = GitManager()
+            config_dir = Path(git_manager.base_path)
             config_dir.mkdir(parents=True, exist_ok=True)
             repo = Repo.init(config_dir)
             return repo
@@ -2034,8 +2038,7 @@ async def get_statistics(current_user: str = Depends(verify_token)):
 async def get_git_status(current_user: str = Depends(verify_token)):
     """Get Git repository status"""
     try:
-        config_dir = Path(settings.config_files_directory)
-        repo = Repo(config_dir)
+        repo = get_git_repo()
         
         # Get branch info
         current_branch = repo.active_branch.name
@@ -2065,8 +2068,7 @@ async def get_git_status(current_user: str = Depends(verify_token)):
 async def get_git_branches(current_user: str = Depends(verify_token)):
     """Get Git repository branches"""
     try:
-        config_dir = Path(settings.config_files_directory)
-        repo = Repo(config_dir)
+        repo = get_git_repo()
         
         branches = [branch.name for branch in repo.branches]
         return branches
@@ -2085,8 +2087,7 @@ async def get_git_branches(current_user: str = Depends(verify_token)):
 async def get_git_commits(branch: str = "main", limit: int = 50, current_user: str = Depends(verify_token)):
     """Get Git commits for a branch"""
     try:
-        config_dir = Path(settings.config_files_directory)
-        repo = Repo(config_dir)
+        repo = get_git_repo()
         
         commits = []
         for commit in repo.iter_commits(branch, max_count=limit):
@@ -2194,8 +2195,7 @@ async def get_file_last_change(file_path: str, current_user: str = Depends(verif
 async def get_file_complete_history(file_path: str, from_commit: str = None, current_user: str = Depends(verify_token)):
     """Get the complete history of a file from a specific commit backwards to its creation"""
     try:
-        config_dir = Path(settings.config_files_directory)
-        repo = Repo(config_dir)
+        repo = get_git_repo()
         
         # Start from the specified commit or HEAD
         start_commit = from_commit if from_commit else "HEAD"
@@ -2602,6 +2602,267 @@ async def reset_settings_to_defaults(current_user: str = Depends(verify_token)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to reset settings: {str(e)}"
         )
+
+# Git Repository Management Endpoints
+@app.get("/api/git/repo/status")
+async def get_git_repository_status(current_user: str = Depends(verify_token)):
+    """Get Git repository status and information"""
+    try:
+        status = git_manager.get_repository_status()
+        return {
+            "success": True,
+            "data": status
+        }
+    
+    except Exception as e:
+        logger.error(f"Error getting Git repository status: {e}")
+        return {
+            "success": False,
+            "message": f"Failed to get repository status: {str(e)}"
+        }
+
+@app.post("/api/git/repo/sync")
+async def sync_git_repository(current_user: str = Depends(verify_token)):
+    """Sync Git repository (clone if not exists, pull if exists)"""
+    try:
+        success, message = git_manager.sync_repository()
+        
+        if success:
+            # Get updated status after sync
+            status = git_manager.get_repository_status()
+            return {
+                "success": True,
+                "message": message,
+                "data": status
+            }
+        else:
+            return {
+                "success": False,
+                "message": message
+            }
+    
+    except Exception as e:
+        logger.error(f"Error syncing Git repository: {e}")
+        return {
+            "success": False,
+            "message": f"Repository sync failed: {str(e)}"
+        }
+
+@app.post("/api/git/repo/clone")
+async def clone_git_repository(current_user: str = Depends(verify_token)):
+    """Force clone Git repository (will backup existing if needed)"""
+    try:
+        success, message = git_manager.clone_repository()
+        
+        if success:
+            status = git_manager.get_repository_status()
+            return {
+                "success": True,
+                "message": message,
+                "data": status
+            }
+        else:
+            return {
+                "success": False,
+                "message": message
+            }
+    
+    except Exception as e:
+        logger.error(f"Error cloning Git repository: {e}")
+        return {
+            "success": False,
+            "message": f"Repository clone failed: {str(e)}"
+        }
+
+@app.post("/api/git/repo/pull")
+async def pull_git_changes(current_user: str = Depends(verify_token)):
+    """Pull latest changes from Git repository"""
+    try:
+        success, message = git_manager.pull_latest_changes()
+        
+        if success:
+            status = git_manager.get_repository_status()
+            return {
+                "success": True,
+                "message": message,
+                "data": status
+            }
+        else:
+            return {
+                "success": False,
+                "message": message
+            }
+    
+    except Exception as e:
+        logger.error(f"Error pulling Git changes: {e}")
+        return {
+            "success": False,
+            "message": f"Git pull failed: {str(e)}"
+        }
+
+@app.get("/api/git/repo/validate")
+async def validate_git_repository_configuration(current_user: str = Depends(verify_token)):
+    """Validate if current repository matches configured settings"""
+    try:
+        validation = git_manager.validate_repository_configuration()
+        return {
+            "success": True,
+            "data": validation
+        }
+    
+    except Exception as e:
+        logger.error(f"Error validating Git repository configuration: {e}")
+        return {
+            "success": False,
+            "message": f"Repository validation failed: {str(e)}"
+        }
+
+@app.post("/api/git/repo/reconfigure")
+async def reconfigure_git_repository(current_user: str = Depends(verify_token)):
+    """Clear current repository and reconfigure with settings"""
+    try:
+        success, message = git_manager.clear_and_reconfigure_repository()
+        
+        if success:
+            # Get updated status and validation after reconfiguration
+            status = git_manager.get_repository_status()
+            validation = git_manager.validate_repository_configuration()
+            return {
+                "success": True,
+                "message": message,
+                "data": {
+                    "status": status,
+                    "validation": validation
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": message
+            }
+    
+    except Exception as e:
+        logger.error(f"Error reconfiguring Git repository: {e}")
+        return {
+            "success": False,
+            "message": f"Repository reconfiguration failed: {str(e)}"
+        }
+
+@app.get("/api/git/repo/files/search")
+async def search_repository_files(
+    query: str = "", 
+    limit: int = 50,
+    current_user: str = Depends(verify_token)
+):
+    """Search for files in the Git repository with filtering and pagination"""
+    try:
+        import os
+        import fnmatch
+        from typing import List, Dict
+        
+        # Get all files from the repository
+        all_files = git_manager.get_repository_status().get('config_files', [])
+        
+        if not all_files:
+            return {
+                "success": True,
+                "data": {
+                    "files": [],
+                    "total_count": 0,
+                    "filtered_count": 0,
+                    "query": query
+                }
+            }
+        
+        # Add directory structure by scanning the actual git directory
+        git_path = git_manager.base_path
+        structured_files = []
+        
+        if os.path.exists(git_path):
+            for root, dirs, files in os.walk(git_path):
+                # Skip .git directory
+                if '.git' in root:
+                    continue
+                    
+                rel_root = os.path.relpath(root, git_path)
+                if rel_root == '.':
+                    rel_root = ''
+                
+                for file in files:
+                    if file.startswith('.'):
+                        continue
+                        
+                    full_path = os.path.join(rel_root, file) if rel_root else file
+                    file_info = {
+                        "name": file,
+                        "path": full_path,
+                        "directory": rel_root,
+                        "size": os.path.getsize(os.path.join(root, file)) if os.path.exists(os.path.join(root, file)) else 0
+                    }
+                    structured_files.append(file_info)
+        
+        # Filter files based on query
+        filtered_files = structured_files
+        if query:
+            query_lower = query.lower()
+            filtered_files = []
+            
+            for file_info in structured_files:
+                # Search in filename, path, and directory
+                if (query_lower in file_info['name'].lower() or 
+                    query_lower in file_info['path'].lower() or
+                    query_lower in file_info['directory'].lower()):
+                    filtered_files.append(file_info)
+                # Also support wildcard matching
+                elif (fnmatch.fnmatch(file_info['name'].lower(), f'*{query_lower}*') or
+                      fnmatch.fnmatch(file_info['path'].lower(), f'*{query_lower}*')):
+                    filtered_files.append(file_info)
+        
+        # Sort by relevance (exact matches first, then by path)
+        if query:
+            def sort_key(item):
+                name_lower = item['name'].lower()
+                path_lower = item['path'].lower()
+                query_lower = query.lower()
+                
+                # Exact filename match gets highest priority
+                if name_lower == query_lower:
+                    return (0, item['path'])
+                # Filename starts with query
+                elif name_lower.startswith(query_lower):
+                    return (1, item['path'])
+                # Filename contains query
+                elif query_lower in name_lower:
+                    return (2, item['path'])
+                # Path contains query
+                else:
+                    return (3, item['path'])
+            
+            filtered_files.sort(key=sort_key)
+        else:
+            # No query, sort alphabetically by path
+            filtered_files.sort(key=lambda x: x['path'])
+        
+        # Apply pagination
+        paginated_files = filtered_files[:limit]
+        
+        return {
+            "success": True,
+            "data": {
+                "files": paginated_files,
+                "total_count": len(structured_files),
+                "filtered_count": len(filtered_files),
+                "query": query,
+                "has_more": len(filtered_files) > limit
+            }
+        }
+    
+    except Exception as e:
+        logger.error(f"Error searching repository files: {e}")
+        return {
+            "success": False,
+            "message": f"File search failed: {str(e)}"
+        }
 
 @app.get("/api/settings/health")
 async def check_settings_health(current_user: str = Depends(verify_token)):
