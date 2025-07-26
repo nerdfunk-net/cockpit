@@ -1,10 +1,10 @@
-# Cockpit Offline & Container Setup
+# Cockpit Container Setup
 
-This guide explains how to run Cockpit in offline mode or Docker containers without internet access.
+This guide explains how to run Cockpit in Docker containers with local static assets.
 
 ## 🏗️ Static Assets Structure
 
-The application now includes a `static/` directory with all external dependencies:
+The application includes a `static/` directory with all external dependencies served locally:
 
 ```
 production/
@@ -23,8 +23,7 @@ production/
 ├── js/
 │   ├── config.js                       # Main configuration
 │   ├── config-container.js             # Container-specific config
-│   └── offline-manager.js              # Offline capabilities
-├── service-worker.js                   # Service Worker for caching
+│   └── api-manager.js                  # API management
 └── container-ready.html                # Container-ready template
 ```
 

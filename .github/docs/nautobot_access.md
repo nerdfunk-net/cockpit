@@ -115,6 +115,22 @@
       }
     }
 
+# To get a list of statuses of a specified content type in nautobot use a graphql query and make a REST API call. 
+  * A GraphQL Query must be encapsulated in a JSON payload with the query key and sent with a POST request.
+  * You can use the parameter content_type to get the statuses of a content_type: valid choices are: dcim.device, dcim.interface, dcim.location, ipam.ipaddress, ipam.prefix
+  * use this query:
+    query status (
+      $content_type: [String]
+    ) {
+      statuses(content_types: $content_type) {
+        id
+        name
+        content_types {
+          model
+        }
+      }
+    }
+
 # To get a list of all secrets_groups in nautobot groups use a graphql query and make a REST API call. 
   * A GraphQL Query must be encapsulated in a JSON payload with the query key and sent with a POST request. 
   * Use this query:

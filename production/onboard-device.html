@@ -24,30 +24,30 @@
         document.head.appendChild(script);
       }
     </script>
-    <!-- Offline Manager -->
-    <script src="js/offline-manager.js"></script>
+    <!-- API Manager -->
+    <script src="js/api-manager.js"></script>
     <script>
       // Wait for all scripts and DOM to be ready before initializing
       document.addEventListener('DOMContentLoaded', function() {
         // Ensure all required objects are available
         console.log('DOM ready, checking dependencies...');
         console.log('CockpitConfig available:', !!window.CockpitConfig);
-        console.log('OfflineManager available:', !!window.OfflineManager);
-        console.log('offlineFetch available:', !!window.offlineFetch);
+        console.log('ApiManager available:', !!window.ApiManager);
+        console.log('apiFetch available:', !!window.apiFetch);
         
         // Wait a bit more if dependencies aren't ready
-        if (!window.CockpitConfig || !window.offlineFetch) {
+        if (!window.CockpitConfig || !window.apiFetch) {
           console.log('Dependencies not ready, waiting...');
           setTimeout(() => {
             console.log('After delay - CockpitConfig:', !!window.CockpitConfig);
-            console.log('After delay - OfflineManager:', !!window.OfflineManager);
-            console.log('After delay - offlineFetch:', !!window.offlineFetch);
+            console.log('After delay - ApiManager:', !!window.ApiManager);
+            console.log('After delay - apiFetch:', !!window.apiFetch);
             
-            // Try to initialize OfflineManager if it's not ready
-            if (window.CockpitConfig && !window.OfflineManager) {
-              console.log('Manually initializing OfflineManager...');
-              if (typeof window.initializeOfflineManager === 'function') {
-                window.initializeOfflineManager();
+            // Try to initialize ApiManager if it's not ready
+            if (window.CockpitConfig && !window.ApiManager) {
+              console.log('Manually initializing ApiManager...');
+              if (typeof window.initializeApiManager === 'function') {
+                window.initializeApiManager();
               }
             }
             
@@ -534,9 +534,9 @@
             return;
           }
           
-          if (!window.offlineFetch) {
-            console.error('offlineFetch not available - cannot initialize');
-            this.showError('Offline manager not loaded. Please refresh the page.');
+          if (!window.apiFetch) {
+            console.error('apiFetch not available - cannot initialize');
+            this.showError('API manager not loaded. Please refresh the page.');
             return;
           }
           
@@ -582,17 +582,8 @@
             })
             .catch(error => {
               console.error('Error getting debug auth token:', error);
-              // Fallback to fresh hardcoded token if API fails
-              localStorage.setItem('auth_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MzQ5MTE1OH0.f05a76BRJXW7xQxgHjPN6xCTPqhFAT56J--g_sqgcvc');
-              localStorage.setItem('user_info', JSON.stringify({
-                "username": "admin",
-                "full_name": "Administrator",
-                "email": "admin@cockpit.local", 
-                "role": "admin"
-              }));
-              localStorage.setItem('token_expiry', Date.now() + (1800 * 1000));
-              // Load dropdown data after setting fallback token
-              this.loadDropdownData();
+              this.showError('Authentication failed. Please log in properly.');
+              return;
             });
           } else {
             // Load dropdown data if token already exists
@@ -693,8 +684,8 @@
             const token = localStorage.getItem('auth_token');
             console.log('Loading dropdown data, token exists:', !!token);
             console.log('CockpitConfig available:', !!window.CockpitConfig);
-            console.log('OfflineManager available:', !!window.OfflineManager);
-            console.log('offlineFetch available:', !!window.offlineFetch);
+            console.log('ApiManager available:', !!window.ApiManager);
+            console.log('apiFetch available:', !!window.apiFetch);
             
             if (!token) {
               this.showError('Authentication required. Please log in.');
@@ -765,13 +756,13 @@
           console.log('Token for request:', token ? token.substring(0, 20) + '...' : 'No token');
           
           try {
-            // Check if offlineFetch is available
-            if (!window.offlineFetch) {
-              throw new Error('offlineFetch is not available');
+            // Check if apiFetch is available
+            if (!window.apiFetch) {
+              throw new Error('apiFetch is not available');
             }
 
-            // Use offline-capable fetch
-            const response = await window.offlineFetch(endpoint, {
+            // Use API fetch
+            const response = await window.apiFetch(endpoint, {
               headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -794,33 +785,7 @@
           } catch (error) {
             console.error(`Failed to fetch ${endpoint}:`, error);
             
-            // Use config fallback for specific endpoints
-            const endpointKey = endpoint.split('/').pop();
-            console.log(`Trying fallback for endpoint key: ${endpointKey}`);
-            
-            // Map endpoint keys to fallback data keys
-            const keyMapping = {
-              'secret-groups': 'secretGroups',
-              'locations': 'locations',
-              'namespaces': 'namespaces', 
-              'roles': 'roles',
-              'platforms': 'platforms',
-              'statuses': 'statuses'
-            };
-            
-            const fallbackKey = keyMapping[endpointKey] || endpointKey;
-            console.log(`Using fallback key: ${fallbackKey}`);
-            
-            if (window.CockpitConfig && window.CockpitConfig.getFallbackData) {
-              const fallbackData = window.CockpitConfig.getFallbackData(fallbackKey);
-              
-              if (fallbackData && fallbackData.length > 0) {
-                console.log(`Using fallback data for ${endpoint}:`, fallbackData);
-                return fallbackData;
-              }
-            }
-            
-            // Re-throw error if no fallback available
+            // Re-throw error - no fallback needed for simple API calls
             throw error;
           }
         }

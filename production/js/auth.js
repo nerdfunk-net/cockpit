@@ -5,7 +5,7 @@
 
 class AuthManager {
     constructor() {
-        // Use configuration if available, fallback to localhost
+        // Use configuration if available, default to localhost
         this.baseURL = window.CockpitConfig ? window.CockpitConfig.api.baseUrl : 'http://localhost:8000';
         this.token = localStorage.getItem('auth_token');
         this.user = JSON.parse(localStorage.getItem('user_info') || 'null');
@@ -263,7 +263,7 @@ window.logout = function() {
     if (window.authManager) {
         window.authManager.logout();
     } else {
-        // Fallback if authManager isn't available
+        // Basic logout if authManager isn't available
         localStorage.clear();
         window.location.href = 'login.html';
     }
