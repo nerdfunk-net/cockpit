@@ -14,9 +14,8 @@ export const API_CONFIG = {
   // API endpoints
   ENDPOINTS: {
     DEVICES: '/api/nautobot/devices',
-    AUTH_LOGIN: '/api/auth/login',
-    AUTH_REGISTER: '/api/auth/register',
-    AUTH_ME: '/api/auth/me',
+    AUTH_LOGIN: '/auth/login',
+    AUTH_VERIFY: '/auth/verify',
     NAMESPACES: '/api/nautobot/namespaces',
     SYNC_NETWORK: '/api/nautobot/sync-network-data'
   },

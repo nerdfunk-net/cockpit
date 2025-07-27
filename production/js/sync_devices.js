@@ -115,8 +115,10 @@ async function fetchDevices(filterType = null, filterValue = null) {
       devices = [];
     } else {
       devices = data.devices;
-      console.log('[DEBUG] Devices array:', devices);
+      console.log('[DEBUG] Devices array set to:', devices);
+      console.log('[DEBUG] Number of devices:', devices.length);
     }
+    console.log('[DEBUG] About to call renderTable...');
     renderTable();
     renderPagination();
   } catch (error) {
@@ -418,6 +420,12 @@ window.addEventListener('DOMContentLoaded', () => {
     return m >= 0 && m <= 32;
   }
   function handleFilter() {
+    console.log('[DEBUG] handleFilter called with:', {
+      filterType: filterType.value,
+      filterValue: filterValue.value,
+      filterValueLength: filterValue.value.length
+    });
+    
     regexMsg.textContent = '';
     if (filterType.value === 'name' && filterValue.value.length >= 3) {
       if (!isValidRegex(filterValue.value)) {
@@ -427,8 +435,10 @@ window.addEventListener('DOMContentLoaded', () => {
         renderPagination();
         return;
       }
+      console.log('[DEBUG] Calling fetchDevices for name filter');
       fetchDevices('name', filterValue.value);
     } else if (filterType.value === 'location' && filterValue.value.length >= 3) {
+      console.log('[DEBUG] Calling fetchDevices for location filter');
       fetchDevices('location', filterValue.value);
     } else if (filterType.value === 'prefix' && filterValue.value.length > 0) {
       if (!isValidCIDR(filterValue.value)) {

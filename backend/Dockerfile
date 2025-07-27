@@ -22,5 +22,5 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Start the application
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start the application using the startup script
+CMD ["python", "start.py"]

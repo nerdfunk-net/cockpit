@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <script src="js/auth.js"></script>
+</head>
+<body>
+    <h1>Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testDeviceSearch()">Test Device Search</button>
+    <div id="results"></div>
+
+    <script>
+        function testLogin() {
+            console.log('[DEBUG] Testing login...')
+            
+            // Check if authManager is available
+            if (!window.authManager) {
+                document.getElementById('results').innerHTML = '<p style="color: red;">AuthManager not available</p>';
+                return;
+            }
+            
+            // Try to login
+            window.authManager.login('admin', 'admin').then(result => {
+                console.log('[DEBUG] Login result:', result);
+                document.getElementById('results').innerHTML = '<p style="color: green;">Login successful!</p>';
+            }).catch(error => {
+                console.error('[ERROR] Login failed:', error);
+                document.getElementById('results').innerHTML = '<p style="color: red;">Login failed: ' + error.message + '</p>';
+            });
+        }
+        
+        async function testDeviceSearch() {
+            console.log('[DEBUG] Testing device search...')
+            
+            if (!window.authManager) {
+                document.getElementById('results').innerHTML = '<p style="color: red;">AuthManager not available</p>';
+                return;
+            }
+            
+            try {
+                const result = await window.authManager.apiRequest('/api/nautobot/devices?filter_type=name&filter_value=LAB');
+                console.log('[DEBUG] Device search result:', result);
+                
+                if (result && result.devices) {
+                    document.getElementById('results').innerHTML = 
+                        `<p style="color: green;">Found ${result.devices.length} devices</p>
+                         <pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    document.getElementById('results').innerHTML = '<p style="color: orange;">No devices found or invalid response</p>';
+                }
+            } catch (error) {
+                console.error('[ERROR] Device search failed:', error);
+                document.getElementById('results').innerHTML = '<p style="color: red;">Device search failed: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

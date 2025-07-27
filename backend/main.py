@@ -151,24 +151,55 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         )
 
 # Nautobot API helper functions
+def get_nautobot_config():
+    """Get Nautobot configuration from database with fallback to environment variables"""
+    try:
+        # Try to get settings from database first
+        db_settings = settings_manager.get_nautobot_settings()
+        if db_settings and db_settings.get('url') and db_settings.get('token'):
+            config = {
+                'url': db_settings['url'],
+                'token': db_settings['token'],
+                'timeout': db_settings.get('timeout', 30),
+                'verify_ssl': db_settings.get('verify_ssl', True),
+                '_source': 'database'
+            }
+            logger.debug(f"Using database settings for Nautobot: {config['url']}")
+            return config
+    except Exception as e:
+        logger.warning(f"Failed to get database settings, falling back to environment: {e}")
+    
+    # Fallback to environment variables
+    config = {
+        'url': settings.nautobot_url,
+        'token': settings.nautobot_token,
+        'timeout': settings.nautobot_timeout,
+        'verify_ssl': True,
+        '_source': 'environment'
+    }
+    logger.debug(f"Using environment settings for Nautobot: {config['url']}")
+    return config
+
 def nautobot_request(endpoint: str, method: str = "GET", data: dict = None) -> dict:
-    """Make a request to Nautobot API"""
-    url = f"{settings.nautobot_url.rstrip('/')}/api/{endpoint.lstrip('/')}"
+    """Make a request to Nautobot API using database settings"""
+    nautobot_config = get_nautobot_config()
+    url = f"{nautobot_config['url'].rstrip('/')}/api/{endpoint.lstrip('/')}"
     headers = {
-        "Authorization": f"Token {settings.nautobot_token}",
+        "Authorization": f"Token {nautobot_config['token']}",
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
     
     try:
+        timeout = nautobot_config.get('timeout', 30)
         if method.upper() == "GET":
-            response = requests.get(url, headers=headers, timeout=30)
+            response = requests.get(url, headers=headers, timeout=timeout)
         elif method.upper() == "POST":
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(url, headers=headers, json=data, timeout=timeout)
         elif method.upper() == "PUT":
-            response = requests.put(url, headers=headers, json=data, timeout=30)
+            response = requests.put(url, headers=headers, json=data, timeout=timeout)
         elif method.upper() == "DELETE":
-            response = requests.delete(url, headers=headers, timeout=30)
+            response = requests.delete(url, headers=headers, timeout=timeout)
         else:
             raise ValueError(f"Unsupported HTTP method: {method}")
         
@@ -181,10 +212,11 @@ def nautobot_request(endpoint: str, method: str = "GET", data: dict = None) -> d
         )
 
 def nautobot_graphql_query(query: str, variables: dict = None) -> dict:
-    """Execute a GraphQL query against Nautobot"""
-    url = f"{settings.nautobot_url.rstrip('/')}/api/graphql/"
+    """Execute a GraphQL query against Nautobot using database settings"""
+    nautobot_config = get_nautobot_config()
+    url = f"{nautobot_config['url'].rstrip('/')}/api/graphql/"
     headers = {
-        "Authorization": f"Token {settings.nautobot_token}",
+        "Authorization": f"Token {nautobot_config['token']}",
         "Content-Type": "application/json"
     }
     
@@ -193,7 +225,8 @@ def nautobot_graphql_query(query: str, variables: dict = None) -> dict:
         payload["variables"] = variables
     
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        timeout = nautobot_config.get('timeout', 30)
+        response = requests.post(url, headers=headers, json=payload, timeout=timeout)
         
         if not response.ok:
             logger.error(f"GraphQL Response Text: {response.text}")
@@ -210,11 +243,12 @@ def nautobot_graphql_query(query: str, variables: dict = None) -> dict:
 # Root endpoint
 @app.get("/")
 async def root():
+    nautobot_config = get_nautobot_config()
     return {
         "message": "Cockpit Network Management Dashboard API",
         "version": "1.0.0",
         "status": "running",
-        "nautobot_url": settings.nautobot_url
+        "nautobot_url": nautobot_config['url']
     }
 
 # Health check endpoint
@@ -638,6 +672,50 @@ async def get_nautobot_stats(current_user: str = Depends(verify_token)):
             detail=f"Failed to fetch Nautobot statistics: {str(e)}"
         )
 
+@app.get("/api/nautobot/test")
+async def test_current_nautobot_connection(current_user: str = Depends(verify_token)):
+    """Test current Nautobot connection using active configuration"""
+    try:
+        nautobot_config = get_nautobot_config()
+        
+        # Test with a simple GraphQL query
+        query = """
+        query {
+          __schema {
+            queryType {
+              name
+            }
+          }
+        }
+        """
+        
+        result = nautobot_graphql_query(query)
+        
+        return {
+            "success": True,
+            "message": "Successfully connected to Nautobot",
+            "nautobot_url": nautobot_config['url'],
+            "connection_source": nautobot_config.get('_source', 'unknown'),
+            "schema_available": bool(result.get('data', {}).get('__schema'))
+        }
+        
+    except HTTPException as e:
+        nautobot_config = get_nautobot_config()
+        return {
+            "success": False,
+            "message": f"Failed to connect to Nautobot: {e.detail}",
+            "nautobot_url": nautobot_config.get('url', 'Unknown'),
+            "connection_source": nautobot_config.get('_source', 'unknown')
+        }
+    except Exception as e:
+        nautobot_config = get_nautobot_config()
+        return {
+            "success": False,
+            "message": f"Unexpected error: {str(e)}",
+            "nautobot_url": nautobot_config.get('url', 'Unknown'),
+            "connection_source": nautobot_config.get('_source', 'unknown')
+        }
+
 # Pydantic models for device onboarding
 class CheckIPRequest(BaseModel):
     ip_address: str
@@ -716,10 +794,11 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
     }
     
     try:
-        # Make the request to the Nautobot job endpoint
-        url = f"{settings.nautobot_url.rstrip('/')}/api/extras/jobs/Sync%20Devices%20From%20Network/run/"
+        # Make the request to the Nautobot job endpoint using database settings
+        nautobot_config = get_nautobot_config()
+        url = f"{nautobot_config['url'].rstrip('/')}/api/extras/jobs/Sync%20Devices%20From%20Network/run/"
         headers = {
-            "Authorization": f"Token {settings.nautobot_token}",
+            "Authorization": f"Token {nautobot_config['token']}",
             "Content-Type": "application/json"
         }
         
@@ -727,7 +806,7 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
             url, 
             headers=headers, 
             json={"data": job_data}, 
-            timeout=30
+            timeout=nautobot_config.get('timeout', 30)
         )
         response.raise_for_status()
         result = response.json()
@@ -753,10 +832,11 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
 async def sync_network_data(request: SyncNetworkDataRequest, current_user: str = Depends(verify_token)):
     """Sync network data from selected devices to Nautobot"""
     try:
-        # Make the request to the Nautobot job endpoint for network sync
-        url = f"{settings.nautobot_url.rstrip('/')}/api/extras/jobs/Sync%20Network%20Data%20From%20Network/run/"
+        # Make the request to the Nautobot job endpoint for network sync using database settings
+        nautobot_config = get_nautobot_config()
+        url = f"{nautobot_config['url'].rstrip('/')}/api/extras/jobs/Sync%20Network%20Data%20From%20Network/run/"
         headers = {
-            "Authorization": f"Token {settings.nautobot_token}",
+            "Authorization": f"Token {nautobot_config['token']}",
             "Content-Type": "application/json"
         }
         
@@ -769,7 +849,7 @@ async def sync_network_data(request: SyncNetworkDataRequest, current_user: str =
             url, 
             headers=headers, 
             json=payload, 
-            timeout=30
+            timeout=nautobot_config.get('timeout', 30)
         )
         
         if not response.ok:
@@ -1742,7 +1822,9 @@ async def get_devices(
                   }
                 }
                 """
-                variables = {"device_filter": [filter_value]}
+                # Make the regex case-insensitive by adding (?i) flag
+                case_insensitive_filter = f"(?i){filter_value}"
+                variables = {"device_filter": [case_insensitive_filter]}
                 
                 result = nautobot_graphql_query(query, variables)
                 if "errors" in result:
@@ -1785,7 +1867,9 @@ async def get_devices(
                   }
                 }
                 """
-                variables = {"location_filter": [filter_value]}
+                # Make the regex case-insensitive by adding (?i) flag
+                case_insensitive_filter = f"(?i){filter_value}"
+                variables = {"location_filter": [case_insensitive_filter]}
                 
                 result = nautobot_graphql_query(query, variables)
                 if "errors" in result:

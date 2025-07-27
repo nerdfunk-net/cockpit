@@ -10,6 +10,12 @@ from typing import Dict, Any, Optional
 from dataclasses import dataclass, asdict
 import json
 
+# Import config to get environment variable defaults
+try:
+    from config_manual import settings as env_settings
+except ImportError:
+    env_settings = None
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -42,7 +48,17 @@ class SettingsManager:
         else:
             self.db_path = db_path
             
-        self.default_nautobot = NautobotSettings()
+        # Use environment settings as defaults if available
+        if env_settings:
+            self.default_nautobot = NautobotSettings(
+                url=env_settings.nautobot_url,
+                token=env_settings.nautobot_token,
+                timeout=env_settings.nautobot_timeout,
+                verify_ssl=True
+            )
+        else:
+            self.default_nautobot = NautobotSettings()
+            
         self.default_git = GitSettings()
         
         # Initialize database

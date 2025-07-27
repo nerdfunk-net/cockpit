@@ -7,6 +7,8 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    networks:
+      - backend
     environment:
       - NODE_ENV=development
       - VITE_HOST=0.0.0.0
@@ -25,6 +27,8 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+    networks:
+      - backend
     environment:
       # Server Configuration
       - SERVER_HOST=0.0.0.0
@@ -51,3 +55,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+networks:
+  backend:
+    name: nautobot_backend
+    external: true
