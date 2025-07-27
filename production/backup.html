@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="images/favicon.ico" type="image/ico" />
+
+    <title>Config Backup - Cockpit</title>
+
+    <!-- Vite Entry Point - will bundle all styles -->
+    <script type="module" src="/src/main-minimal.js"></script>
+    <script>
+      // Robust authentication check
+      (function() {
+        console.log('Checking authentication...');
+        
+        // Check if we have a valid token
+        const token = localStorage.getItem('auth_token');
+        console.log('Token found:', !!token);
+        
+        if (!token) {
+          console.log('No token found, redirecting to login');
+          // Use correct path for Vite dev server on port 3000
+          window.location.href = '/production/login.html';
+          return;
+        }
+        
+        console.log('Token found, user authenticated');
+      })();
+    </script>
+    <script src="js/auth.js"></script>
+    <script>
+      // Initialize auth manager when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        window.authManager = new AuthManager();
+        console.log('AuthManager initialized');
+        
+        // Force update display after a short delay to ensure DOM is ready
+        setTimeout(function() {
+          if (window.authManager && window.authManager.user) {
+            window.authManager.updateUserDisplay();
+            console.log('Force updated user display');
+          }
+        }, 500);
+        
+        // Listen for storage changes (when user logs in from another tab/window)
+        window.addEventListener('storage', function(e) {
+          if (e.key === 'auth_token' || e.key === 'user_info') {
+            console.log('Storage change detected, updating user display');
+            if (window.authManager) {
+              window.authManager.token = localStorage.getItem('auth_token');
+              window.authManager.user = JSON.parse(localStorage.getItem('user_info') || 'null');
+              window.authManager.updateUserDisplay();
+            }
+          }
+        });
+      });
+    </script>
+  </head>
+
+  <body class="nav-md">
+    <div class="container body">
+      <div class="main_container">
+        <div class="col-md-3 left_col menu_fixed">
+          <div class="left_col scroll-view">
+            <div class="navbar nav_title" style="border: 0;">
+              <a href="index.html" class="site_title"><i class="fas fa-paw"></i> <span>Cockpit!</span></a>
+            </div>
+
+            <div class="clearfix"></div>
+
+            <!-- menu profile quick info -->
+            <div class="profile clearfix">
+              <div class="profile_pic">
+              </div>
+              <div class="profile_info">
+                <span id="welcome-message">Welcome,</span>
+                <h2 id="sidebar-username">Loading...</h2>
+              </div>
+            </div>
+            <script>
+              // Enhanced user display management
+              (function() {
+                function updateSidebar() {
+                  try {
+                    const userInfo = JSON.parse(localStorage.getItem('user_info') || 'null');
+                    console.log('Updating sidebar with user info:', userInfo);
+                    
+                    const usernameElement = document.getElementById('sidebar-username');
+                    if (usernameElement && userInfo && userInfo.username) {
+                      usernameElement.textContent = userInfo.username;
+                      console.log('Updated sidebar username:', userInfo.username);
+                    } else {
+                      console.log('Could not update sidebar - missing element or user info');
+                    }
+                  } catch (error) {
+                    console.error('Error updating sidebar:', error);
+                  }
+                }
+                
+                // Update immediately
+                updateSidebar();
+                
+                // Update again after short delays to catch login updates
+                setTimeout(updateSidebar, 1000);
+                setTimeout(updateSidebar, 2000);
+                setTimeout(updateSidebar, 3000);
+              })();
+            </script>
+            <!-- /menu profile quick info -->
+
+            <br />
+
+            <!-- sidebar menu -->
+            <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+              <div class="menu_section">
+                <h3>General</h3>
+                <ul class="nav side-menu">
+                  <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                  <li><a><i class="fas fa-rocket"></i> Onboarding <span class="fas fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="onboard-device.html"><i class="fas fa-plus-circle"></i> Onboard Device</a></li>
+                      <li><a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="backup.html" class="current-page"><i class="fas fa-save"></i> Backup</a></li>
+                      <li><a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a></li>
+                    </ul>
+                  </li>
+                  <li><a href="settings.html"><i class="fas fa-wrench"></i> Settings</a></li>
+                </ul>
+              </div>
+              <div class="menu_section">
+                <!-- Live On section removed as requested -->
+              </div>
+
+            </div>
+            <!-- /sidebar menu -->
+
+            <!-- /menu footer buttons -->
+            <div class="sidebar-footer hidden-small">
+              <a href="settings.html" data-bs-toggle="tooltip" data-bs-placement="top" title="Settings">
+                <span class="fas fa-cog" aria-hidden="true"></span>
+              </a>
+              <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
+                <span class="fas fa-expand" aria-hidden="true"></span>
+              </a>
+              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Lock">
+                <span class="fas fa-eye-slash" aria-hidden="true"></span>
+              </a>
+              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Logout" href="login.html">
+                <span class="fas fa-power-off" aria-hidden="true"></span>
+              </a>
+            </div>
+            <!-- /menu footer buttons -->
+          </div>
+        </div>
+
+        <!-- top navigation -->
+        <div class="top_nav">
+          <div class="nav_menu">
+            <div class="nav toggle">
+              <a id="menu_toggle"><i class="fas fa-bars"></i></a>
+            </div>
+            <nav class="nav navbar-nav">
+            <ul class="navbar-right">
+              <li class="nav-item dropdown open" style="padding-left: 15px;">
+                <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <span id="navbar-username">Loading...</span>
+              
+                </a>
+                <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item"  href="javascript:;"> Profile</a>
+                    <a class="dropdown-item"  href="javascript:;">
+                      <span class="badge bg-red float-end">50%</span>
+                      <span>Settings</span>
+                    </a>
+                <a class="dropdown-item"  href="javascript:;">Help</a>
+                  <a class="dropdown-item"  href="login.html"><i class="fas fa-sign-out-alt float-end"></i> Log Out</a>
+                </div>
+              </li>
+
+            </ul>
+          </nav>
+          </div>
+        </div>
+        <!-- /top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+          <div class="">
+            <div class="page-title">
+              <div class="title_left">
+                <h3>Configuration Backup</h3>
+              </div>
+
+              <div class="title_right">
+                <div class="col-md-5 col-sm-5   form-group row float-end">
+                  <div class="col-sm-9">
+                    <input type="text" class="form-control" id="search-input" placeholder="Search devices...">
+                  </div>
+                  <div class="col-sm-3">
+                    <button class="btn btn-primary" type="button" id="search-btn">
+                      <i class="fas fa-search"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="clearfix"></div>
+
+            <div class="row">
+              <div class="col-md-12 col-sm-12  ">
+                <div class="x_panel">
+                  <div class="x_title">
+                    <h2>Device Configuration Backup Management</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                      <li><a class="collapse-link"><i class="fas fa-chevron-up"></i></a>
+                      </li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false"><i class="fas fa-wrench"></i></a>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="#">Settings</a>
+                            <a class="dropdown-item" href="#">Actions</a>
+                            <a class="dropdown-item" href="#">Something else here</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#">Separated link</a>
+                        </div>
+                      </li>
+                      <li><a class="close-link"><i class="fas fa-close"></i></a>
+                      </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                  </div>
+                  <div class="x_content">
+                    <p class="text-muted font-13 m-b-30">
+                      Manage configuration backups for your network devices. Create scheduled backups, perform manual backups, and manage backup retention policies.
+                    </p>
+
+                    <!-- Backup Controls -->
+                    <div class="row mb-4">
+                      <div class="col-md-12">
+                        <div class="btn-group" role="group" aria-label="Backup actions">
+                          <button type="button" class="btn btn-success" id="backup-all-btn">
+                            <i class="fas fa-save"></i> Backup All Devices
+                          </button>
+                          <button type="button" class="btn btn-primary" id="backup-selected-btn" disabled>
+                            <i class="fas fa-save"></i> Backup Selected
+                          </button>
+                          <button type="button" class="btn btn-info" id="schedule-backup-btn">
+                            <i class="fas fa-clock"></i> Schedule Backup
+                          </button>
+                          <button type="button" class="btn btn-warning" id="restore-config-btn">
+                            <i class="fas fa-undo"></i> Restore Configuration
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Status Panel -->
+                    <div class="row mb-4">
+                      <div class="col-md-12">
+                        <div class="alert alert-info" role="alert" id="status-panel">
+                          <i class="fas fa-info-circle"></i> Ready to perform backup operations.
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Device List Table -->
+                    <div class="table-responsive">
+                      <table class="table table-striped jambo_table bulk_action">
+                        <thead>
+                          <tr class="headings">
+                            <th>
+                              <input type="checkbox" id="check-all" class="flat">
+                            </th>
+                            <th class="column-title">Device Name</th>
+                            <th class="column-title">IP Address</th>
+                            <th class="column-title">Device Type</th>
+                            <th class="column-title">Last Backup</th>
+                            <th class="column-title">Status</th>
+                            <th class="column-title no-link last"><span class="nobr">Action</span></th>
+                            <th class="bulk-actions" colspan="7">
+                              <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fas fa-chevron-down"></i></a>
+                            </th>
+                          </tr>
+                        </thead>
+
+                        <tbody id="device-table-body">
+                          <!-- Sample data - will be populated dynamically -->
+                          <tr class="even pointer">
+                            <td class="a-center ">
+                              <input type="checkbox" class="flat" name="table_records">
+                            </td>
+                            <td class="device-name-cell">Router-01</td>
+                            <td>192.168.1.1</td>
+                            <td>Cisco ISR</td>
+                            <td>
+                              <span class="backup-date">2024-01-15 10:30:00</span>
+                            </td>
+                            <td>
+                              <span class="badge bg-success">Online</span>
+                            </td>
+                            <td class="last">
+                              <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-primary backup-device-btn" data-device="Router-01">
+                                  <i class="fas fa-save"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info view-backups-btn" data-device="Router-01">
+                                  <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning restore-device-btn" data-device="Router-01">
+                                  <i class="fas fa-undo"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr class="odd pointer">
+                            <td class="a-center ">
+                              <input type="checkbox" class="flat" name="table_records">
+                            </td>
+                            <td class="device-name-cell">Switch-01</td>
+                            <td>192.168.1.10</td>
+                            <td>Cisco Catalyst</td>
+                            <td>
+                              <span class="backup-date">2024-01-14 16:45:00</span>
+                            </td>
+                            <td>
+                              <span class="badge bg-success">Online</span>
+                            </td>
+                            <td class="last">
+                              <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-primary backup-device-btn" data-device="Switch-01">
+                                  <i class="fas fa-save"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info view-backups-btn" data-device="Switch-01">
+                                  <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning restore-device-btn" data-device="Switch-01">
+                                  <i class="fas fa-undo"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr class="even pointer">
+                            <td class="a-center ">
+                              <input type="checkbox" class="flat" name="table_records">
+                            </td>
+                            <td class="device-name-cell">Firewall-01</td>
+                            <td>192.168.1.100</td>
+                            <td>FortiGate</td>
+                            <td>
+                              <span class="backup-date">Never</span>
+                            </td>
+                            <td>
+                              <span class="badge bg-danger">Offline</span>
+                            </td>
+                            <td class="last">
+                              <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-primary backup-device-btn" data-device="Firewall-01" disabled>
+                                  <i class="fas fa-save"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info view-backups-btn" data-device="Firewall-01">
+                                  <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning restore-device-btn" data-device="Firewall-01" disabled>
+                                  <i class="fas fa-undo"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /page content -->
+
+        <!-- Modal for Backup History -->
+        <div class="modal fade" id="backupHistoryModal" tabindex="-1" role="dialog" aria-labelledby="backupHistoryModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="backupHistoryModalLabel">Backup History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Size</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="backup-history-body">
+                      <!-- Will be populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal for Schedule Backup -->
+        <div class="modal fade" id="scheduleBackupModal" tabindex="-1" role="dialog" aria-labelledby="scheduleBackupModalLabel" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="scheduleBackupModalLabel">Schedule Backup</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form id="schedule-backup-form">
+                  <div class="form-group mb-3">
+                    <label for="backup-name">Backup Name</label>
+                    <input type="text" class="form-control" id="backup-name" placeholder="Enter backup name" required>
+                  </div>
+                  <div class="form-group mb-3">
+                    <label for="backup-schedule">Schedule</label>
+                    <select class="form-control" id="backup-schedule" required>
+                      <option value="">Select schedule</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+                  <div class="form-group mb-3" id="custom-schedule-group" style="display: none;">
+                    <label for="custom-schedule">Custom Schedule (Cron Expression)</label>
+                    <input type="text" class="form-control" id="custom-schedule" placeholder="0 2 * * *">
+                    <small class="form-text text-muted">Enter a valid cron expression</small>
+                  </div>
+                  <div class="form-group mb-3">
+                    <label for="retention-days">Retention (Days)</label>
+                    <input type="number" class="form-control" id="retention-days" value="30" min="1" max="365">
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-schedule-btn">Save Schedule</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- footer content -->
+        <footer>
+          <div class="float-end">
+            Cockpit Network Device Management Dashboard by <a href="#">Nerdfunk</a>
+          </div>
+          <div class="clearfix"></div>
+        </footer>
+        <!-- /footer content -->
+      </div>
+    </div>
+
+    <!-- Additional Scripts for Backup functionality -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Update navbar username display
+        function updateNavbarUsername() {
+          try {
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || 'null');
+            const navbarUsernameElement = document.getElementById('navbar-username');
+            
+            if (navbarUsernameElement && userInfo && userInfo.username) {
+              navbarUsernameElement.textContent = userInfo.username;
+              console.log('Updated navbar username:', userInfo.username);
+            }
+          } catch (error) {
+            console.error('Error updating navbar username:', error);
+          }
+        }
+
+        // Initial update
+        updateNavbarUsername();
+        
+        // Update after delays to catch auth updates
+        setTimeout(updateNavbarUsername, 1000);
+        setTimeout(updateNavbarUsername, 2000);
+
+        // Basic event handlers for backup functionality
+        const statusPanel = document.getElementById('status-panel');
+        
+        // Backup All Devices
+        document.getElementById('backup-all-btn').addEventListener('click', function() {
+          statusPanel.className = 'alert alert-info';
+          statusPanel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting backup for all devices...';
+          
+          // Simulate backup process
+          setTimeout(() => {
+            statusPanel.className = 'alert alert-success';
+            statusPanel.innerHTML = '<i class="fas fa-check-circle"></i> Backup completed successfully for all online devices.';
+          }, 3000);
+        });
+
+        // Individual device backup buttons
+        document.querySelectorAll('.backup-device-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const deviceName = this.getAttribute('data-device');
+            statusPanel.className = 'alert alert-info';
+            statusPanel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Backing up ${deviceName}...`;
+            
+            setTimeout(() => {
+              statusPanel.className = 'alert alert-success';
+              statusPanel.innerHTML = `<i class="fas fa-check-circle"></i> Backup completed for ${deviceName}.`;
+            }, 2000);
+          });
+        });
+
+        // View backup history
+        document.querySelectorAll('.view-backups-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const deviceName = this.getAttribute('data-device');
+            document.getElementById('backupHistoryModalLabel').textContent = `Backup History - ${deviceName}`;
+            
+            // Populate backup history (sample data)
+            const historyBody = document.getElementById('backup-history-body');
+            historyBody.innerHTML = `
+              <tr>
+                <td>2024-01-15 10:30:00</td>
+                <td>2.3 MB</td>
+                <td><span class="badge bg-success">Success</span></td>
+                <td>
+                  <button class="btn btn-sm btn-primary">Download</button>
+                  <button class="btn btn-sm btn-warning">Restore</button>
+                </td>
+              </tr>
+              <tr>
+                <td>2024-01-14 10:30:00</td>
+                <td>2.2 MB</td>
+                <td><span class="badge bg-success">Success</span></td>
+                <td>
+                  <button class="btn btn-sm btn-primary">Download</button>
+                  <button class="btn btn-sm btn-warning">Restore</button>
+                </td>
+              </tr>
+            `;
+            
+            const modal = new bootstrap.Modal(document.getElementById('backupHistoryModal'));
+            modal.show();
+          });
+        });
+
+        // Schedule backup modal
+        document.getElementById('schedule-backup-btn').addEventListener('click', function() {
+          const modal = new bootstrap.Modal(document.getElementById('scheduleBackupModal'));
+          modal.show();
+        });
+
+        // Custom schedule toggle
+        document.getElementById('backup-schedule').addEventListener('change', function() {
+          const customGroup = document.getElementById('custom-schedule-group');
+          if (this.value === 'custom') {
+            customGroup.style.display = 'block';
+          } else {
+            customGroup.style.display = 'none';
+          }
+        });
+
+        // Save schedule
+        document.getElementById('save-schedule-btn').addEventListener('click', function() {
+          const form = document.getElementById('schedule-backup-form');
+          if (form.checkValidity()) {
+            statusPanel.className = 'alert alert-success';
+            statusPanel.innerHTML = '<i class="fas fa-check-circle"></i> Backup schedule saved successfully.';
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleBackupModal'));
+            modal.hide();
+          } else {
+            form.reportValidity();
+          }
+        });
+
+        // Check all functionality
+        document.getElementById('check-all').addEventListener('change', function() {
+          const checkboxes = document.querySelectorAll('input[name="table_records"]');
+          checkboxes.forEach(cb => cb.checked = this.checked);
+          
+          // Enable/disable selected backup button
+          const selectedCount = document.querySelectorAll('input[name="table_records"]:checked').length;
+          document.getElementById('backup-selected-btn').disabled = selectedCount === 0;
+        });
+
+        // Individual checkbox change
+        document.querySelectorAll('input[name="table_records"]').forEach(cb => {
+          cb.addEventListener('change', function() {
+            const selectedCount = document.querySelectorAll('input[name="table_records"]:checked').length;
+            document.getElementById('backup-selected-btn').disabled = selectedCount === 0;
+          });
+        });
+
+        // Backup selected devices
+        document.getElementById('backup-selected-btn').addEventListener('click', function() {
+          const selectedDevices = [];
+          document.querySelectorAll('input[name="table_records"]:checked').forEach(cb => {
+            const row = cb.closest('tr');
+            const deviceName = row.querySelector('.device-name-cell').textContent;
+            selectedDevices.push(deviceName);
+          });
+
+          if (selectedDevices.length > 0) {
+            statusPanel.className = 'alert alert-info';
+            statusPanel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Backing up ${selectedDevices.length} selected device(s)...`;
+            
+            setTimeout(() => {
+              statusPanel.className = 'alert alert-success';
+              statusPanel.innerHTML = `<i class="fas fa-check-circle"></i> Backup completed for ${selectedDevices.length} selected device(s).`;
+            }, 3000);
+          }
+        });
+
+        console.log('Backup page initialized successfully');
+      });
+    </script>
+  </body>
+</html>

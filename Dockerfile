@@ -19,5 +19,5 @@ RUN npm run build
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "run", "preview"]
+# Start the application with host binding for Docker and disable browser opening
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000", "--no-open"]
