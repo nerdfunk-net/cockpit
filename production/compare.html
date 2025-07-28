@@ -1285,6 +1285,12 @@
               }
 
               showRepositoryConfigurationDialog(validation) {
+                // Remove any existing modal first
+                const existingModal = document.getElementById('repoConfigModal');
+                if (existingModal) {
+                  existingModal.remove();
+                }
+
                 const modal = document.createElement('div');
                 modal.className = 'modal fade';
                 modal.id = 'repoConfigModal';
@@ -1368,25 +1374,44 @@
                 
                 document.body.appendChild(modal);
                 
-                // Show modal
-                const bootstrapModal = new bootstrap.Modal(modal);
-                bootstrapModal.show();
-                
-                // Handle reconfigure button
-                document.getElementById('reconfigureRepoBtn').addEventListener('click', async () => {
-                  if (validation.action_required === 'configure_settings') {
-                    window.location.href = '/settings.html';
-                    return;
+                // Wait for modal to be added to DOM before adding event listeners
+                setTimeout(() => {
+                  // Show modal
+                  const bootstrapModal = new bootstrap.Modal(modal);
+                  bootstrapModal.show();
+                  
+                  // Handle reconfigure button with proper error handling
+                  const reconfigureBtn = document.getElementById('reconfigureRepoBtn');
+                  if (reconfigureBtn) {
+                    console.log('Adding click event listener to reconfigure button');
+                    reconfigureBtn.addEventListener('click', async (e) => {
+                      e.preventDefault();
+                      console.log('Reconfigure button clicked, action_required:', validation.action_required);
+                      
+                      if (validation.action_required === 'configure_settings') {
+                        window.location.href = '/production/settings.html';
+                        return;
+                      }
+                      
+                      try {
+                        await this.reconfigureRepository();
+                        bootstrapModal.hide();
+                      } catch (error) {
+                        console.error('Error in reconfigure button handler:', error);
+                        this.showError('Failed to reconfigure repository. Please try again.');
+                      }
+                    });
+                  } else {
+                    console.error('Reconfigure button not found in modal');
                   }
                   
-                  await this.reconfigureRepository();
-                  bootstrapModal.hide();
-                });
-                
-                // Clean up modal when hidden
-                modal.addEventListener('hidden.bs.modal', () => {
-                  document.body.removeChild(modal);
-                });
+                  // Clean up modal when hidden
+                  modal.addEventListener('hidden.bs.modal', () => {
+                    if (document.body.contains(modal)) {
+                      document.body.removeChild(modal);
+                    }
+                  });
+                }, 100);
               }
 
               async reconfigureRepository() {

@@ -8,6 +8,9 @@ dist/
 
 # Vendor dependencies (generated from node_modules)
 vendors/
+
+# Persistent data directory (database files, etc.)
+data/
 bower_components/
 
 # IDE files

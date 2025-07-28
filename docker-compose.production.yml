@@ -4,9 +4,8 @@ services:
   cockpit:
     build:
       context: .
-      dockerfile: Dockerfile.unified
-    container_name: cockpit
-    hostname: cockpit
+      dockerfile: Dockerfile.unified.production
+    container_name: cockpit-unified-production
     restart: unless-stopped
     ports:
       - "3000:3000"  # Frontend port
@@ -15,9 +14,7 @@ services:
       - backend
     environment:
       # Node.js Frontend Configuration
-      - NODE_ENV=development
-      - VITE_HOST=0.0.0.0
-      - VITE_PORT=3000
+      - NODE_ENV=production
       
       # Backend Server Configuration
       - SERVER_HOST=0.0.0.0
@@ -25,12 +22,12 @@ services:
       - DEBUG=false
       
       # Nautobot Configuration (REQUIRED - Set these values)
-      - NAUTOBOT_HOST=${NAUTOBOT_HOST:-http://localhost:8080}
-      - NAUTOBOT_TOKEN=${NAUTOBOT_TOKEN:-your-nautobot-token-here}
+      - NAUTOBOT_HOST=${NAUTOBOT_HOST}
+      - NAUTOBOT_TOKEN=${NAUTOBOT_TOKEN}
       - NAUTOBOT_TIMEOUT=${NAUTOBOT_TIMEOUT:-30}
       
       # Authentication Configuration (REQUIRED - Change in production)
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       
       # CORS Configuration
@@ -40,21 +37,8 @@ services:
       # Logging Configuration
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      # Development volumes for hot reload
-      - ./src:/app/src:ro
-      - ./production:/app/production:ro
-      - ./package.json:/app/package.json:ro
-      - ./vite.config.js:/app/vite.config.js:ro
-      # Backend files (excluding git directory which needs to be writable)
-      - ./backend/main.py:/app/backend/main.py:ro
-      - ./backend/start.py:/app/backend/start.py:ro
-      - ./backend/config.py:/app/backend/config.py:ro
-      - ./backend/git_manager.py:/app/backend/git_manager.py:ro
-      - ./backend/settings_manager.py:/app/backend/settings_manager.py:ro
-      - ./backend/requirements.txt:/app/backend/requirements.txt:ro
-      # Persistent storage (read-write)
+      # Persistent database storage (read-write)
       - ./data/settings:/app/backend/settings
-      - ./data/git:/app/backend/git
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs"]
       interval: 30s
