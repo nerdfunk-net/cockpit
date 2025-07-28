@@ -10,7 +10,40 @@
 
     <title>Config Backup - Cockpit</title>
 
-    <!-- Vite Entry Point - will bundle all styles -->
+    <!-- Vite Entry Point                        if (response && response.data && response.data.devices) {
+              allDevices = response.data.devices;
+              console.log(`Loaded ${allDevices.length} devices from Nautobot`);
+              renderDevicesTable(allDevices);
+              updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
+            } else if (response && response.errors) {
+              console.error('GraphQL errors:', response.errors);
+              showError('GraphQL errors: ' + response.errors.map(e => e.message).join(', '));
+            } else {
+              console.error('Failed to load devices - full response:', response);
+              showError('Failed to load devices from Nautobot: No data returned - ' + JSON.stringify(response));
+            }
+          } catch (error) {
+            console.error('Error loading devices:', error);
+            console.error('Error details:', {
+              message: error.message,
+              stack: error.stack,
+              name: error.name
+            });
+            showError('Error loading devices: ' + error.message);
+          }GraphQL response:', response);
+
+            if (response && response.data && response.data.devices) {
+              allDevices = response.data.devices;
+              console.log(`Loaded ${allDevices.length} devices from Nautobot`);
+              renderDevicesTable(allDevices);
+              updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
+            } else if (response && response.errors) {
+              console.error('GraphQL errors:', response.errors);
+              showError('GraphQL errors: ' + response.errors.map(e => e.message).join(', '));
+            } else {
+              console.error('Failed to load devices:', response);
+              showError('Failed to load devices from Nautobot: No data returned');
+            }dle all styles -->
     <script type="module" src="/src/main-minimal.js"></script>
     <script>
       // Robust authentication check
@@ -200,14 +233,39 @@
               </div>
 
               <div class="title_right">
-                <div class="col-md-5 col-sm-5   form-group row float-end">
-                  <div class="col-sm-9">
-                    <input type="text" class="form-control" id="search-input" placeholder="Search devices...">
-                  </div>
-                  <div class="col-sm-3">
-                    <button class="btn btn-primary" type="button" id="search-btn">
-                      <i class="fas fa-search"></i>
-                    </button>
+                <div class="col-md-12 col-sm-12">
+                  <!-- Search and Filter Controls -->
+                  <div class="row g-3">
+                    <div class="col-lg-3 col-md-5">
+                      <div class="form-group">
+                        <label for="search-input" class="form-label">Search Devices</label>
+                        <input type="text" class="form-control" id="search-input" placeholder="Search by name...">
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-5">
+                      <div class="form-group">
+                        <label for="backup-date-filter" class="form-label">Last Backup Date</label>
+                        <input type="date" class="form-control" id="backup-date-filter">
+                      </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                      <div class="form-group">
+                        <label for="date-comparison" class="form-label">Date Comparison</label>
+                        <select class="form-control" id="date-comparison">
+                          <option value="">No Date Filter</option>
+                          <option value="lte">Less than or equal to</option>
+                          <option value="lt">Less than</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                      <div class="form-group">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center" id="clear-filters-btn" style="border-radius: 8px; font-weight: 500; transition: all 0.3s ease;" title="Clear Filters">
+                          <i class="fas fa-times-circle"></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -220,49 +278,9 @@
                 <div class="x_panel">
                   <div class="x_title">
                     <h2>Device Configuration Backup Management</h2>
-                    <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fas fa-chevron-up"></i></a>
-                      </li>
-                      <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false"><i class="fas fa-wrench"></i></a>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <a class="dropdown-item" href="#">Settings</a>
-                            <a class="dropdown-item" href="#">Actions</a>
-                            <a class="dropdown-item" href="#">Something else here</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#">Separated link</a>
-                        </div>
-                      </li>
-                      <li><a class="close-link"><i class="fas fa-close"></i></a>
-                      </li>
-                    </ul>
                     <div class="clearfix"></div>
                   </div>
                   <div class="x_content">
-                    <p class="text-muted font-13 m-b-30">
-                      Manage configuration backups for your network devices. Create scheduled backups, perform manual backups, and manage backup retention policies.
-                    </p>
-
-                    <!-- Backup Controls -->
-                    <div class="row mb-4">
-                      <div class="col-md-12">
-                        <div class="btn-group" role="group" aria-label="Backup actions">
-                          <button type="button" class="btn btn-success" id="backup-all-btn">
-                            <i class="fas fa-save"></i> Backup All Devices
-                          </button>
-                          <button type="button" class="btn btn-primary" id="backup-selected-btn" disabled>
-                            <i class="fas fa-save"></i> Backup Selected
-                          </button>
-                          <button type="button" class="btn btn-info" id="schedule-backup-btn">
-                            <i class="fas fa-clock"></i> Schedule Backup
-                          </button>
-                          <button type="button" class="btn btn-warning" id="restore-config-btn">
-                            <i class="fas fa-undo"></i> Restore Configuration
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
                     <!-- Status Panel -->
                     <div class="row mb-4">
                       <div class="col-md-12">
@@ -274,7 +292,7 @@
 
                     <!-- Device List Table -->
                     <div class="table-responsive">
-                      <table class="table table-striped jambo_table bulk_action">
+                      <table class="table bulk_action">
                         <thead>
                           <tr class="headings">
                             <th>
@@ -282,97 +300,23 @@
                             </th>
                             <th class="column-title">Device Name</th>
                             <th class="column-title">IP Address</th>
+                            <th class="column-title">Role</th>
+                            <th class="column-title">Location</th>
                             <th class="column-title">Device Type</th>
-                            <th class="column-title">Last Backup</th>
                             <th class="column-title">Status</th>
+                            <th class="column-title">Last Backup</th>
                             <th class="column-title no-link last"><span class="nobr">Action</span></th>
-                            <th class="bulk-actions" colspan="7">
+                            <th class="bulk-actions" colspan="9">
                               <a class="antoo" style="color:#fff; font-weight:500;">Bulk Actions ( <span class="action-cnt"> </span> ) <i class="fas fa-chevron-down"></i></a>
                             </th>
                           </tr>
                         </thead>
 
                         <tbody id="device-table-body">
-                          <!-- Sample data - will be populated dynamically -->
-                          <tr class="even pointer">
-                            <td class="a-center ">
-                              <input type="checkbox" class="flat" name="table_records">
-                            </td>
-                            <td class="device-name-cell">Router-01</td>
-                            <td>192.168.1.1</td>
-                            <td>Cisco ISR</td>
-                            <td>
-                              <span class="backup-date">2024-01-15 10:30:00</span>
-                            </td>
-                            <td>
-                              <span class="badge bg-success">Online</span>
-                            </td>
-                            <td class="last">
-                              <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-primary backup-device-btn" data-device="Router-01">
-                                  <i class="fas fa-save"></i>
-                                </button>
-                                <button class="btn btn-sm btn-info view-backups-btn" data-device="Router-01">
-                                  <i class="fas fa-history"></i>
-                                </button>
-                                <button class="btn btn-sm btn-warning restore-device-btn" data-device="Router-01">
-                                  <i class="fas fa-undo"></i>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr class="odd pointer">
-                            <td class="a-center ">
-                              <input type="checkbox" class="flat" name="table_records">
-                            </td>
-                            <td class="device-name-cell">Switch-01</td>
-                            <td>192.168.1.10</td>
-                            <td>Cisco Catalyst</td>
-                            <td>
-                              <span class="backup-date">2024-01-14 16:45:00</span>
-                            </td>
-                            <td>
-                              <span class="badge bg-success">Online</span>
-                            </td>
-                            <td class="last">
-                              <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-primary backup-device-btn" data-device="Switch-01">
-                                  <i class="fas fa-save"></i>
-                                </button>
-                                <button class="btn btn-sm btn-info view-backups-btn" data-device="Switch-01">
-                                  <i class="fas fa-history"></i>
-                                </button>
-                                <button class="btn btn-sm btn-warning restore-device-btn" data-device="Switch-01">
-                                  <i class="fas fa-undo"></i>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr class="even pointer">
-                            <td class="a-center ">
-                              <input type="checkbox" class="flat" name="table_records">
-                            </td>
-                            <td class="device-name-cell">Firewall-01</td>
-                            <td>192.168.1.100</td>
-                            <td>FortiGate</td>
-                            <td>
-                              <span class="backup-date">Never</span>
-                            </td>
-                            <td>
-                              <span class="badge bg-danger">Offline</span>
-                            </td>
-                            <td class="last">
-                              <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-primary backup-device-btn" data-device="Firewall-01" disabled>
-                                  <i class="fas fa-save"></i>
-                                </button>
-                                <button class="btn btn-sm btn-info view-backups-btn" data-device="Firewall-01">
-                                  <i class="fas fa-history"></i>
-                                </button>
-                                <button class="btn btn-sm btn-warning restore-device-btn" data-device="Firewall-01" disabled>
-                                  <i class="fas fa-undo"></i>
-                                </button>
-                              </div>
+                          <!-- Loading state -->
+                          <tr>
+                            <td colspan="9" class="text-center">
+                              <i class="fas fa-spinner fa-spin"></i> Loading devices from Nautobot...
                             </td>
                           </tr>
                         </tbody>
@@ -475,6 +419,729 @@
     <!-- Additional Scripts for Backup functionality -->
     <script>
       document.addEventListener('DOMContentLoaded', function() {
+        // Device management functions
+        let allDevices = [];
+        let currentPage = 0;
+        let pageSize = 20;
+        let currentSearchTerm = '';
+        let currentDateFilter = '';
+        let currentDateComparison = '';
+        let isLoading = false;
+        
+        // Load devices from Nautobot using GraphQL
+        async function loadDevices(page = 0, pageSize = 20) {
+          try {
+            console.log(`Loading devices from Nautobot (page ${page + 1})...`);
+            
+            if (!window.authManager) {
+              console.error('AuthManager not available');
+              showError('Authentication manager not ready. Please refresh the page.');
+              return;
+            }
+
+            const query = `
+              query single_device(
+                $device_filter: [String]
+                $limit: Int = 10
+                $offset: Int = 0
+              ) {
+                devices(name__ire: $device_filter, limit: $limit, offset: $offset) {
+                  id
+                  name
+                  role {
+                    name
+                  }
+                  location {
+                    name
+                  }
+                  primary_ip4 {
+                    address
+                  }
+                  status {
+                    name
+                  }
+                  device_type {
+                    model
+                  }
+                  cf_last_backup
+                }
+              }
+            `;
+
+            const response = await window.authManager.apiRequest('/api/graphql', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                query: query,
+                variables: {
+                  device_filter: [""], // Empty string returns all devices
+                  limit: pageSize,
+                  offset: page * pageSize
+                }
+              })
+            });
+
+            console.log('GraphQL response:', response);
+
+            if (response && response.data && response.data.devices) {
+              const devices = response.data.devices;
+              console.log(`Loaded ${devices.length} devices from Nautobot (page ${page + 1})`);
+              
+              // If this is the first page, replace all devices, otherwise append
+              if (page === 0) {
+                allDevices = devices;
+              } else {
+                allDevices = allDevices.concat(devices);
+              }
+              
+              renderDevicesTable(allDevices);
+              updatePaginationControls(page, pageSize, devices.length);
+              updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
+            } else if (response && response.errors) {
+              console.error('GraphQL errors:', response.errors);
+              showError('GraphQL errors: ' + response.errors.map(e => e.message).join(', '));
+            } else {
+              console.error('Failed to load devices - full response:', response);
+              showError('Failed to load devices from Nautobot: No data returned');
+            }
+          } catch (error) {
+            console.error('Error loading devices:', error);
+            console.error('Error details:', {
+              message: error.message,
+              stack: error.stack,
+              name: error.name
+            });
+            showError('Error loading devices: ' + error.message);
+          }
+        }
+
+        // Search devices with filter
+        async function searchDevices(searchTerm, page = 0, pageSize = 20) {
+          try {
+            console.log(`Searching devices with term: "${searchTerm}" (page ${page + 1})...`);
+            
+            if (!window.authManager) {
+              console.error('AuthManager not available');
+              showError('Authentication manager not ready. Please refresh the page.');
+              return;
+            }
+
+            const query = `
+              query single_device(
+                $device_filter: [String]
+                $limit: Int = 10
+                $offset: Int = 0
+              ) {
+                devices(name__ire: $device_filter, limit: $limit, offset: $offset) {
+                  id
+                  name
+                  role {
+                    name
+                  }
+                  location {
+                    name
+                  }
+                  primary_ip4 {
+                    address
+                  }
+                  status {
+                    name
+                  }
+                  device_type {
+                    model
+                  }
+                  cf_last_backup
+                }
+              }
+            `;
+
+            // Create regex pattern for case-insensitive search
+            const searchPattern = searchTerm.trim() ? `(?i).*${searchTerm.trim()}.*` : "";
+
+            const response = await window.authManager.apiRequest('/api/graphql', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                query: query,
+                variables: {
+                  device_filter: [searchPattern],
+                  limit: pageSize,
+                  offset: page * pageSize
+                }
+              })
+            });
+
+            console.log('Search response:', response);
+
+            if (response && response.data && response.data.devices) {
+              const devices = response.data.devices;
+              console.log(`Found ${devices.length} devices matching "${searchTerm}" (page ${page + 1})`);
+              
+              // If this is the first page, replace all devices, otherwise append
+              if (page === 0) {
+                allDevices = devices;
+                currentSearchTerm = searchTerm;
+              } else {
+                allDevices = allDevices.concat(devices);
+              }
+              
+              renderDevicesTable(allDevices);
+              updatePaginationControls(page, pageSize, devices.length);
+              updateStatusPanel(`<i class="fas fa-search"></i> Found ${allDevices.length} devices matching "${searchTerm}".`, 'info');
+            } else if (response && response.errors) {
+              console.error('GraphQL errors:', response.errors);
+              showError('Search failed: ' + response.errors.map(e => e.message).join(', '));
+            } else {
+              console.error('Search failed - full response:', response);
+              showError('Search failed: No data returned');
+            }
+          } catch (error) {
+            console.error('Error searching devices:', error);
+            showError('Error searching devices: ' + error.message);
+          }
+        }
+
+        // Filter devices with combined filters (search + date)
+        async function filterDevices(searchTerm = '', dateFilter = '', dateComparison = '', page = 0, pageSize = 20) {
+          try {
+            console.log(`Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}" (page ${page + 1})...`);
+            
+            if (!window.authManager) {
+              console.error('AuthManager not available');
+              showError('Authentication manager not ready. Please refresh the page.');
+              return;
+            }
+
+            let query;
+            let variables = {
+              limit: pageSize,
+              offset: page * pageSize
+            };
+
+            // Determine which query to use based on filters
+            if (dateFilter && dateComparison) {
+              // Date filter query
+              if (dateComparison === 'lte') {
+                query = `
+                  query single_device(
+                    $date_filter: [String]
+                    $limit: Int = 10
+                    $offset: Int = 0
+                  ) {
+                    devices(cf_last_backup__lte: $date_filter, limit: $limit, offset: $offset) {
+                      id
+                      name
+                      role {
+                        name
+                      }
+                      location {
+                        name
+                      }
+                      primary_ip4 {
+                        address
+                      }
+                      status {
+                        name
+                      }
+                      device_type {
+                        model
+                      }
+                      cf_last_backup
+                    }
+                  }
+                `;
+                variables.date_filter = [dateFilter];
+              } else if (dateComparison === 'lt') {
+                query = `
+                  query single_device(
+                    $date_filter: [String]
+                    $limit: Int = 10
+                    $offset: Int = 0
+                  ) {
+                    devices(cf_last_backup__lt: $date_filter, limit: $limit, offset: $offset) {
+                      id
+                      name
+                      role {
+                        name
+                      }
+                      location {
+                        name
+                      }
+                      primary_ip4 {
+                        address
+                      }
+                      status {
+                        name
+                      }
+                      device_type {
+                        model
+                      }
+                      cf_last_backup
+                    }
+                  }
+                `;
+                variables.date_filter = [dateFilter];
+              }
+            } else if (searchTerm) {
+              // Search filter query
+              query = `
+                query single_device(
+                  $device_filter: [String]
+                  $limit: Int = 10
+                  $offset: Int = 0
+                ) {
+                  devices(name__ire: $device_filter, limit: $limit, offset: $offset) {
+                    id
+                    name
+                    role {
+                      name
+                    }
+                    location {
+                      name
+                    }
+                    primary_ip4 {
+                      address
+                    }
+                    status {
+                      name
+                    }
+                    device_type {
+                      model
+                    }
+                    cf_last_backup
+                  }
+                }
+              `;
+              const searchPattern = `(?i).*${searchTerm.trim()}.*`;
+              variables.device_filter = [searchPattern];
+            } else {
+              // No filters - get all devices
+              query = `
+                query single_device(
+                  $device_filter: [String]
+                  $limit: Int = 10
+                  $offset: Int = 0
+                ) {
+                  devices(name__ire: $device_filter, limit: $limit, offset: $offset) {
+                    id
+                    name
+                    role {
+                      name
+                    }
+                    location {
+                      name
+                    }
+                    primary_ip4 {
+                      address
+                    }
+                    status {
+                      name
+                    }
+                    device_type {
+                      model
+                    }
+                    cf_last_backup
+                  }
+                }
+              `;
+              variables.device_filter = [""];
+            }
+
+            const response = await window.authManager.apiRequest('/api/graphql', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                query: query,
+                variables: variables
+              })
+            });
+
+            console.log('Filter response:', response);
+
+            if (response && response.data && response.data.devices) {
+              const devices = response.data.devices;
+              console.log(`Found ${devices.length} devices with filters (page ${page + 1})`);
+              
+              // If this is the first page, replace all devices, otherwise append
+              if (page === 0) {
+                allDevices = devices;
+                currentSearchTerm = searchTerm;
+                currentDateFilter = dateFilter;
+                currentDateComparison = dateComparison;
+              } else {
+                allDevices = allDevices.concat(devices);
+              }
+              
+              renderDevicesTable(allDevices);
+              updatePaginationControls(page, pageSize, devices.length);
+              
+              // Update status message
+              let statusMessage = `<i class="fas fa-check-circle"></i> Found ${allDevices.length} devices`;
+              if (searchTerm || (dateFilter && dateComparison)) {
+                statusMessage += ' with applied filters';
+              }
+              updateStatusPanel(statusMessage + '.', 'success');
+              
+            } else if (response && response.errors) {
+              console.error('GraphQL errors:', response.errors);
+              showError('Filter failed: ' + response.errors.map(e => e.message).join(', '));
+            } else {
+              console.error('Filter failed - full response:', response);
+              showError('Filter failed: No data returned');
+            }
+          } catch (error) {
+            console.error('Error filtering devices:', error);
+            showError('Error filtering devices: ' + error.message);
+          }
+        }
+
+        // Render devices table
+        function renderDevicesTable(devices) {
+          const tableBody = document.getElementById('device-table-body');
+          
+          if (!devices || devices.length === 0) {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="9" class="text-center text-muted">
+                  <i class="fas fa-info-circle"></i> No devices found in Nautobot.
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          tableBody.innerHTML = devices.map((device, index) => {
+            const rowClass = index % 2 === 0 ? 'even' : 'odd';
+            const deviceName = device.name || 'Unknown';
+            const ipAddress = device.primary_ip4?.address || 'N/A';
+            const role = device.role?.name || 'Unknown';
+            const location = device.location?.name || 'Unknown';
+            const deviceType = device.device_type?.model || 'Unknown';
+            const status = device.status?.name || 'Unknown';
+            const lastBackup = device.cf_last_backup || 'Never';
+            
+            // Determine status badge color
+            let statusBadgeClass = 'bg-secondary';
+            if (status.toLowerCase().includes('active') || status.toLowerCase().includes('online')) {
+              statusBadgeClass = 'bg-success';
+            } else if (status.toLowerCase().includes('offline') || status.toLowerCase().includes('failed')) {
+              statusBadgeClass = 'bg-danger';
+            } else if (status.toLowerCase().includes('maintenance')) {
+              statusBadgeClass = 'bg-warning';
+            }
+
+            const isOffline = status.toLowerCase().includes('offline') || status.toLowerCase().includes('failed');
+
+            return `
+              <tr class="${rowClass}">
+                <td class="a-center">
+                  <input type="checkbox" class="flat" name="table_records" data-device-id="${device.id}" data-device-name="${deviceName}">
+                </td>
+                <td class="device-name-cell">${deviceName}</td>
+                <td>${ipAddress}</td>
+                <td>${role}</td>
+                <td>${location}</td>
+                <td>${deviceType}</td>
+                <td>
+                  <span class="badge ${statusBadgeClass}">${status}</span>
+                </td>
+                <td>
+                  <span class="backup-date">${lastBackup}</span>
+                </td>
+                <td class="last">
+                  <div class="btn-group" role="group">
+                    <button class="btn btn-sm btn-primary backup-device-btn" data-device="${deviceName}" data-device-id="${device.id}" ${isOffline ? 'disabled' : ''} title="Backup Device">
+                      <i class="fas fa-save"></i>
+                    </button>
+                    <button class="btn btn-sm btn-info view-backups-btn" data-device="${deviceName}" data-device-id="${device.id}" title="View Backup History">
+                      <i class="fas fa-history"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('');
+
+          // Re-attach event listeners for dynamically created elements
+          attachDeviceEventListeners();
+        }
+
+        // Update pagination controls
+        function updatePaginationControls(page, pageSize, returnedCount) {
+          // Create pagination controls if they don't exist
+          let paginationContainer = document.getElementById('pagination-container');
+          if (!paginationContainer) {
+            paginationContainer = document.createElement('div');
+            paginationContainer.id = 'pagination-container';
+            paginationContainer.className = 'row mt-3';
+            paginationContainer.innerHTML = `
+              <div class="col-md-6">
+                <div class="pagination-info">
+                  <span id="pagination-info-text">Showing devices...</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="pagination-controls text-end">
+                  <button type="button" class="btn btn-sm btn-outline-primary" id="load-more-btn" style="display: none;">
+                    <i class="fas fa-plus-circle"></i> Load More
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="reset-pagination-btn" style="display: none;">
+                    <i class="fas fa-refresh"></i> Reset
+                  </button>
+                </div>
+              </div>
+            `;
+            
+            // Insert after the table
+            const tableContainer = document.querySelector('.table-responsive');
+            tableContainer.parentNode.insertBefore(paginationContainer, tableContainer.nextSibling);
+            
+            // Add event listeners
+            document.getElementById('load-more-btn').addEventListener('click', loadMoreDevices);
+            document.getElementById('reset-pagination-btn').addEventListener('click', resetPagination);
+          }
+          
+          // Update pagination info
+          const infoText = document.getElementById('pagination-info-text');
+          const loadMoreBtn = document.getElementById('load-more-btn');
+          const resetBtn = document.getElementById('reset-pagination-btn');
+          
+          const startItem = (page * pageSize) + 1;
+          const endItem = startItem + returnedCount - 1;
+          
+          if (allDevices.length > 0) {
+            infoText.textContent = `Showing ${allDevices.length} devices`;
+            if (returnedCount === pageSize) {
+              loadMoreBtn.style.display = 'inline-block';
+            } else {
+              loadMoreBtn.style.display = 'none';
+            }
+            
+            if (page > 0 || currentSearchTerm) {
+              resetBtn.style.display = 'inline-block';
+            } else {
+              resetBtn.style.display = 'none';
+            }
+          } else {
+            infoText.textContent = 'No devices found';
+            loadMoreBtn.style.display = 'none';
+            resetBtn.style.display = 'none';
+          }
+        }
+
+        // Load more devices (next page)
+        async function loadMoreDevices() {
+          if (isLoading) return;
+          
+          isLoading = true;
+          const loadMoreBtn = document.getElementById('load-more-btn');
+          const originalText = loadMoreBtn.innerHTML;
+          loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+          loadMoreBtn.disabled = true;
+          
+          try {
+            currentPage++;
+            await filterDevices(currentSearchTerm, currentDateFilter, currentDateComparison, currentPage, pageSize);
+          } finally {
+            loadMoreBtn.innerHTML = originalText;
+            loadMoreBtn.disabled = false;
+            isLoading = false;
+          }
+        }
+
+        // Reset pagination
+        async function resetPagination() {
+          currentPage = 0;
+          currentSearchTerm = '';
+          currentDateFilter = '';
+          currentDateComparison = '';
+          allDevices = [];
+          
+          // Clear all filter inputs
+          const searchInput = document.getElementById('search-input');
+          const dateInput = document.getElementById('backup-date-filter');
+          const comparisonSelect = document.getElementById('date-comparison');
+          
+          if (searchInput) searchInput.value = '';
+          if (dateInput) dateInput.value = '';
+          if (comparisonSelect) comparisonSelect.value = '';
+          
+          // Hide pagination controls
+          const paginationContainer = document.getElementById('pagination-container');
+          if (paginationContainer) {
+            paginationContainer.remove();
+          }
+          
+          // Load first page with no filters
+          await filterDevices('', '', '', 0, pageSize);
+        }
+
+        // Attach event listeners to device buttons
+        function attachDeviceEventListeners() {
+          // Individual device backup buttons
+          document.querySelectorAll('.backup-device-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const deviceName = this.getAttribute('data-device');
+              const deviceId = this.getAttribute('data-device-id');
+              performDeviceBackup(deviceName, deviceId);
+            });
+          });
+
+          // View backup history
+          document.querySelectorAll('.view-backups-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const deviceName = this.getAttribute('data-device');
+              const deviceId = this.getAttribute('data-device-id');
+              showBackupHistory(deviceName, deviceId);
+            });
+          });
+
+          // Individual checkbox change
+          document.querySelectorAll('input[name="table_records"]').forEach(cb => {
+            cb.addEventListener('change', function() {
+              const selectedCount = document.querySelectorAll('input[name="table_records"]:checked').length;
+              document.getElementById('backup-selected-btn').disabled = selectedCount === 0;
+            });
+          });
+        }
+
+        // Perform device backup
+        async function performDeviceBackup(deviceName, deviceId) {
+          updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Backing up ${deviceName}...`, 'info');
+          
+          try {
+            // Simulate backup API call - replace with actual backup endpoint
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            updateStatusPanel(`<i class="fas fa-check-circle"></i> Backup completed for ${deviceName}.`, 'success');
+            
+            // Refresh current page data to update last backup time
+            setTimeout(() => {
+              if (currentSearchTerm) {
+                searchDevices(currentSearchTerm, 0, (currentPage + 1) * pageSize);
+              } else {
+                loadDevices(0, (currentPage + 1) * pageSize);
+              }
+            }, 1000);
+          } catch (error) {
+            console.error('Backup failed:', error);
+            updateStatusPanel(`<i class="fas fa-exclamation-triangle"></i> Backup failed for ${deviceName}: ${error.message}`, 'danger');
+          }
+        }
+
+        // Show backup history
+        function showBackupHistory(deviceName, deviceId) {
+          document.getElementById('backupHistoryModalLabel').textContent = `Backup History - ${deviceName}`;
+          
+          // Populate backup history (sample data - replace with actual API call)
+          const historyBody = document.getElementById('backup-history-body');
+          historyBody.innerHTML = `
+            <tr>
+              <td>2024-01-15 10:30:00</td>
+              <td>2.3 MB</td>
+              <td><span class="badge bg-success">Success</span></td>
+              <td>
+                <button class="btn btn-sm btn-primary">Download</button>
+                <button class="btn btn-sm btn-warning">Restore</button>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="4" class="text-center text-muted">
+                <i class="fas fa-info-circle"></i> Integration with backup system needed
+              </td>
+            </tr>
+          `;
+          
+          const modal = new bootstrap.Modal(document.getElementById('backupHistoryModal'));
+          modal.show();
+        }
+
+        // Show restore dialog
+        function showRestoreDialog(deviceName, deviceId) {
+          // Placeholder for restore functionality
+          updateStatusPanel(`<i class="fas fa-info-circle"></i> Restore functionality for ${deviceName} - Integration needed.`, 'info');
+        }
+
+        // Utility functions
+        let statusTimeout;
+        function updateStatusPanel(message, type = 'info', autoHide = true) {
+          const statusPanel = document.getElementById('status-panel');
+          statusPanel.className = `alert alert-${type}`;
+          statusPanel.innerHTML = message;
+          statusPanel.style.display = 'block';
+          
+          // Clear any existing timeout
+          if (statusTimeout) {
+            clearTimeout(statusTimeout);
+          }
+          
+          // Auto-hide success and info messages after 3 seconds
+          if (autoHide && (type === 'success' || type === 'info')) {
+            statusTimeout = setTimeout(() => {
+              statusPanel.style.display = 'none';
+            }, 3000);
+          }
+        }
+
+        function showError(message) {
+          updateStatusPanel(`<i class="fas fa-exclamation-triangle"></i> ${message}`, 'danger', false);
+        }
+
+        // Search functionality with debouncing
+        let searchTimeout;
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+          searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = this.value.trim();
+            
+            // Debounce search to avoid too many API calls
+            searchTimeout = setTimeout(async () => {
+              currentPage = 0;
+              await filterDevices(searchTerm, currentDateFilter, currentDateComparison, 0, pageSize);
+            }, 500); // Wait 500ms after user stops typing
+          });
+        }
+
+        // Add date filter event listeners
+        const dateInput = document.getElementById('backup-date-filter');
+        const comparisonSelect = document.getElementById('date-comparison');
+        
+        if (dateInput) {
+          dateInput.addEventListener('change', () => {
+            currentPage = 0;
+            const newDateFilter = dateInput.value;
+            filterDevices(currentSearchTerm, newDateFilter, currentDateComparison, 0, pageSize);
+          });
+        }
+        
+        if (comparisonSelect) {
+          comparisonSelect.addEventListener('change', () => {
+            currentPage = 0;
+            const newDateComparison = comparisonSelect.value;
+            filterDevices(currentSearchTerm, currentDateFilter, newDateComparison, 0, pageSize);
+          });
+        }
+        
+        // Add clear filters button event listener
+        const clearButton = document.getElementById('clear-filters-btn');
+        if (clearButton) {
+          clearButton.addEventListener('click', resetPagination);
+        }
+
+        // Initialize the page
+        console.log('Initializing backup page...');
+        
+        // Wait a bit for AuthManager to be ready, then load first page
+        setTimeout(() => {
+          filterDevices('', '', '', 0, pageSize);
+        }, 1000);
+
         // Update navbar username display
         function updateNavbarUsername() {
           try {
@@ -501,63 +1168,31 @@
         const statusPanel = document.getElementById('status-panel');
         
         // Backup All Devices
-        document.getElementById('backup-all-btn').addEventListener('click', function() {
-          statusPanel.className = 'alert alert-info';
-          statusPanel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting backup for all devices...';
+        document.getElementById('backup-all-btn').addEventListener('click', async function() {
+          if (allDevices.length === 0) {
+            updateStatusPanel('<i class="fas fa-exclamation-triangle"></i> No devices available to backup.', 'warning');
+            return;
+          }
+
+          updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Starting backup for ${allDevices.length} devices...`, 'info');
           
-          // Simulate backup process
-          setTimeout(() => {
-            statusPanel.className = 'alert alert-success';
-            statusPanel.innerHTML = '<i class="fas fa-check-circle"></i> Backup completed successfully for all online devices.';
-          }, 3000);
-        });
-
-        // Individual device backup buttons
-        document.querySelectorAll('.backup-device-btn').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const deviceName = this.getAttribute('data-device');
-            statusPanel.className = 'alert alert-info';
-            statusPanel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Backing up ${deviceName}...`;
+          try {
+            // Simulate backup process for all devices
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            updateStatusPanel(`<i class="fas fa-check-circle"></i> Backup completed successfully for ${allDevices.length} devices.`, 'success');
             
+            // Refresh current page data
             setTimeout(() => {
-              statusPanel.className = 'alert alert-success';
-              statusPanel.innerHTML = `<i class="fas fa-check-circle"></i> Backup completed for ${deviceName}.`;
-            }, 2000);
-          });
-        });
-
-        // View backup history
-        document.querySelectorAll('.view-backups-btn').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const deviceName = this.getAttribute('data-device');
-            document.getElementById('backupHistoryModalLabel').textContent = `Backup History - ${deviceName}`;
-            
-            // Populate backup history (sample data)
-            const historyBody = document.getElementById('backup-history-body');
-            historyBody.innerHTML = `
-              <tr>
-                <td>2024-01-15 10:30:00</td>
-                <td>2.3 MB</td>
-                <td><span class="badge bg-success">Success</span></td>
-                <td>
-                  <button class="btn btn-sm btn-primary">Download</button>
-                  <button class="btn btn-sm btn-warning">Restore</button>
-                </td>
-              </tr>
-              <tr>
-                <td>2024-01-14 10:30:00</td>
-                <td>2.2 MB</td>
-                <td><span class="badge bg-success">Success</span></td>
-                <td>
-                  <button class="btn btn-sm btn-primary">Download</button>
-                  <button class="btn btn-sm btn-warning">Restore</button>
-                </td>
-              </tr>
-            `;
-            
-            const modal = new bootstrap.Modal(document.getElementById('backupHistoryModal'));
-            modal.show();
-          });
+              if (currentSearchTerm) {
+                searchDevices(currentSearchTerm, 0, (currentPage + 1) * pageSize);
+              } else {
+                loadDevices(0, (currentPage + 1) * pageSize);
+              }
+            }, 1000);
+          } catch (error) {
+            console.error('Backup all failed:', error);
+            updateStatusPanel(`<i class="fas fa-exclamation-triangle"></i> Backup failed: ${error.message}`, 'danger');
+          }
         });
 
         // Schedule backup modal
@@ -580,8 +1215,7 @@
         document.getElementById('save-schedule-btn').addEventListener('click', function() {
           const form = document.getElementById('schedule-backup-form');
           if (form.checkValidity()) {
-            statusPanel.className = 'alert alert-success';
-            statusPanel.innerHTML = '<i class="fas fa-check-circle"></i> Backup schedule saved successfully.';
+            updateStatusPanel('<i class="fas fa-check-circle"></i> Backup schedule saved successfully.', 'success');
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleBackupModal'));
             modal.hide();
@@ -600,31 +1234,35 @@
           document.getElementById('backup-selected-btn').disabled = selectedCount === 0;
         });
 
-        // Individual checkbox change
-        document.querySelectorAll('input[name="table_records"]').forEach(cb => {
-          cb.addEventListener('change', function() {
-            const selectedCount = document.querySelectorAll('input[name="table_records"]:checked').length;
-            document.getElementById('backup-selected-btn').disabled = selectedCount === 0;
-          });
-        });
-
         // Backup selected devices
-        document.getElementById('backup-selected-btn').addEventListener('click', function() {
+        document.getElementById('backup-selected-btn').addEventListener('click', async function() {
           const selectedDevices = [];
           document.querySelectorAll('input[name="table_records"]:checked').forEach(cb => {
-            const row = cb.closest('tr');
-            const deviceName = row.querySelector('.device-name-cell').textContent;
-            selectedDevices.push(deviceName);
+            const deviceName = cb.getAttribute('data-device-name');
+            const deviceId = cb.getAttribute('data-device-id');
+            selectedDevices.push({ name: deviceName, id: deviceId });
           });
 
           if (selectedDevices.length > 0) {
-            statusPanel.className = 'alert alert-info';
-            statusPanel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Backing up ${selectedDevices.length} selected device(s)...`;
+            updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Backing up ${selectedDevices.length} selected device(s)...`, 'info');
             
-            setTimeout(() => {
-              statusPanel.className = 'alert alert-success';
-              statusPanel.innerHTML = `<i class="fas fa-check-circle"></i> Backup completed for ${selectedDevices.length} selected device(s).`;
-            }, 3000);
+            try {
+              // Simulate backup process for selected devices
+              await new Promise(resolve => setTimeout(resolve, 3000));
+              updateStatusPanel(`<i class="fas fa-check-circle"></i> Backup completed for ${selectedDevices.length} selected device(s).`, 'success');
+              
+              // Refresh current page data
+              setTimeout(() => {
+                if (currentSearchTerm) {
+                  searchDevices(currentSearchTerm, 0, (currentPage + 1) * pageSize);
+                } else {
+                  loadDevices(0, (currentPage + 1) * pageSize);
+                }
+              }, 1000);
+            } catch (error) {
+              console.error('Selected backup failed:', error);
+              updateStatusPanel(`<i class="fas fa-exclamation-triangle"></i> Selected backup failed: ${error.message}`, 'danger');
+            }
           }
         });
 

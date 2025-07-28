@@ -1804,7 +1804,7 @@ async def get_devices(
                 # Use name filtering with regex support - correct Nautobot syntax
                 query = """
                 query single_device($device_filter: [String]) {
-                  devices(name__re: $device_filter) {
+                  devices(name__ire: $device_filter) {
                     id
                     name
                     role {
@@ -1822,9 +1822,7 @@ async def get_devices(
                   }
                 }
                 """
-                # Make the regex case-insensitive by adding (?i) flag
-                case_insensitive_filter = f"(?i){filter_value}"
-                variables = {"device_filter": [case_insensitive_filter]}
+                variables = {"device_filter": [filter_value]}
                 
                 result = nautobot_graphql_query(query, variables)
                 if "errors" in result:
@@ -2100,6 +2098,31 @@ async def graphql_query(
     current_user: str = Depends(verify_token)
 ):
     """Execute GraphQL query against Nautobot"""
+    try:
+        query = query_data.get("query")
+        variables = query_data.get("variables", {})
+        
+        if not query:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="GraphQL query is required"
+            )
+        
+        result = nautobot_graphql_query(query, variables)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"GraphQL query failed: {str(e)}"
+        )
+
+# Nautobot GraphQL endpoint (alias for the frontend)
+@app.post("/api/nautobot/graphql")  
+async def nautobot_graphql_endpoint(
+    query_data: dict,
+    current_user: str = Depends(verify_token)
+):
+    """Execute GraphQL query against Nautobot - alias for /api/graphql"""
     try:
         query = query_data.get("query")
         variables = query_data.get("variables", {})

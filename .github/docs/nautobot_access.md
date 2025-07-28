@@ -149,10 +149,8 @@
   * The result will contain the name of a device, the role, the location and the primary_ipv4 address.
   * Use this query:
 
-    query single_device (
-    $device_filter: [String]) 
-    {
-      devices (name__re:$device_filter) {
+    query single_device($device_filter: [String]) {
+      devices(name__ire: $device_filter) {
         id
         name
         role {
@@ -167,6 +165,40 @@
         status {
           name
         }
+        device_type {
+          model
+        }
+        
+        cf_last_backup
+      }
+    }
+
+# To get the last backup of a device use a graphql query and make a REST API call. 
+  * A GraphQL Query must be encapsulated in a JSON payload with the query key and sent with a POST request. 
+  * The parameter device_filter is used to get the data of a device.
+  * Use you can name__re instead of name to use a regular expression. In this case you ghet a list of devices that matches the regular expression.
+  * The result will contain the name of a device, the role, the location and the primary_ipv4 address.
+  * Use this query:
+
+    query single_device (
+    $device_filter: [String]) 
+    {
+      devices (name__ire:$device_filter) {
+        id
+        name
+        role {
+          name
+        }
+        location {
+          name
+        }
+        primary_ip4 {
+          address
+        }
+        status {
+          name
+        }
+        cf_last_backup
       }
     }
 
