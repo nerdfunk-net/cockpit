@@ -16,6 +16,7 @@ services:
       - NODE_ENV=development
       - VITE_HOST=0.0.0.0
       - VITE_PORT=3000
+      - VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS:-auto}
       
       # Backend Server Configuration
       - SERVER_HOST=0.0.0.0

@@ -78,6 +78,7 @@ docker-compose logs -f cockpit-backend
 - **Backend Container**: FastAPI application on port 8000
 - **Volume Mounts**: `./configs` mapped to container for persistent Git repository
 - **Environment Variables**: Configure via `.env` file or docker-compose override
+- **Security**: VITE_ALLOWED_HOSTS controls which hosts can access the Vite server
 
 ### Common Docker Issues
 - **Port Conflicts**: Ensure ports 3000 and 8000 are available
@@ -145,6 +146,10 @@ SECRET_KEY=your-jwt-secret
 DEBUG=true
 SERVER_PORT=8000
 CORS_ORIGINS=http://localhost:3000
+
+# Vite frontend configuration
+VITE_HOST=0.0.0.0                    # Host binding for Vite server
+VITE_ALLOWED_HOSTS=auto              # Comma-separated list of allowed hosts or 'auto'
 ```
 
 ## Common Debugging Patterns
