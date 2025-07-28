@@ -1238,11 +1238,6 @@
                 // Load files and Git data on page load (with delay for authManager)
                 this.loadFiles();
                 
-                // Check repository configuration
-                setTimeout(() => {
-                  this.validateRepositoryConfiguration();
-                }, 1000);
-                
                 // Delay Git status loading to ensure authManager is ready
                 setTimeout(() => {
                   this.loadGitStatus();
@@ -1250,217 +1245,6 @@
                 
                 // Load saved font size preference
                 this.loadFontSizePreference();
-              }
-
-              // Repository Validation and Configuration
-              async validateRepositoryConfiguration() {
-                try {
-                  console.log('Starting repository validation...');
-                  
-                  if (!window.authManager) {
-                    console.warn('AuthManager not ready for repository validation');
-                    return;
-                  }
-
-                  console.log('Making API request to validate repository...');
-                  const response = await window.authManager.apiRequest('/api/git/repo/validate');
-                  console.log('Validation response:', response);
-                  
-                  if (response.success) {
-                    const validation = response.data;
-                    console.log('Validation data:', validation);
-                    
-                    if (!validation.is_valid || validation.needs_reconfiguration) {
-                      console.log('Repository needs reconfiguration, showing dialog');
-                      this.showRepositoryConfigurationDialog(validation);
-                    } else {
-                      console.log('Repository configuration is valid');
-                    }
-                  } else {
-                    console.error('Failed to validate repository configuration:', response.message);
-                  }
-                } catch (error) {
-                  console.error('Error validating repository configuration:', error);
-                }
-              }
-
-              showRepositoryConfigurationDialog(validation) {
-                // Remove any existing modal first
-                const existingModal = document.getElementById('repoConfigModal');
-                if (existingModal) {
-                  existingModal.remove();
-                }
-
-                const modal = document.createElement('div');
-                modal.className = 'modal fade';
-                modal.id = 'repoConfigModal';
-                modal.setAttribute('data-bs-backdrop', 'static');
-                modal.setAttribute('data-bs-keyboard', 'false');
-                
-                let issuesHtml = validation.issues.map(issue => `<li class="text-warning">${issue}</li>`).join('');
-                let actionMessage = '';
-                let actionButtonText = 'Reconfigure Repository';
-                
-                switch (validation.action_required) {
-                  case 'configure_settings':
-                    actionMessage = 'Please configure your Git settings first.';
-                    actionButtonText = 'Go to Settings';
-                    break;
-                  case 'clone_repository':
-                    actionMessage = 'The repository needs to be cloned for the first time.';
-                    actionButtonText = 'Clone Repository';
-                    break;
-                  case 'clear_and_clone':
-                    actionMessage = 'The directory contains non-Git files and needs to be cleared.';
-                    actionButtonText = 'Clear & Reconfigure';
-                    break;
-                  case 'reconfigure_repository':
-                    actionMessage = 'The current repository does not match your settings.';
-                    actionButtonText = 'Reconfigure Repository';
-                    break;
-                  case 'switch_branch':
-                    actionMessage = 'The current branch does not match your configured branch.';
-                    actionButtonText = 'Switch Branch';
-                    break;
-                  default:
-                    actionMessage = 'The repository configuration needs to be updated.';
-                }
-                
-                modal.innerHTML = `
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-header bg-warning">
-                        <h5 class="modal-title">
-                          <i class="fas fa-exclamation-triangle"></i> Repository Configuration Mismatch
-                        </h5>
-                      </div>
-                      <div class="modal-body">
-                        <div class="alert alert-warning">
-                          <strong>Repository Configuration Issues Detected:</strong>
-                          <ul class="mt-2 mb-0">
-                            ${issuesHtml}
-                          </ul>
-                        </div>
-                        
-                        <div class="row mt-3">
-                          <div class="col-md-6">
-                            <h6>Current Repository:</h6>
-                            <code>${validation.current_repo || 'Not set'}</code>
-                            <br><small class="text-muted">Branch: ${validation.current_branch || 'Unknown'}</small>
-                          </div>
-                          <div class="col-md-6">
-                            <h6>Configured Repository:</h6>
-                            <code>${validation.configured_repo || 'Not configured'}</code>
-                            <br><small class="text-muted">Branch: ${validation.configured_branch || 'main'}</small>
-                          </div>
-                        </div>
-                        
-                        <div class="alert alert-info mt-3">
-                          <strong>Action Required:</strong> ${actionMessage}
-                          <br><small>This will remove the current content and clone the configured repository.</small>
-                        </div>
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                          Cancel
-                        </button>
-                        <button type="button" class="btn btn-warning" id="reconfigureRepoBtn">
-                          <i class="fas fa-sync"></i> ${actionButtonText}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                `;
-                
-                document.body.appendChild(modal);
-                
-                // Wait for modal to be added to DOM before adding event listeners
-                setTimeout(() => {
-                  // Show modal
-                  const bootstrapModal = new bootstrap.Modal(modal);
-                  bootstrapModal.show();
-                  
-                  // Handle reconfigure button with proper error handling
-                  const reconfigureBtn = document.getElementById('reconfigureRepoBtn');
-                  if (reconfigureBtn) {
-                    console.log('Adding click event listener to reconfigure button');
-                    reconfigureBtn.addEventListener('click', async (e) => {
-                      e.preventDefault();
-                      console.log('Reconfigure button clicked, action_required:', validation.action_required);
-                      
-                      if (validation.action_required === 'configure_settings') {
-                        window.location.href = '/production/settings.html';
-                        return;
-                      }
-                      
-                      try {
-                        await this.reconfigureRepository();
-                        bootstrapModal.hide();
-                      } catch (error) {
-                        console.error('Error in reconfigure button handler:', error);
-                        this.showError('Failed to reconfigure repository. Please try again.');
-                      }
-                    });
-                  } else {
-                    console.error('Reconfigure button not found in modal');
-                  }
-                  
-                  // Clean up modal when hidden
-                  modal.addEventListener('hidden.bs.modal', () => {
-                    if (document.body.contains(modal)) {
-                      document.body.removeChild(modal);
-                    }
-                  });
-                }, 100);
-              }
-
-              async reconfigureRepository() {
-                try {
-                  console.log('Starting repository reconfiguration...');
-                  
-                  // Show loading state
-                  const button = document.getElementById('reconfigureRepoBtn');
-                  const originalText = button.innerHTML;
-                  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reconfiguring...';
-                  button.disabled = true;
-                  
-                  console.log('Making API request to reconfigure repository...');
-                  const response = await window.authManager.apiRequest('/api/git/repo/reconfigure', {
-                    method: 'POST'
-                  });
-                  
-                  console.log('Reconfigure response:', response);
-                  
-                  if (response.success) {
-                    this.showSuccess('Repository reconfigured successfully! Reloading files...');
-                    console.log('Repository reconfigured successfully, reloading data...');
-                    
-                    // Reload files and Git status
-                    setTimeout(() => {
-                      this.loadFiles();
-                      this.loadGitStatus();
-                    }, 1000);
-                    
-                  } else {
-                    console.error('Failed to reconfigure repository:', response.message);
-                    this.showError(`Failed to reconfigure repository: ${response.message}`);
-                  }
-                  
-                  // Restore button
-                  button.innerHTML = originalText;
-                  button.disabled = false;
-                  
-                } catch (error) {
-                  console.error('Error reconfiguring repository:', error);
-                  this.showError('Error reconfiguring repository. Please try again.');
-                  
-                  // Restore button
-                  const button = document.getElementById('reconfigureRepoBtn');
-                  if (button) {
-                    button.innerHTML = '<i class="fas fa-sync"></i> Reconfigure Repository';
-                    button.disabled = false;
-                  }
-                }
               }
 
               // File Search Functionality
@@ -1688,26 +1472,18 @@
               async searchGitFiles(query) {
                 try {
                   // Use same search endpoint as file compare mode
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch(`http://localhost:8000/api/git/repo/files/search?query=${encodeURIComponent(query)}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
+                  const result = await window.authManager.apiRequest(`/api/git/repo/files/search?query=${encodeURIComponent(query)}`);
 
-                  if (response.ok) {
-                    const result = await response.json();
-                    if (result.success && result.data && result.data.files) {
-                      // Convert to same format as local gitFiles
-                      const formattedFiles = result.data.files.map(fileInfo => ({
-                        path: fileInfo.path,
-                        name: fileInfo.name,
-                        directory: fileInfo.directory || ''
-                      }));
-                      this.displayGitSearchResults(formattedFiles, query);
-                    } else {
-                      this.showGitSearchError('No files found');
-                    }
+                  if (result.success && result.data && result.data.files) {
+                    // Convert to same format as local gitFiles
+                    const formattedFiles = result.data.files.map(fileInfo => ({
+                      path: fileInfo.path,
+                      name: fileInfo.name,
+                      directory: fileInfo.directory || ''
+                    }));
+                    this.displayGitSearchResults(formattedFiles, query);
                   } else {
-                    this.showGitSearchError('Failed to search files');
+                    this.showGitSearchError('No files found');
                   }
                 } catch (error) {
                   console.error('Error searching Git files:', error);
@@ -1962,27 +1738,18 @@
               async searchHistoryFiles(query) {
                 try {
                   // Use same approach as Git mode file search
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch(`http://localhost:8000/api/git/repo/files/search?query=${encodeURIComponent(query)}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
+                  const result = await window.authManager.apiRequest(`/api/git/repo/files/search?query=${encodeURIComponent(query)}`);
 
-                  if (response.ok) {
-                    const result = await response.json();
-                    if (result.success && result.data && result.data.files) {
-                      // Convert to same format as other modes
-                      const formattedFiles = result.data.files.map(fileInfo => ({
-                        path: fileInfo.path,
-                        name: fileInfo.name,
-                        directory: fileInfo.directory || ''
-                      }));
-                      this.displayHistorySearchResults(formattedFiles, query);
-                    } else {
-                      this.showHistorySearchError('No files found');
-                    }
+                  if (result.success && result.data && result.data.files) {
+                    // Convert to same format as other modes
+                    const formattedFiles = result.data.files.map(fileInfo => ({
+                      path: fileInfo.path,
+                      name: fileInfo.name,
+                      directory: fileInfo.directory || ''
+                    }));
+                    this.displayHistorySearchResults(formattedFiles, query);
                   } else {
-                    console.error('History file search failed:', response.status, response.statusText);
-                    this.showHistorySearchError('Error searching files');
+                    this.showHistorySearchError('No files found');
                   }
                 } catch (error) {
                   console.error('Error searching history files:', error);
@@ -2211,48 +1978,41 @@
 
               async populateGitBranches() {
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch('http://localhost:8000/api/git/branches', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                  const data = await window.authManager.apiRequest('/api/git/branches');
+                  console.log('Git branches data:', data);
+                  
+                  // Handle different response formats
+                  let branches = [];
+                  if (Array.isArray(data)) {
+                    // Direct array of strings
+                    branches = data;
+                  } else if (data.branches && Array.isArray(data.branches)) {
+                    // Array of branch objects with name property
+                    branches = data.branches.map(branch => 
+                      typeof branch === 'string' ? branch : branch.name
+                    );
+                  } else {
+                    // Fallback to empty array
+                    branches = [];
+                  }
+                  
+                  this.gitData.branches = branches;
+                  
+                  const branchSelect = document.getElementById('gitBranchSelect');
+                  
+                  branchSelect.innerHTML = '<option value="">Select branch...</option>';
+                  branches.forEach(branch => {
+                    const option = new Option(branch, branch);
+                    branchSelect.add(option);
                   });
-
-                  if (response.ok) {
-                    const data = await response.json();
-                    console.log('Git branches data:', data);
-                    
-                    // Handle different response formats
-                    let branches = [];
-                    if (Array.isArray(data)) {
-                      // Direct array of strings
-                      branches = data;
-                    } else if (data.branches && Array.isArray(data.branches)) {
-                      // Array of branch objects with name property
-                      branches = data.branches.map(branch => 
-                        typeof branch === 'string' ? branch : branch.name
-                      );
-                    } else {
-                      // Fallback to empty array
-                      branches = [];
-                    }
-                    
-                    this.gitData.branches = branches;
-                    
-                    const branchSelect = document.getElementById('gitBranchSelect');
-                    
-                    branchSelect.innerHTML = '<option value="">Select branch...</option>';
-                    branches.forEach(branch => {
-                      const option = new Option(branch, branch);
-                      branchSelect.add(option);
-                    });
-                    
-                    // Auto-select the main branch if available
-                    if (branches.includes('main')) {
-                      branchSelect.value = 'main';
-                      await this.loadCommitsForBranch('main');
-                    } else if (branches.length > 0) {
-                      branchSelect.value = branches[0];
-                      await this.loadCommitsForBranch(branches[0]);
-                    }
+                  
+                  // Auto-select the main branch if available
+                  if (branches.includes('main')) {
+                    branchSelect.value = 'main';
+                    await this.loadCommitsForBranch('main');
+                  } else if (branches.length > 0) {
+                    branchSelect.value = branches[0];
+                    await this.loadCommitsForBranch(branches[0]);
                   }
                 } catch (error) {
                   console.error('Error loading Git branches:', error);
@@ -2298,15 +2058,8 @@
 
               async loadCommitsForBranch(branch) {
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch(`http://localhost:8000/api/git/commits/${branch}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-
-                  if (response.ok) {
-                    this.gitData.commits = await response.json();
-                    this.populateGitCommits();
-                  }
+                  this.gitData.commits = await window.authManager.apiRequest(`/api/git/commits/${branch}`);
+                  this.populateGitCommits();
                 } catch (error) {
                   console.error('Error loading commits for branch:', error);
                 }
@@ -2323,26 +2076,19 @@
                   }
 
                   const commitHash = rightCommit || leftCommit || 'HEAD';
-                  const token = localStorage.getItem('auth_token');
                   
-                  const response = await fetch(`http://localhost:8000/api/git/files/${commitHash}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-
-                  if (response.ok) {
-                    const files = await response.json();
-                    // Store files for search functionality instead of populating select
-                    this.gitFiles = files.map(filePath => ({
-                      path: filePath,
-                      name: filePath.split('/').pop(),
-                      directory: filePath.includes('/') ? filePath.substring(0, filePath.lastIndexOf('/')) : ''
-                    }));
-                    
-                    // Initialize Git file search if not already done
-                    if (!this.gitFileSearchInitialized) {
-                      this.initializeGitFileSearch();
-                      this.gitFileSearchInitialized = true;
-                    }
+                  const files = await window.authManager.apiRequest(`/api/git/files/${commitHash}`);
+                  // Store files for search functionality instead of populating select
+                  this.gitFiles = files.map(filePath => ({
+                    path: filePath,
+                    name: filePath.split('/').pop(),
+                    directory: filePath.includes('/') ? filePath.substring(0, filePath.lastIndexOf('/')) : ''
+                  }));
+                  
+                  // Initialize Git file search if not already done
+                  if (!this.gitFileSearchInitialized) {
+                    this.initializeGitFileSearch();
+                    this.gitFileSearchInitialized = true;
                   }
                 } catch (error) {
                   console.error('Error loading Git files:', error);
@@ -2372,38 +2118,11 @@
 
               async loadFiles() {
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  if (!token) {
-                    this.showError('Please log in to access files');
-                    setTimeout(() => {
-                      window.location.href = '/login.html';
-                    }, 2000);
-                    return;
-                  }
+                  const data = await window.authManager.apiRequest('/api/files/list');
                   
-                  const response = await fetch('http://localhost:8000/api/files/list', {
-                    headers: {
-                      'Authorization': `Bearer ${token}`
-                    }
-                  });
-                  const data = await response.json();
-                  
-                  if (response.status === 401) {
-                    localStorage.removeItem('auth_token');
-                    this.showError('Session expired. Please log in again.');
-                    setTimeout(() => {
-                      window.location.href = '/login.html';
-                    }, 2000);
-                    return;
-                  }
-                  
-                  if (response.ok) {
-                    this.files = data.files || data;
-                    this.populateFileSelects();
-                    console.log('Files loaded:', this.files.length);
-                  } else {
-                    this.showError('Failed to load files: ' + (data.detail || 'Unknown error'));
-                  }
+                  this.files = data.files || data;
+                  this.populateFileSelects();
+                  console.log('Files loaded:', this.files.length);
                 } catch (error) {
                   this.showError('Error loading files: ' + error.message);
                 }
@@ -2423,33 +2142,22 @@
                 historyContent.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading file history...</p>';
 
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch(`http://localhost:8000/api/git/file-history/${encodeURIComponent(selectedFile.path)}`, {
-                    headers: {
-                      'Authorization': `Bearer ${token}`
-                    }
-                  });
+                  const data = await window.authManager.apiRequest(`/api/git/file-history/${encodeURIComponent(selectedFile.path)}`);
 
-                  const data = await response.json();
+                  const commit = data.last_commit;
+                  const commitDate = new Date(commit.date);
+                  const timeAgo = this.getTimeAgo(commitDate);
 
-                  if (response.ok) {
-                    const commit = data.last_commit;
-                    const commitDate = new Date(commit.date);
-                    const timeAgo = this.getTimeAgo(commitDate);
-
-                    historyContent.innerHTML = `
-                      <div class="file-history-info">
-                        <p><strong>Last Modified:</strong> ${timeAgo}</p>
-                        <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
-                        <p><strong>Author:</strong> ${commit.author.name}</p>
-                        <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
-                        <p><strong>Message:</strong> ${commit.message}</p>
-                        ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
-                      </div>
-                    `;
-                  } else {
-                    historyContent.innerHTML = `<p class="text-warning">Could not load history: ${data.detail}</p>`;
-                  }
+                  historyContent.innerHTML = `
+                    <div class="file-history-info">
+                      <p><strong>Last Modified:</strong> ${timeAgo}</p>
+                      <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
+                      <p><strong>Author:</strong> ${commit.author.name}</p>
+                      <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
+                      <p><strong>Message:</strong> ${commit.message}</p>
+                      ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
+                    </div>
+                  `;
                 } catch (error) {
                   historyContent.innerHTML = `<p class="text-danger">Error loading history: ${error.message}</p>`;
                 }
@@ -2514,47 +2222,36 @@
                 historyContent.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading file history...</p>';
 
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch(`http://localhost:8000/api/git/file-history/${encodeURIComponent(filePath)}`, {
-                    headers: {
-                      'Authorization': `Bearer ${token}`
-                    }
-                  });
+                  const data = await window.authManager.apiRequest(`/api/git/file-history/${encodeURIComponent(filePath)}`);
 
-                  const data = await response.json();
+                  const commit = data.last_commit;
+                  const commitDate = new Date(commit.date);
+                  const timeAgo = this.getTimeAgo(commitDate);
 
-                  if (response.ok) {
-                    const commit = data.last_commit;
-                    const commitDate = new Date(commit.date);
-                    const timeAgo = this.getTimeAgo(commitDate);
+                  // Check if the selected commit is the same as the last commit that modified the file
+                  // Compare both full hash and short hash, handling both directions
+                  const selectedShort = commitHash.substring(0, 8);
+                  const lastCommitShort = commit.short_hash || commit.hash.substring(0, 8);
+                  const isSelectedCommit = (
+                    commitHash === commit.hash || 
+                    selectedShort === lastCommitShort ||
+                    commitHash === commit.short_hash ||
+                    (commit.hash && commit.hash.startsWith(commitHash))
+                  );
+                  
+                  const commitLabel = isSelectedCommit ? 'Selected Commit' : 'Last Modified';
 
-                    // Check if the selected commit is the same as the last commit that modified the file
-                    // Compare both full hash and short hash, handling both directions
-                    const selectedShort = commitHash.substring(0, 8);
-                    const lastCommitShort = commit.short_hash || commit.hash.substring(0, 8);
-                    const isSelectedCommit = (
-                      commitHash === commit.hash || 
-                      selectedShort === lastCommitShort ||
-                      commitHash === commit.short_hash ||
-                      (commit.hash && commit.hash.startsWith(commitHash))
-                    );
-                    
-                    const commitLabel = isSelectedCommit ? 'Selected Commit' : 'Last Modified';
-
-                    historyContent.innerHTML = `
-                      <div class="file-history-info">
-                        <p><strong>${commitLabel}:</strong> ${timeAgo}</p>
-                        <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
-                        <p><strong>Author:</strong> ${commit.author.name}</p>
-                        <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
-                        <p><strong>Message:</strong> ${commit.message}</p>
-                        ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
-                        ${!isSelectedCommit ? `<p class="text-info"><i class="fas fa-info-circle"></i> Note: File unchanged in selected commit (${selectedShort}). Showing last modification.</p>` : ''}
-                      </div>
-                    `;
-                  } else {
-                    historyContent.innerHTML = `<p class="text-warning">Could not load history: ${data.detail}</p>`;
-                  }
+                  historyContent.innerHTML = `
+                    <div class="file-history-info">
+                      <p><strong>${commitLabel}:</strong> ${timeAgo}</p>
+                      <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
+                      <p><strong>Author:</strong> ${commit.author.name}</p>
+                      <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
+                      <p><strong>Message:</strong> ${commit.message}</p>
+                      ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
+                      ${!isSelectedCommit ? `<p class="text-info"><i class="fas fa-info-circle"></i> Note: File unchanged in selected commit (${selectedShort}). Showing last modification.</p>` : ''}
+                    </div>
+                  `;
                 } catch (error) {
                   historyContent.innerHTML = `<p class="text-danger">Error loading history: ${error.message}</p>`;
                 }
@@ -2638,22 +2335,11 @@
               async loadHistoryBranches() {
                 console.log('Loading branches for history mode...');
                 try {
-                  // Use the same approach as Git Commits mode
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch('http://localhost:8000/api/git/branches', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-
-                  if (response.ok) {
-                    const data = await response.json();
-                    console.log('History branches data:', data);
-                    
-                    const branches = this.parseBranchesData(data);
-                    this.populateHistoryBranchSelect(branches);
-                  } else {
-                    console.error('Failed to load branches:', response.status, response.statusText);
-                    this.addDefaultHistoryBranch();
-                  }
+                  const data = await window.authManager.apiRequest('/api/git/branches');
+                  console.log('History branches data:', data);
+                  
+                  const branches = this.parseBranchesData(data);
+                  this.populateHistoryBranchSelect(branches);
                 } catch (error) {
                   console.error('Error loading branches for history mode:', error);
                   console.error('Error stack:', error.stack);
@@ -2733,20 +2419,9 @@
               async loadHistoryCommitsForBranch(branch) {
                 console.log('Loading commits for branch:', branch);
                 try {
-                  // Use the same approach as Git Commits mode
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch(`http://localhost:8000/api/git/commits/${branch}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-
-                  if (response.ok) {
-                    const commits = await response.json();
-                    console.log('Loaded commits for history mode:', commits.length);
-                    this.populateHistoryCommitSelect(commits);
-                  } else {
-                    console.error('Failed to load commits:', response.status, response.statusText);
-                    this.addDefaultHistoryCommit();
-                  }
+                  const commits = await window.authManager.apiRequest(`/api/git/commits/${branch}`);
+                  console.log('Loaded commits for history mode:', commits.length);
+                  this.populateHistoryCommitSelect(commits);
                 } catch (error) {
                   console.error('Error loading commits for branch:', branch, error);
                   console.error('Error stack:', error.stack);
@@ -2836,20 +2511,10 @@
                     }
                   }
                   
-                  // Fallback to direct fetch using the correct API endpoint
-                  console.log('Falling back to direct fetch for file history...');
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch(`/api/git/file-complete-history/${encodeURIComponent(filePath)}?from_commit=${encodeURIComponent(commit)}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-
-                  if (response.ok) {
-                    const data = await response.json();
-                    this.renderFileHistory(data, commit);
-                  } else {
-                    console.error('Direct fetch also failed for file history:', response.status, response.statusText);
-                    historyContent.innerHTML = `<p class="text-danger">Error loading file history: ${response.statusText}</p>`;
-                  }
+                  // Fallback to direct API request using the correct API endpoint
+                  console.log('Falling back to direct API request for file history...');
+                  const data = await window.authManager.apiRequest(`/api/git/file-complete-history/${encodeURIComponent(filePath)}?from_commit=${encodeURIComponent(commit)}`);
+                  this.renderFileHistory(data, commit);
                 } catch (error) {
                   console.error('Error loading file history:', error);
                   historyContent.innerHTML = `<p class="text-danger">Error loading file history: ${error.message}</p>`;
@@ -2959,77 +2624,53 @@
                 this.showLoading();
 
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  
                   // Get the file history to find the parent commit
-                  const historyResponse = await fetch(`http://localhost:8000/api/git/file-complete-history/${encodeURIComponent(fileName)}?from_commit=${encodeURIComponent(commitHash)}`, {
-                    headers: {
-                      'Authorization': `Bearer ${token}`
-                    }
-                  });
+                  const historyData = await window.authManager.apiRequest(`/api/git/file-complete-history/${encodeURIComponent(fileName)}?from_commit=${encodeURIComponent(commitHash)}`);
 
-                  if (historyResponse.ok) {
-                    const historyData = await historyResponse.json();
-                    
-                    // Find the current commit and the next one (parent) in the history
-                    let currentIndex = -1;
-                    for (let i = 0; i < historyData.commits.length; i++) {
-                      if (historyData.commits[i].hash === commitHash || historyData.commits[i].short_hash === shortHash) {
-                        currentIndex = i;
-                        break;
-                      }
+                  // Find the current commit and the next one (parent) in the history
+                  let currentIndex = -1;
+                  for (let i = 0; i < historyData.commits.length; i++) {
+                    if (historyData.commits[i].hash === commitHash || historyData.commits[i].short_hash === shortHash) {
+                      currentIndex = i;
+                      break;
                     }
-                    
-                    if (currentIndex === -1) {
-                      this.showError('Could not find commit in history');
-                      return;
-                    }
-                    
-                    // Get parent commit (next in history array, or create empty for first commit)
-                    let parentCommit = null;
-                    if (currentIndex < historyData.commits.length - 1) {
-                      parentCommit = historyData.commits[currentIndex + 1].hash;
-                    } else {
-                      // This is the first commit for this file, compare with empty
-                      parentCommit = null;
-                    }
-                    
-                    // Use the existing diff API
-                    const diffResponse = await fetch('http://localhost:8000/api/git/diff', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                      },
-                      body: JSON.stringify({
-                        commit1: parentCommit, // Parent (older)
-                        commit2: commitHash,   // Current (newer)
-                        file_path: fileName
-                      })
-                    });
-
-                    if (diffResponse.ok) {
-                      const diffData = await diffResponse.json();
-                      
-                      // Format the diff data for display
-                      const formattedDiff = this.formatGitDiff(diffData, fileName, parentCommit || 'empty', commitHash);
-                      
-                      // Display the comparison
-                      this.displayComparison(formattedDiff, `Commit ${shortHash}: ${fileName}`);
-                      
-                      // Scroll to comparison section
-                      document.getElementById('comparisonSection').scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'start'
-                      });
-                    } else {
-                      const error = await diffResponse.json();
-                      this.showError(`Failed to load commit diff: ${error.detail || 'Unknown error'}`);
-                    }
-                  } else {
-                    const error = await historyResponse.json();
-                    this.showError(`Failed to load file history for diff: ${error.detail || 'Unknown error'}`);
                   }
+                  
+                  if (currentIndex === -1) {
+                    this.showError('Could not find commit in history');
+                    return;
+                  }
+                  
+                  // Get parent commit (next in history array, or create empty for first commit)
+                  let parentCommit = null;
+                  if (currentIndex < historyData.commits.length - 1) {
+                    parentCommit = historyData.commits[currentIndex + 1].hash;
+                  } else {
+                    // This is the first commit for this file, compare with empty
+                    parentCommit = null;
+                  }
+                  
+                  // Use the existing diff API
+                  const diffData = await window.authManager.apiRequest('/api/git/diff', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      commit1: parentCommit, // Parent (older)
+                      commit2: commitHash,   // Current (newer)
+                      file_path: fileName
+                    })
+                  });
+                  
+                  // Format the diff data for display
+                  const formattedDiff = this.formatGitDiff(diffData, fileName, parentCommit || 'empty', commitHash);
+                  
+                  // Display the comparison
+                  this.displayComparison(formattedDiff, `Commit ${shortHash}: ${fileName}`);
+                  
+                  // Scroll to comparison section
+                  document.getElementById('comparisonSection').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
                 } catch (error) {
                   this.showError(`Error loading commit diff: ${error.message}`);
                 }
@@ -3047,51 +2688,39 @@
                 this.showLoading();
 
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch(`http://localhost:8000/api/git/files/${commitHash}?file_path=${encodeURIComponent(fileName)}`, {
-                    headers: {
-                      'Authorization': `Bearer ${token}`
-                    }
+                  const fileData = await window.authManager.apiRequest(`/api/git/files/${commitHash}?file_path=${encodeURIComponent(fileName)}`);
+                  
+                  // Display file content using a simple approach
+                  const displayData = {
+                    left_file: `${fileName} (${shortHash})`,
+                    right_file: `File Content`,
+                    left_lines: [],
+                    right_lines: []
+                  };
+
+                  // Convert file content to lines for display
+                  const lines = fileData.content ? fileData.content.split('\n') : ['<empty file>'];
+                  lines.forEach((line, index) => {
+                    displayData.left_lines.push({
+                      line_number: index + 1,
+                      content: line,
+                      type: 'equal'
+                    });
+                    // Add the same line to right side to make it display properly
+                    displayData.right_lines.push({
+                      line_number: index + 1,
+                      content: line,
+                      type: 'equal'
+                    });
                   });
 
-                  if (response.ok) {
-                    const fileData = await response.json();
-                    
-                    // Display file content using a simple approach
-                    const displayData = {
-                      left_file: `${fileName} (${shortHash})`,
-                      right_file: `File Content`,
-                      left_lines: [],
-                      right_lines: []
-                    };
-
-                    // Convert file content to lines for display
-                    const lines = fileData.content ? fileData.content.split('\n') : ['<empty file>'];
-                    lines.forEach((line, index) => {
-                      displayData.left_lines.push({
-                        line_number: index + 1,
-                        content: line,
-                        type: 'equal'
-                      });
-                      // Add the same line to right side to make it display properly
-                      displayData.right_lines.push({
-                        line_number: index + 1,
-                        content: line,
-                        type: 'equal'
-                      });
-                    });
-
-                    this.displayComparison(displayData, `File Content: ${fileName} (${shortHash})`);
-                    
-                    // Scroll to comparison section
-                    document.getElementById('comparisonSection').scrollIntoView({ 
-                      behavior: 'smooth',
-                      block: 'start'
-                    });
-                  } else {
-                    const error = await response.json();
-                    this.showError(`Failed to load file content: ${error.detail || 'Unknown error'}`);
-                  }
+                  this.displayComparison(displayData, `File Content: ${fileName} (${shortHash})`);
+                  
+                  // Scroll to comparison section
+                  document.getElementById('comparisonSection').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
                 } catch (error) {
                   this.showError(`Error loading file content: ${error.message}`);
                 }
@@ -3127,26 +2756,15 @@
                 this.showLoading();
                 
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch('http://localhost:8000/api/files/compare', {
+                  const data = await window.authManager.apiRequest('/api/files/compare', {
                     method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                    },
                     body: JSON.stringify({
                       file1: leftFile,
                       file2: rightFile
                     })
                   });
                   
-                  const data = await response.json();
-                  
-                  if (response.ok) {
-                    this.displayComparison(data, `${leftFile} vs ${rightFile}`);
-                  } else {
-                    this.showError('Comparison failed: ' + (data.detail || 'Unknown error'));
-                  }
+                  this.displayComparison(data, `${leftFile} vs ${rightFile}`);
                 } catch (error) {
                   this.showError('Error comparing files: ' + error.message);
                 }
@@ -3166,13 +2784,8 @@
                 this.showLoading();
                 
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch('http://localhost:8000/api/git/diff', {
+                  const result = await window.authManager.apiRequest('/api/git/diff', {
                     method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                    },
                     body: JSON.stringify({
                       commit1: leftCommit,
                       commit2: rightCommit,
@@ -3180,17 +2793,11 @@
                     })
                   });
                   
-                  const result = await response.json();
-                  
-                  if (response.ok) {
-                    // Convert Git diff format to comparison format
-                    const formattedResult = this.formatGitDiff(result, gitFile, leftCommit, rightCommit);
-                    const leftCommitShort = leftCommit.substring(0, 8);
-                    const rightCommitShort = rightCommit.substring(0, 8);
-                    this.displayComparison(formattedResult, `${gitFile}: ${leftCommitShort} → ${rightCommitShort}`);
-                  } else {
-                    this.showError('Git comparison failed: ' + (result.detail || 'Unknown error'));
-                  }
+                  // Convert Git diff format to comparison format
+                  const formattedResult = this.formatGitDiff(result, gitFile, leftCommit, rightCommit);
+                  const leftCommitShort = leftCommit.substring(0, 8);
+                  const rightCommitShort = rightCommit.substring(0, 8);
+                  this.displayComparison(formattedResult, `${gitFile}: ${leftCommitShort} → ${rightCommitShort}`);
                 } catch (error) {
                   this.showError('Error comparing Git commits: ' + error.message);
                 }
@@ -3340,26 +2947,15 @@
                 this.showLoading();
                 
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  const response = await fetch('/api/files/compare', {
+                  const data = await window.authManager.apiRequest('/api/files/compare', {
                     method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                    },
                     body: JSON.stringify({
                       left_file: leftFile,
                       right_file: rightFile
                     })
                   });
                   
-                  const data = await response.json();
-                  
-                  if (response.ok) {
-                    this.displayComparison(data);
-                  } else {
-                    this.showError('Comparison failed: ' + (data.detail || 'Unknown error'));
-                  }
+                  this.displayComparison(data);
                 } catch (error) {
                   this.showError('Error comparing files: ' + error.message);
                 }

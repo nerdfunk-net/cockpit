@@ -4,8 +4,8 @@ services:
   cockpit:
     build:
       context: .
-      dockerfile: Dockerfile.unified.production
-    container_name: cockpit-unified-production
+      dockerfile: Dockerfile.production
+    container_name: cockpit-production
     restart: unless-stopped
     ports:
       - "3000:3000"  # Frontend port

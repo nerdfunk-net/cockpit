@@ -23,7 +23,11 @@ class AuthManager {
      */
     async login(username, password) {
         try {
-            const response = await fetch(`${this.baseURL}/auth/login`, {
+            // Use relative URL if we're in development mode (Vite proxy)
+            const isDevelopment = window.location.port === '3000' || window.location.port === '3001';
+            const url = isDevelopment ? '/auth/login' : `${this.baseURL}/auth/login`;
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -59,7 +63,11 @@ class AuthManager {
      */
     async register(username, password, email, fullName) {
         try {
-            const response = await fetch(`${this.baseURL}/auth/register`, {
+            // Use relative URL if we're in development mode (Vite proxy)
+            const isDevelopment = window.location.port === '3000' || window.location.port === '3001';
+            const url = isDevelopment ? '/auth/register' : `${this.baseURL}/auth/register`;
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -156,7 +164,12 @@ class AuthManager {
         };
 
         try {
-            const response = await fetch(`${this.baseURL}${endpoint}`, config);
+            // Use relative URL if we're in development mode (Vite proxy)
+            // or if we're running from the same origin as the API
+            const isDevelopment = window.location.port === '3000' || window.location.port === '3001';
+            const url = isDevelopment ? endpoint : `${this.baseURL}${endpoint}`;
+            
+            const response = await fetch(url, config);
             
             if (response.status === 401) {
                 // Token expired or invalid

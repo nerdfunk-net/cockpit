@@ -2,7 +2,7 @@ services:
   cockpit:
     build:
       context: .
-      dockerfile: Dockerfile.unified
+      dockerfile: Dockerfile
     container_name: cockpit
     hostname: cockpit
     restart: unless-stopped

@@ -1,4 +1,4 @@
-# Unified Production Dockerfile for Cockpit - Frontend + Backend
+# Production Dockerfile for Cockpit - Frontend + Backend
 FROM node:18-alpine
 
 # Install Python and other dependencies
@@ -29,8 +29,8 @@ COPY backend/requirements.txt ./backend/
 RUN pip install --no-cache-dir --break-system-packages -r backend/requirements.txt
 
 # Copy and make startup script executable
-COPY start-unified-production.sh /app/
-RUN chmod +x /app/start-unified-production.sh
+COPY start-production.sh /app/
+RUN chmod +x /app/start-production.sh
 
 # Expose ports
 EXPOSE 3000 8000
@@ -40,4 +40,4 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
     CMD curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs || exit 1
 
 # Use the production startup script
-CMD ["/app/start-unified-production.sh"]
+CMD ["/app/start-production.sh"]

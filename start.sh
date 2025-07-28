@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "Starting Cockpit unified container..."
+echo "Starting Cockpit container..."
 
 # Start backend in the background
 echo "Starting backend server..."

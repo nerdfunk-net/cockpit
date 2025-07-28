@@ -56,9 +56,9 @@ case "$1" in
         echo "✅ Containers restarted!"
         ;;
     "logs")
-        if docker-compose ps | grep -q cockpit-unified; then
+        if docker-compose ps | grep -q cockpit; then
             docker-compose logs -f
-        elif docker-compose -f docker-compose.production.yml ps | grep -q cockpit-unified-production; then
+        elif docker-compose -f docker-compose.production.yml ps | grep -q cockpit-production; then
             docker-compose -f docker-compose.production.yml logs -f
         else
             echo "❌ No Cockpit containers are running"
