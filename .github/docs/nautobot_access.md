@@ -309,10 +309,10 @@
  * the body must contain a dict called 'data' that contains the following properties:
 
         "devices": device_id,
-        "default_prefix_status": status,
-        "interface_status": status,
-        "ip_address_status": status,
-        "namespace": namespace,
+        "default_prefix_status": status_id,
+        "interface_status": status_id,
+        "ip_address_status": status_id,
+        "namespace": namespace_id,
         "sync_cables": sync_cables,
         "sync_software_version": sync_software_version,
         "sync_vlans": sync_vlans,

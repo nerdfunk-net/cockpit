@@ -913,8 +913,9 @@
 
             if (response.ok) {
               if (data.exists) {
-                if (data.device) {
-                  this.showSuccess(`✅ IP address '${ipAddress}' found in Nautobot and assigned to device: ${data.device.name}`);
+                if (data.is_assigned_to_device && data.assigned_devices && data.assigned_devices.length > 0) {
+                  const deviceNames = data.assigned_devices.map(device => device.name).join(', ');
+                  this.showSuccess(`✅ IP address '${ipAddress}' found in Nautobot and assigned to device(s): ${deviceNames}`);
                 } else {
                   this.showWarning(`⚠️ IP address '${ipAddress}' found in Nautobot but not assigned to any device.`);
                 }

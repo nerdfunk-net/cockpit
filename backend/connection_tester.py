@@ -5,13 +5,14 @@ Tests Nautobot and Git connections with user-provided settings
 
 import asyncio
 import logging
-import aiohttp
+import requests
 import git
 import tempfile
 import shutil
 import os
 from typing import Dict, Any, Tuple
 from urllib.parse import urlparse
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -57,79 +58,86 @@ class ConnectionTester:
                 f"{url.rstrip('/')}/",  # Try base URL
             ]
             
-            connector = aiohttp.TCPConnector(verify_ssl=verify_ssl)
-            timeout_config = aiohttp.ClientTimeout(total=timeout)
+            # Use ThreadPoolExecutor to run requests in async context
+            def make_request(url, headers, timeout, verify_ssl):
+                return requests.get(url, headers=headers, timeout=timeout, verify=verify_ssl)
             
-            async with aiohttp.ClientSession(
-                connector=connector, 
-                timeout=timeout_config,
-                headers=headers
-            ) as session:
+            executor = ThreadPoolExecutor(max_workers=1)
+            
+            # First, let's test the base URL to see if it's a valid Nautobot instance
+            try:
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(
+                    executor, make_request, f"{url.rstrip('/')}/", headers, timeout, verify_ssl
+                )
                 
-                # First, let's test the base URL to see if it's a valid Nautobot instance
-                base_response = None
+                # Check if this looks like a Nautobot instance  
+                if response.status_code == 200:
+                    response_text = response.text.lower()
+                    if 'nautobot' in response_text or 'netbox' in response_text:
+                        # This looks like a Nautobot/NetBox instance
+                        pass
+                    else:
+                        return False, f"URL appears to be accessible but doesn't look like a Nautobot instance. Please verify the URL points to your Nautobot installation."
+                elif response.status_code == 404:
+                    return False, f"Base URL not found. Please verify the Nautobot URL is correct (e.g., http://nautobot.example.com or http://localhost:8080)."
+                elif response.status_code in [401, 403]:
+                    # Auth required even for base page, try API directly
+                    pass
+                else:
+                    return False, f"Base URL returned HTTP {response.status_code}. Please verify the Nautobot URL."
+            except Exception as e:
+                return False, f"Cannot reach base URL: {str(e)}"
+            
+            # Now test API endpoints
+            for api_endpoint in potential_endpoints:
                 try:
-                    async with session.get(f"{url.rstrip('/')}/") as response:
-                        base_response = response
-                        response_text = await response.text()
+                    response = await loop.run_in_executor(
+                        executor, make_request, api_endpoint, headers, timeout, verify_ssl
+                    )
+                    
+                    if response.status_code == 200:
+                        # Found a working API endpoint, now test device access
+                        devices_url = f"{url.rstrip('/')}/api/dcim/devices/?limit=1"
+                        devices_response = await loop.run_in_executor(
+                            executor, make_request, devices_url, headers, timeout, verify_ssl
+                        )
                         
-                        # Check if this looks like a Nautobot instance
-                        if response.status == 200:
-                            if 'nautobot' in response_text.lower() or 'netbox' in response_text.lower():
-                                # This looks like a Nautobot/NetBox instance
-                                pass
+                        if devices_response.status_code == 200:
+                            return True, f"Connection successful! Nautobot REST API is accessible with device permissions. (Using endpoint: {api_endpoint})"
+                        elif devices_response.status_code == 403:
+                            # Try a less privileged endpoint
+                            status_url = f"{url.rstrip('/')}/api/status/"
+                            status_response = await loop.run_in_executor(
+                                executor, make_request, status_url, headers, timeout, verify_ssl
+                            )
+                            
+                            if status_response.status_code == 200:
+                                return True, f"Connection successful! Nautobot API is accessible (limited permissions detected). (Using endpoint: {api_endpoint})"
                             else:
-                                return False, f"URL appears to be accessible but doesn't look like a Nautobot instance. Please verify the URL points to your Nautobot installation."
-                        elif response.status == 404:
-                            return False, f"Base URL not found. Please verify the Nautobot URL is correct (e.g., http://nautobot.example.com or http://localhost:8080)."
-                        elif response.status in [401, 403]:
-                            # Auth required even for base page, try API directly
-                            pass
+                                return False, "Access forbidden. Your token may not have sufficient permissions. Please ensure your token has at least 'read' permissions for basic API access."
+                        elif devices_response.status_code == 401:
+                            return False, "Authentication failed. Please check your API token."
+                        elif devices_response.status_code == 404:
+                            # API root works but devices endpoint doesn't - might be different Nautobot version
+                            return True, f"Connection successful! API is accessible but device endpoint structure may be different. (Using endpoint: {api_endpoint})"
                         else:
-                            return False, f"Base URL returned HTTP {response.status}. Please verify the Nautobot URL."
+                            error_text = devices_response.text[:200] if devices_response.text else "No error details"
+                            return False, f"Device API test failed - HTTP {devices_response.status_code}: {error_text}"
+                    elif response.status_code == 401:
+                        return False, "Authentication failed. Please check your API token."
+                    elif response.status_code == 403:
+                        return False, "Access forbidden. Your token may not have sufficient permissions. Please ensure your token has at least 'read' permissions."
+                    # If we get 404, try the next endpoint
                 except Exception as e:
-                    return False, f"Cannot reach base URL: {str(e)}"
-                
-                # Now test API endpoints
-                for api_endpoint in potential_endpoints:
-                    try:
-                        async with session.get(api_endpoint) as response:
-                            if response.status == 200:
-                                # Found a working API endpoint, now test device access
-                                devices_url = f"{url.rstrip('/')}/api/dcim/devices/"
-                                async with session.get(devices_url + "?limit=1") as devices_response:
-                                    if devices_response.status == 200:
-                                        return True, f"Connection successful! Nautobot REST API is accessible with device permissions. (Using endpoint: {api_endpoint})"
-                                    elif devices_response.status == 403:
-                                        # Try a less privileged endpoint
-                                        status_url = f"{url.rstrip('/')}/api/status/"
-                                        async with session.get(status_url) as status_response:
-                                            if status_response.status == 200:
-                                                return True, f"Connection successful! Nautobot API is accessible (limited permissions detected). (Using endpoint: {api_endpoint})"
-                                            else:
-                                                return False, "Access forbidden. Your token may not have sufficient permissions. Please ensure your token has at least 'read' permissions for basic API access."
-                                    elif devices_response.status == 401:
-                                        return False, "Authentication failed. Please check your API token."
-                                    elif devices_response.status == 404:
-                                        # API root works but devices endpoint doesn't - might be different Nautobot version
-                                        return True, f"Connection successful! API is accessible but device endpoint structure may be different. (Using endpoint: {api_endpoint})"
-                                    else:
-                                        error_text = await devices_response.text()
-                                        return False, f"Device API test failed - HTTP {devices_response.status}: {error_text[:200]}"
-                            elif response.status == 401:
-                                return False, "Authentication failed. Please check your API token."
-                            elif response.status == 403:
-                                return False, "Access forbidden. Your token may not have sufficient permissions. Please ensure your token has at least 'read' permissions."
-                            # If we get 404, try the next endpoint
-                    except Exception as e:
-                        continue  # Try next endpoint
-                
-                # None of the API endpoints worked
-                return False, f"No accessible API endpoints found. Tried: {', '.join(potential_endpoints)}. Please verify this is a Nautobot instance and the URL is correct."
+                    continue  # Try next endpoint
+            
+            # None of the API endpoints worked
+            return False, f"No accessible API endpoints found. Tried: {', '.join(potential_endpoints)}. Please verify this is a Nautobot instance and the URL is correct."
         
-        except aiohttp.ClientConnectorError as e:
+        except requests.exceptions.ConnectionError as e:
             return False, f"Connection failed: {str(e)}"
-        except aiohttp.ClientTimeout:
+        except requests.exceptions.Timeout:
             return False, f"Connection timed out after {timeout} seconds"
         except Exception as e:
             logger.error(f"Nautobot connection test error: {e}")

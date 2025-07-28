@@ -8,7 +8,7 @@ for better code organization and maintainability.
 from __future__ import annotations
 import logging
 from datetime import datetime
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
@@ -17,9 +17,6 @@ from routers.nautobot import router as nautobot_router
 from routers.git import router as git_router
 from routers.files import router as files_router
 from routers.settings import router as settings_router
-
-# Import auth dependency
-from core.auth import verify_token
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -37,10 +34,11 @@ app = FastAPI(
 # CORS configuration
 def setup_cors():
     """Configure CORS middleware."""
-    from config_manual import settings
+    from config_manual import get_config
+    config = get_config()
     
     # Get CORS origins from config
-    cors_origins = settings.cors_origins
+    cors_origins = config.cors_origins
     if isinstance(cors_origins, str):
         cors_origins = [origins.strip() for origins in cors_origins.split(",")]
     
@@ -116,31 +114,13 @@ async def get_statistics():
 
 # GraphQL endpoint compatibility
 @app.post("/api/graphql")
-async def graphql_endpoint(query_data: dict, current_user: str = Depends(verify_token)):
-    """
-    Legacy GraphQL endpoint - maintains backward compatibility.
-    Forwards requests to the Nautobot GraphQL service.
-    """
-    from services.nautobot import nautobot_service
+async def graphql_endpoint():
+    """Legacy GraphQL endpoint - redirects to Nautobot GraphQL."""
     from fastapi import HTTPException, status
-    
-    try:
-        query = query_data.get("query")
-        variables = query_data.get("variables", {})
-        
-        if not query:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="GraphQL query is required"
-            )
-        
-        result = await nautobot_service.graphql_query(query, variables)
-        return result
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"GraphQL query failed: {str(e)}"
-        )
+    raise HTTPException(
+        status_code=status.HTTP_301_MOVED_PERMANENTLY,
+        detail="Use /api/nautobot/graphql endpoint instead"
+    )
 
 
 @app.post("/api/nautobot/graphql")  
@@ -174,6 +154,7 @@ async def nautobot_graphql_endpoint(query_data: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    from config_manual import settings
+    from config_manual import get_config
     
-    uvicorn.run(app, host="0.0.0.0", port=settings.port)
+    config = get_config()
+    uvicorn.run(app, host="0.0.0.0", port=config.port)

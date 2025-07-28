@@ -19,7 +19,10 @@ class GitManager:
     
     def __init__(self, base_path: str = None):
         if base_path is None:
-            self.base_path = os.path.join(os.path.dirname(__file__), 'git', 'configs')
+            # Use ./data/git/configs relative to the project root
+            # Go up one directory from backend/ to get to project root
+            project_root = os.path.dirname(os.path.dirname(__file__))
+            self.base_path = os.path.join(project_root, 'data', 'git', 'configs')
         else:
             self.base_path = base_path
         
@@ -123,6 +126,28 @@ class GitManager:
             os.chdir(self.base_path)
             
             try:
+                # Check if there are any remotes configured
+                remote_check = subprocess.run(['git', 'remote'], capture_output=True, text=True)
+                if not remote_check.stdout.strip():
+                    return False, "No Git remote configured. Please configure a Git repository first."
+                
+                # Check if current branch has upstream tracking
+                upstream_check = subprocess.run(['git', 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], 
+                                              capture_output=True, text=True)
+                
+                if upstream_check.returncode != 0:
+                    # No upstream tracking, try to set it up
+                    # First, get the current branch name
+                    branch_result = subprocess.run(['git', 'branch', '--show-current'], capture_output=True, text=True)
+                    if branch_result.returncode == 0:
+                        current_branch = branch_result.stdout.strip()
+                        if current_branch:
+                            # Try to set upstream to origin/current_branch
+                            upstream_result = subprocess.run(['git', 'branch', '--set-upstream-to=origin/' + current_branch], 
+                                                           capture_output=True, text=True)
+                            if upstream_result.returncode != 0:
+                                return False, f"No upstream tracking configured and unable to set it automatically. Please configure Git repository settings."
+                
                 # Pull latest changes
                 result = subprocess.run(['git', 'pull'], capture_output=True, text=True, timeout=30)
                 
