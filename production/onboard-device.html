@@ -32,26 +32,19 @@
         // Ensure all required objects are available
         console.log('DOM ready, checking dependencies...');
         console.log('CockpitConfig available:', !!window.CockpitConfig);
-        console.log('ApiManager available:', !!window.ApiManager);
-        console.log('apiFetch available:', !!window.apiFetch);
+        console.log('authManager available:', !!window.authManager);
         
         // Wait a bit more if dependencies aren't ready
-        if (!window.CockpitConfig || !window.apiFetch) {
+        if (!window.CockpitConfig || !window.authManager) {
           console.log('Dependencies not ready, waiting...');
           setTimeout(() => {
             console.log('After delay - CockpitConfig:', !!window.CockpitConfig);
-            console.log('After delay - ApiManager:', !!window.ApiManager);
-            console.log('After delay - apiFetch:', !!window.apiFetch);
+            console.log('After delay - authManager:', !!window.authManager);
             
-            // Try to initialize ApiManager if it's not ready
-            if (window.CockpitConfig && !window.ApiManager) {
-              console.log('Manually initializing ApiManager...');
-              if (typeof window.initializeApiManager === 'function') {
-                window.initializeApiManager();
-              }
+            // Initialize the onboard manager
+            if (window.CockpitConfig && window.authManager) {
+              initializeOnboarding();
             }
-            
-            initializeOnboarding();
           }, 500);
         } else {
           initializeOnboarding();
@@ -535,9 +528,9 @@
             return;
           }
           
-          if (!window.apiFetch) {
-            console.error('apiFetch not available - cannot initialize');
-            this.showError('API manager not loaded. Please refresh the page.');
+          if (!window.authManager) {
+            console.error('authManager not available - cannot initialize');
+            this.showError('Authentication manager not loaded. Please refresh the page.');
             return;
           }
           
@@ -561,7 +554,7 @@
           if (!localStorage.getItem('auth_token')) {
             console.log('Getting fresh debug auth token...');
             
-            fetch(`${window.CockpitConfig.api.baseUrl}/auth/login`, {
+            fetch('/auth/login', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ username: 'admin', password: 'admin' })
@@ -685,8 +678,7 @@
             const token = localStorage.getItem('auth_token');
             console.log('Loading dropdown data, token exists:', !!token);
             console.log('CockpitConfig available:', !!window.CockpitConfig);
-            console.log('ApiManager available:', !!window.ApiManager);
-            console.log('apiFetch available:', !!window.apiFetch);
+            console.log('authManager available:', !!window.authManager);
             
             if (!token) {
               this.showError('Authentication required. Please log in.');
@@ -757,42 +749,16 @@
         }
 
         async fetchData(endpoint) {
-          const token = localStorage.getItem('auth_token');
-          
-          console.log(`Fetching data from: ${endpoint}`);
-          console.log('Token for request:', token ? token.substring(0, 20) + '...' : 'No token');
+          // Convert full URL to relative path for Vite proxy
+          const relativePath = endpoint.replace(window.CockpitConfig.api.baseUrl, '');
+          console.log(`Fetching data from: ${relativePath}`);
           
           try {
-            // Check if apiFetch is available
-            if (!window.apiFetch) {
-              throw new Error('apiFetch is not available');
-            }
-
-            // Use API fetch
-            const response = await window.apiFetch(endpoint, {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            });
-
-            console.log(`Response for ${endpoint}:`, {
-              ok: response.ok,
-              status: response.status,
-              statusText: response.statusText
-            });
-
-            if (!response.ok) {
-              throw new Error(`Failed to fetch ${endpoint}: ${response.status} ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            console.log(`Data received from ${endpoint}:`, data ? `${data.length} items` : 'null');
+            const data = await window.authManager.apiRequest(relativePath);
+            console.log(`Data received from ${relativePath}:`, data ? `${data.length} items` : 'null');
             return data;
           } catch (error) {
-            console.error(`Failed to fetch ${endpoint}:`, error);
-            
-            // Re-throw error - no fallback needed for simple API calls
+            console.error(`Failed to fetch ${relativePath}:`, error);
             throw error;
           }
         }
@@ -888,43 +854,31 @@
 
           try {
             const token = localStorage.getItem('auth_token');
-            console.log('Using token:', token ? token.substring(0, 20) + '...' : 'missing');
+            console.log('Validating IP address:', ipAddress);
             
             const requestBody = { ip_address: ipAddress };
             console.log('Request body:', requestBody);
             
-            const checkIpUrl = window.CockpitConfig.getApiUrl(window.CockpitConfig.api.endpoints.nautobot.checkIp);
-            console.log('Check IP URL:', checkIpUrl);
+            // Convert full URL to relative path for Vite proxy
+            const relativePath = window.CockpitConfig.api.endpoints.nautobot.checkIp.replace(window.CockpitConfig.api.baseUrl, '');
+            console.log('Check IP path:', relativePath);
             
-            const response = await fetch(checkIpUrl, {
+            const data = await window.authManager.apiRequest(relativePath, {
               method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
               body: JSON.stringify(requestBody)
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-            
-            const data = await response.json();
             console.log('Response data:', data);
 
-            if (response.ok) {
-              if (data.exists) {
-                if (data.is_assigned_to_device && data.assigned_devices && data.assigned_devices.length > 0) {
-                  const deviceNames = data.assigned_devices.map(device => device.name).join(', ');
-                  this.showSuccess(`✅ IP address '${ipAddress}' found in Nautobot and assigned to device(s): ${deviceNames}`);
-                } else {
-                  this.showWarning(`⚠️ IP address '${ipAddress}' found in Nautobot but not assigned to any device.`);
-                }
+            if (data.exists) {
+              if (data.is_assigned_to_device && data.assigned_devices && data.assigned_devices.length > 0) {
+                const deviceNames = data.assigned_devices.map(device => device.name).join(', ');
+                this.showSuccess(`✅ IP address '${ipAddress}' found in Nautobot and assigned to device(s): ${deviceNames}`);
               } else {
-                this.showInfo(`ℹ️ IP address '${ipAddress}' not found in Nautobot. Ready for onboarding.`);
+                this.showWarning(`⚠️ IP address '${ipAddress}' found in Nautobot but not assigned to any device.`);
               }
             } else {
-              console.error('API error response:', data);
-              this.showError(`❌ Error checking IP address: ${data.detail || 'Unknown error'}`);
+              this.showInfo(`ℹ️ IP address '${ipAddress}' not found in Nautobot. Ready for onboarding.`);
             }
 
           } catch (error) {
@@ -946,28 +900,18 @@
 
           try {
             const formData = this.getFormData();
-            const token = localStorage.getItem('auth_token');
 
-            const onboardUrl = window.CockpitConfig.getApiUrl(window.CockpitConfig.api.endpoints.nautobot.onboardDevice);
-            console.log('Onboard URL:', onboardUrl);
+            // Convert full URL to relative path for Vite proxy
+            const relativePath = window.CockpitConfig.api.endpoints.nautobot.onboardDevice.replace(window.CockpitConfig.api.baseUrl, '');
+            console.log('Onboard path:', relativePath);
 
-            const response = await fetch(onboardUrl, {
+            const data = await window.authManager.apiRequest(relativePath, {
               method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
               body: JSON.stringify(formData)
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-              this.showSuccess(`✅ Device onboarding initiated successfully! Job ID: ${data.job_id} - ${data.message}`);
-              this.resetForm();
-            } else {
-              this.showError(`❌ Failed to onboard device: ${data.error || data.detail || 'Unknown error'}`);
-            }
+            this.showSuccess(`✅ Device onboarding initiated successfully! Job ID: ${data.job_id} - ${data.message}`);
+            this.resetForm();
 
           } catch (error) {
             console.error('Error during onboarding:', error);

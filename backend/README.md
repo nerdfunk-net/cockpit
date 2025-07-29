@@ -17,6 +17,6 @@ This is a minimal FastAPI backend for your cockpit frontend project.
 
 - `GET /ping` — Health check endpoint, returns `{ "message": "pong" }`
 
-## CORS
+## API Access
 
-CORS is enabled for all origins for development. Adjust `allow_origins` in `main.py` for production use.
+All API endpoints require JWT authentication. The frontend uses Vite proxy during development, eliminating the need for CORS configuration.

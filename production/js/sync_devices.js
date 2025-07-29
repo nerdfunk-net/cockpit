@@ -106,8 +106,9 @@ async function fetchDevices(filterType = null, filterValue = null) {
     
     console.log('[DEBUG] Making API request to:', url);
     
-    // Use authenticated API request
-    const data = await window.authManager.apiRequest(url.replace('http://localhost:8000', ''));
+    // Convert to relative path for Vite proxy
+    const relativePath = url.replace(CONFIG.API.BASE_URL, '');
+    const data = await window.authManager.apiRequest(relativePath);
     console.log('[DEBUG] Received data from backend:', data);
     
     if (!data.devices) {

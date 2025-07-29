@@ -16,7 +16,7 @@ A modern web-based dashboard for managing network devices through Nautobot API i
 - **FastAPI Framework** - High-performance async Python API
 - **Nautobot Integration** - GraphQL queries to fetch device, location, and namespace data
 - **JWT Authentication** - Secure token-based authentication system
-- **CORS Support** - Configured for frontend-backend communication
+- **Vite Proxy Integration** - Seamless frontend-backend communication without CORS complexity
 - **RESTful Endpoints** - Clean API design for device management operations
 
 ### Device Management
@@ -42,7 +42,7 @@ A modern web-based dashboard for managing network devices through Nautobot API i
 - **Uvicorn** - ASGI server
 - **JWT Authentication** - JSON Web Token security
 - **Requests** - HTTP client for Nautobot API
-- **CORS Middleware** - Cross-origin request handling
+- **Vite Proxy Support** - Simplified development without CORS middleware
 
 ### External Integrations
 - **Nautobot** - Network source of truth platform
@@ -195,7 +195,6 @@ All configuration is handled via environment variables in Docker:
 | `SECRET_KEY` | JWT secret | `your-secret-key` |
 | `DEBUG` | Debug mode | `false` |
 | `LOG_LEVEL` | Logging level | `INFO` |
-| `CORS_ORIGINS` | Allowed origins | `http://localhost,https://app.com` |
 
 ## ⚙️ Configuration
 
@@ -220,7 +219,6 @@ cp .env.example .env
 | `NAUTOBOT_TIMEOUT` | Request timeout (seconds) | `30` | No |
 | `SECRET_KEY` | JWT signing key | - | **Yes** |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | `30` | No |
-| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `http://localhost:3000,http://localhost:5173` | No |
 | `LOG_LEVEL` | Logging level | `INFO` | No |
 
 #### Example Configuration
@@ -236,7 +234,6 @@ SERVER_PORT=8000
 DEBUG=false
 NAUTOBOT_TIMEOUT=30
 ACCESS_TOKEN_EXPIRE_MINUTES=60
-CORS_ORIGINS=http://localhost:3000,https://your-frontend.example.com
 LOG_LEVEL=INFO
 ```
 
@@ -383,8 +380,7 @@ The application comes with a default admin user:
 2. ✅ Set `NAUTOBOT_TOKEN` to your API token  
 3. ✅ Generate and set a secure `SECRET_KEY`
 4. ✅ Set `DEBUG=false` for production
-5. ✅ Configure `CORS_ORIGINS` with your frontend domains
-6. ✅ Set appropriate `LOG_LEVEL` (INFO or WARNING)
+5. ✅ Set appropriate `LOG_LEVEL` (INFO or WARNING)
 
 **Frontend Configuration (`production/js/config.js`):**
 1. ✅ Update `api.baseUrl` to your production backend URL
@@ -396,8 +392,7 @@ The application comes with a default admin user:
 1. ✅ Change default admin password (`admin`/`admin`)
 2. ✅ Use strong, unique `SECRET_KEY` for JWT signing
 3. ✅ Enable HTTPS for production deployments
-4. ✅ Configure appropriate CORS origins
-5. ✅ Disable debug mode in production
+4. ✅ Disable debug mode in production
 
 **Example Production Configuration:**
 
@@ -409,7 +404,6 @@ SECRET_KEY=your-very-secure-secret-key-for-jwt-signing
 DEBUG=false
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8000
-CORS_ORIGINS=https://cockpit.company.com,https://dashboard.company.com
 LOG_LEVEL=INFO
 ```
 

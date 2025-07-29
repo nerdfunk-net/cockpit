@@ -96,6 +96,11 @@ docker-compose logs -f cockpit-backend
 ### Frontend Architecture
 - **Authentication Check**: Every page has inline auth verification before DOM load
 - **API Communication**: `window.authManager.apiRequest()` method handles all API calls with automatic authentication
+- **Vite Proxy Integration**: All applications use Vite proxy for API calls - **NO CORS configuration needed**
+  - Development: API calls to `/api/*` and `/auth/*` are proxied to `http://127.0.0.1:8000`
+  - Production: AuthManager automatically switches to absolute URLs
+  - Pattern: Always use relative paths like `/api/git/status` instead of full URLs
+  - Benefits: Eliminates CORS issues, simplifies development, consistent URL handling
 - **Development vs Production URLs**: AuthManager automatically detects development mode (ports 3000/3001) and uses relative URLs for Vite proxy
 - **Module Loading**: Vite builds from `src/main*.js` entry points, serves via `production/` static files
 - **Repository Management**: GitManager class handles all Git repository status and operations via UI section
@@ -111,9 +116,9 @@ docker-compose logs -f cockpit-backend
 ### Backend API Patterns
 - **Repository Access**: Always use `get_git_repo()` for Git operations to ensure consistency
 - **Error Handling**: FastAPI HTTPException with appropriate status codes
-- **CORS**: Configured for localhost development, customizable via environment
 - **Router Structure**: APIs organized in `/backend/routers/` (git.py, nautobot.py, etc.)
 - **Authentication**: JWT tokens via `/auth/login`, all API endpoints require authentication
+- **No CORS Configuration**: CORS removed since all frontend apps use Vite proxy
 
 ### Git Operations
 - **File History**: `/api/git/file-complete-history/{file_path}` provides commit timeline
@@ -145,7 +150,6 @@ SECRET_KEY=your-jwt-secret
 # Development defaults
 DEBUG=true
 SERVER_PORT=8000
-CORS_ORIGINS=http://localhost:3000
 
 # Vite frontend configuration
 VITE_HOST=0.0.0.0                    # Host binding for Vite server

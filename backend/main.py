@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
 from routers.auth import router as auth_router
@@ -33,27 +32,6 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
-
-# CORS configuration
-def setup_cors():
-    """Configure CORS middleware."""
-    from config_manual import settings
-    
-    # Get CORS origins from config
-    cors_origins = settings.cors_origins
-    if isinstance(cors_origins, str):
-        cors_origins = [origins.strip() for origins in cors_origins.split(",")]
-    
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
-    )
-
-# Setup CORS
-setup_cors()
 
 # Include routers
 app.include_router(auth_router)

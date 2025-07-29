@@ -51,16 +51,6 @@ class Settings:
     demo_username: str = os.getenv('DEMO_USERNAME', 'admin')
     demo_password: str = os.getenv('DEMO_PASSWORD', 'admin')
     
-    # CORS Configuration
-    cors_origins: list = get_env_list('CORS_ORIGINS', [
-        'http://localhost:3000', 
-        'http://localhost:3001', 
-        'http://localhost:5173', 
-        'http://127.0.0.1:3000', 
-        'http://127.0.0.1:3001', 
-        'http://127.0.0.1:5173'
-    ])
-    
     # File storage configuration
     config_files_directory: str = os.getenv('CONFIG_FILES_DIRECTORY', 'config_files')
     allowed_file_extensions: list = get_env_list('ALLOWED_FILE_EXTENSIONS', ['.txt', '.conf', '.cfg', '.config', '.ini'])
@@ -74,4 +64,3 @@ if __name__ == "__main__":
     print(f"  Server: http://{settings.host}:{settings.port}")
     print(f"  Debug Mode: {settings.debug}")
     print(f"  Nautobot URL: {settings.nautobot_url}")
-    print(f"  CORS Origins: {settings.cors_origins}")

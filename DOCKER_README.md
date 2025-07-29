@@ -109,10 +109,6 @@ All environment variables from the original setup are supported:
 - `SECRET_KEY`: JWT secret key
 - `ACCESS_TOKEN_EXPIRE_MINUTES`: Token expiry (default: 30)
 
-### CORS Configuration
-- `CORS_ORIGINS`: Allowed origins (default: http://localhost:3000)
-- `CORS_ALLOW_CREDENTIALS`: Allow credentials (default: true)
-
 ## Management Commands
 
 ### Using the Control Script
@@ -179,8 +175,7 @@ docker exec cockpit curl -f http://localhost:8000/docs
 
 ### Frontend Not Loading
 1. Check if port 3000 is accessible
-2. Verify CORS settings in environment variables
-3. Check frontend logs in container output
+2. Check frontend logs in container output
 
 ### Backend API Errors
 1. Check if port 8000 is accessible  

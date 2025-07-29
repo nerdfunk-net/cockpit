@@ -336,8 +336,9 @@
           this.setLoadingState(true);
 
           try {
-            // Fetch statistics from backend
-            const stats = await window.authManager.apiRequest(window.CockpitConfig.api.endpoints.nautobot.stats);
+            // Fetch statistics from backend - convert to relative path for Vite proxy
+            const relativePath = window.CockpitConfig.api.endpoints.nautobot.stats.replace(window.CockpitConfig.api.baseUrl, '');
+            const stats = await window.authManager.apiRequest(relativePath);
             
             console.log('Dashboard stats received:', stats);
 

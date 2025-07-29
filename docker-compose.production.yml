@@ -30,10 +30,6 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       
-      # CORS Configuration
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
-      - CORS_ALLOW_CREDENTIALS=${CORS_ALLOW_CREDENTIALS:-true}
-      
       # Logging Configuration
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
