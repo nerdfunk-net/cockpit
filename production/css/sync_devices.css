@@ -17,10 +17,18 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Pagination container styling */
+.tables-row + .row {
+  margin-top: 20px; /* Add space between tables and pagination */
+}
+
 /* DataTables pagination styling */
 .dataTables_paginate {
-  margin-top: 15px;
+  margin-top: 20px;
+  margin-bottom: 15px;
   text-align: center;
+  clear: both; /* Ensure it appears below floated elements */
 }
 
 .dataTables_paginate .pagination {

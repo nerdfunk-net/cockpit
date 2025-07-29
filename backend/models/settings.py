@@ -23,6 +23,7 @@ class GitSettingsRequest(BaseModel):
     token: Optional[str] = ""
     config_path: str = "configs/"
     sync_interval: int = 15
+    verify_ssl: bool = True
 
 
 class AllSettingsRequest(BaseModel):
@@ -45,3 +46,4 @@ class GitTestRequest(BaseModel):
     branch: str = "main"
     username: Optional[str] = ""
     token: Optional[str] = ""
+    verify_ssl: bool = True

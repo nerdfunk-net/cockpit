@@ -29,6 +29,36 @@ class GitManager:
         # Ensure base directory exists
         os.makedirs(self.base_path, exist_ok=True)
         
+    def _configure_git_ssl(self) -> Dict[str, str]:
+        """Configure Git SSL settings and return environment variables"""
+        from config_manual import settings as env_settings
+        
+        env = os.environ.copy()
+        
+        # Get Git settings from database (preferred) or fall back to environment
+        git_settings = settings_manager.get_git_settings()
+        if git_settings:
+            ssl_verify = git_settings.get('verify_ssl', True)
+        else:
+            ssl_verify = env_settings.git_ssl_verify
+        
+        # Configure SSL verification
+        if not ssl_verify:
+            env['GIT_SSL_NO_VERIFY'] = '1'
+            logger.warning("Git SSL verification disabled - not recommended for production")
+        
+        # Configure custom CA certificate (still from environment as these are file paths)
+        if env_settings.git_ssl_ca_info and os.path.exists(env_settings.git_ssl_ca_info):
+            env['GIT_SSL_CAINFO'] = env_settings.git_ssl_ca_info
+            logger.info(f"Using custom CA certificate: {env_settings.git_ssl_ca_info}")
+        
+        # Configure client certificate (still from environment as these are file paths)
+        if env_settings.git_ssl_cert and os.path.exists(env_settings.git_ssl_cert):
+            env['GIT_SSL_CERT'] = env_settings.git_ssl_cert
+            logger.info(f"Using client certificate: {env_settings.git_ssl_cert}")
+        
+        return env
+        
     def is_git_repository(self) -> bool:
         """Check if the configs directory is a valid Git repository"""
         try:
@@ -86,9 +116,10 @@ class GitManager:
                 if parsed.scheme in ['http', 'https']:
                     clone_url = f"{parsed.scheme}://{username}:{token}@{parsed.netloc}{parsed.path}"
             
-            # Clone the repository
+            # Clone the repository with SSL configuration
+            env = self._configure_git_ssl()
             cmd = ['git', 'clone', '--branch', branch, clone_url, self.base_path]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, env=env)
             
             if result.returncode == 0:
                 logger.info(f"Successfully cloned repository to {self.base_path}")
@@ -148,8 +179,9 @@ class GitManager:
                             if upstream_result.returncode != 0:
                                 return False, f"No upstream tracking configured and unable to set it automatically. Please configure Git repository settings."
                 
-                # Pull latest changes
-                result = subprocess.run(['git', 'pull'], capture_output=True, text=True, timeout=30)
+                # Pull latest changes with SSL configuration
+                env = self._configure_git_ssl()
+                result = subprocess.run(['git', 'pull'], capture_output=True, text=True, timeout=30, env=env)
                 
                 if result.returncode == 0:
                     output = result.stdout.strip()

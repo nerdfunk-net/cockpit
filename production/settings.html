@@ -323,6 +323,20 @@
                       </div>
 
                       <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="git-verify-ssl" class="control-label">SSL Certificate Verification</label>
+                            <div class="checkbox">
+                              <label>
+                                <input type="checkbox" id="git-verify-ssl" checked> Verify SSL certificates
+                              </label>
+                            </div>
+                            <small class="form-text text-muted">Verify SSL certificates when connecting to Git repository (disable for self-signed certificates)</small>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row">
                         <div class="col-md-12">
                           <button type="button" id="test-git-connection" class="btn btn-info btn-sm">
                             <i class="fas fa-code-branch"></i> Test Git Connection
@@ -565,6 +579,7 @@
             document.getElementById('git-token').value = settings.git.token;
             document.getElementById('config-path').value = settings.git.config_path;
             document.getElementById('sync-interval').value = settings.git.sync_interval;
+            document.getElementById('git-verify-ssl').checked = settings.git.verify_ssl !== false;
 
             // Show success message
             if (loadedFromBackend) {
@@ -604,6 +619,7 @@
             document.getElementById('git-token').value = settings.git.token || '';
             document.getElementById('config-path').value = settings.git.configPath || 'configs/';
             document.getElementById('sync-interval').value = settings.git.syncInterval || 15;
+            document.getElementById('git-verify-ssl').checked = settings.git.verifySSL !== false;
             
             // Show error message
             this.showStatus('❌ Failed to load settings from database, using defaults: ' + error.message, 'danger');
@@ -624,7 +640,8 @@
               username: '',
               token: '',
               configPath: 'configs/',
-              syncInterval: 15
+              syncInterval: 15,
+              verifySSL: true
             }
           };
 
@@ -701,7 +718,8 @@
                 repo_url: repoUrl,
                 branch: document.getElementById('git-branch').value,
                 username: document.getElementById('git-username').value,
-                token: document.getElementById('git-token').value
+                token: document.getElementById('git-token').value,
+                verify_ssl: document.getElementById('git-verify-ssl').checked
               })
             });
 
@@ -741,7 +759,8 @@
               username: document.getElementById('git-username').value.trim(),
               token: document.getElementById('git-token').value.trim(),
               config_path: document.getElementById('config-path').value.trim(),
-              sync_interval: parseInt(document.getElementById('sync-interval').value)
+              sync_interval: parseInt(document.getElementById('sync-interval').value),
+              verify_ssl: document.getElementById('git-verify-ssl').checked
             };
 
             // Validate required fields

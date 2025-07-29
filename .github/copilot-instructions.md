@@ -124,6 +124,10 @@ docker-compose logs -f cockpit-backend
 - **File History**: `/api/git/file-complete-history/{file_path}` provides commit timeline
 - **Branch Management**: Dynamic branch switching with `/api/git/branches` and `/api/git/commits`
 - **Diff Generation**: Unified diff format via `/api/git/diff` POST endpoint
+- **SSL Certificate Support**: Configurable SSL verification for self-hosted Git servers
+  - `GIT_SSL_VERIFY`: Enable/disable SSL verification (default: true)
+  - `GIT_SSL_CA_INFO`: Path to custom CA certificate file
+  - `GIT_SSL_CERT`: Path to client certificate file (if required)
 
 ## Critical Integration Points
 

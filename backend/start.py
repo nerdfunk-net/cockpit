@@ -56,7 +56,7 @@ def main():
     logger.info(f"Server: {settings.host}:{settings.port}")
     logger.info(f"Debug: {settings.debug}")
     logger.info(f"Nautobot (env): {settings.nautobot_url}")
-    logger.info(f"CORS Origins: {settings.cors_origins}")
+    logger.info(f"Git SSL Verification: {settings.git_ssl_verify}")
     
     # Start the server
     uvicorn.run(

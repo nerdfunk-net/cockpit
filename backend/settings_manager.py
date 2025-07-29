@@ -35,6 +35,7 @@ class GitSettings:
     token: str = ""
     config_path: str = "configs/"
     sync_interval: int = 15
+    verify_ssl: bool = True
 
 class SettingsManager:
     """Manages application settings in SQLite database"""
@@ -93,6 +94,7 @@ class SettingsManager:
                         token TEXT,
                         config_path TEXT NOT NULL DEFAULT 'configs/',
                         sync_interval INTEGER NOT NULL DEFAULT 15,
+                        verify_ssl BOOLEAN NOT NULL DEFAULT 1,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
@@ -106,6 +108,9 @@ class SettingsManager:
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
+                
+                # Run database migrations
+                self._run_migrations(cursor)
                 
                 # Check if we need to insert default values
                 cursor.execute('SELECT COUNT(*) FROM nautobot_settings')
@@ -132,6 +137,20 @@ class SettingsManager:
             logger.error(f"Database initialization failed: {e}")
             return False
     
+    def _run_migrations(self, cursor):
+        """Run database migrations for schema updates"""
+        try:
+            # Check if verify_ssl column exists in git_settings table
+            cursor.execute("PRAGMA table_info(git_settings)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            if 'verify_ssl' not in columns:
+                logger.info("Adding verify_ssl column to git_settings table")
+                cursor.execute('ALTER TABLE git_settings ADD COLUMN verify_ssl BOOLEAN NOT NULL DEFAULT 1')
+                
+        except sqlite3.Error as e:
+            logger.error(f"Migration failed: {e}")
+    
     def _insert_default_nautobot_settings(self, cursor):
         """Insert default Nautobot settings"""
         cursor.execute('''
@@ -147,15 +166,16 @@ class SettingsManager:
     def _insert_default_git_settings(self, cursor):
         """Insert default Git settings"""
         cursor.execute('''
-            INSERT INTO git_settings (repo_url, branch, username, token, config_path, sync_interval)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO git_settings (repo_url, branch, username, token, config_path, sync_interval, verify_ssl)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (
             self.default_git.repo_url,
             self.default_git.branch,
             self.default_git.username,
             self.default_git.token,
             self.default_git.config_path,
-            self.default_git.sync_interval
+            self.default_git.sync_interval,
+            self.default_git.verify_ssl
         ))
     
     def get_nautobot_settings(self) -> Optional[Dict[str, Any]]:
@@ -202,7 +222,8 @@ class SettingsManager:
                         'username': row['username'] or '',
                         'token': row['token'] or '',
                         'config_path': row['config_path'],
-                        'sync_interval': row['sync_interval']
+                        'sync_interval': row['sync_interval'],
+                        'verify_ssl': bool(row['verify_ssl']) if 'verify_ssl' in row.keys() else True
                     }
                 else:
                     # Fallback to defaults
@@ -253,15 +274,16 @@ class SettingsManager:
                 cursor = conn.cursor()
                 
                 cursor.execute('''
-                    INSERT INTO git_settings (repo_url, branch, username, token, config_path, sync_interval)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO git_settings (repo_url, branch, username, token, config_path, sync_interval, verify_ssl)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     settings.get('repo_url', self.default_git.repo_url),
                     settings.get('branch', self.default_git.branch),
                     settings.get('username', self.default_git.username),
                     settings.get('token', self.default_git.token),
                     settings.get('config_path', self.default_git.config_path),
-                    settings.get('sync_interval', self.default_git.sync_interval)
+                    settings.get('sync_interval', self.default_git.sync_interval),
+                    settings.get('verify_ssl', self.default_git.verify_ssl)
                 ))
                 
                 conn.commit()

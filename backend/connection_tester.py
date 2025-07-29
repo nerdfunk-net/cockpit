@@ -149,7 +149,7 @@ class ConnectionTester:
         Test connection to Git repository
         
         Args:
-            settings: Dict with repo_url, branch, username, token
+            settings: Dict with repo_url, branch, username, token, verify_ssl
             
         Returns:
             Tuple of (success: bool, message: str)
@@ -158,6 +158,7 @@ class ConnectionTester:
         branch = settings.get('branch', 'main').strip()
         username = settings.get('username', '').strip()
         token = settings.get('token', '').strip()
+        verify_ssl = settings.get('verify_ssl', True)
         
         if not repo_url:
             return False, "Repository URL is required"
@@ -180,9 +181,16 @@ class ConnectionTester:
             try:
                 # Use git ls-remote to test connectivity without full clone
                 import subprocess
+                
+                # Prepare environment with SSL settings
+                env = os.environ.copy()
+                if not verify_ssl:
+                    env['GIT_SSL_NO_VERIFY'] = '1'
+                    logger.warning("Git SSL verification disabled for connection test")
+                
                 result = subprocess.run([
                     'git', 'ls-remote', '--heads', test_url
-                ], capture_output=True, text=True, timeout=30)
+                ], capture_output=True, text=True, timeout=30, env=env)
                 
                 if result.returncode != 0:
                     error_msg = result.stderr.strip()
