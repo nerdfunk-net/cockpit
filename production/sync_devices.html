@@ -176,6 +176,14 @@
             <!-- Device rows go here -->
                           </tbody>
                         </table>
+                        <!-- Pagination for left table - moved under left table -->
+                        <div class="left-table-pagination-container">
+                          <div class="dataTables_wrapper form-inline dt-bootstrap no-footer">
+                            <div class="dataTables_paginate paging_simple_numbers" id="left-pagination">
+                              <!-- Pagination will be inserted here -->
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div class="arrows-container">
                         <button class="arrow-btn" id="to-right"><i class="fas fa-arrow-right"></i></button>
@@ -196,14 +204,12 @@
                             <!-- Device rows go here -->
                           </tbody>
                         </table>
-                      </div>
-                    </div>
-                    <!-- Pagination for left table - moved outside tables-row -->
-                    <div class="row">
-                      <div class="col-sm-12">
-                        <div class="dataTables_wrapper form-inline dt-bootstrap no-footer">
-                          <div class="dataTables_paginate paging_simple_numbers" id="left-pagination">
-                            <!-- Pagination will be inserted here -->
+                        <!-- Pagination for right table - added under right table -->
+                        <div class="right-table-pagination-container">
+                          <div class="dataTables_wrapper form-inline dt-bootstrap no-footer">
+                            <div class="dataTables_paginate paging_simple_numbers" id="right-pagination">
+                              <!-- Pagination will be inserted here -->
+                            </div>
                           </div>
                         </div>
                       </div>

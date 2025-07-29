@@ -19,8 +19,16 @@
 }
 
 /* Pagination container styling */
-.tables-row + .row {
-  margin-top: 20px; /* Add space between tables and pagination */
+.left-table-pagination-container,
+.right-table-pagination-container {
+  margin-top: 15px;
+}
+
+.left-table-pagination-container .dataTables_paginate,
+.right-table-pagination-container .dataTables_paginate {
+  margin-top: 0;
+  margin-bottom: 0;
+  text-align: center;
 }
 
 /* DataTables pagination styling */

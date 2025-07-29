@@ -3,6 +3,7 @@ import { CONFIG } from '../../src/config.js';
 const BACKEND_API = `${CONFIG.API.BASE_URL}${CONFIG.API.ENDPOINTS.DEVICES}`;
 const PAGE_SIZE = CONFIG.UI.PAGE_SIZE;
 let currentPage = 1;
+let currentRightPage = 1; // Add pagination for right table
 let devices = [];
 let rightTableDevices = [];
 
@@ -56,6 +57,11 @@ function setupButtonEventListeners() {
       }
       console.log('[DEBUG] Added', addedCount, 'devices to right table');
       
+      // Reset right table pagination to first page if devices were added
+      if (addedCount > 0) {
+        currentRightPage = 1;
+      }
+      
       // Uncheck the selected items
       checked.forEach(cb => cb.checked = false);
       
@@ -83,7 +89,18 @@ function setupButtonEventListeners() {
       // Remove selected devices from rightTableDevices
       const beforeCount = rightTableDevices.length;
       rightTableDevices = rightTableDevices.filter(d => !selectedIds.includes(d.id));
-      console.log('[DEBUG] Removed', beforeCount - rightTableDevices.length, 'devices from right table');
+      const removedCount = beforeCount - rightTableDevices.length;
+      console.log('[DEBUG] Removed', removedCount, 'devices from right table');
+      
+      // Adjust right table pagination if we removed devices
+      if (removedCount > 0) {
+        const totalRightPages = Math.ceil(rightTableDevices.length / PAGE_SIZE);
+        if (currentRightPage > totalRightPages && totalRightPages > 0) {
+          currentRightPage = totalRightPages;
+        } else if (rightTableDevices.length === 0) {
+          currentRightPage = 1;
+        }
+      }
       
       renderTable();
     });
@@ -181,13 +198,20 @@ function selectAllLeftHandler() {
 function renderRightTable() {
   if (!rightTableBody) return;
   rightTableBody.innerHTML = '';
-  const pageDevices = rightTableDevices.slice(0, PAGE_SIZE);
+  
+  // Calculate pagination for right table
+  const start = (currentRightPage - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+  const pageDevices = rightTableDevices.slice(start, end);
+  
   if (pageDevices.length === 0) {
     const row = document.createElement('tr');
     row.innerHTML = `<td colspan="5" style="text-align:center;color:#888;">No devices selected.</td>`;
     rightTableBody.appendChild(row);
+    renderRightPagination(); // Still render pagination to maintain layout
     return;
   }
+  
   for (const device of pageDevices) {
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -199,7 +223,7 @@ function renderRightTable() {
             `;
             rightTableBody.appendChild(row);
   }
-  // Remove DataTable initialization that might interfere with content display
+  
   // Select-all logic for right table
   const selectAllRight = document.getElementById('select-all-right');
   if (selectAllRight) {
@@ -208,6 +232,9 @@ function renderRightTable() {
     selectAllRight.checked = false;
     selectAllRight.addEventListener('change', selectAllRightHandler);
   }
+  
+  // Render pagination for right table
+  renderRightPagination();
 }
 
 // Separate handler function to avoid duplicates
@@ -221,11 +248,32 @@ function renderPagination() {
   let pagination = document.getElementById('left-pagination');
   if (!pagination) {
     // Create pagination container if it doesn't exist
-    pagination = document.createElement('div');
-    pagination.id = 'left-pagination';
-    pagination.className = 'dataTables_paginate paging_simple_numbers';
-    leftTableBody.parentElement.parentElement.appendChild(pagination);
+    const paginationContainer = document.querySelector('.left-table-pagination-container .dataTables_wrapper');
+    if (paginationContainer) {
+      pagination = document.createElement('div');
+      pagination.id = 'left-pagination';
+      pagination.className = 'dataTables_paginate paging_simple_numbers';
+      paginationContainer.appendChild(pagination);
+    } else {
+      // Fallback: create container structure if it doesn't exist
+      const leftTableContainer = document.getElementById('left-table').closest('.table-container');
+      if (leftTableContainer) {
+        const containerDiv = document.createElement('div');
+        containerDiv.className = 'left-table-pagination-container';
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.className = 'dataTables_wrapper form-inline dt-bootstrap no-footer';
+        pagination = document.createElement('div');
+        pagination.id = 'left-pagination';
+        pagination.className = 'dataTables_paginate paging_simple_numbers';
+        wrapperDiv.appendChild(pagination);
+        containerDiv.appendChild(wrapperDiv);
+        leftTableContainer.appendChild(containerDiv);
+      }
+    }
   }
+  
+  if (!pagination) return; // Safety check
+  
   pagination.innerHTML = '';
   
   const totalPages = Math.ceil(devices.length / PAGE_SIZE);
@@ -311,6 +359,124 @@ function renderPagination() {
       currentPage = totalPages;
       renderTable();
       renderPagination();
+    };
+  }
+  ul.appendChild(lastLi);
+  
+  pagination.appendChild(ul);
+}
+
+// Render pagination for right table
+function renderRightPagination() {
+  let pagination = document.getElementById('right-pagination');
+  if (!pagination) {
+    // Create pagination container if it doesn't exist
+    const paginationContainer = document.querySelector('.right-table-pagination-container .dataTables_wrapper');
+    if (paginationContainer) {
+      pagination = document.createElement('div');
+      pagination.id = 'right-pagination';
+      pagination.className = 'dataTables_paginate paging_simple_numbers';
+      paginationContainer.appendChild(pagination);
+    } else {
+      // Fallback: create container structure if it doesn't exist
+      const rightTableContainer = document.getElementById('right-table').closest('.table-container');
+      if (rightTableContainer) {
+        const containerDiv = document.createElement('div');
+        containerDiv.className = 'right-table-pagination-container';
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.className = 'dataTables_wrapper form-inline dt-bootstrap no-footer';
+        pagination = document.createElement('div');
+        pagination.id = 'right-pagination';
+        pagination.className = 'dataTables_paginate paging_simple_numbers';
+        wrapperDiv.appendChild(pagination);
+        containerDiv.appendChild(wrapperDiv);
+        rightTableContainer.appendChild(containerDiv);
+      }
+    }
+  }
+  
+  if (!pagination) return; // Safety check
+  
+  pagination.innerHTML = '';
+  
+  const totalPages = Math.ceil(rightTableDevices.length / PAGE_SIZE);
+  if (totalPages <= 1) {
+    pagination.style.display = 'none';
+    return;
+  }
+  
+  pagination.style.display = 'block';
+  
+  // Create pagination list
+  const ul = document.createElement('ul');
+  ul.className = 'pagination';
+  
+  // First button
+  const firstLi = document.createElement('li');
+  firstLi.className = `paginate_button page-item ${currentRightPage === 1 ? 'disabled' : ''}`;
+  firstLi.innerHTML = `<a href="#" aria-controls="right-table" data-dt-idx="0" tabindex="0" class="page-link">First</a>`;
+  if (currentRightPage > 1) {
+    firstLi.onclick = (e) => {
+      e.preventDefault();
+      currentRightPage = 1;
+      renderRightTable();
+    };
+  }
+  ul.appendChild(firstLi);
+  
+  // Previous button
+  const prevLi = document.createElement('li');
+  prevLi.className = `paginate_button page-item previous ${currentRightPage === 1 ? 'disabled' : ''}`;
+  prevLi.innerHTML = `<a href="#" aria-controls="right-table" data-dt-idx="previous" tabindex="0" class="page-link">Previous</a>`;
+  if (currentRightPage > 1) {
+    prevLi.onclick = (e) => {
+      e.preventDefault();
+      currentRightPage--;
+      renderRightTable();
+    };
+  }
+  ul.appendChild(prevLi);
+  
+  // Page numbers
+  const startPage = Math.max(1, currentRightPage - 2);
+  const endPage = Math.min(totalPages, currentRightPage + 2);
+  
+  for (let i = startPage; i <= endPage; i++) {
+    const li = document.createElement('li');
+    li.className = `paginate_button page-item ${i === currentRightPage ? 'active' : ''}`;
+    li.innerHTML = `<a href="#" aria-controls="right-table" data-dt-idx="${i}" tabindex="0" class="page-link">${i}</a>`;
+    if (i !== currentRightPage) {
+      li.onclick = (e) => {
+        e.preventDefault();
+        currentRightPage = i;
+        renderRightTable();
+      };
+    }
+    ul.appendChild(li);
+  }
+  
+  // Next button
+  const nextLi = document.createElement('li');
+  nextLi.className = `paginate_button page-item next ${currentRightPage === totalPages ? 'disabled' : ''}`;
+  nextLi.innerHTML = `<a href="#" aria-controls="right-table" data-dt-idx="next" tabindex="0" class="page-link">Next</a>`;
+  if (currentRightPage < totalPages) {
+    nextLi.onclick = (e) => {
+      e.preventDefault();
+      currentRightPage++;
+      renderRightTable();
+    };
+  }
+  ul.appendChild(nextLi);
+  
+  // Last button
+  const lastLi = document.createElement('li');
+  lastLi.className = `paginate_button page-item ${currentRightPage === totalPages ? 'disabled' : ''}`;
+  lastLi.innerHTML = `<a href="#" aria-controls="right-table" data-dt-idx="${totalPages}" tabindex="0" class="page-link">Last</a>`;
+  if (currentRightPage < totalPages) {
+    lastLi.onclick = (e) => {
+      e.preventDefault();
+      currentRightPage = totalPages;
+      renderRightTable();
     };
   }
   ul.appendChild(lastLi);
