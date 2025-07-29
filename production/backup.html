@@ -92,6 +92,7 @@
         });
       });
     </script>
+    <link rel="stylesheet" href="css/sync_devices.css">
   </head>
 
   <body class="nav-md">
@@ -290,6 +291,23 @@
                       </div>
                     </div>
 
+                    <!-- Action Buttons -->
+                    <div class="row mb-3">
+                      <div class="col-md-12">
+                        <div class="btn-group" role="group">
+                          <button type="button" class="btn btn-primary" id="backup-all-btn">
+                            <i class="fas fa-save"></i> Backup All Devices
+                          </button>
+                          <button type="button" class="btn btn-success" id="backup-selected-btn" disabled>
+                            <i class="fas fa-check"></i> Backup Selected
+                          </button>
+                          <button type="button" class="btn btn-info" id="schedule-backup-btn">
+                            <i class="fas fa-clock"></i> Schedule Backup
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                     <!-- Device List Table -->
                     <div class="table-responsive">
                       <table class="table bulk_action">
@@ -321,6 +339,9 @@
                           </tr>
                         </tbody>
                       </table>
+                      
+                      <!-- Pagination Container -->
+                      <div id="backup-pagination" class="pagination-container"></div>
                     </div>
                   </div>
                 </div>
@@ -421,17 +442,19 @@
       document.addEventListener('DOMContentLoaded', function() {
         // Device management functions
         let allDevices = [];
+        let filteredDevices = [];
         let currentPage = 0;
-        let pageSize = 20;
+        let pageSize = 10; // Set to 10 rows as requested
+        let totalPages = 0;
         let currentSearchTerm = '';
         let currentDateFilter = '';
         let currentDateComparison = '';
         let isLoading = false;
         
         // Load devices from Nautobot using GraphQL
-        async function loadDevices(page = 0, pageSize = 20) {
+        async function loadDevices() {
           try {
-            console.log(`Loading devices from Nautobot (page ${page + 1})...`);
+            console.log(`Loading all devices from Nautobot...`);
             
             if (!window.authManager) {
               console.error('AuthManager not available');
@@ -440,12 +463,8 @@
             }
 
             const query = `
-              query single_device(
-                $device_filter: [String]
-                $limit: Int = 10
-                $offset: Int = 0
-              ) {
-                devices(name__ire: $device_filter, limit: $limit, offset: $offset) {
+              query all_devices {
+                devices {
                   id
                   name
                   role {
@@ -474,30 +493,17 @@
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                query: query,
-                variables: {
-                  device_filter: [""], // Empty string returns all devices
-                  limit: pageSize,
-                  offset: page * pageSize
-                }
+                query: query
               })
             });
 
             console.log('GraphQL response:', response);
 
             if (response && response.data && response.data.devices) {
-              const devices = response.data.devices;
-              console.log(`Loaded ${devices.length} devices from Nautobot (page ${page + 1})`);
-              
-              // If this is the first page, replace all devices, otherwise append
-              if (page === 0) {
-                allDevices = devices;
-              } else {
-                allDevices = allDevices.concat(devices);
-              }
-              
+              allDevices = response.data.devices;
+              console.log(`Loaded ${allDevices.length} devices from Nautobot`);
+              currentPage = 0; // Reset to first page
               renderDevicesTable(allDevices);
-              updatePaginationControls(page, pageSize, devices.length);
               updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
             } else if (response && response.errors) {
               console.error('GraphQL errors:', response.errors);
@@ -517,291 +523,99 @@
           }
         }
 
-        // Search devices with filter
-        async function searchDevices(searchTerm, page = 0, pageSize = 20) {
-          try {
-            console.log(`Searching devices with term: "${searchTerm}" (page ${page + 1})...`);
-            
-            if (!window.authManager) {
-              console.error('AuthManager not available');
-              showError('Authentication manager not ready. Please refresh the page.');
-              return;
-            }
-
-            const query = `
-              query single_device(
-                $device_filter: [String]
-                $limit: Int = 10
-                $offset: Int = 0
-              ) {
-                devices(name__ire: $device_filter, limit: $limit, offset: $offset) {
-                  id
-                  name
-                  role {
-                    name
-                  }
-                  location {
-                    name
-                  }
-                  primary_ip4 {
-                    address
-                  }
-                  status {
-                    name
-                  }
-                  device_type {
-                    model
-                  }
-                  cf_last_backup
-                }
-              }
-            `;
-
-            // Create regex pattern for case-insensitive search
-            const searchPattern = searchTerm.trim() ? `(?i).*${searchTerm.trim()}.*` : "";
-
-            const response = await window.authManager.apiRequest('/api/graphql', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                query: query,
-                variables: {
-                  device_filter: [searchPattern],
-                  limit: pageSize,
-                  offset: page * pageSize
-                }
-              })
-            });
-
-            console.log('Search response:', response);
-
-            if (response && response.data && response.data.devices) {
-              const devices = response.data.devices;
-              console.log(`Found ${devices.length} devices matching "${searchTerm}" (page ${page + 1})`);
-              
-              // If this is the first page, replace all devices, otherwise append
-              if (page === 0) {
-                allDevices = devices;
-                currentSearchTerm = searchTerm;
-              } else {
-                allDevices = allDevices.concat(devices);
-              }
-              
-              renderDevicesTable(allDevices);
-              updatePaginationControls(page, pageSize, devices.length);
-              updateStatusPanel(`<i class="fas fa-search"></i> Found ${allDevices.length} devices matching "${searchTerm}".`, 'info');
-            } else if (response && response.errors) {
-              console.error('GraphQL errors:', response.errors);
-              showError('Search failed: ' + response.errors.map(e => e.message).join(', '));
-            } else {
-              console.error('Search failed - full response:', response);
-              showError('Search failed: No data returned');
-            }
-          } catch (error) {
-            console.error('Error searching devices:', error);
-            showError('Error searching devices: ' + error.message);
+        // Search devices with filter (client-side filtering)
+        function searchDevices(searchTerm) {
+          console.log(`Searching devices with term: "${searchTerm}"`);
+          
+          if (!searchTerm.trim()) {
+            // If no search term, show all devices
+            currentPage = 0;
+            renderDevicesTable(allDevices);
+            updateStatusPanel(`<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`, 'success');
+            return;
           }
+          
+          // Filter devices client-side
+          const filtered = allDevices.filter(device => {
+            const deviceName = (device.name || '').toLowerCase();
+            const role = (device.role?.name || '').toLowerCase();
+            const location = (device.location?.name || '').toLowerCase();
+            const deviceType = (device.device_type?.model || '').toLowerCase();
+            const status = (device.status?.name || '').toLowerCase();
+            const searchLower = searchTerm.toLowerCase();
+            
+            return deviceName.includes(searchLower) ||
+                   role.includes(searchLower) ||
+                   location.includes(searchLower) ||
+                   deviceType.includes(searchLower) ||
+                   status.includes(searchLower);
+          });
+          
+          console.log(`Found ${filtered.length} devices matching "${searchTerm}"`);
+          currentPage = 0;
+          currentSearchTerm = searchTerm;
+          renderDevicesTable(filtered);
+          updateStatusPanel(`<i class="fas fa-search"></i> Found ${filtered.length} devices matching "${searchTerm}".`, 'info');
         }
 
-        // Filter devices with combined filters (search + date)
-        async function filterDevices(searchTerm = '', dateFilter = '', dateComparison = '', page = 0, pageSize = 20) {
-          try {
-            console.log(`Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}" (page ${page + 1})...`);
-            
-            if (!window.authManager) {
-              console.error('AuthManager not available');
-              showError('Authentication manager not ready. Please refresh the page.');
-              return;
-            }
-
-            let query;
-            let variables = {
-              limit: pageSize,
-              offset: page * pageSize
-            };
-
-            // Determine which query to use based on filters
-            if (dateFilter && dateComparison) {
-              // Date filter query
+        // Filter devices with combined filters (client-side filtering)
+        function filterDevices(searchTerm = '', dateFilter = '', dateComparison = '') {
+          console.log(`Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}"`);
+          
+          let filtered = [...allDevices];
+          
+          // Apply search filter
+          if (searchTerm.trim()) {
+            filtered = filtered.filter(device => {
+              const deviceName = (device.name || '').toLowerCase();
+              const role = (device.role?.name || '').toLowerCase();
+              const location = (device.location?.name || '').toLowerCase();
+              const deviceType = (device.device_type?.model || '').toLowerCase();
+              const status = (device.status?.name || '').toLowerCase();
+              const searchLower = searchTerm.toLowerCase();
+              
+              return deviceName.includes(searchLower) ||
+                     role.includes(searchLower) ||
+                     location.includes(searchLower) ||
+                     deviceType.includes(searchLower) ||
+                     status.includes(searchLower);
+            });
+          }
+          
+          // Apply date filter
+          if (dateFilter && dateComparison) {
+            const filterDate = new Date(dateFilter);
+            filtered = filtered.filter(device => {
+              if (!device.cf_last_backup || device.cf_last_backup === 'Never') {
+                return dateComparison === 'lt'; // Devices with no backup date are considered very old
+              }
+              
+              const backupDate = new Date(device.cf_last_backup);
               if (dateComparison === 'lte') {
-                query = `
-                  query single_device(
-                    $date_filter: [String]
-                    $limit: Int = 10
-                    $offset: Int = 0
-                  ) {
-                    devices(cf_last_backup__lte: $date_filter, limit: $limit, offset: $offset) {
-                      id
-                      name
-                      role {
-                        name
-                      }
-                      location {
-                        name
-                      }
-                      primary_ip4 {
-                        address
-                      }
-                      status {
-                        name
-                      }
-                      device_type {
-                        model
-                      }
-                      cf_last_backup
-                    }
-                  }
-                `;
-                variables.date_filter = [dateFilter];
+                return backupDate <= filterDate;
               } else if (dateComparison === 'lt') {
-                query = `
-                  query single_device(
-                    $date_filter: [String]
-                    $limit: Int = 10
-                    $offset: Int = 0
-                  ) {
-                    devices(cf_last_backup__lt: $date_filter, limit: $limit, offset: $offset) {
-                      id
-                      name
-                      role {
-                        name
-                      }
-                      location {
-                        name
-                      }
-                      primary_ip4 {
-                        address
-                      }
-                      status {
-                        name
-                      }
-                      device_type {
-                        model
-                      }
-                      cf_last_backup
-                    }
-                  }
-                `;
-                variables.date_filter = [dateFilter];
+                return backupDate < filterDate;
               }
-            } else if (searchTerm) {
-              // Search filter query
-              query = `
-                query single_device(
-                  $device_filter: [String]
-                  $limit: Int = 10
-                  $offset: Int = 0
-                ) {
-                  devices(name__ire: $device_filter, limit: $limit, offset: $offset) {
-                    id
-                    name
-                    role {
-                      name
-                    }
-                    location {
-                      name
-                    }
-                    primary_ip4 {
-                      address
-                    }
-                    status {
-                      name
-                    }
-                    device_type {
-                      model
-                    }
-                    cf_last_backup
-                  }
-                }
-              `;
-              const searchPattern = `(?i).*${searchTerm.trim()}.*`;
-              variables.device_filter = [searchPattern];
-            } else {
-              // No filters - get all devices
-              query = `
-                query single_device(
-                  $device_filter: [String]
-                  $limit: Int = 10
-                  $offset: Int = 0
-                ) {
-                  devices(name__ire: $device_filter, limit: $limit, offset: $offset) {
-                    id
-                    name
-                    role {
-                      name
-                    }
-                    location {
-                      name
-                    }
-                    primary_ip4 {
-                      address
-                    }
-                    status {
-                      name
-                    }
-                    device_type {
-                      model
-                    }
-                    cf_last_backup
-                  }
-                }
-              `;
-              variables.device_filter = [""];
-            }
-
-            const response = await window.authManager.apiRequest('/api/graphql', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                query: query,
-                variables: variables
-              })
+              return true;
             });
-
-            console.log('Filter response:', response);
-
-            if (response && response.data && response.data.devices) {
-              const devices = response.data.devices;
-              console.log(`Found ${devices.length} devices with filters (page ${page + 1})`);
-              
-              // If this is the first page, replace all devices, otherwise append
-              if (page === 0) {
-                allDevices = devices;
-                currentSearchTerm = searchTerm;
-                currentDateFilter = dateFilter;
-                currentDateComparison = dateComparison;
-              } else {
-                allDevices = allDevices.concat(devices);
-              }
-              
-              renderDevicesTable(allDevices);
-              updatePaginationControls(page, pageSize, devices.length);
-              
-              // Update status message
-              let statusMessage = `<i class="fas fa-check-circle"></i> Found ${allDevices.length} devices`;
-              if (searchTerm || (dateFilter && dateComparison)) {
-                statusMessage += ' with applied filters';
-              }
-              updateStatusPanel(statusMessage + '.', 'success');
-              
-            } else if (response && response.errors) {
-              console.error('GraphQL errors:', response.errors);
-              showError('Filter failed: ' + response.errors.map(e => e.message).join(', '));
-            } else {
-              console.error('Filter failed - full response:', response);
-              showError('Filter failed: No data returned');
-            }
-          } catch (error) {
-            console.error('Error filtering devices:', error);
-            showError('Error filtering devices: ' + error.message);
           }
+          
+          console.log(`Found ${filtered.length} devices with applied filters`);
+          currentPage = 0;
+          currentSearchTerm = searchTerm;
+          currentDateFilter = dateFilter;
+          currentDateComparison = dateComparison;
+          renderDevicesTable(filtered);
+          
+          // Update status message
+          let statusMessage = `<i class="fas fa-check-circle"></i> Found ${filtered.length} devices`;
+          if (searchTerm || (dateFilter && dateComparison)) {
+            statusMessage += ' with applied filters';
+          }
+          updateStatusPanel(statusMessage + '.', 'success');
         }
 
-        // Render devices table
+        // Render devices table with pagination
         function renderDevicesTable(devices) {
           const tableBody = document.getElementById('device-table-body');
           
@@ -813,11 +627,22 @@
                 </td>
               </tr>
             `;
+            renderBackupPagination(0, 0);
             return;
           }
 
-          tableBody.innerHTML = devices.map((device, index) => {
-            const rowClass = index % 2 === 0 ? 'even' : 'odd';
+          // Store filtered devices for pagination
+          filteredDevices = devices;
+          totalPages = Math.ceil(filteredDevices.length / pageSize);
+          
+          // Calculate start and end indices for current page
+          const startIndex = currentPage * pageSize;
+          const endIndex = Math.min(startIndex + pageSize, filteredDevices.length);
+          const currentPageDevices = filteredDevices.slice(startIndex, endIndex);
+
+          tableBody.innerHTML = currentPageDevices.map((device, index) => {
+            const globalIndex = startIndex + index;
+            const rowClass = globalIndex % 2 === 0 ? 'even' : 'odd';
             const deviceName = device.name || 'Unknown';
             const ipAddress = device.primary_ip4?.address || 'N/A';
             const role = device.role?.name || 'Unknown';
@@ -868,100 +693,131 @@
             `;
           }).join('');
 
+          // Render pagination controls
+          renderBackupPagination(filteredDevices.length, totalPages);
+          
           // Re-attach event listeners for dynamically created elements
           attachDeviceEventListeners();
         }
 
-        // Update pagination controls
-        function updatePaginationControls(page, pageSize, returnedCount) {
-          // Create pagination controls if they don't exist
-          let paginationContainer = document.getElementById('pagination-container');
+        // Render pagination controls for backup page
+        function renderBackupPagination(totalItems, totalPages) {
+          const paginationContainer = document.getElementById('backup-pagination');
+          
           if (!paginationContainer) {
-            paginationContainer = document.createElement('div');
-            paginationContainer.id = 'pagination-container';
-            paginationContainer.className = 'row mt-3';
-            paginationContainer.innerHTML = `
+            console.error('Pagination container not found');
+            return;
+          }
+          
+          if (totalItems === 0 || totalPages <= 1) {
+            paginationContainer.innerHTML = '';
+            return;
+          }
+          
+          const startItem = (currentPage * pageSize) + 1;
+          const endItem = Math.min((currentPage + 1) * pageSize, totalItems);
+          
+          let paginationHtml = `
+            <div class="row mt-3">
               <div class="col-md-6">
-                <div class="pagination-info">
-                  <span id="pagination-info-text">Showing devices...</span>
+                <div class="dataTables_info">
+                  Showing ${startItem} to ${endItem} of ${totalItems} entries
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="pagination-controls text-end">
-                  <button type="button" class="btn btn-sm btn-outline-primary" id="load-more-btn" style="display: none;">
-                    <i class="fas fa-plus-circle"></i> Load More
-                  </button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="reset-pagination-btn" style="display: none;">
-                    <i class="fas fa-refresh"></i> Reset
-                  </button>
-                </div>
-              </div>
+                <div class="dataTables_paginate paging_simple_numbers" style="text-align: right;">
+                  <ul class="pagination">
+          `;
+          
+          // First button
+          paginationHtml += `
+            <li class="paginate_button page-item ${currentPage === 0 ? 'disabled' : ''}" id="backup-first">
+              <a href="#" class="page-link">First</a>
+            </li>
+          `;
+          
+          // Previous button  
+          paginationHtml += `
+            <li class="paginate_button page-item previous ${currentPage === 0 ? 'disabled' : ''}" id="backup-previous">
+              <a href="#" class="page-link">Previous</a>
+            </li>
+          `;
+          
+          // Page numbers (show max 5 pages around current page)
+          let startPage = Math.max(0, currentPage - 2);
+          let endPage = Math.min(totalPages - 1, currentPage + 2);
+          
+          // Adjust range if we're near the beginning or end
+          if (endPage - startPage < 4) {
+            if (startPage === 0) {
+              endPage = Math.min(totalPages - 1, startPage + 4);
+            } else if (endPage === totalPages - 1) {
+              startPage = Math.max(0, endPage - 4);
+            }
+          }
+          
+          for (let i = startPage; i <= endPage; i++) {
+            paginationHtml += `
+              <li class="paginate_button page-item ${i === currentPage ? 'active' : ''}" data-page="${i}">
+                <a href="#" class="page-link">${i + 1}</a>
+              </li>
             `;
-            
-            // Insert after the table
-            const tableContainer = document.querySelector('.table-responsive');
-            tableContainer.parentNode.insertBefore(paginationContainer, tableContainer.nextSibling);
-            
-            // Add event listeners
-            document.getElementById('load-more-btn').addEventListener('click', loadMoreDevices);
-            document.getElementById('reset-pagination-btn').addEventListener('click', resetPagination);
           }
           
-          // Update pagination info
-          const infoText = document.getElementById('pagination-info-text');
-          const loadMoreBtn = document.getElementById('load-more-btn');
-          const resetBtn = document.getElementById('reset-pagination-btn');
+          // Next button
+          paginationHtml += `
+            <li class="paginate_button page-item next ${currentPage >= totalPages - 1 ? 'disabled' : ''}" id="backup-next">
+              <a href="#" class="page-link">Next</a>
+            </li>
+          `;
           
-          const startItem = (page * pageSize) + 1;
-          const endItem = startItem + returnedCount - 1;
+          // Last button
+          paginationHtml += `
+            <li class="paginate_button page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}" id="backup-last">
+              <a href="#" class="page-link">Last</a>
+            </li>
+          `;
           
-          if (allDevices.length > 0) {
-            infoText.textContent = `Showing ${allDevices.length} devices`;
-            if (returnedCount === pageSize) {
-              loadMoreBtn.style.display = 'inline-block';
-            } else {
-              loadMoreBtn.style.display = 'none';
+          paginationHtml += `
+                  </ul>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          paginationContainer.innerHTML = paginationHtml;
+          
+          // Add event listeners for pagination controls
+          paginationContainer.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = e.target.closest('li');
+            if (!target || target.classList.contains('disabled') || target.classList.contains('active')) {
+              return;
             }
             
-            if (page > 0 || currentSearchTerm) {
-              resetBtn.style.display = 'inline-block';
-            } else {
-              resetBtn.style.display = 'none';
+            if (target.id === 'backup-first') {
+              currentPage = 0;
+            } else if (target.id === 'backup-previous') {
+              currentPage = Math.max(0, currentPage - 1);
+            } else if (target.id === 'backup-next') {
+              currentPage = Math.min(totalPages - 1, currentPage + 1);
+            } else if (target.id === 'backup-last') {
+              currentPage = totalPages - 1;
+            } else if (target.hasAttribute('data-page')) {
+              currentPage = parseInt(target.getAttribute('data-page'));
             }
-          } else {
-            infoText.textContent = 'No devices found';
-            loadMoreBtn.style.display = 'none';
-            resetBtn.style.display = 'none';
-          }
+            
+            // Re-render table with new page
+            renderDevicesTable(filteredDevices);
+          });
         }
 
-        // Load more devices (next page)
-        async function loadMoreDevices() {
-          if (isLoading) return;
-          
-          isLoading = true;
-          const loadMoreBtn = document.getElementById('load-more-btn');
-          const originalText = loadMoreBtn.innerHTML;
-          loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-          loadMoreBtn.disabled = true;
-          
-          try {
-            currentPage++;
-            await filterDevices(currentSearchTerm, currentDateFilter, currentDateComparison, currentPage, pageSize);
-          } finally {
-            loadMoreBtn.innerHTML = originalText;
-            loadMoreBtn.disabled = false;
-            isLoading = false;
-          }
-        }
-
-        // Reset pagination
-        async function resetPagination() {
+        // Reset pagination and filters
+        function resetPagination() {
           currentPage = 0;
           currentSearchTerm = '';
           currentDateFilter = '';
           currentDateComparison = '';
-          allDevices = [];
           
           // Clear all filter inputs
           const searchInput = document.getElementById('search-input');
@@ -972,14 +828,9 @@
           if (dateInput) dateInput.value = '';
           if (comparisonSelect) comparisonSelect.value = '';
           
-          // Hide pagination controls
-          const paginationContainer = document.getElementById('pagination-container');
-          if (paginationContainer) {
-            paginationContainer.remove();
-          }
-          
-          // Load first page with no filters
-          await filterDevices('', '', '', 0, pageSize);
+          // Show all devices
+          renderDevicesTable(allDevices);
+          updateStatusPanel(`<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`, 'success');
         }
 
         // Attach event listeners to device buttons
@@ -1020,13 +871,9 @@
             await new Promise(resolve => setTimeout(resolve, 2000));
             updateStatusPanel(`<i class="fas fa-check-circle"></i> Backup completed for ${deviceName}.`, 'success');
             
-            // Refresh current page data to update last backup time
+            // Refresh devices data to update last backup time
             setTimeout(() => {
-              if (currentSearchTerm) {
-                searchDevices(currentSearchTerm, 0, (currentPage + 1) * pageSize);
-              } else {
-                loadDevices(0, (currentPage + 1) * pageSize);
-              }
+              loadDevices();
             }, 1000);
           } catch (error) {
             console.error('Backup failed:', error);
@@ -1100,11 +947,10 @@
             clearTimeout(searchTimeout);
             const searchTerm = this.value.trim();
             
-            // Debounce search to avoid too many API calls
-            searchTimeout = setTimeout(async () => {
-              currentPage = 0;
-              await filterDevices(searchTerm, currentDateFilter, currentDateComparison, 0, pageSize);
-            }, 500); // Wait 500ms after user stops typing
+            // Debounce search to avoid too many updates
+            searchTimeout = setTimeout(() => {
+              filterDevices(searchTerm, currentDateFilter, currentDateComparison);
+            }, 300); // Wait 300ms after user stops typing
           });
         }
 
@@ -1114,17 +960,15 @@
         
         if (dateInput) {
           dateInput.addEventListener('change', () => {
-            currentPage = 0;
             const newDateFilter = dateInput.value;
-            filterDevices(currentSearchTerm, newDateFilter, currentDateComparison, 0, pageSize);
+            filterDevices(currentSearchTerm, newDateFilter, currentDateComparison);
           });
         }
         
         if (comparisonSelect) {
           comparisonSelect.addEventListener('change', () => {
-            currentPage = 0;
             const newDateComparison = comparisonSelect.value;
-            filterDevices(currentSearchTerm, currentDateFilter, newDateComparison, 0, pageSize);
+            filterDevices(currentSearchTerm, currentDateFilter, newDateComparison);
           });
         }
         
@@ -1137,9 +981,9 @@
         // Initialize the page
         console.log('Initializing backup page...');
         
-        // Wait a bit for AuthManager to be ready, then load first page
+        // Wait a bit for AuthManager to be ready, then load devices
         setTimeout(() => {
-          filterDevices('', '', '', 0, pageSize);
+          loadDevices();
         }, 1000);
 
         // Update navbar username display
@@ -1181,13 +1025,9 @@
             await new Promise(resolve => setTimeout(resolve, 3000));
             updateStatusPanel(`<i class="fas fa-check-circle"></i> Backup completed successfully for ${allDevices.length} devices.`, 'success');
             
-            // Refresh current page data
+            // Refresh devices data
             setTimeout(() => {
-              if (currentSearchTerm) {
-                searchDevices(currentSearchTerm, 0, (currentPage + 1) * pageSize);
-              } else {
-                loadDevices(0, (currentPage + 1) * pageSize);
-              }
+              loadDevices();
             }, 1000);
           } catch (error) {
             console.error('Backup all failed:', error);
@@ -1251,13 +1091,9 @@
               await new Promise(resolve => setTimeout(resolve, 3000));
               updateStatusPanel(`<i class="fas fa-check-circle"></i> Backup completed for ${selectedDevices.length} selected device(s).`, 'success');
               
-              // Refresh current page data
+              // Refresh devices data
               setTimeout(() => {
-                if (currentSearchTerm) {
-                  searchDevices(currentSearchTerm, 0, (currentPage + 1) * pageSize);
-                } else {
-                  loadDevices(0, (currentPage + 1) * pageSize);
-                }
+                loadDevices();
               }, 1000);
             } catch (error) {
               console.error('Selected backup failed:', error);

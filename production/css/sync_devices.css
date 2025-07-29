@@ -31,6 +31,13 @@
   text-align: center;
 }
 
+/* Backup page pagination styling */
+#backup-pagination {
+  margin-top: 0;
+  margin-bottom: 0;
+  text-align: center;
+}
+
 /* DataTables pagination styling */
 .dataTables_paginate {
   margin-top: 20px;
