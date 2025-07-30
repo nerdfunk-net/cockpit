@@ -111,6 +111,12 @@ function setupButtonEventListeners() {
 
 async function fetchDevices(filterType = null, filterValue = null) {
   console.log('[DEBUG] fetchDevices called with:', { filterType, filterValue });
+  
+  // Reset to first page when filtering
+  if (filterType && filterValue) {
+    currentPage = 1;
+  }
+  
   try {
     let url = BACKEND_API;
     if (filterType === 'name' && filterValue && filterValue.length >= 3) {

@@ -87,12 +87,49 @@ async def get_devices(
         
         if filter_type and filter_value:
             if filter_type == 'name':
-                query_filters = f'name: "{filter_value}"'
+                # Use GraphQL query with case-insensitive regex pattern matching for device names
+                query = """
+                query devices_by_name($name_filter: [String]) {
+                  devices(name__ire: $name_filter) {
+                    id
+                    name
+                    role {
+                      name
+                    }
+                    location {
+                      name
+                    }
+                    primary_ip4 {
+                      address
+                    }
+                    status {
+                      name
+                    }
+                  }
+                }
+                """
+                variables = {"name_filter": [filter_value]}
+                
+                result = await nautobot_service.graphql_query(query, variables)
+                if "errors" in result:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"GraphQL errors: {result['errors']}"
+                    )
+                
+                devices = result["data"]["devices"]
+                
+                return {
+                    "devices": devices[offset:offset+limit],
+                    "count": len(devices),
+                    "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
+                    "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
+                }
                 
             elif filter_type == 'location':
                 query = """
-                query devices_by_location($location_filter: String) {
-                  locations(name: $location_filter) {
+                query devices_by_location($location_filter: [String]) {
+                  locations(name__ire: $location_filter) {
                     name
                     devices {
                       id
@@ -110,7 +147,7 @@ async def get_devices(
                   }
                 }
                 """
-                variables = {"location_filter": filter_value}
+                variables = {"location_filter": [filter_value]}
                 
                 result = await nautobot_service.graphql_query(query, variables)
                 if "errors" in result:
