@@ -55,32 +55,60 @@ async def git_status(current_user: str = Depends(verify_token)):
     try:
         repo = get_git_repo()
         
-        # Get branch info
-        current_branch = repo.active_branch.name
+        # Check if repository has any commits
+        commits = []
+        current_branch = None
+        
+        try:
+            # Try to get current branch
+            current_branch = repo.active_branch.name
+        except Exception as e:
+            logger.warning(f"Could not get active branch (repository may be empty): {e}")
+            # For empty repositories, use default branch name
+            current_branch = "main"
         
         # Get recent commits (needed by frontend)
-        commits = []
         try:
-            for commit in repo.iter_commits(max_count=50):
-                commits.append({
-                    "hash": commit.hexsha,
-                    "short_hash": commit.hexsha[:7],
-                    "message": commit.message.strip(),
-                    "author": commit.author.name,
-                    "date": commit.committed_datetime.isoformat(),
-                    "timestamp": int(commit.committed_date)
-                })
+            # Check if repository has any commits
+            if repo.head.is_valid():
+                for commit in repo.iter_commits(max_count=50):
+                    commits.append({
+                        "hash": commit.hexsha,
+                        "short_hash": commit.hexsha[:7],
+                        "message": commit.message.strip(),
+                        "author": commit.author.name,
+                        "date": commit.committed_datetime.isoformat(),
+                        "timestamp": int(commit.committed_date)
+                    })
+            else:
+                logger.info("Repository has no commits yet")
         except Exception as e:
             logger.warning(f"Could not fetch commits: {e}")
         
-        # Get status
+        # Get status (handle cases where repository is empty)
+        try:
+            is_dirty = repo.is_dirty()
+            untracked_files = repo.untracked_files
+            modified_files = [item.a_path for item in repo.index.diff(None)]
+            staged_files = []
+            
+            # Only get staged files if repository has commits
+            if repo.head.is_valid():
+                staged_files = [item.a_path for item in repo.index.diff("HEAD")]
+        except Exception as e:
+            logger.warning(f"Could not get repository status details: {e}")
+            is_dirty = False
+            untracked_files = []
+            modified_files = []
+            staged_files = []
+        
         status_info = {
             "current_branch": current_branch,  # Frontend expects this field name
             "branch": current_branch,  # Keep for backward compatibility
-            "is_dirty": repo.is_dirty(),
-            "untracked_files": repo.untracked_files,
-            "modified_files": [item.a_path for item in repo.index.diff(None)],
-            "staged_files": [item.a_path for item in repo.index.diff("HEAD")],
+            "is_dirty": is_dirty,
+            "untracked_files": untracked_files,
+            "modified_files": modified_files,
+            "staged_files": staged_files,
             "commits": commits  # Frontend needs this for Git Commits mode
         }
         
@@ -91,6 +119,7 @@ async def git_status(current_user: str = Depends(verify_token)):
             detail=f"Git repository not found or invalid: {str(e)}"
         )
     except Exception as e:
+        logger.error(f"Git status error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Git status error: {str(e)}"
@@ -599,6 +628,35 @@ async def sync_git_repository(current_user: str = Depends(verify_token)):
         return {
             "success": False,
             "message": f"Repository sync failed: {str(e)}"
+        }
+
+
+@router.post("/repo/clone")
+async def clone_git_repository(current_user: str = Depends(verify_token)):
+    """Force clone Git repository (backup existing and clone fresh)."""
+    try:
+        from git_manager import GitManager
+        git_manager = GitManager()
+        success, message = git_manager.clone_repository()
+        
+        if success:
+            # Get updated status after clone
+            status = git_manager.get_repository_status()
+            return {
+                "success": True,
+                "message": message,
+                "data": status
+            }
+        else:
+            return {
+                "success": False,
+                "message": message
+            }
+    except Exception as e:
+        logger.error(f"Error cloning Git repository: {e}")
+        return {
+            "success": False,
+            "message": f"Repository clone failed: {str(e)}"
         }
 
 

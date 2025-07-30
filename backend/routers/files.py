@@ -129,21 +129,25 @@ def create_sample_files(config_dir: Path):
 async def list_files(current_user: str = Depends(verify_token)):
     """List all configuration files."""
     try:
-        from config_manual import settings
-        config_dir = Path(settings.config_files_directory)
+        # Use GitManager to get the correct repository path
+        from git_manager import GitManager
+        git_manager = GitManager()
+        config_dir = Path(git_manager.base_path)
         
-        # Ensure directory exists
-        config_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Create sample files if directory is empty
-        if not any(config_dir.iterdir()):
-            create_sample_files(config_dir)
+        # Check if directory exists
+        if not config_dir.exists():
+            return {"files": []}
         
         files = []
-        allowed_extensions = settings.allowed_file_extensions
+        # Use common config file extensions
+        allowed_extensions = ['.txt', '.conf', '.cfg', '.config', '.ini', '.yml', '.yaml', '.json']
         
         for file_path in config_dir.rglob('*'):
             if file_path.is_file() and any(file_path.name.endswith(ext) for ext in allowed_extensions):
+                # Skip .git directory
+                if '.git' in file_path.parts:
+                    continue
+                    
                 relative_path = file_path.relative_to(config_dir)
                 files.append({
                     "name": file_path.name,
@@ -169,8 +173,10 @@ async def compare_files(
 ):
     """Compare two configuration files."""
     try:
-        from config_manual import settings
-        config_dir = Path(settings.config_files_directory)
+        # Use GitManager to get the correct repository path
+        from git_manager import GitManager
+        git_manager = GitManager()
+        config_dir = Path(git_manager.base_path)
         
         left_file_path = config_dir / request.left_file
         right_file_path = config_dir / request.right_file
@@ -267,8 +273,10 @@ async def export_diff(
 ):
     """Export diff in unified format."""
     try:
-        from config_manual import settings
-        config_dir = Path(settings.config_files_directory)
+        # Use GitManager to get the correct repository path
+        from git_manager import GitManager
+        git_manager = GitManager()
+        config_dir = Path(git_manager.base_path)
         
         left_file_path = config_dir / request.left_file
         right_file_path = config_dir / request.right_file
@@ -325,14 +333,16 @@ async def export_diff(
 async def get_file_config(current_user: str = Depends(verify_token)):
     """Get file storage configuration information."""
     try:
-        from config_manual import settings
-        config_dir = Path(settings.config_files_directory)
+        # Use GitManager to get the correct repository path
+        from git_manager import GitManager
+        git_manager = GitManager()
+        config_dir = Path(git_manager.base_path)
         
         return {
             "directory": str(config_dir.absolute()),
             "directory_exists": config_dir.exists(),
-            "allowed_extensions": settings.allowed_file_extensions,
-            "max_file_size_mb": settings.max_file_size_mb,
+            "allowed_extensions": ['.txt', '.conf', '.cfg', '.config', '.ini', '.yml', '.yaml', '.json'],
+            "max_file_size_mb": 10,
             "directory_writable": config_dir.exists() and os.access(config_dir, os.W_OK)
         }
     except Exception as e:

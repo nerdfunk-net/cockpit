@@ -380,14 +380,14 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
         job_data = {
             "data": {
                 "location": request.location_id,
-                "ip_addresses": [request.ip_address],  # Changed from ip_address to ip_addresses array
+                "ip_addresses": request.ip_address,  # Keep as string - multiple IPs separated by comma
                 "secrets_group": request.secret_groups_id,
                 "device_role": request.role_id,
                 "namespace": request.namespace_id,
                 "device_status": request.status_id,
                 "interface_status": request.interface_status_id,
                 "ip_address_status": request.ip_address_status_id,
-                "platform": request.platform_id,
+                "platform": None if request.platform_id == "detect" else request.platform_id,
                 "port": request.port,
                 "timeout": request.timeout,
                 "update_devices_without_primary_ip": False

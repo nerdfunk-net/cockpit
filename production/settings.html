@@ -240,11 +240,8 @@
                         <div class="col-md-6">
                           <div class="form-group">
                             <label for="nautobot-verify-ssl" class="control-label">SSL Verification</label>
-                            <div class="checkbox">
-                              <label>
-                                <input type="checkbox" id="nautobot-verify-ssl" checked> Verify SSL certificates
-                              </label>
-                            </div>
+                            <input type="checkbox" id="nautobot-verify-ssl" class="form-check-input">
+                            <label for="nautobot-verify-ssl" class="form-check-label">Verify SSL certificates</label>
                             <small class="form-text text-muted">Uncheck only for development environments</small>
                           </div>
                         </div>
@@ -326,11 +323,8 @@
                         <div class="col-md-6">
                           <div class="form-group">
                             <label for="git-verify-ssl" class="control-label">SSL Certificate Verification</label>
-                            <div class="checkbox">
-                              <label>
-                                <input type="checkbox" id="git-verify-ssl" checked> Verify SSL certificates
-                              </label>
-                            </div>
+                            <input type="checkbox" id="git-verify-ssl" class="form-check-input">
+                            <label for="git-verify-ssl" class="form-check-label">Verify SSL certificates</label>
                             <small class="form-text text-muted">Verify SSL certificates when connecting to Git repository (disable for self-signed certificates)</small>
                           </div>
                         </div>
@@ -563,23 +557,25 @@
               username: settings.git.username || '',
               token: settings.git.token || '',
               config_path: settings.git.config_path || 'configs/',
-              sync_interval: settings.git.sync_interval || 15
+              sync_interval: settings.git.sync_interval || 15,
+              verify_ssl: settings.git.verify_ssl !== undefined ? settings.git.verify_ssl : true
             };
 
             // Populate form fields - Nautobot settings
+            // Populate Nautobot settings
             document.getElementById('nautobot-url').value = settings.nautobot.url;
             document.getElementById('nautobot-token').value = settings.nautobot.token;
             document.getElementById('nautobot-timeout').value = settings.nautobot.timeout;
-            document.getElementById('nautobot-verify-ssl').checked = settings.nautobot.verify_ssl;
+            document.getElementById('nautobot-verify-ssl').checked = (settings.nautobot.verify_ssl === true);
 
-            // Populate form fields - Git settings
+            // Populate Git settings
             document.getElementById('git-repo-url').value = settings.git.repo_url;
             document.getElementById('git-branch').value = settings.git.branch;
             document.getElementById('git-username').value = settings.git.username;
             document.getElementById('git-token').value = settings.git.token;
             document.getElementById('config-path').value = settings.git.config_path;
             document.getElementById('sync-interval').value = settings.git.sync_interval;
-            document.getElementById('git-verify-ssl').checked = settings.git.verify_ssl !== false;
+            document.getElementById('git-verify-ssl').checked = (settings.git.verify_ssl === true);
 
             // Show success message
             if (loadedFromBackend) {
@@ -607,19 +603,20 @@
             const settings = this.getStoredSettings();
             
             // Nautobot settings
+            // Fallback: Populate Nautobot settings with defaults
             document.getElementById('nautobot-url').value = settings.nautobot.url || '';
             document.getElementById('nautobot-token').value = settings.nautobot.token || '';
             document.getElementById('nautobot-timeout').value = settings.nautobot.timeout || 30;
-            document.getElementById('nautobot-verify-ssl').checked = settings.nautobot.verifySSL !== false;
+            document.getElementById('nautobot-verify-ssl').checked = (settings.nautobot.verify_ssl === true);
 
-            // Git settings
+            // Fallback: Populate Git settings with defaults
             document.getElementById('git-repo-url').value = settings.git.repoUrl || '';
             document.getElementById('git-branch').value = settings.git.branch || 'main';
             document.getElementById('git-username').value = settings.git.username || '';
             document.getElementById('git-token').value = settings.git.token || '';
             document.getElementById('config-path').value = settings.git.configPath || 'configs/';
             document.getElementById('sync-interval').value = settings.git.syncInterval || 15;
-            document.getElementById('git-verify-ssl').checked = settings.git.verifySSL !== false;
+            document.getElementById('git-verify-ssl').checked = (settings.git.verify_ssl === true);
             
             // Show error message
             this.showStatus('❌ Failed to load settings from database, using defaults: ' + error.message, 'danger');

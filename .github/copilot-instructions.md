@@ -90,7 +90,7 @@ docker-compose logs -f cockpit-backend
 
 ### Configuration Management
 - **Manual Config**: `backend/config_manual.py` uses simple environment variables (preferred)
-- **Settings Persistence**: SQLite database at `backend/settings/cockpit_settings.db`
+- **Settings Persistence**: SQLite database at `data/settings/cockpit_settings.db`
 - **Git Integration**: Repository consistency requires all Git endpoints use `get_git_repo()` helper
 
 ### Frontend Architecture

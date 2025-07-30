@@ -42,8 +42,8 @@ class SettingsManager:
     
     def __init__(self, db_path: str = None):
         if db_path is None:
-            # Create settings directory if it doesn't exist
-            settings_dir = os.path.join(os.path.dirname(__file__), 'settings')
+            # Use data/settings directory for persistence across containers
+            settings_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'settings')
             os.makedirs(settings_dir, exist_ok=True)
             self.db_path = os.path.join(settings_dir, 'cockpit_settings.db')
         else:
@@ -249,15 +249,37 @@ class SettingsManager:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 
-                cursor.execute('''
-                    INSERT INTO nautobot_settings (url, token, timeout, verify_ssl)
-                    VALUES (?, ?, ?, ?)
-                ''', (
-                    settings.get('url', self.default_nautobot.url),
-                    settings.get('token', self.default_nautobot.token),
-                    settings.get('timeout', self.default_nautobot.timeout),
-                    settings.get('verify_ssl', self.default_nautobot.verify_ssl)
-                ))
+                # First, check if any settings exist
+                cursor.execute('SELECT COUNT(*) FROM nautobot_settings')
+                count = cursor.fetchone()[0]
+                
+                if count == 0:
+                    # Insert new settings
+                    cursor.execute('''
+                        INSERT INTO nautobot_settings (url, token, timeout, verify_ssl)
+                        VALUES (?, ?, ?, ?)
+                    ''', (
+                        settings.get('url', self.default_nautobot.url),
+                        settings.get('token', self.default_nautobot.token),
+                        settings.get('timeout', self.default_nautobot.timeout),
+                        settings.get('verify_ssl', self.default_nautobot.verify_ssl)
+                    ))
+                else:
+                    # Update existing settings (update the first/most recent record)
+                    cursor.execute('''
+                        UPDATE nautobot_settings SET 
+                            url = ?, 
+                            token = ?, 
+                            timeout = ?, 
+                            verify_ssl = ?,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = (SELECT id FROM nautobot_settings ORDER BY id DESC LIMIT 1)
+                    ''', (
+                        settings.get('url', self.default_nautobot.url),
+                        settings.get('token', self.default_nautobot.token),
+                        settings.get('timeout', self.default_nautobot.timeout),
+                        settings.get('verify_ssl', self.default_nautobot.verify_ssl)
+                    ))
                 
                 conn.commit()
                 logger.info("Nautobot settings updated successfully")
@@ -273,18 +295,46 @@ class SettingsManager:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 
-                cursor.execute('''
-                    INSERT INTO git_settings (repo_url, branch, username, token, config_path, sync_interval, verify_ssl)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    settings.get('repo_url', self.default_git.repo_url),
-                    settings.get('branch', self.default_git.branch),
-                    settings.get('username', self.default_git.username),
-                    settings.get('token', self.default_git.token),
-                    settings.get('config_path', self.default_git.config_path),
-                    settings.get('sync_interval', self.default_git.sync_interval),
-                    settings.get('verify_ssl', self.default_git.verify_ssl)
-                ))
+                # First, check if any settings exist
+                cursor.execute('SELECT COUNT(*) FROM git_settings')
+                count = cursor.fetchone()[0]
+                
+                if count == 0:
+                    # Insert new settings
+                    cursor.execute('''
+                        INSERT INTO git_settings (repo_url, branch, username, token, config_path, sync_interval, verify_ssl)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        settings.get('repo_url', self.default_git.repo_url),
+                        settings.get('branch', self.default_git.branch),
+                        settings.get('username', self.default_git.username),
+                        settings.get('token', self.default_git.token),
+                        settings.get('config_path', self.default_git.config_path),
+                        settings.get('sync_interval', self.default_git.sync_interval),
+                        settings.get('verify_ssl', self.default_git.verify_ssl)
+                    ))
+                else:
+                    # Update existing settings (update the first/most recent record)
+                    cursor.execute('''
+                        UPDATE git_settings SET 
+                            repo_url = ?, 
+                            branch = ?, 
+                            username = ?, 
+                            token = ?, 
+                            config_path = ?, 
+                            sync_interval = ?, 
+                            verify_ssl = ?,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = (SELECT id FROM git_settings ORDER BY id DESC LIMIT 1)
+                    ''', (
+                        settings.get('repo_url', self.default_git.repo_url),
+                        settings.get('branch', self.default_git.branch),
+                        settings.get('username', self.default_git.username),
+                        settings.get('token', self.default_git.token),
+                        settings.get('config_path', self.default_git.config_path),
+                        settings.get('sync_interval', self.default_git.sync_interval),
+                        settings.get('verify_ssl', self.default_git.verify_ssl)
+                    ))
                 
                 conn.commit()
                 logger.info("Git settings updated successfully")

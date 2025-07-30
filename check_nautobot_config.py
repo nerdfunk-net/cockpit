@@ -6,7 +6,7 @@ import sqlite3
 import os
 
 # Path to the database
-db_path = "/Users/mp/programming/cockpit/backend/settings/cockpit_settings.db"
+db_path = "/Users/mp/programming/cockpit/data/settings/cockpit_settings.db"
 
 if os.path.exists(db_path):
     conn = sqlite3.connect(db_path)

@@ -789,6 +789,11 @@
                       </div>
                     </li>
                     <li>
+                      <button class="btn btn-sm btn-outline-secondary" id="closeResultsBtn" title="Close Comparison Results">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </li>
+                    <li>
                       <a class="collapse-link"><i class="fas fa-chevron-up"></i></a>
                     </li>
                   </ul>
@@ -1193,6 +1198,7 @@
                 document.getElementById('fontSizeSelect').addEventListener('change', (e) => this.changeFontSize(e.target.value));
                 document.getElementById('gitStatusBtn').addEventListener('click', () => this.showGitStatus());
                 document.getElementById('closeHistoryBtn').addEventListener('click', () => this.closeFileHistory());
+                document.getElementById('closeResultsBtn').addEventListener('click', () => this.closeComparisonResults());
                 
                 // File search will be initialized when files are loaded by populateFileSelects
 
@@ -1896,6 +1902,15 @@
                   historyMode.style.display = 'none';
                   gitStatusBtn.style.display = 'inline-block';
                   this.updateGitFileHistoryVisibility();
+                  
+                  // Ensure commits are loaded when switching to Git mode
+                  if (this.gitData.commits.length === 0) {
+                    console.log('No commits loaded, reloading Git status...');
+                    this.loadGitStatus();
+                  } else {
+                    // Refresh the commit dropdowns to make sure they're populated
+                    this.populateGitCommits();
+                  }
                 } else if (mode === 'history') {
                   fileMode.style.display = 'none';
                   gitMode.style.display = 'none';
@@ -1955,7 +1970,7 @@
                     await this.populateGitBranches();
                     this.populateGitCommits();
                     
-                    console.log('ConfigCompare: Git status loaded:', this.gitData.status);
+                    console.log('ConfigCompare: Git status loaded with', this.gitData.commits.length, 'commits');
                   } else {
                     // Git not available, disable Git mode
                     console.log('ConfigCompare: Git status not available, disabling Git mode');
@@ -2022,6 +2037,11 @@
               populateGitCommits() {
                 const leftSelect = document.getElementById('leftCommitSelect');
                 const rightSelect = document.getElementById('rightCommitSelect');
+                
+                if (!leftSelect || !rightSelect) {
+                  console.error('Commit select elements not found');
+                  return;
+                }
                 
                 leftSelect.innerHTML = '<option value="">Select commit...</option>';
                 rightSelect.innerHTML = '<option value="">Select commit...</option>';
@@ -2269,6 +2289,11 @@
                 // Clear both sides
                 this.clearFileHistory('left');
                 this.clearFileHistory('right');
+              }
+
+              closeComparisonResults() {
+                const comparisonSection = document.getElementById('comparisonSection');
+                comparisonSection.style.display = 'none';
               }
 
               updateGitFileHistoryVisibility() {

@@ -48,7 +48,7 @@ services:
       - ./backend/settings_manager.py:/app/backend/settings_manager.py:ro
       - ./backend/requirements.txt:/app/backend/requirements.txt:ro
       # Persistent storage (read-write)
-      - ./data/settings:/app/backend/settings
+      - ./data/settings:/app/data/settings
       - ./data/git:/app/backend/git
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs"]

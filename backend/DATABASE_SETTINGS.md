@@ -57,6 +57,6 @@ These are still used as defaults and fallback:
 ## Database Settings (Primary)
 
 Settings are stored in SQLite database at:
-`backend/settings/cockpit_settings.db`
+`data/settings/cockpit_settings.db`
 
 Managed via web interface at Settings page.

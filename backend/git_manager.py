@@ -45,7 +45,7 @@ class GitManager:
         # Configure SSL verification
         if not ssl_verify:
             env['GIT_SSL_NO_VERIFY'] = '1'
-            logger.warning("Git SSL verification disabled - not recommended for production")
+            logger.info("Git SSL verification disabled via database setting - not recommended for production")
         
         # Configure custom CA certificate (still from environment as these are file paths)
         if env_settings.git_ssl_ca_info and os.path.exists(env_settings.git_ssl_ca_info):
@@ -100,8 +100,8 @@ class GitManager:
             if not repo_url:
                 return False, "Git repository URL not configured. Please set up Git settings."
             
-            # If directory exists and is not empty, back it up first
-            if os.path.exists(self.base_path) and not self.is_directory_empty():
+            # If directory exists, back it up first (including corrupted Git repos)
+            if os.path.exists(self.base_path):
                 backup_path = f"{self.base_path}_backup_{int(time.time())}"
                 shutil.move(self.base_path, backup_path)
                 logger.info(f"Backed up existing directory to {backup_path}")
@@ -414,13 +414,34 @@ class GitManager:
     def sync_repository(self) -> Tuple[bool, str]:
         """Sync repository - clone if not exists, pull if exists"""
         try:
+            # If not a Git repository at all, try to clone
             if not self.is_git_repository():
                 if self.is_directory_empty():
                     return self.clone_repository()
                 else:
                     return False, "Directory contains files but is not a Git repository. Please clear the directory or configure Git manually."
             else:
-                return self.pull_latest_changes()
+                # It's a Git repository, but check if it has a remote configured
+                original_cwd = os.getcwd()
+                try:
+                    os.chdir(self.base_path)
+                    remote_check = subprocess.run(['git', 'remote'], capture_output=True, text=True)
+                    
+                    if not remote_check.stdout.strip():
+                        # No remotes configured, this is likely a corrupted/incomplete Git repo
+                        logger.warning("Git repository exists but has no remotes configured. Will re-clone.")
+                        os.chdir(original_cwd)  # Change back before clone operation
+                        return self.clone_repository()
+                    else:
+                        # Has remotes, try to pull
+                        os.chdir(original_cwd)  # Change back
+                        return self.pull_latest_changes()
+                        
+                except Exception as e:
+                    os.chdir(original_cwd)
+                    logger.error(f"Error checking Git remote configuration: {e}")
+                    # If we can't check remotes, assume it's corrupted and re-clone
+                    return self.clone_repository()
         
         except Exception as e:
             logger.error(f"Error during repository sync: {e}")

@@ -34,7 +34,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
       # Persistent database storage (read-write)
-      - ./data/settings:/app/backend/settings
+      - ./data/settings:/app/data/settings
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs"]
       interval: 30s

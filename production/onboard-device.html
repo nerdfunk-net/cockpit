@@ -306,8 +306,8 @@
                   <div class="row mb-4">
                     <div class="col-md-6">
                       <div class="form-group mb-0">
-                        <label for="ip_address" class="control-label">IP Address <span class="required">*</span></label>
-                        <input type="text" id="ip_address" name="ip_address" class="form-control" placeholder="Enter device IP address (e.g., 192.168.1.1)" required style="height: 48px;">
+                        <label for="ip_address" class="control-label">IP Address(es) <span class="required">*</span></label>
+                        <input type="text" id="ip_address" name="ip_address" class="form-control" placeholder="Enter device IP address(es) (e.g., 192.168.1.1 or 192.168.1.1,192.168.1.2)" required style="height: 48px;">
                         <div class="invalid-feedback" id="ip_error" style="display: none;">
                           Please enter a valid IP address.
                         </div>
@@ -359,10 +359,22 @@
                               <div class="col-md-6">
                                 <div class="form-group mb-3">
                                   <label for="location" class="control-label">Location <span class="required">*</span></label>
-                                  <select id="location" name="location" class="form-control" required>
-                                    <option value="">Select Location...</option>
-                                    <!-- Options will be populated dynamically -->
-                                  </select>
+                                  <div class="location-selector-wrapper">
+                                    <input type="text" 
+                                           id="location_search" 
+                                           class="form-control" 
+                                           placeholder="Search locations..." 
+                                           autocomplete="off">
+                                    <input type="hidden" 
+                                           id="location" 
+                                           name="location" 
+                                           required>
+                                    <div id="location_dropdown" class="location-dropdown" style="display: none;">
+                                      <div class="dropdown-content">
+                                        <!-- Filtered options will be populated here -->
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
 
                                 <div class="form-group mb-3">
@@ -425,7 +437,7 @@
                                 <div class="form-group mb-3">
                                   <label for="platform" class="control-label">Platform <span class="required">*</span></label>
                                   <select id="platform" name="platform" class="form-control" required>
-                                    <option value="">Select Platform...</option>
+                                    <option value="detect" selected>Auto-Detect Platform</option>
                                     <!-- Options will be populated dynamically -->
                                   </select>
                                 </div>
@@ -510,6 +522,66 @@
       #onboard_btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+      }
+
+      /* Location selector styles */
+      .location-selector-wrapper {
+        position: relative;
+      }
+
+      .location-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: #fff;
+        border: 1px solid #d1d3e2;
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        max-height: 300px;
+        overflow-y: auto;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+      }
+
+      .dropdown-content {
+        padding: 0;
+      }
+
+      .location-dropdown-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f3f4;
+        transition: background-color 0.15s ease-in-out;
+      }
+
+      .location-dropdown-item:hover {
+        background-color: #f8f9fc;
+      }
+
+      .location-dropdown-item:last-child {
+        border-bottom: none;
+        border-radius: 0 0 6px 6px;
+      }
+
+      .location-dropdown-item.selected {
+        background-color: #4e73df;
+        color: white;
+      }
+
+      .location-dropdown-item.no-results {
+        color: #858796;
+        font-style: italic;
+        cursor: default;
+      }
+
+      .location-dropdown-item.no-results:hover {
+        background-color: transparent;
+      }
+
+      #location_search.has-selection {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
       }
     </style>
 
@@ -607,15 +679,30 @@
             return false;
           }
           
-          if (ipRegex.test(ipValue)) {
-            console.log('IP validation passed');
+          // Split by comma and validate each IP address
+          const ipAddresses = ipValue.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+          
+          if (ipAddresses.length === 0) {
+            console.log('No valid IP addresses found');
+            ipInput.classList.remove('is-valid');
+            ipInput.classList.add('is-invalid');
+            ipError.style.display = 'block';
+            ipSuccess.style.display = 'none';
+            return false;
+          }
+          
+          // Validate each IP address
+          const allValid = ipAddresses.every(ip => ipRegex.test(ip));
+          
+          if (allValid) {
+            console.log('All IP addresses validation passed');
             ipInput.classList.remove('is-invalid');
             ipInput.classList.add('is-valid');
             ipError.style.display = 'none';
             ipSuccess.style.display = 'block';
             return true;
           } else {
-            console.log('IP validation failed');
+            console.log('IP validation failed for one or more addresses');
             ipInput.classList.remove('is-valid');
             ipInput.classList.add('is-invalid');
             ipError.style.display = 'block';
@@ -765,24 +852,49 @@
 
         populateSelect(selectId, data) {
           console.log(`Populating select '${selectId}' with`, data.length, 'items');
+          
+          // Special handling for location selector
+          if (selectId === 'location') {
+            this.initializeLocationSelector(data);
+            return;
+          }
+          
           const select = document.getElementById(selectId);
           if (!select) {
             console.error(`Select element with id '${selectId}' not found`);
             return;
           }
 
-          const defaultOption = select.querySelector('option[value=""]');
-          
-          // Clear existing options except the default
-          select.innerHTML = '';
-          if (defaultOption) {
-            select.appendChild(defaultOption.cloneNode(true));
+          // Special handling for platform select to preserve "detect" option
+          if (selectId === 'platform') {
+            const detectOption = select.querySelector('option[value="detect"]');
+            
+            // Clear existing options except the detect option
+            select.innerHTML = '';
+            if (detectOption) {
+              select.appendChild(detectOption.cloneNode(true));
+            } else {
+              // Add detect option if it doesn't exist
+              const detectOpt = document.createElement('option');
+              detectOpt.value = 'detect';
+              detectOpt.textContent = 'Auto-Detect Platform';
+              detectOpt.selected = true;
+              select.appendChild(detectOpt);
+            }
           } else {
-            // Add default option if it doesn't exist
-            const defaultOpt = document.createElement('option');
-            defaultOpt.value = '';
-            defaultOpt.textContent = `Select ${selectId.replace('_', ' ')}...`;
-            select.appendChild(defaultOpt);
+            const defaultOption = select.querySelector('option[value=""]');
+            
+            // Clear existing options except the default
+            select.innerHTML = '';
+            if (defaultOption) {
+              select.appendChild(defaultOption.cloneNode(true));
+            } else {
+              // Add default option if it doesn't exist
+              const defaultOpt = document.createElement('option');
+              defaultOpt.value = '';
+              defaultOpt.textContent = `Select ${selectId.replace('_', ' ')}...`;
+              select.appendChild(defaultOpt);
+            }
           }
 
           // Define default values for specific selects
@@ -839,14 +951,19 @@
           
           if (!this.validateIPAddress()) {
             console.log('IP validation failed');
-            this.showError('Please enter a valid IP address first.');
+            this.showError('Please enter valid IP address(es) first.');
             return;
           }
 
-          const ipAddress = document.getElementById('ip_address').value.trim();
+          const ipInput = document.getElementById('ip_address').value.trim();
+          const ipAddresses = ipInput.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+          const firstIP = ipAddresses[0];
           const validateBtn = document.getElementById('validate_ip_btn');
           
-          console.log('Checking IP:', ipAddress);
+          console.log('Checking first IP:', firstIP);
+          if (ipAddresses.length > 1) {
+            console.log('Multiple IPs detected, checking only the first one:', firstIP);
+          }
           console.log('Button element:', validateBtn);
           
           validateBtn.disabled = true;
@@ -854,9 +971,9 @@
 
           try {
             const token = localStorage.getItem('auth_token');
-            console.log('Validating IP address:', ipAddress);
+            console.log('Validating IP address:', firstIP);
             
-            const requestBody = { ip_address: ipAddress };
+            const requestBody = { ip_address: firstIP };
             console.log('Request body:', requestBody);
             
             // Convert full URL to relative path for Vite proxy
@@ -870,15 +987,20 @@
 
             console.log('Response data:', data);
 
+            let message = '';
+            if (ipAddresses.length > 1) {
+              message += `Note: Checking only first IP (${firstIP}) of ${ipAddresses.length} addresses. `;
+            }
+
             if (data.exists) {
               if (data.is_assigned_to_device && data.assigned_devices && data.assigned_devices.length > 0) {
                 const deviceNames = data.assigned_devices.map(device => device.name).join(', ');
-                this.showSuccess(`✅ IP address '${ipAddress}' found in Nautobot and assigned to device(s): ${deviceNames}`);
+                this.showSuccess(`✅ ${message}IP address '${firstIP}' found in Nautobot and assigned to device(s): ${deviceNames}`);
               } else {
-                this.showWarning(`⚠️ IP address '${ipAddress}' found in Nautobot but not assigned to any device.`);
+                this.showWarning(`⚠️ ${message}IP address '${firstIP}' found in Nautobot but not assigned to any device.`);
               }
             } else {
-              this.showInfo(`ℹ️ IP address '${ipAddress}' not found in Nautobot. Ready for onboarding.`);
+              this.showInfo(`ℹ️ ${message}IP address '${firstIP}' not found in Nautobot. Ready for onboarding.`);
             }
 
           } catch (error) {
@@ -937,8 +1059,22 @@
             if (!field.value.trim()) {
               field.classList.add('is-invalid');
               isValid = false;
+              
+              // Special handling for location selector
+              if (field.id === 'location') {
+                const searchInput = document.getElementById('location_search');
+                searchInput.classList.add('is-invalid');
+                searchInput.classList.remove('is-valid');
+              }
             } else {
               field.classList.remove('is-invalid');
+              
+              // Special handling for location selector
+              if (field.id === 'location') {
+                const searchInput = document.getElementById('location_search');
+                searchInput.classList.remove('is-invalid');
+                searchInput.classList.add('is-valid');
+              }
             }
           });
 
@@ -974,6 +1110,18 @@
           
           form.reset();
           ipInput.value = '';
+          
+          // Reset location selector
+          const locationSearch = document.getElementById('location_search');
+          const locationHidden = document.getElementById('location');
+          if (locationSearch) {
+            locationSearch.value = '';
+            locationSearch.classList.remove('has-selection', 'is-valid', 'is-invalid');
+          }
+          if (locationHidden) {
+            locationHidden.value = '';
+          }
+          this.hideLocationDropdown();
           
           // Reset validation states
           document.querySelectorAll('.is-valid, .is-invalid').forEach(el => {
@@ -1026,6 +1174,109 @@
           const statusDiv = document.getElementById('status_messages');
           statusDiv.style.display = 'none';
           statusDiv.innerHTML = '';
+        }
+
+        initializeLocationSelector(locations) {
+          console.log('Initializing location selector with', locations.length, 'locations');
+          
+          // Store locations data for filtering
+          this.locationsData = locations;
+          
+          const searchInput = document.getElementById('location_search');
+          const hiddenInput = document.getElementById('location');
+          const dropdown = document.getElementById('location_dropdown');
+          
+          // Initialize event listeners
+          searchInput.addEventListener('input', (e) => {
+            this.filterLocations(e.target.value);
+          });
+          
+          searchInput.addEventListener('focus', () => {
+            this.showLocationDropdown();
+          });
+          
+          // Hide dropdown when clicking outside
+          document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+              this.hideLocationDropdown();
+            }
+          });
+          
+          // Show all locations initially
+          this.filterLocations('');
+        }
+
+        filterLocations(searchTerm) {
+          const dropdown = document.getElementById('location_dropdown');
+          const dropdownContent = dropdown.querySelector('.dropdown-content');
+          
+          if (!this.locationsData) {
+            console.error('No locations data available');
+            return;
+          }
+          
+          const searchLower = searchTerm.toLowerCase();
+          const filteredLocations = this.locationsData.filter(location => {
+            const locationName = (location.name || location.display || location.label || location).toLowerCase();
+            return locationName.includes(searchLower);
+          });
+          
+          // Clear existing content
+          dropdownContent.innerHTML = '';
+          
+          if (filteredLocations.length === 0) {
+            const noResults = document.createElement('div');
+            noResults.className = 'location-dropdown-item no-results';
+            noResults.textContent = 'No locations found';
+            dropdownContent.appendChild(noResults);
+          } else {
+            filteredLocations.forEach(location => {
+              const item = document.createElement('div');
+              item.className = 'location-dropdown-item';
+              item.textContent = location.name || location.display || location.label || location;
+              item.dataset.value = location.id || location.value || location;
+              
+              item.addEventListener('click', () => {
+                this.selectLocation(location);
+              });
+              
+              dropdownContent.appendChild(item);
+            });
+          }
+          
+          // Show dropdown if we have search term or focus
+          if (searchTerm || document.activeElement === document.getElementById('location_search')) {
+            this.showLocationDropdown();
+          }
+        }
+
+        selectLocation(location) {
+          const searchInput = document.getElementById('location_search');
+          const hiddenInput = document.getElementById('location');
+          
+          const locationName = location.name || location.display || location.label || location;
+          const locationValue = location.id || location.value || location;
+          
+          searchInput.value = locationName;
+          searchInput.classList.add('has-selection');
+          hiddenInput.value = locationValue;
+          
+          this.hideLocationDropdown();
+          
+          // Trigger validation update
+          this.updateOnboardButton();
+          
+          console.log(`Selected location: ${locationName} (${locationValue})`);
+        }
+
+        showLocationDropdown() {
+          const dropdown = document.getElementById('location_dropdown');
+          dropdown.style.display = 'block';
+        }
+
+        hideLocationDropdown() {
+          const dropdown = document.getElementById('location_dropdown');
+          dropdown.style.display = 'none';
         }
       }
 
