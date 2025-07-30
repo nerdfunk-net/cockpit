@@ -616,7 +616,37 @@ async def get_namespaces(current_user: str = Depends(verify_token)):
 
 @router.get("/stats")
 async def get_nautobot_stats(current_user: str = Depends(verify_token)):
-    """Get Nautobot statistics."""
+    """Get Nautobot statistics with 10-minute caching."""
+    from datetime import datetime, timezone, timedelta
+    import json
+    import os
+    
+    # Cache configuration
+    cache_duration = timedelta(minutes=10)
+    cache_dir = "data/cache"
+    cache_file = os.path.join(cache_dir, "nautobot_stats.json")
+    
+    # Ensure cache directory exists
+    os.makedirs(cache_dir, exist_ok=True)
+    
+    # Check if cache exists and is still valid
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, 'r') as f:
+                cache_data = json.load(f)
+            
+            cache_timestamp = datetime.fromisoformat(cache_data.get('cache_timestamp', ''))
+            if datetime.now(timezone.utc) - cache_timestamp < cache_duration:
+                logger.info("Returning cached Nautobot stats")
+                # Remove cache metadata before returning
+                stats = cache_data.copy()
+                del stats['cache_timestamp']
+                return stats
+        except (json.JSONDecodeError, ValueError, KeyError) as e:
+            logger.warning(f"Invalid cache file, will refresh: {e}")
+    
+    logger.info("Cache expired or missing, fetching fresh Nautobot stats")
+    
     try:
         # Get device counts by status
         devices_result = await nautobot_service.rest_request("dcim/devices/")
@@ -651,8 +681,20 @@ async def get_nautobot_stats(current_user: str = Depends(verify_token)):
             "total_device_types": device_types_result.get("count", 0)
         }
         
+        # Save to cache with timestamp
+        cache_data = stats.copy()
+        cache_data['cache_timestamp'] = datetime.now(timezone.utc).isoformat()
+        
+        try:
+            with open(cache_file, 'w') as f:
+                json.dump(cache_data, f)
+            logger.info("Nautobot stats cached successfully")
+        except Exception as cache_error:
+            logger.warning(f"Failed to cache stats: {cache_error}")
+        
         return stats
     except Exception as e:
+        logger.error(f"Error fetching Nautobot stats: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch statistics: {str(e)}"
