@@ -558,14 +558,24 @@ async def sync_network_data(request: SyncNetworkDataRequest, current_user: str =
 # Additional endpoints for various Nautobot resources
 @router.get("/locations")
 async def get_locations(current_user: str = Depends(verify_token)):
-    """Get list of locations from Nautobot."""
+    """Get list of locations from Nautobot with parent and children relationships."""
     try:
         query = """
-        query {
+        query locations {
           locations {
             id
             name
             description
+            parent {
+              id
+              name
+              description
+            }
+            children {
+              id
+              name
+              description
+            }
           }
         }
         """

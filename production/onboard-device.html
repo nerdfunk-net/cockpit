@@ -278,9 +278,9 @@
               <div class="title_right">
                 <div class="col-md-5 col-sm-5 form-group float-end top_search">
                   <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search for devices...">
+                    <input type="text" id="device_search_input" class="form-control" placeholder="Search for devices...">
                     <span class="input-group-btn">
-                      <button class="btn btn-secondary" type="button">Go!</button>
+                      <button class="btn btn-secondary" type="button" id="device_search_btn">Go!</button>
                     </span>
                   </div>
                 </div>
@@ -500,6 +500,45 @@
       .alert {
         border-radius: 6px;
         margin-bottom: 1rem;
+        position: relative;
+        padding-right: 35px;
+      }
+      
+      .alert ul {
+        margin-bottom: 0;
+      }
+      
+      .alert li {
+        margin-bottom: 5px;
+      }
+      
+      .alert-close {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        font-weight: bold;
+        color: inherit;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.15s ease-in-out;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .alert-close:hover {
+        opacity: 1;
+      }
+      
+      .alert-close:focus {
+        outline: none;
+        opacity: 1;
       }
 
       .form-group label {
@@ -545,6 +584,8 @@
         cursor: pointer;
         border-bottom: 1px solid #f3f3f4;
         transition: background-color 0.15s ease-in-out;
+        line-height: 1.4;
+        word-wrap: break-word;
       }
 
       .location-dropdown-item:hover {
@@ -612,6 +653,14 @@
           document.getElementById('onboard_form').addEventListener('change', () => this.updateOnboardButton());
           document.getElementById('onboard_btn').addEventListener('click', () => this.handleOnboard());
           document.getElementById('validate_ip_btn').addEventListener('click', () => this.checkIPInNautobot());
+          
+          // Device search functionality
+          document.getElementById('device_search_btn').addEventListener('click', () => this.searchDeviceInNautobot());
+          document.getElementById('device_search_input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              this.searchDeviceInNautobot();
+            }
+          });
 
           // DEBUG: Set auth token for testing if not present
           if (!localStorage.getItem('auth_token')) {
@@ -1004,6 +1053,70 @@
           }
         }
 
+        async searchDeviceInNautobot() {
+          console.log('=== DEVICE SEARCH INITIATED ===');
+          
+          const searchInput = document.getElementById('device_search_input');
+          const searchBtn = document.getElementById('device_search_btn');
+          const deviceName = searchInput.value.trim();
+          
+          if (!deviceName) {
+            this.showError('Please enter a device name to search.');
+            return;
+          }
+          
+          console.log('Searching for device:', deviceName);
+          
+          // Show loading state
+          searchBtn.disabled = true;
+          searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+          
+          try {
+            // Use the devices endpoint with name filter
+            const relativePath = '/api/nautobot/devices';
+            const queryParams = new URLSearchParams({
+              filter_type: 'name',
+              filter_value: deviceName,
+              limit: 10
+            });
+            
+            const requestUrl = `${relativePath}?${queryParams.toString()}`;
+            console.log('Device search request URL:', requestUrl);
+            
+            const data = await window.authManager.apiRequest(requestUrl);
+            console.log('Device search response:', data);
+            
+            if (data.devices && data.devices.length > 0) {
+              // Found devices
+              const deviceList = data.devices.map(device => {
+                const location = device.location ? ` (${device.location.name})` : '';
+                const role = device.role ? ` [${device.role.name}]` : '';
+                const ip = device.primary_ip4 ? ` - ${device.primary_ip4.address}` : '';
+                const status = device.status ? ` (${device.status.name})` : '';
+                return `<strong>${device.name}</strong>${role}${location}${ip}${status}`;
+              });
+              
+              if (data.devices.length === 1) {
+                this.showSuccess(`✅ Device found in Nautobot: ${deviceList[0]}`);
+              } else {
+                const deviceListHtml = deviceList.map(device => `<li style="margin-bottom: 8px;">${device}</li>`).join('');
+                this.showSuccess(`✅ Found ${data.devices.length} device(s) matching "${deviceName}":<ul style="margin: 10px 0; padding-left: 20px; list-style-type: disc;">${deviceListHtml}</ul>`);
+              }
+            } else {
+              // No devices found
+              this.showInfo(`ℹ️ No devices found in Nautobot with name containing "${deviceName}". This name is available for onboarding.`);
+            }
+            
+          } catch (error) {
+            console.error('Error searching for device:', error);
+            this.showError(`❌ Error searching for device: ${error.message}`);
+          } finally {
+            searchBtn.disabled = false;
+            searchBtn.innerHTML = 'Go!';
+            console.log('=== DEVICE SEARCH COMPLETED ===');
+          }
+        }
+
         async handleOnboard() {
           if (!this.validateForm()) return;
 
@@ -1127,7 +1240,45 @@
           document.getElementById('port').value = '22';
           document.getElementById('timeout').value = '30';
           
+          // Restore default selections for dropdowns
+          this.restoreDefaultSelections();
+          
           this.hideStatusMessages();
+        }
+
+        restoreDefaultSelections() {
+          // Define default values for specific selects
+          const defaultValues = {
+            'namespace': 'Global',
+            'device_role': 'network',
+            'device_status': 'Active',
+            'interface_status': 'Active',
+            'ip_address_status': 'Active',
+            'platform': 'detect'
+          };
+
+          // Restore default selections
+          Object.keys(defaultValues).forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (select) {
+              const defaultValue = defaultValues[selectId];
+              
+              // For platform, select by value
+              if (selectId === 'platform') {
+                select.value = defaultValue;
+              } else {
+                // For other selects, find option by text content
+                const options = Array.from(select.options);
+                const defaultOption = options.find(option => option.textContent === defaultValue);
+                if (defaultOption) {
+                  select.value = defaultOption.value;
+                  console.log(`Restored default value for '${selectId}': ${defaultValue}`);
+                } else {
+                  console.warn(`Default value '${defaultValue}' not found for select '${selectId}'`);
+                }
+              }
+            }
+          });
         }
 
         showError(message) {
@@ -1148,30 +1299,99 @@
 
         showMessage(message, type) {
           const statusDiv = document.getElementById('status_messages');
+          
+          // Clear any existing timeout to prevent auto-hiding new messages
+          if (this.messageTimeout) {
+            clearTimeout(this.messageTimeout);
+            this.messageTimeout = null;
+          }
+          
+          // Add close button for success messages
+          const closeButton = type === 'success' ? 
+            '<button type="button" class="btn-close alert-close" aria-label="Close" onclick="window.onboardDevice.hideStatusMessages()">×</button>' : 
+            '';
+          
           statusDiv.innerHTML = `
             <div class="alert alert-${type}" role="alert">
               ${message}
+              ${closeButton}
             </div>
           `;
           statusDiv.style.display = 'block';
           
-          // Auto-hide info messages after 5 seconds
+          // Only auto-hide info messages after 5 seconds, keep success messages until manually closed
           if (type === 'info') {
-            setTimeout(() => this.hideStatusMessages(), 5000);
+            this.messageTimeout = setTimeout(() => this.hideStatusMessages(), 5000);
           }
         }
 
         hideStatusMessages() {
+          // Clear any existing timeout
+          if (this.messageTimeout) {
+            clearTimeout(this.messageTimeout);
+            this.messageTimeout = null;
+          }
+          
           const statusDiv = document.getElementById('status_messages');
           statusDiv.style.display = 'none';
           statusDiv.innerHTML = '';
         }
 
+        buildLocationHierarchy() {
+          console.log('Building location hierarchy...');
+          
+          // Create a map for quick location lookup by ID
+          const locationMap = new Map();
+          this.locationsData.forEach(location => {
+            locationMap.set(location.id, location);
+          });
+          
+          // Build hierarchical path for each location
+          this.locationsData.forEach(location => {
+            location.hierarchicalPath = this.buildLocationPath(location, locationMap);
+            location.displayName = location.hierarchicalPath;
+          });
+          
+          // Sort locations by their hierarchical path
+          this.locationsData.sort((a, b) => {
+            return a.hierarchicalPath.localeCompare(b.hierarchicalPath);
+          });
+          
+          console.log('Location hierarchy built and sorted:', this.locationsData.map(l => l.hierarchicalPath));
+        }
+
+        buildLocationPath(location, locationMap) {
+          const path = [];
+          let current = location;
+          
+          // Traverse up the hierarchy to build the full path
+          while (current) {
+            path.unshift(current.name); // Add to beginning of array
+            
+            // Move to parent if it exists
+            if (current.parent && current.parent.id) {
+              current = locationMap.get(current.parent.id);
+              
+              // Prevent infinite loops in case of circular references
+              if (path.includes(current?.name)) {
+                console.warn('Circular reference detected in location hierarchy for:', location.name);
+                break;
+              }
+            } else {
+              current = null; // No parent, we've reached the root
+            }
+          }
+          
+          // Join path with arrows, or return just the name if it's a root location
+          return path.length > 1 ? path.join(' → ') : path[0];
+        }
+
         initializeLocationSelector(locations) {
           console.log('Initializing location selector with', locations.length, 'locations');
           
-          // Store locations data for filtering
+          // Store locations data and build hierarchical paths
           this.locationsData = locations;
+          this.buildLocationHierarchy();
           
           const searchInput = document.getElementById('location_search');
           const hiddenInput = document.getElementById('location');
@@ -1208,8 +1428,9 @@
           
           const searchLower = searchTerm.toLowerCase();
           const filteredLocations = this.locationsData.filter(location => {
-            const locationName = (location.name || location.display || location.label || location).toLowerCase();
-            return locationName.includes(searchLower);
+            // Search on the full hierarchical path
+            const hierarchicalPath = location.hierarchicalPath.toLowerCase();
+            return hierarchicalPath.includes(searchLower);
           });
           
           // Clear existing content
@@ -1224,7 +1445,8 @@
             filteredLocations.forEach(location => {
               const item = document.createElement('div');
               item.className = 'location-dropdown-item';
-              item.textContent = location.name || location.display || location.label || location;
+              // Display the hierarchical path
+              item.textContent = location.hierarchicalPath;
               item.dataset.value = location.id || location.value || location;
               
               item.addEventListener('click', () => {
@@ -1245,10 +1467,11 @@
           const searchInput = document.getElementById('location_search');
           const hiddenInput = document.getElementById('location');
           
-          const locationName = location.name || location.display || location.label || location;
+          // Use the hierarchical path for display, but store the actual location ID
+          const locationDisplayName = location.hierarchicalPath;
           const locationValue = location.id || location.value || location;
           
-          searchInput.value = locationName;
+          searchInput.value = locationDisplayName;
           searchInput.classList.add('has-selection');
           hiddenInput.value = locationValue;
           
@@ -1257,7 +1480,7 @@
           // Trigger validation update
           this.updateOnboardButton();
           
-          console.log(`Selected location: ${locationName} (${locationValue})`);
+          console.log(`Selected location: ${locationDisplayName} (${locationValue})`);
         }
 
         showLocationDropdown() {
