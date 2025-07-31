@@ -396,7 +396,7 @@
                             <th class="column-title">
                               Device Name
                               <div class="header-filter mt-1">
-                                <input type="text" class="form-control form-control-sm" id="device-name-filter" placeholder="Filter by name...">
+                                <input type="text" class="form-control form-control-sm" id="device-name-filter" placeholder="Type 3+ chars for backend search...">
                               </div>
                             </th>
                             <th class="column-title">IP Address</th>
@@ -556,12 +556,23 @@
         let allDevices = [];
         let filteredDevices = [];
         let currentPage = 0;
-        let pageSize = 10; // Set to 10 rows as requested
+        let pageSize = 50; // Default page size for backend pagination
         let totalPages = 0;
         let currentSearchTerm = '';
         let currentDateFilter = '';
         let currentDateComparison = '';
         let isLoading = false;
+        
+        // Pagination state for backend API
+        let paginationState = {
+          isBackendPaginated: false,
+          hasMore: false,
+          totalCount: 0,
+          currentLimit: null,
+          currentOffset: 0,
+          filterType: null,
+          filterValue: null
+        };
         
         // Header filter variables
         let currentRoleFilter = '';
@@ -582,10 +593,21 @@
           statuses: new Set()
         };
         
-        // Load devices from Nautobot using GraphQL
-        async function loadDevices() {
+        // Load devices from Nautobot using REST API with pagination
+        async function loadDevices(deviceNameFilter = '', useBackendPagination = false, limit = null, offset = 0) {
           try {
-            console.log(`Loading all devices from Nautobot...`);
+            if (isLoading) {
+              console.log('Already loading devices, skipping...');
+              return;
+            }
+            
+            isLoading = true;
+            console.log(`Loading devices from Nautobot...`, {
+              deviceNameFilter,
+              useBackendPagination,
+              limit,
+              offset
+            });
             
             if (!window.authManager) {
               console.error('AuthManager not available');
@@ -593,69 +615,77 @@
               return;
             }
 
-            const query = `
-              query all_devices {
-                devices {
-                  id
-                  name
-                  role {
-                    name
-                  }
-                  location {
-                    name
-                  }
-                  primary_ip4 {
-                    address
-                  }
-                  status {
-                    name
-                  }
-                  device_type {
-                    model
-                  }
-                  cf_last_backup
-                }
+            // Build API URL with parameters
+            let apiUrl = '/api/nautobot/devices';
+            const params = new URLSearchParams();
+            
+            if (useBackendPagination && limit) {
+              params.append('limit', limit);
+              params.append('offset', offset);
+            }
+            
+            if (deviceNameFilter) {
+              params.append('filter_type', 'name');
+              params.append('filter_value', deviceNameFilter);
+            }
+            
+            if (params.toString()) {
+              apiUrl += '?' + params.toString();
+            }
+
+            console.log('API URL:', apiUrl);
+            updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Loading devices...`, 'info');
+
+            const response = await window.authManager.apiRequest(apiUrl);
+            console.log('API response:', response);
+
+            if (response && response.devices) {
+              // Update pagination state
+              paginationState = {
+                isBackendPaginated: response.is_paginated || false,
+                hasMore: response.has_more || false,
+                totalCount: response.count || 0,
+                currentLimit: response.current_limit,
+                currentOffset: response.current_offset || 0,
+                filterType: deviceNameFilter ? 'name' : null,
+                filterValue: deviceNameFilter || null
+              };
+              
+              if (useBackendPagination) {
+                // Backend pagination mode - display current page of devices
+                allDevices = response.devices;
+                console.log(`Loaded ${allDevices.length} devices (page ${Math.floor(offset / limit) + 1})`);
+                
+                // For backend pagination, we work with the current page data
+                filteredDevices = allDevices;
+                currentPage = 0; // Reset client-side page since we're using backend pagination
+                
+                renderDevicesTable(filteredDevices);
+                renderBackendPagination();
+                
+                updateStatusPanel(`<i class="fas fa-check-circle"></i> Loaded ${allDevices.length} devices (${paginationState.totalCount} total).`, 'success');
+              } else {
+                // Full data load mode - load all devices for client-side filtering
+                allDevices = response.devices;
+                console.log(`Loaded ${allDevices.length} devices from Nautobot`);
+                
+                // Extract filter options from loaded devices
+                extractFilterOptions(allDevices);
+                populateHeaderFilters();
+                
+                currentPage = 0; // Reset to first page
+                renderDevicesTable(allDevices);
+                updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
               }
-            `;
-
-            const response = await window.authManager.apiRequest('/api/graphql', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                query: query
-              })
-            });
-
-            console.log('GraphQL response:', response);
-
-            if (response && response.data && response.data.devices) {
-              allDevices = response.data.devices;
-              console.log(`Loaded ${allDevices.length} devices from Nautobot`);
-              
-              // Extract filter options from loaded devices
-              extractFilterOptions(allDevices);
-              populateHeaderFilters();
-              
-              currentPage = 0; // Reset to first page
-              renderDevicesTable(allDevices);
-              updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
-            } else if (response && response.errors) {
-              console.error('GraphQL errors:', response.errors);
-              showError('GraphQL errors: ' + response.errors.map(e => e.message).join(', '));
             } else {
-              console.error('Failed to load devices - full response:', response);
-              showError('Failed to load devices from Nautobot: No data returned');
+              console.error('Failed to load devices - invalid response:', response);
+              showError('Failed to load devices from Nautobot: Invalid response format');
             }
           } catch (error) {
             console.error('Error loading devices:', error);
-            console.error('Error details:', {
-              message: error.message,
-              stack: error.stack,
-              name: error.name
-            });
             showError('Error loading devices: ' + error.message);
+          } finally {
+            isLoading = false;
           }
         }
 
@@ -750,16 +780,29 @@
           const deviceTypeFilter = document.getElementById('device-type-filter');
           const statusFilter = document.getElementById('status-filter');
           
-          // Device name filter with debouncing
+          // Device name filter with debouncing and backend search
           if (deviceNameFilter) {
             let searchTimeout;
             deviceNameFilter.addEventListener('input', () => {
               clearTimeout(searchTimeout);
               searchTimeout = setTimeout(() => {
-                currentDeviceNameFilter = deviceNameFilter.value.trim();
-                applyAllFilters();
+                const deviceName = deviceNameFilter.value.trim();
+                currentDeviceNameFilter = deviceName;
+                
+                if (deviceName.length >= 3) {
+                  // Use backend pagination for device name search (3+ characters)
+                  console.log('Triggering backend search for:', deviceName);
+                  loadDevices(deviceName, true, pageSize, 0);
+                } else if (deviceName.length === 0) {
+                  // Clear filter - load all devices in full mode
+                  console.log('Clearing device name filter, loading all devices');
+                  loadDevices('', false);
+                } else {
+                  // Less than 3 characters - apply client-side filtering only
+                  applyAllFilters();
+                }
                 updateFilterIndicators();
-              }, 300); // Wait 300ms after user stops typing
+              }, 500); // Wait 500ms after user stops typing for backend search
             });
           }
           
@@ -1005,6 +1048,13 @@
             header.setAttribute('data-order', 'none');
           });
           
+          // Reset page size selectors to default value (50)
+          pageSize = 50;
+          const pageSizeSelector = document.getElementById('page-size-selector');
+          const backendPageSizeSelector = document.getElementById('backend-page-size-selector');
+          if (pageSizeSelector) pageSizeSelector.value = '50';
+          if (backendPageSizeSelector) backendPageSizeSelector.value = '50';
+          
           updateFilterIndicators();
           renderDevicesTable(allDevices);
           updateStatusPanel(`<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`, 'success');
@@ -1149,77 +1199,108 @@
             return;
           }
           
-          if (totalItems === 0 || totalPages <= 1) {
-            paginationContainer.innerHTML = '';
-            return;
-          }
-          
-          const startItem = (currentPage * pageSize) + 1;
+          // Always show pagination container with page size selector, even for single page
+          const startItem = totalItems > 0 ? (currentPage * pageSize) + 1 : 0;
           const endItem = Math.min((currentPage + 1) * pageSize, totalItems);
+          const showPaginationControls = totalItems > 0 && totalPages > 1;
           
           let paginationHtml = `
             <div class="row mt-3">
               <div class="col-md-6">
                 <div class="dataTables_info">
-                  Showing ${startItem} to ${endItem} of ${totalItems} entries
+                  ${totalItems > 0 ? `Showing ${startItem} to ${endItem} of ${totalItems} entries` : 'No entries to display'}
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="dataTables_paginate paging_simple_numbers" style="text-align: right;">
-                  <ul class="pagination">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="me-3">
+                    <label for="page-size-selector" class="form-label me-2 mb-0">Show:</label>
+                    <select class="form-select form-select-sm d-inline-block" id="page-size-selector" style="width: auto;">
+                      <option value="10" ${pageSize === 10 ? 'selected' : ''}>10</option>
+                      <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
+                      <option value="100" ${pageSize === 100 ? 'selected' : ''}>100</option>
+                      <option value="200" ${pageSize === 200 ? 'selected' : ''}>200</option>
+                      <option value="500" ${pageSize === 500 ? 'selected' : ''}>500</option>
+                    </select>
+                    <span class="ms-1">entries</span>
+                  </div>
           `;
+          
+          // Only show pagination controls if there are multiple pages
+          if (showPaginationControls) {
+            paginationHtml += `
+                  <div class="dataTables_paginate paging_simple_numbers">
+                    <ul class="pagination mb-0">
+            `;
+          } else {
+            // Show grayed out pagination controls for visual consistency
+            paginationHtml += `
+                  <div class="dataTables_paginate paging_simple_numbers" style="opacity: 0.5;">
+                    <ul class="pagination mb-0">
+            `;
+          }
           
           // First button
           paginationHtml += `
-            <li class="paginate_button page-item ${currentPage === 0 ? 'disabled' : ''}" id="backup-first">
+            <li class="paginate_button page-item ${!showPaginationControls || currentPage === 0 ? 'disabled' : ''}" id="backup-first">
               <a href="#" class="page-link">First</a>
             </li>
           `;
           
           // Previous button  
           paginationHtml += `
-            <li class="paginate_button page-item previous ${currentPage === 0 ? 'disabled' : ''}" id="backup-previous">
+            <li class="paginate_button page-item previous ${!showPaginationControls || currentPage === 0 ? 'disabled' : ''}" id="backup-previous">
               <a href="#" class="page-link">Previous</a>
             </li>
           `;
           
           // Page numbers (show max 5 pages around current page)
-          let startPage = Math.max(0, currentPage - 2);
-          let endPage = Math.min(totalPages - 1, currentPage + 2);
-          
-          // Adjust range if we're near the beginning or end
-          if (endPage - startPage < 4) {
-            if (startPage === 0) {
-              endPage = Math.min(totalPages - 1, startPage + 4);
-            } else if (endPage === totalPages - 1) {
-              startPage = Math.max(0, endPage - 4);
+          if (showPaginationControls) {
+            let startPage = Math.max(0, currentPage - 2);
+            let endPage = Math.min(totalPages - 1, currentPage + 2);
+            
+            // Adjust range if we're near the beginning or end
+            if (endPage - startPage < 4) {
+              if (startPage === 0) {
+                endPage = Math.min(totalPages - 1, startPage + 4);
+              } else if (endPage === totalPages - 1) {
+                startPage = Math.max(0, endPage - 4);
+              }
             }
-          }
-          
-          for (let i = startPage; i <= endPage; i++) {
+            
+            for (let i = startPage; i <= endPage; i++) {
+              paginationHtml += `
+                <li class="paginate_button page-item ${i === currentPage ? 'active' : ''}" data-page="${i}">
+                  <a href="#" class="page-link">${i + 1}</a>
+                </li>
+              `;
+            }
+          } else {
+            // Show single page number when there's only one page
             paginationHtml += `
-              <li class="paginate_button page-item ${i === currentPage ? 'active' : ''}" data-page="${i}">
-                <a href="#" class="page-link">${i + 1}</a>
+              <li class="paginate_button page-item active disabled">
+                <a href="#" class="page-link">1</a>
               </li>
             `;
           }
           
           // Next button
           paginationHtml += `
-            <li class="paginate_button page-item next ${currentPage >= totalPages - 1 ? 'disabled' : ''}" id="backup-next">
+            <li class="paginate_button page-item next ${!showPaginationControls || currentPage >= totalPages - 1 ? 'disabled' : ''}" id="backup-next">
               <a href="#" class="page-link">Next</a>
             </li>
           `;
           
           // Last button
           paginationHtml += `
-            <li class="paginate_button page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}" id="backup-last">
+            <li class="paginate_button page-item ${!showPaginationControls || currentPage >= totalPages - 1 ? 'disabled' : ''}" id="backup-last">
               <a href="#" class="page-link">Last</a>
             </li>
           `;
           
           paginationHtml += `
-                  </ul>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1250,6 +1331,175 @@
             // Re-render table with new page
             renderDevicesTable(filteredDevices);
           });
+          
+          // Add event listener for page size selector
+          const pageSizeSelector = document.getElementById('page-size-selector');
+          if (pageSizeSelector) {
+            pageSizeSelector.addEventListener('change', function() {
+              const newPageSize = parseInt(this.value);
+              console.log(`Changing page size from ${pageSize} to ${newPageSize}`);
+              
+              // Calculate the current first item index
+              const currentFirstItem = currentPage * pageSize;
+              
+              // Update page size
+              pageSize = newPageSize;
+              
+              // Recalculate current page to maintain approximate position
+              currentPage = Math.floor(currentFirstItem / pageSize);
+              
+              // Re-render table with new page size
+              renderDevicesTable(filteredDevices);
+            });
+          }
+        }
+
+        // Render pagination controls for backend pagination
+        function renderBackendPagination() {
+          const paginationContainer = document.getElementById('backup-pagination');
+          
+          if (!paginationContainer) {
+            console.error('Pagination container not found');
+            return;
+          }
+          
+          if (!paginationState.isBackendPaginated) {
+            // Fall back to regular pagination
+            renderBackupPagination(filteredDevices.length, Math.ceil(filteredDevices.length / pageSize));
+            return;
+          }
+          
+          const currentPageNum = Math.floor(paginationState.currentOffset / pageSize);
+          const totalPages = Math.ceil(paginationState.totalCount / pageSize);
+          const showPaginationControls = totalPages > 1;
+          
+          const startItem = paginationState.currentOffset + 1;
+          const endItem = Math.min(paginationState.currentOffset + pageSize, paginationState.totalCount);
+          
+          let paginationHtml = `
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <div class="dataTables_info">
+                  Showing ${startItem} to ${endItem} of ${paginationState.totalCount} entries
+                  ${paginationState.filterValue ? `(filtered by: ${paginationState.filterValue})` : ''}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="me-3">
+                    <label for="backend-page-size-selector" class="form-label me-2 mb-0">Show:</label>
+                    <select class="form-select form-select-sm d-inline-block" id="backend-page-size-selector" style="width: auto;">
+                      <option value="10" ${pageSize === 10 ? 'selected' : ''}>10</option>
+                      <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
+                      <option value="100" ${pageSize === 100 ? 'selected' : ''}>100</option>
+                      <option value="200" ${pageSize === 200 ? 'selected' : ''}>200</option>
+                      <option value="500" ${pageSize === 500 ? 'selected' : ''}>500</option>
+                    </select>
+                    <span class="ms-1">entries</span>
+                  </div>
+                  ${showPaginationControls ? 
+                    '<div class="dataTables_paginate paging_simple_numbers">' : 
+                    '<div class="dataTables_paginate paging_simple_numbers" style="opacity: 0.5;">'}
+                    <ul class="pagination mb-0">
+          `;
+          
+          // Previous button  
+          paginationHtml += `
+            <li class="paginate_button page-item previous ${!showPaginationControls || currentPageNum === 0 ? 'disabled' : ''}" id="backend-previous">
+              <a href="#" class="page-link">Previous</a>
+            </li>
+          `;
+          
+          // Page numbers (show max 5 pages around current page)
+          if (showPaginationControls) {
+            let startPage = Math.max(0, currentPageNum - 2);
+            let endPage = Math.min(totalPages - 1, currentPageNum + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+              paginationHtml += `
+                <li class="paginate_button page-item ${i === currentPageNum ? 'active' : ''}" data-backend-page="${i}">
+                  <a href="#" class="page-link">${i + 1}</a>
+                </li>
+              `;
+            }
+          } else {
+            // Show single page number when there's only one page
+            paginationHtml += `
+              <li class="paginate_button page-item active disabled">
+                <a href="#" class="page-link">1</a>
+              </li>
+            `;
+          }
+          
+          // Next button
+          paginationHtml += `
+            <li class="paginate_button page-item next ${!showPaginationControls || !paginationState.hasMore ? 'disabled' : ''}" id="backend-next">
+              <a href="#" class="page-link">Next</a>
+            </li>
+          `;
+          
+          paginationHtml += `
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Add load all button for switching to full data mode
+          paginationHtml += `
+            <div class="row mt-2">
+              <div class="col-md-12 text-center">
+                <button class="btn btn-outline-secondary btn-sm" id="load-all-devices-btn">
+                  <i class="fas fa-download"></i> Load All Devices (Full Data)
+                </button>
+                <small class="text-muted d-block mt-1">
+                  Switch to full data mode for complete filtering and sorting
+                </small>
+              </div>
+            </div>
+          `;
+          
+          paginationContainer.innerHTML = paginationHtml;
+          
+          // Add event listeners for backend pagination controls
+          paginationContainer.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = e.target.closest('li, button');
+            if (!target || target.classList.contains('disabled') || target.classList.contains('active')) {
+              return;
+            }
+            
+            if (target.id === 'backend-previous') {
+              const newOffset = Math.max(0, paginationState.currentOffset - pageSize);
+              loadDevices(paginationState.filterValue || '', true, pageSize, newOffset);
+            } else if (target.id === 'backend-next') {
+              const newOffset = paginationState.currentOffset + pageSize;
+              loadDevices(paginationState.filterValue || '', true, pageSize, newOffset);
+            } else if (target.hasAttribute('data-backend-page')) {
+              const pageNum = parseInt(target.getAttribute('data-backend-page'));
+              const newOffset = pageNum * pageSize;
+              loadDevices(paginationState.filterValue || '', true, pageSize, newOffset);
+            } else if (target.id === 'load-all-devices-btn') {
+              // Switch to full data mode
+              loadDevices('', false);
+            }
+          });
+          
+          // Add event listener for backend page size selector
+          const backendPageSizeSelector = document.getElementById('backend-page-size-selector');
+          if (backendPageSizeSelector) {
+            backendPageSizeSelector.addEventListener('change', function() {
+              const newPageSize = parseInt(this.value);
+              console.log(`Changing backend page size from ${pageSize} to ${newPageSize}`);
+              
+              // Update page size
+              pageSize = newPageSize;
+              
+              // Reload current page with new page size (reset to first page)
+              loadDevices(paginationState.filterValue || '', true, pageSize, 0);
+            });
+          }
         }
 
         // Reset pagination and filters

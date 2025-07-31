@@ -73,13 +73,20 @@ async def test_current_nautobot_connection(current_user: str = Depends(verify_to
 
 @router.get("/devices")
 async def get_devices(
-    limit: int = 50,
-    offset: int = 0,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
     filter_type: Optional[str] = None,
     filter_value: Optional[str] = None,
     current_user: str = Depends(verify_token)
 ):
-    """Get list of devices from Nautobot with optional filtering."""
+    """Get list of devices from Nautobot with optional filtering and pagination.
+    
+    Args:
+        limit: Number of devices per page (default: no limit for full data load)
+        offset: Number of devices to skip (default: 0)
+        filter_type: Type of filter ('name', 'location', 'prefix')
+        filter_value: Value to filter by
+    """
     try:
         # Build GraphQL query based on filters
         query_filters = ""
@@ -88,9 +95,14 @@ async def get_devices(
         if filter_type and filter_value:
             if filter_type == 'name':
                 # Use GraphQL query with case-insensitive regex pattern matching for device names
+                # Include limit and offset for backend pagination
                 query = """
-                query devices_by_name($name_filter: [String]) {
-                  devices(name__ire: $name_filter) {
+                query devices_by_name(
+                  $name_filter: [String],
+                  $limit: Int,
+                  $offset: Int
+                ) {
+                  devices(name__ire: $name_filter, limit: $limit, offset: $offset) {
                     id
                     name
                     role {
@@ -110,6 +122,12 @@ async def get_devices(
                 """
                 variables = {"name_filter": [filter_value]}
                 
+                # Add pagination parameters if provided
+                if limit is not None:
+                    variables["limit"] = limit
+                if offset is not None:
+                    variables["offset"] = offset
+                
                 result = await nautobot_service.graphql_query(query, variables)
                 if "errors" in result:
                     raise HTTPException(
@@ -119,19 +137,31 @@ async def get_devices(
                 
                 devices = result["data"]["devices"]
                 
+                # For filtered results with backend pagination, we can't easily get total count
+                # So we'll return the current page and indicate if there might be more
+                has_more = len(devices) == limit if limit else False
+                
                 return {
-                    "devices": devices[offset:offset+limit],
+                    "devices": devices,
                     "count": len(devices),
-                    "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
-                    "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
+                    "has_more": has_more,
+                    "is_paginated": limit is not None,
+                    "current_offset": offset or 0,
+                    "current_limit": limit,
+                    "next": None if not has_more else f"/api/nautobot/devices?limit={limit}&offset={(offset or 0) + limit}&filter_type={filter_type}&filter_value={filter_value}",
+                    "previous": None if (offset or 0) == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, (offset or 0) - limit)}&filter_type={filter_type}&filter_value={filter_value}"
                 }
                 
             elif filter_type == 'location':
                 query = """
-                query devices_by_location($location_filter: [String]) {
+                query devices_by_location(
+                  $location_filter: [String],
+                  $limit: Int,
+                  $offset: Int
+                ) {
                   locations(name__ire: $location_filter) {
                     name
-                    devices {
+                    devices(limit: $limit, offset: $offset) {
                       id
                       name
                       role {
@@ -149,6 +179,12 @@ async def get_devices(
                 """
                 variables = {"location_filter": [filter_value]}
                 
+                # Add pagination parameters if provided
+                if limit is not None:
+                    variables["limit"] = limit
+                if offset is not None:
+                    variables["offset"] = offset
+                
                 result = await nautobot_service.graphql_query(query, variables)
                 if "errors" in result:
                     raise HTTPException(
@@ -163,20 +199,30 @@ async def get_devices(
                         device["location"] = {"name": location["name"]}
                         devices.append(device)
                 
+                has_more = len(devices) == limit if limit else False
+                
                 return {
-                    "devices": devices[offset:offset+limit],
+                    "devices": devices,
                     "count": len(devices),
-                    "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
-                    "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
+                    "has_more": has_more,
+                    "is_paginated": limit is not None,
+                    "current_offset": offset or 0,
+                    "current_limit": limit,
+                    "next": None if not has_more else f"/api/nautobot/devices?limit={limit}&offset={(offset or 0) + limit}&filter_type={filter_type}&filter_value={filter_value}",
+                    "previous": None if (offset or 0) == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, (offset or 0) - limit)}&filter_type={filter_type}&filter_value={filter_value}"
                 }
                 
             elif filter_type == 'prefix':
                 # Use prefix filtering - correct Nautobot syntax
                 query = """
-                query devices_by_ip_prefix($prefix_filter: [String]) {
+                query devices_by_ip_prefix(
+                  $prefix_filter: [String],
+                  $limit: Int,
+                  $offset: Int
+                ) {
                   prefixes(within_include: $prefix_filter) {
                     prefix
-                    ip_addresses {
+                    ip_addresses(limit: $limit, offset: $offset) {
                       primary_ip4_for {
                         id
                         name
@@ -199,6 +245,12 @@ async def get_devices(
                 """
                 variables = {"prefix_filter": [filter_value]}
                 
+                # Add pagination parameters if provided
+                if limit is not None:
+                    variables["limit"] = limit
+                if offset is not None:
+                    variables["offset"] = offset
+                
                 result = await nautobot_service.graphql_query(query, variables)
                 if "errors" in result:
                     raise HTTPException(
@@ -215,18 +267,23 @@ async def get_devices(
                             devices_dict[device["id"]] = device
                 
                 devices = list(devices_dict.values())
+                has_more = len(devices) == limit if limit else False
                 
                 return {
-                    "devices": devices[offset:offset+limit],
+                    "devices": devices,
                     "count": len(devices),
-                    "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
-                    "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
+                    "has_more": has_more,
+                    "is_paginated": limit is not None,
+                    "current_offset": offset or 0,
+                    "current_limit": limit,
+                    "next": None if not has_more else f"/api/nautobot/devices?limit={limit}&offset={(offset or 0) + limit}&filter_type={filter_type}&filter_value={filter_value}",
+                    "previous": None if (offset or 0) == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, (offset or 0) - limit)}&filter_type={filter_type}&filter_value={filter_value}"
                 }
         
         # Standard device query when no filters are provided
         query = """
-        query all_devices {
-          devices {
+        query all_devices($limit: Int, $offset: Int) {
+          devices(limit: $limit, offset: $offset) {
             id
             name
             role {
@@ -245,7 +302,14 @@ async def get_devices(
         }
         """
         
-        result = await nautobot_service.graphql_query(query)
+        variables = {}
+        # Only add pagination parameters if they are provided
+        if limit is not None:
+            variables["limit"] = limit
+        if offset is not None:
+            variables["offset"] = offset
+        
+        result = await nautobot_service.graphql_query(query, variables)
         if "errors" in result:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -254,15 +318,32 @@ async def get_devices(
         
         devices = result["data"]["devices"]
         
-        # Apply pagination to the results
-        paginated_devices = devices[offset:offset+limit]
-        
-        return {
-            "devices": paginated_devices,
-            "count": len(devices),
-            "next": None if offset + limit >= len(devices) else f"/api/nautobot/devices?limit={limit}&offset={offset+limit}",
-            "previous": None if offset == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, offset-limit)}"
-        }
+        # For unfiltered results
+        if limit is not None:
+            # Backend pagination - we can't easily get total count from GraphQL
+            has_more = len(devices) == limit
+            return {
+                "devices": devices,
+                "count": len(devices),
+                "has_more": has_more,
+                "is_paginated": True,
+                "current_offset": offset or 0,
+                "current_limit": limit,
+                "next": None if not has_more else f"/api/nautobot/devices?limit={limit}&offset={(offset or 0) + limit}",
+                "previous": None if (offset or 0) == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, (offset or 0) - limit)}"
+            }
+        else:
+            # No pagination - return all devices (legacy behavior)
+            return {
+                "devices": devices,
+                "count": len(devices),
+                "has_more": False,
+                "is_paginated": False,
+                "current_offset": 0,
+                "current_limit": None,
+                "next": None,
+                "previous": None
+            }
         
     except Exception as e:
         logger.error(f"Error fetching devices: {str(e)}")
