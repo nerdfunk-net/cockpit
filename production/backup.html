@@ -93,6 +93,97 @@
       });
     </script>
     <link rel="stylesheet" href="css/sync_devices.css">
+    
+    <!-- Custom styles for header filters -->
+    <style>
+      .header-filter {
+        margin-top: 5px;
+      }
+      
+      .header-filter select {
+        font-size: 12px;
+        height: 28px;
+        padding: 2px 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #fff;
+        min-width: 100px;
+      }
+      
+      .header-filter input {
+        font-size: 12px;
+        height: 28px;
+        padding: 2px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #fff;
+        min-width: 120px;
+      }
+      
+      .header-filter select:focus,
+      .header-filter input:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.1rem rgba(78, 115, 223, 0.25);
+      }
+      
+      .column-title {
+        vertical-align: top;
+        padding: 8px 12px;
+      }
+      
+      .table thead th {
+        border-bottom: 2px solid #dee2e6;
+        background-color: #f8f9fc;
+      }
+      
+      /* Clear filters button styling */
+      .clear-all-filters {
+        margin-top: 10px;
+        padding: 4px 12px;
+        font-size: 11px;
+        border-radius: 4px;
+      }
+      
+      /* Active filter indicator */
+      .header-filter select.active-filter,
+      .header-filter input.active-filter {
+        border-color: #4e73df;
+        background-color: #e3f2fd;
+      }
+      
+      /* Sortable column styles */
+      .sortable {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+      }
+      
+      .sortable:hover {
+        background-color: #e9ecef;
+      }
+      
+      .sort-icon {
+        margin-left: 5px;
+        font-size: 11px;
+        color: #6c757d;
+      }
+      
+      .sortable[data-order="asc"] .sort-icon i {
+        color: #4e73df;
+      }
+      
+      .sortable[data-order="desc"] .sort-icon i {
+        color: #4e73df;
+      }
+      
+      .sortable[data-order="asc"] .sort-icon i:before {
+        content: "\f0de"; /* fa-sort-up */
+      }
+      
+      .sortable[data-order="desc"] .sort-icon i:before {
+        content: "\f0dd"; /* fa-sort-down */
+      }
+    </style>
   </head>
 
   <body class="nav-md">
@@ -235,22 +326,16 @@
 
               <div class="title_right">
                 <div class="col-md-12 col-sm-12">
-                  <!-- Search and Filter Controls -->
+                  <!-- Filter Controls -->
                   <div class="row g-2 align-items-end">
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                      <div class="form-group mb-0">
-                        <label for="search-input" class="form-label">Search Devices</label>
-                        <input type="text" class="form-control" id="search-input" placeholder="Search by name...">
-                      </div>
+                    <div class="col-lg-3 col-md-3 col-sm-6">
+                      <!-- Empty spacer column to push content right -->
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6">
                       <div class="form-group mb-0">
                         <label for="backup-date-filter" class="form-label">Last Backup Date</label>
                         <input type="date" class="form-control" id="backup-date-filter" style="min-width: 150px;">
                       </div>
-                    </div>
-                    <div class="col-lg-1 col-md-1 col-sm-6">
-                      <!-- Spacer column to push content right -->
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6">
                       <div class="form-group mb-0">
@@ -262,7 +347,7 @@
                         </select>
                       </div>
                     </div>
-                    <div class="col-lg-2 col-md-2 col-sm-6">
+                    <div class="col-lg-1 col-md-1 col-sm-6">
                       <div class="form-group mb-0">
                         <label class="form-label d-block" style="visibility: hidden;">Clear</label>
                         <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center" id="clear-filters-btn" style="border-radius: 8px; font-weight: 500; transition: all 0.3s ease; min-width: 42px;" title="Clear Filters">
@@ -294,20 +379,65 @@
                       </div>
                     </div>
 
-
+                    <!-- Clear All Filters Button -->
+                    <div class="row mb-3">
+                      <div class="col-md-12">
+                        <button type="button" class="btn btn-outline-secondary btn-sm clear-all-filters" id="clear-all-filters-btn" title="Clear All Filters">
+                          <i class="fas fa-eraser"></i> Clear All Filters
+                        </button>
+                      </div>
+                    </div>
 
                     <!-- Device List Table -->
                     <div class="table-responsive">
                       <table class="table bulk_action">
                         <thead>
                           <tr class="headings">
-                            <th class="column-title">Device Name</th>
+                            <th class="column-title">
+                              Device Name
+                              <div class="header-filter mt-1">
+                                <input type="text" class="form-control form-control-sm" id="device-name-filter" placeholder="Filter by name...">
+                              </div>
+                            </th>
                             <th class="column-title">IP Address</th>
-                            <th class="column-title">Role</th>
-                            <th class="column-title">Location</th>
-                            <th class="column-title">Device Type</th>
-                            <th class="column-title">Status</th>
-                            <th class="column-title">Last Backup</th>
+                            <th class="column-title">
+                              Role
+                              <div class="header-filter mt-1">
+                                <select class="form-control form-control-sm" id="role-filter">
+                                  <option value="">All Roles</option>
+                                </select>
+                              </div>
+                            </th>
+                            <th class="column-title">
+                              Location
+                              <div class="header-filter mt-1">
+                                <select class="form-control form-control-sm" id="location-filter">
+                                  <option value="">All Locations</option>
+                                </select>
+                              </div>
+                            </th>
+                            <th class="column-title">
+                              Device Type
+                              <div class="header-filter mt-1">
+                                <select class="form-control form-control-sm" id="device-type-filter">
+                                  <option value="">All Types</option>
+                                </select>
+                              </div>
+                            </th>
+                            <th class="column-title">
+                              Status
+                              <div class="header-filter mt-1">
+                                <select class="form-control form-control-sm" id="status-filter">
+                                  <option value="">All Statuses</option>
+                                </select>
+                              </div>
+                            </th>
+                            <th class="column-title sortable" data-column="last_backup" data-order="none">
+                              Last Backup
+                              <span class="sort-icon">
+                                <i class="fas fa-sort"></i>
+                              </span>
+                            </th>
                             <th class="column-title no-link last"><span class="nobr">Action</span></th>
                           </tr>
                         </thead>
@@ -433,6 +563,25 @@
         let currentDateComparison = '';
         let isLoading = false;
         
+        // Header filter variables
+        let currentRoleFilter = '';
+        let currentLocationFilter = '';
+        let currentDeviceTypeFilter = '';
+        let currentStatusFilter = '';
+        let currentDeviceNameFilter = '';
+        
+        // Sorting variables
+        let currentSortColumn = '';
+        let currentSortOrder = 'none'; // 'asc', 'desc', 'none'
+        
+        // Filter options storage
+        let filterOptions = {
+          roles: new Set(),
+          locations: new Set(),
+          deviceTypes: new Set(),
+          statuses: new Set()
+        };
+        
         // Load devices from Nautobot using GraphQL
         async function loadDevices() {
           try {
@@ -484,6 +633,11 @@
             if (response && response.data && response.data.devices) {
               allDevices = response.data.devices;
               console.log(`Loaded ${allDevices.length} devices from Nautobot`);
+              
+              // Extract filter options from loaded devices
+              extractFilterOptions(allDevices);
+              populateHeaderFilters();
+              
               currentPage = 0; // Reset to first page
               renderDevicesTable(allDevices);
               updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
@@ -503,6 +657,357 @@
             });
             showError('Error loading devices: ' + error.message);
           }
+        }
+
+        // Extract unique filter options from loaded devices
+        function extractFilterOptions(devices) {
+          console.log('Extracting filter options from devices...');
+          
+          // Clear existing options
+          filterOptions.roles.clear();
+          filterOptions.locations.clear();
+          filterOptions.deviceTypes.clear();
+          filterOptions.statuses.clear();
+          
+          devices.forEach(device => {
+            if (device.role?.name) filterOptions.roles.add(device.role.name);
+            if (device.location?.name) filterOptions.locations.add(device.location.name);
+            if (device.device_type?.model) filterOptions.deviceTypes.add(device.device_type.model);
+            if (device.status?.name) filterOptions.statuses.add(device.status.name);
+          });
+          
+          console.log('Filter options extracted:', {
+            roles: filterOptions.roles.size,
+            locations: filterOptions.locations.size,
+            deviceTypes: filterOptions.deviceTypes.size,
+            statuses: filterOptions.statuses.size
+          });
+        }
+
+        // Populate header filter dropdowns
+        function populateHeaderFilters() {
+          console.log('Populating header filter dropdowns...');
+          
+          // Populate role filter
+          const roleFilter = document.getElementById('role-filter');
+          if (roleFilter) {
+            roleFilter.innerHTML = '<option value="">All Roles</option>';
+            Array.from(filterOptions.roles).sort().forEach(role => {
+              const option = document.createElement('option');
+              option.value = role;
+              option.textContent = role;
+              roleFilter.appendChild(option);
+            });
+          }
+          
+          // Populate location filter
+          const locationFilter = document.getElementById('location-filter');
+          if (locationFilter) {
+            locationFilter.innerHTML = '<option value="">All Locations</option>';
+            Array.from(filterOptions.locations).sort().forEach(location => {
+              const option = document.createElement('option');
+              option.value = location;
+              option.textContent = location;
+              locationFilter.appendChild(option);
+            });
+          }
+          
+          // Populate device type filter
+          const deviceTypeFilter = document.getElementById('device-type-filter');
+          if (deviceTypeFilter) {
+            deviceTypeFilter.innerHTML = '<option value="">All Types</option>';
+            Array.from(filterOptions.deviceTypes).sort().forEach(deviceType => {
+              const option = document.createElement('option');
+              option.value = deviceType;
+              option.textContent = deviceType;
+              deviceTypeFilter.appendChild(option);
+            });
+          }
+          
+          // Populate status filter
+          const statusFilter = document.getElementById('status-filter');
+          if (statusFilter) {
+            statusFilter.innerHTML = '<option value="">All Statuses</option>';
+            Array.from(filterOptions.statuses).sort().forEach(status => {
+              const option = document.createElement('option');
+              option.value = status;
+              option.textContent = status;
+              statusFilter.appendChild(option);
+            });
+          }
+          
+          // Add event listeners to header filters
+          initializeHeaderFilterListeners();
+          
+          console.log('Header filter dropdowns populated');
+        }
+
+        // Initialize header filter event listeners
+        function initializeHeaderFilterListeners() {
+          const deviceNameFilter = document.getElementById('device-name-filter');
+          const roleFilter = document.getElementById('role-filter');
+          const locationFilter = document.getElementById('location-filter');
+          const deviceTypeFilter = document.getElementById('device-type-filter');
+          const statusFilter = document.getElementById('status-filter');
+          
+          // Device name filter with debouncing
+          if (deviceNameFilter) {
+            let searchTimeout;
+            deviceNameFilter.addEventListener('input', () => {
+              clearTimeout(searchTimeout);
+              searchTimeout = setTimeout(() => {
+                currentDeviceNameFilter = deviceNameFilter.value.trim();
+                applyAllFilters();
+                updateFilterIndicators();
+              }, 300); // Wait 300ms after user stops typing
+            });
+          }
+          
+          if (roleFilter) {
+            roleFilter.addEventListener('change', () => {
+              currentRoleFilter = roleFilter.value;
+              applyAllFilters();
+              updateFilterIndicators();
+            });
+          }
+          
+          if (locationFilter) {
+            locationFilter.addEventListener('change', () => {
+              currentLocationFilter = locationFilter.value;
+              applyAllFilters();
+              updateFilterIndicators();
+            });
+          }
+          
+          if (deviceTypeFilter) {
+            deviceTypeFilter.addEventListener('change', () => {
+              currentDeviceTypeFilter = deviceTypeFilter.value;
+              applyAllFilters();
+              updateFilterIndicators();
+            });
+          }
+          
+          if (statusFilter) {
+            statusFilter.addEventListener('change', () => {
+              currentStatusFilter = statusFilter.value;
+              applyAllFilters();
+              updateFilterIndicators();
+            });
+          }
+          
+          // Initialize sorting functionality
+          initializeSorting();
+        }
+
+        // Initialize sorting functionality
+        function initializeSorting() {
+          const sortableHeaders = document.querySelectorAll('.sortable');
+          
+          sortableHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+              const column = header.getAttribute('data-column');
+              const currentOrder = header.getAttribute('data-order');
+              
+              // Reset all other headers
+              sortableHeaders.forEach(h => {
+                if (h !== header) {
+                  h.setAttribute('data-order', 'none');
+                }
+              });
+              
+              // Cycle through sort orders: none -> asc -> desc -> none
+              let newOrder;
+              if (currentOrder === 'none') {
+                newOrder = 'asc';
+              } else if (currentOrder === 'asc') {
+                newOrder = 'desc';
+              } else {
+                newOrder = 'none';
+              }
+              
+              header.setAttribute('data-order', newOrder);
+              currentSortColumn = newOrder === 'none' ? '' : column;
+              currentSortOrder = newOrder;
+              
+              console.log(`Sorting by ${column}: ${newOrder}`);
+              applyAllFilters(); // This will also apply sorting
+            });
+          });
+        }
+
+        // Apply all filters together (search + header filters + date filters) and sorting
+        function applyAllFilters() {
+          console.log('Applying all filters:', {
+            deviceName: currentDeviceNameFilter,
+            role: currentRoleFilter,
+            location: currentLocationFilter,
+            deviceType: currentDeviceTypeFilter,
+            status: currentStatusFilter,
+            date: currentDateFilter,
+            dateComparison: currentDateComparison,
+            sort: currentSortColumn,
+            sortOrder: currentSortOrder
+          });
+          
+          let filtered = allDevices.filter(device => {
+            // Device name filter
+            if (currentDeviceNameFilter) {
+              const deviceName = (device.name || '').toLowerCase();
+              if (!deviceName.includes(currentDeviceNameFilter.toLowerCase())) {
+                return false;
+              }
+            }
+            
+            // Header filters
+            if (currentRoleFilter && device.role?.name !== currentRoleFilter) return false;
+            if (currentLocationFilter && device.location?.name !== currentLocationFilter) return false;
+            if (currentDeviceTypeFilter && device.device_type?.model !== currentDeviceTypeFilter) return false;
+            if (currentStatusFilter && device.status?.name !== currentStatusFilter) return false;
+            
+            // Date filter
+            if (currentDateFilter && currentDateComparison) {
+              const deviceBackupDate = device.cf_last_backup;
+              if (deviceBackupDate && deviceBackupDate !== 'Never') {
+                const backupDate = new Date(deviceBackupDate);
+                const filterDate = new Date(currentDateFilter);
+                
+                if (currentDateComparison === 'lte' && backupDate > filterDate) return false;
+                if (currentDateComparison === 'lt' && backupDate >= filterDate) return false;
+              } else if (deviceBackupDate === 'Never' || !deviceBackupDate) {
+                // Handle devices with no backup date based on filter logic
+                if (currentDateComparison === 'lte' || currentDateComparison === 'lt') {
+                  return false; // Exclude devices with no backup when filtering by date
+                }
+              }
+            }
+            
+            return true;
+          });
+          
+          // Apply sorting if a column is selected
+          if (currentSortColumn && currentSortOrder !== 'none') {
+            filtered = sortDevices(filtered, currentSortColumn, currentSortOrder);
+          }
+          
+          currentPage = 0; // Reset to first page
+          renderDevicesTable(filtered);
+          
+          const activeFiltersCount = [
+            currentDeviceNameFilter,
+            currentRoleFilter,
+            currentLocationFilter, 
+            currentDeviceTypeFilter,
+            currentStatusFilter,
+            currentDateFilter
+          ].filter(f => f).length;
+          
+          if (activeFiltersCount > 0 || currentSortColumn) {
+            let statusMessage = `<i class="fas fa-filter"></i> Showing ${filtered.length} of ${allDevices.length} devices`;
+            if (activeFiltersCount > 0) {
+              statusMessage += ` (${activeFiltersCount} filter${activeFiltersCount > 1 ? 's' : ''} active)`;
+            }
+            if (currentSortColumn) {
+              statusMessage += ` - Sorted by ${currentSortColumn.replace('_', ' ')} (${currentSortOrder})`;
+            }
+            updateStatusPanel(statusMessage, 'info');
+          } else {
+            updateStatusPanel(
+              `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices`,
+              'success'
+            );
+          }
+        }
+
+        // Sort devices by specified column and order
+        function sortDevices(devices, column, order) {
+          return devices.slice().sort((a, b) => {
+            let aVal, bVal;
+            
+            switch (column) {
+              case 'last_backup':
+                aVal = a.cf_last_backup;
+                bVal = b.cf_last_backup;
+                
+                // Handle 'Never' and null values - treat them as very old dates
+                if (aVal === 'Never' || !aVal) aVal = '1970-01-01';
+                if (bVal === 'Never' || !bVal) bVal = '1970-01-01';
+                
+                // Convert to dates for comparison
+                aVal = new Date(aVal);
+                bVal = new Date(bVal);
+                break;
+              default:
+                return 0; // No sorting for unknown columns
+            }
+            
+            // Perform comparison
+            if (aVal < bVal) return order === 'asc' ? -1 : 1;
+            if (aVal > bVal) return order === 'asc' ? 1 : -1;
+            return 0;
+          });
+        }
+
+        // Update visual indicators for active filters
+        function updateFilterIndicators() {
+          const filters = [
+            { element: document.getElementById('device-name-filter'), value: currentDeviceNameFilter },
+            { element: document.getElementById('role-filter'), value: currentRoleFilter },
+            { element: document.getElementById('location-filter'), value: currentLocationFilter },
+            { element: document.getElementById('device-type-filter'), value: currentDeviceTypeFilter },
+            { element: document.getElementById('status-filter'), value: currentStatusFilter }
+          ];
+          
+          filters.forEach(filter => {
+            if (filter.element) {
+              if (filter.value) {
+                filter.element.classList.add('active-filter');
+              } else {
+                filter.element.classList.remove('active-filter');
+              }
+            }
+          });
+        }
+
+        // Reset all filters
+        function resetAllFilters() {
+          currentSearchTerm = '';
+          currentDeviceNameFilter = '';
+          currentRoleFilter = '';
+          currentLocationFilter = '';
+          currentDeviceTypeFilter = '';
+          currentStatusFilter = '';
+          currentDateFilter = '';
+          currentDateComparison = '';
+          currentSortColumn = '';
+          currentSortOrder = 'none';
+          currentPage = 0;
+          
+          // Reset form inputs
+          const deviceNameFilter = document.getElementById('device-name-filter');
+          const dateInput = document.getElementById('backup-date-filter');
+          const comparisonSelect = document.getElementById('date-comparison');
+          const roleFilter = document.getElementById('role-filter');
+          const locationFilter = document.getElementById('location-filter');
+          const deviceTypeFilter = document.getElementById('device-type-filter');
+          const statusFilter = document.getElementById('status-filter');
+          
+          if (deviceNameFilter) deviceNameFilter.value = '';
+          if (dateInput) dateInput.value = '';
+          if (comparisonSelect) comparisonSelect.value = '';
+          if (roleFilter) roleFilter.value = '';
+          if (locationFilter) locationFilter.value = '';
+          if (deviceTypeFilter) deviceTypeFilter.value = '';
+          if (statusFilter) statusFilter.value = '';
+          
+          // Reset sorting indicators
+          const sortableHeaders = document.querySelectorAll('.sortable');
+          sortableHeaders.forEach(header => {
+            header.setAttribute('data-order', 'none');
+          });
+          
+          updateFilterIndicators();
+          renderDevicesTable(allDevices);
+          updateStatusPanel(`<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`, 'success');
         }
 
         // Search devices with filter (client-side filtering)
@@ -544,57 +1049,13 @@
         function filterDevices(searchTerm = '', dateFilter = '', dateComparison = '') {
           console.log(`Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}"`);
           
-          let filtered = [...allDevices];
-          
-          // Apply search filter
-          if (searchTerm.trim()) {
-            filtered = filtered.filter(device => {
-              const deviceName = (device.name || '').toLowerCase();
-              const role = (device.role?.name || '').toLowerCase();
-              const location = (device.location?.name || '').toLowerCase();
-              const deviceType = (device.device_type?.model || '').toLowerCase();
-              const status = (device.status?.name || '').toLowerCase();
-              const searchLower = searchTerm.toLowerCase();
-              
-              return deviceName.includes(searchLower) ||
-                     role.includes(searchLower) ||
-                     location.includes(searchLower) ||
-                     deviceType.includes(searchLower) ||
-                     status.includes(searchLower);
-            });
-          }
-          
-          // Apply date filter
-          if (dateFilter && dateComparison) {
-            const filterDate = new Date(dateFilter);
-            filtered = filtered.filter(device => {
-              if (!device.cf_last_backup || device.cf_last_backup === 'Never') {
-                return dateComparison === 'lt'; // Devices with no backup date are considered very old
-              }
-              
-              const backupDate = new Date(device.cf_last_backup);
-              if (dateComparison === 'lte') {
-                return backupDate <= filterDate;
-              } else if (dateComparison === 'lt') {
-                return backupDate < filterDate;
-              }
-              return true;
-            });
-          }
-          
-          console.log(`Found ${filtered.length} devices with applied filters`);
-          currentPage = 0;
+          // Update global filter variables
           currentSearchTerm = searchTerm;
           currentDateFilter = dateFilter;
           currentDateComparison = dateComparison;
-          renderDevicesTable(filtered);
           
-          // Update status message
-          let statusMessage = `<i class="fas fa-check-circle"></i> Found ${filtered.length} devices`;
-          if (searchTerm || (dateFilter && dateComparison)) {
-            statusMessage += ' with applied filters';
-          }
-          updateStatusPanel(statusMessage + '.', 'success');
+          // Apply all filters
+          applyAllFilters();
         }
 
         // Render devices table with pagination
@@ -793,23 +1254,7 @@
 
         // Reset pagination and filters
         function resetPagination() {
-          currentPage = 0;
-          currentSearchTerm = '';
-          currentDateFilter = '';
-          currentDateComparison = '';
-          
-          // Clear all filter inputs
-          const searchInput = document.getElementById('search-input');
-          const dateInput = document.getElementById('backup-date-filter');
-          const comparisonSelect = document.getElementById('date-comparison');
-          
-          if (searchInput) searchInput.value = '';
-          if (dateInput) dateInput.value = '';
-          if (comparisonSelect) comparisonSelect.value = '';
-          
-          // Show all devices
-          renderDevicesTable(allDevices);
-          updateStatusPanel(`<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`, 'success');
+          resetAllFilters();
         }
 
         // Attach event listeners to device buttons
@@ -910,21 +1355,6 @@
           updateStatusPanel(`<i class="fas fa-exclamation-triangle"></i> ${message}`, 'danger', false);
         }
 
-        // Search functionality with debouncing
-        let searchTimeout;
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-          searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            const searchTerm = this.value.trim();
-            
-            // Debounce search to avoid too many updates
-            searchTimeout = setTimeout(() => {
-              filterDevices(searchTerm, currentDateFilter, currentDateComparison);
-            }, 300); // Wait 300ms after user stops typing
-          });
-        }
-
         // Add date filter event listeners
         const dateInput = document.getElementById('backup-date-filter');
         const comparisonSelect = document.getElementById('date-comparison');
@@ -947,6 +1377,12 @@
         const clearButton = document.getElementById('clear-filters-btn');
         if (clearButton) {
           clearButton.addEventListener('click', resetPagination);
+        }
+        
+        // Add clear all filters button event listener  
+        const clearAllButton = document.getElementById('clear-all-filters-btn');
+        if (clearAllButton) {
+          clearAllButton.addEventListener('click', resetAllFilters);
         }
 
         // Initialize the page
