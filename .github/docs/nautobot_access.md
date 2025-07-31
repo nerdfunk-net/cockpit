@@ -60,6 +60,27 @@
       }
     }
 
+# To get all locations together with parent and child to build a tree use a graphql query and make a REST API call. 
+ * A GraphQL Query must be encapsulated in a JSON payload with the query key and sent with a POST request. 
+  * Use this query:
+    query locations_tree {
+      locations {
+        id
+        name
+        description
+        parent {
+          id
+          name
+          description
+        }
+        children {
+          id
+          name
+          description
+        }
+      }
+    }
+
 # To get a list of all namespaces in nautobot use a graphql query and make a REST API call. 
   * A GraphQL Query must be encapsulated in a JSON payload with the query key and sent with a POST request. 
   * Use this query:

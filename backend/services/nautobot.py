@@ -21,25 +21,25 @@ class NautobotService:
     
     def _get_config(self) -> Dict[str, Any]:
         """Get Nautobot configuration from database with fallback to environment variables."""
-        if not self.config:
-            try:
-                # Try to get settings from database first
-                from settings_manager import settings_manager
-                db_settings = settings_manager.get_nautobot_settings()
-                if db_settings and db_settings.get('url') and db_settings.get('token'):
-                    self.config = {
-                        'url': db_settings['url'],
-                        'token': db_settings['token'],
-                        'timeout': db_settings.get('timeout', 30),
-                        'verify_ssl': db_settings.get('verify_ssl', True),
-                        '_source': 'database'
-                    }
-                    logger.debug(f"Using database settings for Nautobot: {self.config['url']}")
-                    return self.config
-            except Exception as e:
-                logger.warning(f"Failed to get database settings, falling back to environment: {e}")
-            
-            # Fallback to environment variables
+        # Always check database first to ensure we get the latest settings
+        try:
+            from settings_manager import settings_manager
+            db_settings = settings_manager.get_nautobot_settings()
+            if db_settings and db_settings.get('url') and db_settings.get('token'):
+                config = {
+                    'url': db_settings['url'],
+                    'token': db_settings['token'],
+                    'timeout': db_settings.get('timeout', 30),
+                    'verify_ssl': db_settings.get('verify_ssl', True),
+                    '_source': 'database'
+                }
+                logger.debug(f"Using database settings for Nautobot: {config['url']}")
+                return config
+        except Exception as e:
+            logger.warning(f"Failed to get database settings, falling back to environment: {e}")
+        
+        # Fallback to environment variables (cache these since they don't change)
+        if not self.config or self.config.get('_source') != 'environment':
             from config_manual import settings
             self.config = {
                 'url': settings.nautobot_url,

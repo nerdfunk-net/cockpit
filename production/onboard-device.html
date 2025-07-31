@@ -324,14 +324,6 @@
                         </button>
                       </div>
                     </div>
-                    <div class="col-md-3">
-                      <div class="form-group mb-0">
-                        <label class="control-label" style="visibility: hidden;">Spacer</label>
-                        <button type="submit" class="btn btn-primary w-100" id="onboard_btn" disabled style="height: 48px;">
-                          <i class="fas fa-plus-circle"></i> Onboard Device
-                        </button>
-                      </div>
-                    </div>
                   </div>
 
                   <!-- Status Messages - Moved to top for better visibility -->
@@ -454,8 +446,8 @@
                             <div class="row mt-4">
                               <div class="col-md-12">
                                 <div class="text-center">
-                                  <button type="button" class="btn btn-secondary me-2" id="reset_btn">
-                                    <i class="fas fa-undo"></i> Reset Form
+                                  <button type="submit" class="btn btn-primary me-2" id="onboard_btn" disabled>
+                                    <i class="fas fa-plus-circle"></i> Onboard Device
                                   </button>
                                 </div>
                               </div>
@@ -619,7 +611,6 @@
           });
           document.getElementById('onboard_form').addEventListener('change', () => this.updateOnboardButton());
           document.getElementById('onboard_btn').addEventListener('click', () => this.handleOnboard());
-          document.getElementById('reset_btn').addEventListener('click', () => this.resetForm());
           document.getElementById('validate_ip_btn').addEventListener('click', () => this.checkIPInNautobot());
 
           // DEBUG: Set auth token for testing if not present
