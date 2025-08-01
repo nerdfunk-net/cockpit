@@ -96,6 +96,19 @@
     
     <!-- Custom styles for header filters -->
     <style>
+      /* Add bottom spacing to prevent scrollbar overlap with pagination */
+      .right_col {
+        padding-bottom: 60px !important; /* Extra space at bottom of main content */
+      }
+      
+      .pagination-container {
+        margin-bottom: 40px; /* Extra margin below pagination */
+      }
+      
+      .table-responsive {
+        margin-bottom: 20px; /* Space between table and pagination */
+      }
+      
       .header-filter {
         margin-top: 5px;
       }
@@ -1308,8 +1321,12 @@
           
           paginationContainer.innerHTML = paginationHtml;
           
-          // Add event listeners for pagination controls
-          paginationContainer.addEventListener('click', function(e) {
+          // Remove any existing event listeners by cloning and replacing the container
+          const newPaginationContainer = paginationContainer.cloneNode(true);
+          paginationContainer.parentNode.replaceChild(newPaginationContainer, paginationContainer);
+          
+          // Add event listeners for pagination controls to the new container
+          newPaginationContainer.addEventListener('click', function(e) {
             e.preventDefault();
             const target = e.target.closest('li');
             if (!target || target.classList.contains('disabled') || target.classList.contains('active')) {
@@ -1332,8 +1349,8 @@
             renderDevicesTable(filteredDevices);
           });
           
-          // Add event listener for page size selector
-          const pageSizeSelector = document.getElementById('page-size-selector');
+          // Add event listener for page size selector to the new container
+          const pageSizeSelector = newPaginationContainer.querySelector('#page-size-selector');
           if (pageSizeSelector) {
             pageSizeSelector.addEventListener('change', function() {
               const newPageSize = parseInt(this.value);

@@ -94,8 +94,24 @@ async def get_devices(
         
         if filter_type and filter_value:
             if filter_type == 'name':
-                # Use GraphQL query with case-insensitive regex pattern matching for device names
-                # Include limit and offset for backend pagination
+                # First, get the total count without pagination
+                count_query = """
+                query devices_count_by_name($name_filter: [String]) {
+                  devices(name__ire: $name_filter) {
+                    id
+                  }
+                }
+                """
+                count_variables = {"name_filter": [filter_value]}
+                count_result = await nautobot_service.graphql_query(count_query, count_variables)
+                if "errors" in count_result:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"GraphQL errors in count query: {count_result['errors']}"
+                    )
+                total_count = len(count_result["data"]["devices"])
+                
+                # Now get the paginated data
                 query = """
                 query devices_by_name(
                   $name_filter: [String],
@@ -117,6 +133,10 @@ async def get_devices(
                     status {
                       name
                     }
+                    device_type {
+                      model
+                    }
+                    cf_last_backup
                   }
                 }
                 """
@@ -137,13 +157,12 @@ async def get_devices(
                 
                 devices = result["data"]["devices"]
                 
-                # For filtered results with backend pagination, we can't easily get total count
-                # So we'll return the current page and indicate if there might be more
-                has_more = len(devices) == limit if limit else False
+                # Calculate if there are more pages
+                has_more = (offset or 0) + len(devices) < total_count
                 
                 return {
                     "devices": devices,
-                    "count": len(devices),
+                    "count": total_count,  # Return actual total count
                     "has_more": has_more,
                     "is_paginated": limit is not None,
                     "current_offset": offset or 0,
@@ -167,12 +186,19 @@ async def get_devices(
                       role {
                         name
                       }
+                      location {
+                        name
+                      }
                       primary_ip4 {
                         address
                       }
                       status {
                         name
                       }
+                      device_type {
+                        model
+                      }
+                      cf_last_backup
                     }
                   }
                 }
@@ -238,6 +264,10 @@ async def get_devices(
                         status {
                           name
                         }
+                        device_type {
+                          model
+                        }
+                        cf_last_backup
                       }
                     }
                   }
@@ -298,6 +328,10 @@ async def get_devices(
             status {
               name
             }
+            device_type {
+              model
+            }
+            cf_last_backup
           }
         }
         """
@@ -320,11 +354,28 @@ async def get_devices(
         
         # For unfiltered results
         if limit is not None:
-            # Backend pagination - we can't easily get total count from GraphQL
-            has_more = len(devices) == limit
+            # First get total count without pagination
+            count_query = """
+            query all_devices_count {
+              devices {
+                id
+              }
+            }
+            """
+            count_result = await nautobot_service.graphql_query(count_query, {})
+            if "errors" in count_result:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"GraphQL errors in count query: {count_result['errors']}"
+                )
+            total_count = len(count_result["data"]["devices"])
+            
+            # Calculate if there are more pages
+            has_more = (offset or 0) + len(devices) < total_count
+            
             return {
                 "devices": devices,
-                "count": len(devices),
+                "count": total_count,  # Return actual total count
                 "has_more": has_more,
                 "is_paginated": True,
                 "current_offset": offset or 0,
@@ -867,6 +918,19 @@ async def get_nautobot_ipaddress_statuses(current_user: str = Depends(verify_tok
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch IP address statuses: {str(e)}"
+        )
+
+
+@router.get("/statuses/prefix")
+async def get_nautobot_prefix_statuses(current_user: str = Depends(verify_token)):
+    """Get Nautobot prefix statuses."""
+    try:
+        result = await nautobot_service.rest_request("extras/statuses/?content_types=ipam.prefix")
+        return result.get("results", [])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch prefix statuses: {str(e)}"
         )
 
 

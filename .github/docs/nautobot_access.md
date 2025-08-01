@@ -31,6 +31,9 @@
         status {
           name
         }
+        device_type {
+          model
+        }
       }
     }
 
@@ -321,20 +324,22 @@
   - Authorization: "Token nautobot_api_token"
  * add "body_format: json" to the request
  * ask the user to enter the following data:
-    1. status (selection)
-    2. namespace (selection)
-    3. Sync Cables (parameter is named sync_cables) as checkbox
-    4. Sync Software (parameter is sync_software_version) as checkbox
-    5. Sync VLANs (parameter is named sync_vlans) as checkbox
-    6. Sync VRFs (parameter is named sync_vrfs) as checkbox
+    1. prefix status (selection)
+    2. interface status (selection)
+    3. IP address status (selection)
+    4. namespace (selection)
+    5. Sync Cables (parameter is named sync_cables) as checkbox
+    6. Sync Software (parameter is sync_software_version) as checkbox
+    7. Sync VLANs (parameter is named sync_vlans) as checkbox
+    8. Sync VRFs (parameter is named sync_vrfs) as checkbox
  * the body must contain a dict called 'data' that contains the following properties:
 
-        "devices": device_id,
-        "default_prefix_status": status_id,
-        "interface_status": status_id,
-        "ip_address_status": status_id,
-        "namespace": namespace_id,
-        "sync_cables": sync_cables,
-        "sync_software_version": sync_software_version,
-        "sync_vlans": sync_vlans,
-        "sync_vrfs": sync_vrfs
+        "devices": [ device_id ], # list
+        "default_prefix_status": status_id, # string
+        "interface_status": status_id, # string
+        "ip_address_status": status_id, # string
+        "namespace": namespace_id, # string
+        "sync_cables": sync_cables, #bool
+        "sync_software_version": sync_software_version, # bool
+        "sync_vlans": sync_vlans, # bool
+        "sync_vrfs": sync_vrfs # bool
