@@ -654,38 +654,33 @@
                               <!-- Results will be populated here -->
                             </div>
                           </div>
-                          <!-- Selected File Display -->
-                          <div class="selected-file-info" id="historySelectedFile" style="display: none;">
-                            <small class="text-muted">Selected: <span class="selected-path"></span></small>
-                          </div>
                         </div>
                       </div>
                     </div>
                     
-                    <!-- Show History Button -->
-                    <div class="row">
-                      <div class="col-md-12">
-                        <div class="text-center" style="margin-top: 15px;">
-                          <button class="btn btn-primary" id="showHistoryBtn" disabled>
-                            <i class="fas fa-history"></i> Show History
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                     
                     <!-- File History Display -->
                     <div class="row" id="fileHistoryDisplay" style="display: none; margin-top: 20px;">
                       <div class="col-md-12">
                         <div class="card">
-                          <div class="card-header">
+                          <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="mb-0">
                               <i class="fas fa-clock"></i> File History: <span id="historyFileName"></span>
                             </h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="closeFileHistoryDisplayBtn" title="Close File History">
+                              <i class="fas fa-times"></i>
+                            </button>
                           </div>
                           <div class="card-body">
                             <div id="historyContent">
                               <!-- History timeline will be populated here -->
                             </div>
+                          </div>
+                          <div class="card-footer">
+                            <button type="button" class="btn btn-primary" id="compareSelectedBtn" disabled>
+                              <i class="fas fa-exchange-alt"></i> Compare Selected
+                            </button>
+                            <small class="text-muted ms-2">Select two commits to compare them</small>
                           </div>
                         </div>
                       </div>
@@ -735,8 +730,8 @@
                         <button class="btn btn-primary" id="compareBtn" disabled>
                           <i class="fas fa-exchange-alt"></i> Compare
                         </button>
-                        <button class="btn btn-secondary ms-2" id="refreshBtn">
-                          <i class="fas fa-sync"></i> Refresh
+                        <button class="btn btn-primary ms-2" id="showHistoryBtn" disabled>
+                          <i class="fas fa-history"></i> Show History
                         </button>
                         <button class="btn btn-success ms-2" id="exportBtn" disabled>
                           <i class="fas fa-download"></i> Export Diff
@@ -1056,6 +1051,27 @@
               background: #e7f3ff;
               border-color: #007bff;
             }
+
+            .timeline-item.timeline-selectable {
+              cursor: pointer;
+              transition: all 0.2s ease;
+            }
+
+            .timeline-item.timeline-selectable:hover .timeline-content {
+              background: #f0f0f0;
+              border-color: #007bff;
+            }
+
+            .timeline-item.timeline-selected .timeline-content {
+              background: #d4edda;
+              border-color: #28a745;
+              box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
+            }
+
+            .timeline-item.timeline-selected .timeline-marker {
+              background-color: #28a745 !important;
+              box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.5);
+            }
             
             .timeline-title {
               color: #5a5c69;
@@ -1173,6 +1189,7 @@
                 this.historyFileSearchInitialized = false;
                 this.selectedGitFile = null;
                 this.selectedHistoryFile = null;
+                this.selectedHistoryRows = [];
                 this.currentDiffs = [];
                 this.currentDiffIndex = 0;
                 this.hideUnchanged = false;
@@ -1189,7 +1206,6 @@
 
               init() {
                 // Initialize event listeners
-                document.getElementById('refreshBtn').addEventListener('click', () => this.handleRefresh());
                 document.getElementById('compareBtn').addEventListener('click', () => this.handleCompare());
                 document.getElementById('exportBtn').addEventListener('click', () => this.exportDiff());
                 document.getElementById('prevDiffBtn').addEventListener('click', () => this.navigateDiff(-1));
@@ -1199,6 +1215,8 @@
                 document.getElementById('gitStatusBtn').addEventListener('click', () => this.showGitStatus());
                 document.getElementById('closeHistoryBtn').addEventListener('click', () => this.closeFileHistory());
                 document.getElementById('closeResultsBtn').addEventListener('click', () => this.closeComparisonResults());
+                document.getElementById('closeFileHistoryDisplayBtn').addEventListener('click', () => this.closeFileHistoryDisplay());
+                document.getElementById('compareSelectedBtn').addEventListener('click', () => this.compareSelectedHistoryRows());
                 
                 // File search will be initialized when files are loaded by populateFileSelects
 
@@ -1689,7 +1707,6 @@
               initializeHistoryFileSearch() {
                 const searchInput = document.getElementById('historyFileSearch');
                 const resultsDiv = document.getElementById('historyFileResults');
-                const selectedDiv = document.getElementById('historySelectedFile');
                 
                 if (!searchInput) {
                   console.error('History file search input element not found');
@@ -1797,13 +1814,9 @@
 
               selectHistoryFile(file) {
                 const searchInput = document.getElementById('historyFileSearch');
-                const selectedDiv = document.getElementById('historySelectedFile');
-                const selectedPath = selectedDiv.querySelector('.selected-path');
                 
-                // Update input and display
+                // Update input
                 searchInput.value = file.name;
-                selectedPath.textContent = file.path;
-                selectedDiv.style.display = 'block';
                 
                 // Store selected file
                 this.selectedHistoryFile = file;
@@ -2291,6 +2304,137 @@
                 this.clearFileHistory('right');
               }
 
+              closeFileHistoryDisplay() {
+                const fileHistoryDisplay = document.getElementById('fileHistoryDisplay');
+                fileHistoryDisplay.style.display = 'none';
+                
+                // Clear the selected rows if any
+                this.selectedHistoryRows = [];
+                this.updateCompareSelectedButton();
+              }
+
+              toggleHistoryRowSelection(commitHash, event) {
+                event.stopPropagation();
+                
+                const timelineItem = document.querySelector(`[data-commit-hash="${commitHash}"]`);
+                if (!timelineItem) return;
+
+                const index = this.selectedHistoryRows.findIndex(row => row.hash === commitHash);
+                
+                if (index === -1) {
+                  // Select the row (max 2 selections)
+                  if (this.selectedHistoryRows.length < 2) {
+                    this.selectedHistoryRows.push({
+                      hash: commitHash,
+                      shortHash: timelineItem.dataset.commitShort,
+                      element: timelineItem
+                    });
+                    timelineItem.classList.add('timeline-selected');
+                  }
+                } else {
+                  // Deselect the row
+                  this.selectedHistoryRows.splice(index, 1);
+                  timelineItem.classList.remove('timeline-selected');
+                }
+                
+                this.updateCompareSelectedButton();
+              }
+
+              updateCompareSelectedButton() {
+                const compareBtn = document.getElementById('compareSelectedBtn');
+                const isEnabled = this.selectedHistoryRows.length === 2;
+                compareBtn.disabled = !isEnabled;
+                
+                const helpText = compareBtn.nextElementSibling;
+                if (this.selectedHistoryRows.length === 0) {
+                  helpText.textContent = 'Select two commits to compare them';
+                } else if (this.selectedHistoryRows.length === 1) {
+                  helpText.textContent = 'Select one more commit to compare';
+                } else {
+                  helpText.textContent = 'Ready to compare selected commits';
+                }
+              }
+
+              async compareSelectedHistoryRows() {
+                if (this.selectedHistoryRows.length !== 2) {
+                  this.showError('Please select exactly two commits to compare');
+                  return;
+                }
+
+                const fileName = document.getElementById('historyFileName').textContent;
+                if (!fileName) {
+                  this.showError('No file selected for comparison');
+                  return;
+                }
+
+                // Sort by chronological order (older first, newer second)
+                const sortedRows = this.selectedHistoryRows.sort((a, b) => {
+                  // Assume the order in the timeline is chronological (newer first)
+                  const aElement = a.element;
+                  const bElement = b.element;
+                  const aIndex = Array.from(aElement.parentNode.children).indexOf(aElement);
+                  const bIndex = Array.from(bElement.parentNode.children).indexOf(bElement);
+                  return bIndex - aIndex; // Reverse order for chronological
+                });
+
+                const olderCommit = sortedRows[0];
+                const newerCommit = sortedRows[1];
+
+                this.showLoading();
+
+                try {
+                  const diffData = await window.authManager.apiRequest('/api/git/diff', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      commit1: olderCommit.hash,
+                      commit2: newerCommit.hash,
+                      file_path: fileName
+                    })
+                  });
+                  
+                  const formattedDiff = this.formatGitDiff(diffData, fileName, olderCommit.shortHash, newerCommit.shortHash);
+                  
+                  this.displayComparison(formattedDiff, `Compare ${olderCommit.shortHash} vs ${newerCommit.shortHash}: ${fileName}`);
+                  
+                  document.getElementById('comparisonSection').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
+                } catch (error) {
+                  this.showError(`Error comparing commits: ${error.message}`);
+                }
+              }
+
+              async downloadHistoryFile(commitHash, shortHash) {
+                const fileName = document.getElementById('historyFileName').textContent;
+                if (!fileName) {
+                  this.showError('No file selected for download');
+                  return;
+                }
+
+                try {
+                  const response = await window.authManager.apiRequest(`/api/git/files/${encodeURIComponent(commitHash)}?file_path=${encodeURIComponent(fileName)}`);
+                  
+                  if (!response || !response.content) {
+                    this.showError('File content not found');
+                    return;
+                  }
+
+                  // Create and download the file
+                  const blob = new Blob([response.content], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${fileName.split('/').pop()}_${shortHash}`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                } catch (error) {
+                  this.showError(`Error downloading file: ${error.message}`);
+                }
+              }
+
               closeComparisonResults() {
                 const comparisonSection = document.getElementById('comparisonSection');
                 comparisonSection.style.display = 'none';
@@ -2595,7 +2739,10 @@
                   }
 
                   historyHtml += `
-                    <div class="timeline-item ${isSelectedCommit ? 'timeline-current' : ''}">
+                    <div class="timeline-item timeline-selectable ${isSelectedCommit ? 'timeline-current' : ''}" 
+                         data-commit-hash="${commit.hash}" 
+                         data-commit-short="${commit.short_hash}"
+                         onclick="configCompare.toggleHistoryRowSelection('${commit.hash}', event)">
                       <div class="timeline-marker bg-${changeColor}">
                         <i class="${changeIcon}"></i>
                       </div>
@@ -2616,16 +2763,21 @@
                           <div class="timeline-actions">
                             ${isLast ? 
                               `<button class="btn btn-sm btn-outline-info" 
-                                      onclick="configCompare.viewHistoryFile('${commit.hash}', '${commit.short_hash}')"
+                                      onclick="configCompare.viewHistoryFile('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
                                       title="View file content at this commit">
                                 <i class="fas fa-file-alt"></i> View File
                               </button>` :
                               `<button class="btn btn-sm btn-outline-primary" 
-                                      onclick="configCompare.compareHistoryCommit('${commit.hash}', '${commit.short_hash}')"
+                                      onclick="configCompare.compareHistoryCommit('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
                                       title="Show changes made in this commit">
                                 <i class="fas fa-exchange-alt"></i> Compare
                               </button>`
                             }
+                            <button class="btn btn-sm btn-outline-success" 
+                                    onclick="configCompare.downloadHistoryFile('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
+                                    title="Download file at this commit">
+                              <i class="fas fa-download"></i> Download
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -2635,6 +2787,10 @@
 
                 historyHtml += '</div>';
                 historyContent.innerHTML = historyHtml;
+                
+                // Initialize button state
+                this.selectedHistoryRows = [];
+                this.updateCompareSelectedButton();
               }
 
               async compareHistoryCommit(commitHash, shortHash) {
