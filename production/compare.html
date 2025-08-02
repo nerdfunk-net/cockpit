@@ -346,16 +346,6 @@
                 <h3>Compare configurations</h3>
               </div>
 
-              <div class="title_right">
-                <div class="col-md-5 col-sm-5 form-group float-end top_search">
-                  <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search for configurations...">
-                    <span class="input-group-btn">
-                      <button class="btn btn-secondary" type="button">Go!</button>
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -371,6 +361,9 @@
                     <li><a class="collapse-link"><i class="fas fa-chevron-down"></i></a></li>
                     <li><button class="btn btn-sm btn-primary" id="refreshGitStatus" title="Refresh status">
                       <i class="fas fa-sync-alt"></i>
+                    </button></li>
+                    <li><button class="btn btn-sm btn-info" id="gitStatusBtn" title="Show Git Status">
+                      <i class="fas fa-info-circle"></i>
                     </button></li>
                   </ul>
                   <div class="clearfix"></div>
@@ -735,9 +728,6 @@
                         </button>
                         <button class="btn btn-success ms-2" id="exportBtn" disabled>
                           <i class="fas fa-download"></i> Export Diff
-                        </button>
-                        <button class="btn btn-info ms-2" id="gitStatusBtn" style="display: none;">
-                          <i class="fas fa-info-circle"></i> Git Status
                         </button>
                       </div>
                     </div>
@@ -1901,19 +1891,16 @@
                 const fileMode = document.getElementById('fileComparisonMode');
                 const gitMode = document.getElementById('gitComparisonMode');
                 const historyMode = document.getElementById('fileHistoryMode');
-                const gitStatusBtn = document.getElementById('gitStatusBtn');
 
                 if (mode === 'files') {
                   fileMode.style.display = 'block';
                   gitMode.style.display = 'none';
                   historyMode.style.display = 'none';
-                  gitStatusBtn.style.display = 'none';
                   this.updateFileHistoryVisibility();
                 } else if (mode === 'git') {
                   fileMode.style.display = 'none';
                   gitMode.style.display = 'block';
                   historyMode.style.display = 'none';
-                  gitStatusBtn.style.display = 'inline-block';
                   this.updateGitFileHistoryVisibility();
                   
                   // Ensure commits are loaded when switching to Git mode
@@ -1928,7 +1915,6 @@
                   fileMode.style.display = 'none';
                   gitMode.style.display = 'none';
                   historyMode.style.display = 'block';
-                  gitStatusBtn.style.display = 'none';
                   
                   // Initialize history file search immediately when switching to history mode
                   if (!this.historyFileSearchInitialized) {
@@ -3222,7 +3208,7 @@
                                   <tr>
                                     <td><code>${commit.hash.substring(0, 8)}</code></td>
                                     <td>${commit.message}</td>
-                                    <td>${commit.author}</td>
+                                    <td>${typeof commit.author === 'object' ? commit.author.name : commit.author}</td>
                                     <td>${new Date(commit.date).toLocaleDateString()}</td>
                                   </tr>
                                 `).join('')}
