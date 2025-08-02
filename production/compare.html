@@ -179,7 +179,13 @@
                       <li><a href="compare.html" class="current-page">Compare</a></li>
                     </ul>
                   </li>
-                  <li><a href="settings.html"><i class="fas fa-wrench"></i> Settings</a></li>
+                  <li><a><i class="fas fa-wrench"></i> Settings <span class="fas fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a></li>
+                      <li><a href="settings-git.html"><i class="fas fa-code-branch"></i> Git</a></li>
+                      <li><a href="settings-templates.html"><i class="fas fa-file-code"></i> Templates</a></li>
+                    </ul>
+                  </li>
                 </ul>
               </div>
               <div class="menu_section">
@@ -191,7 +197,7 @@
 
             <!-- /menu footer buttons -->
             <div class="sidebar-footer hidden-small">
-              <a href="settings.html" data-bs-toggle="tooltip" data-bs-placement="top" title="Settings">
+              <a href="settings-nautobot.html" data-bs-toggle="tooltip" data-bs-placement="top" title="Settings">
                 <span class="fas fa-cog" aria-hidden="true"></span>
               </a>
               <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
@@ -262,7 +268,7 @@
                   </script>
                   <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
                     <a class="dropdown-item"  href="javascript:;"> Profile</a>
-                      <a class="dropdown-item" href="settings.html">
+                      <a class="dropdown-item" href="settings-nautobot.html">
                         <span class="badge bg-red float-end">50%</span>
                         <span>Settings</span>
                       </a>
@@ -651,6 +657,22 @@
                       </div>
                     </div>
                     
+                    <!-- Show History and Compare Buttons for File History Mode -->
+                    <div class="row">
+                      <div class="col-md-12">
+                        <div class="text-center" style="margin-top: 15px;">
+                          <button class="btn btn-primary" id="showHistoryBtn" disabled>
+                            <i class="fas fa-history"></i> Show History
+                          </button>
+                          <button class="btn btn-primary ms-2" id="historyCompareBtn" disabled>
+                            <i class="fas fa-exchange-alt"></i> Compare
+                          </button>
+                          <button class="btn btn-success ms-2" id="historyExportBtn" disabled>
+                            <i class="fas fa-download"></i> Export Diff
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                     
                     <!-- File History Display -->
                     <div class="row" id="fileHistoryDisplay" style="display: none; margin-top: 20px;">
@@ -716,15 +738,12 @@
                     </div>
                   </div>
                   
-                  <!-- Compare Button and Controls -->
-                  <div class="row">
+                  <!-- Compare Button and Controls - Hidden for File History Mode -->
+                  <div class="row" id="sharedCompareControls">
                     <div class="col-md-12">
                       <div class="text-center" style="margin-top: 15px;">
                         <button class="btn btn-primary" id="compareBtn" disabled>
                           <i class="fas fa-exchange-alt"></i> Compare
-                        </button>
-                        <button class="btn btn-primary ms-2" id="showHistoryBtn" disabled>
-                          <i class="fas fa-history"></i> Show History
                         </button>
                         <button class="btn btn-success ms-2" id="exportBtn" disabled>
                           <i class="fas fa-download"></i> Export Diff
@@ -990,15 +1009,16 @@
             }
             
             .timeline-header {
-              margin-bottom: 1rem;
-              padding-bottom: 0.5rem;
+              margin-bottom: 0.5rem;
+              padding-bottom: 0.25rem;
               border-bottom: 1px solid #e3e6f0;
             }
             
             .timeline-item {
               position: relative;
-              padding: 1rem 0 1rem 3rem;
+              padding: 0.75rem 0 0.75rem 3rem;
               border-left: 2px solid #e3e6f0;
+              transition: all 0.2s ease;
             }
             
             .timeline-item:last-child {
@@ -1012,7 +1032,7 @@
             .timeline-marker {
               position: absolute;
               left: -0.6rem;
-              top: 1.2rem;
+              top: 1rem;
               width: 1.2rem;
               height: 1.2rem;
               border-radius: 50%;
@@ -1033,8 +1053,11 @@
               background: #f8f9fc;
               border: 1px solid #e3e6f0;
               border-radius: 0.35rem;
-              padding: 1rem;
+              padding: 0.75rem;
               margin-left: 0.5rem;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
             }
             
             .timeline-item.timeline-current .timeline-content {
@@ -1063,36 +1086,69 @@
               box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.5);
             }
             
+            .timeline-main-content {
+              flex: 1;
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+            }
+            
+            .timeline-commit-info {
+              flex: 0 0 120px;
+              font-family: 'Courier New', monospace;
+              font-size: 0.85rem;
+            }
+            
+            .timeline-author-info {
+              flex: 0 0 150px;
+              font-size: 0.85rem;
+            }
+            
+            .timeline-message-info {
+              flex: 1;
+              font-size: 0.85rem;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            
+            .timeline-time-info {
+              flex: 0 0 180px;
+              font-size: 0.8rem;
+              color: #6c757d;
+            }
+            
+            .timeline-actions {
+              flex: 0 0 auto;
+              display: flex;
+              gap: 0.25rem;
+            }
+            
+            .timeline-actions .btn {
+              font-size: 0.7rem;
+              padding: 0.2rem 0.4rem;
+              line-height: 1.2;
+            }
+            
             .timeline-title {
               color: #5a5c69;
               font-weight: 600;
+              margin: 0;
+              font-size: 0.85rem;
             }
             
             .timeline-time {
-              font-size: 0.875rem;
+              font-size: 0.8rem;
+              margin: 0;
             }
             
             .timeline-body {
               color: #6c757d;
+              margin: 0;
             }
             
             .timeline-body p {
-              margin-bottom: 0.5rem;
-            }
-            
-            .timeline-body p:last-child {
-              margin-bottom: 0;
-            }
-            
-            .timeline-actions {
-              margin-top: 0.75rem;
-              padding-top: 0.75rem;
-              border-top: 1px solid #e3e6f0;
-            }
-            
-            .timeline-actions .btn {
-              font-size: 0.75rem;
-              padding: 0.25rem 0.5rem;
+              margin: 0;
             }
             
             /* File Search Container - Ensure proper positioning context */
@@ -1198,6 +1254,8 @@
                 // Initialize event listeners
                 document.getElementById('compareBtn').addEventListener('click', () => this.handleCompare());
                 document.getElementById('exportBtn').addEventListener('click', () => this.exportDiff());
+                document.getElementById('historyCompareBtn').addEventListener('click', () => this.handleCompare());
+                document.getElementById('historyExportBtn').addEventListener('click', () => this.exportDiff());
                 document.getElementById('prevDiffBtn').addEventListener('click', () => this.navigateDiff(-1));
                 document.getElementById('nextDiffBtn').addEventListener('click', () => this.navigateDiff(1));
                 document.getElementById('toggleUnchangedBtn').addEventListener('click', () => this.toggleUnchanged());
@@ -1891,16 +1949,19 @@
                 const fileMode = document.getElementById('fileComparisonMode');
                 const gitMode = document.getElementById('gitComparisonMode');
                 const historyMode = document.getElementById('fileHistoryMode');
+                const sharedControls = document.getElementById('sharedCompareControls');
 
                 if (mode === 'files') {
                   fileMode.style.display = 'block';
                   gitMode.style.display = 'none';
                   historyMode.style.display = 'none';
+                  sharedControls.style.display = 'block';
                   this.updateFileHistoryVisibility();
                 } else if (mode === 'git') {
                   fileMode.style.display = 'none';
                   gitMode.style.display = 'block';
                   historyMode.style.display = 'none';
+                  sharedControls.style.display = 'block';
                   this.updateGitFileHistoryVisibility();
                   
                   // Ensure commits are loaded when switching to Git mode
@@ -1915,6 +1976,7 @@
                   fileMode.style.display = 'none';
                   gitMode.style.display = 'none';
                   historyMode.style.display = 'block';
+                  sharedControls.style.display = 'none';
                   
                   // Initialize history file search immediately when switching to history mode
                   if (!this.historyFileSearchInitialized) {
@@ -1946,8 +2008,10 @@
                 const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
                 if (mode === 'files') {
                   this.compareFiles();
-                } else {
+                } else if (mode === 'git') {
                   this.compareGitCommits();
+                } else if (mode === 'history') {
+                  this.compareSelectedHistoryRows();
                 }
               }
 
@@ -2324,6 +2388,7 @@
                 }
                 
                 this.updateCompareSelectedButton();
+                this.updateCompareButton(); // Update the history compare button as well
               }
 
               updateCompareSelectedButton() {
@@ -2733,38 +2798,39 @@
                         <i class="${changeIcon}"></i>
                       </div>
                       <div class="timeline-content">
-                        <div class="timeline-header">
-                          <h6 class="timeline-title mb-1">
-                            File ${changeType} 
-                            ${isSelectedCommit ? '<span class="badge bg-info ms-2">Selected Commit</span>' : ''}
-                          </h6>
-                          <p class="timeline-time text-muted mb-2">
-                            <i class="fas fa-clock"></i> ${timeAgo} (${commitDate.toLocaleString()})
-                          </p>
-                        </div>
-                        <div class="timeline-body">
-                          <p class="mb-1"><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
-                          <p class="mb-1"><strong>Author:</strong> ${commit.author.name}</p>
-                          <p class="mb-2"><strong>Message:</strong> ${commit.message}</p>
-                          <div class="timeline-actions">
-                            ${isLast ? 
-                              `<button class="btn btn-sm btn-outline-info" 
-                                      onclick="configCompare.viewHistoryFile('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
-                                      title="View file content at this commit">
-                                <i class="fas fa-file-alt"></i> View File
-                              </button>` :
-                              `<button class="btn btn-sm btn-outline-primary" 
-                                      onclick="configCompare.compareHistoryCommit('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
-                                      title="Show changes made in this commit">
-                                <i class="fas fa-exchange-alt"></i> Compare
-                              </button>`
-                            }
-                            <button class="btn btn-sm btn-outline-success" 
-                                    onclick="configCompare.downloadHistoryFile('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
-                                    title="Download file at this commit">
-                              <i class="fas fa-download"></i> Download
-                            </button>
+                        <div class="timeline-main-content">
+                          <div class="timeline-commit-info">
+                            <code>${commit.short_hash}</code>
+                            ${isSelectedCommit ? '<br><span class="badge bg-info" style="font-size: 0.6rem;">Selected</span>' : ''}
                           </div>
+                          <div class="timeline-author-info">
+                            <strong>${commit.author.name}</strong>
+                          </div>
+                          <div class="timeline-message-info" title="${commit.message}">
+                            ${commit.message}
+                          </div>
+                          <div class="timeline-time-info">
+                            <i class="fas fa-clock"></i> ${timeAgo}
+                          </div>
+                        </div>
+                        <div class="timeline-actions">
+                          ${isLast ? 
+                            `<button class="btn btn-outline-info" 
+                                    onclick="configCompare.viewHistoryFile('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
+                                    title="View file content at this commit">
+                              <i class="fas fa-file-alt"></i>
+                            </button>` :
+                            `<button class="btn btn-outline-primary" 
+                                    onclick="configCompare.compareHistoryCommit('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
+                                    title="Show changes made in this commit">
+                              <i class="fas fa-exchange-alt"></i>
+                            </button>`
+                          }
+                          <button class="btn btn-outline-success" 
+                                  onclick="configCompare.downloadHistoryFile('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
+                                  title="Download file at this commit">
+                            <i class="fas fa-download"></i>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -3072,6 +3138,8 @@
               updateCompareButton() {
                 const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
                 const compareBtn = document.getElementById('compareBtn');
+                const historyCompareBtn = document.getElementById('historyCompareBtn');
+                const historyExportBtn = document.getElementById('historyExportBtn');
                 let canCompare = false;
 
                 if (mode === 'files') {
@@ -3086,18 +3154,20 @@
                   canCompare = leftCommit && rightCommit && gitFile && leftCommit !== rightCommit;
                   compareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare Commits';
                 } else if (mode === 'history') {
-                  // In history mode, the compare button is not used (Show History button is used instead)
-                  canCompare = false;
-                  compareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare';
+                  // In history mode, check if we have selected rows for comparison
+                  canCompare = this.selectedHistoryRows.length === 2;
+                  if (historyCompareBtn) {
+                    historyCompareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare';
+                    historyCompareBtn.disabled = !canCompare;
+                  }
+                  if (historyExportBtn) {
+                    historyExportBtn.disabled = !canCompare;
+                  }
                 }
                 
-                compareBtn.disabled = !canCompare;
-                
-                // Hide compare button in history mode
-                if (mode === 'history') {
-                  compareBtn.style.display = 'none';
-                } else {
-                  compareBtn.style.display = 'inline-block';
+                // Update main compare button (for files and git modes)
+                if (mode !== 'history') {
+                  compareBtn.disabled = !canCompare;
                 }
               }
 
