@@ -182,7 +182,7 @@
                   <li><a><i class="fas fa-wrench"></i> Settings <span class="fas fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a></li>
-                      <li><a href="settings-git.html"><i class="fas fa-code-branch"></i> Git</a></li>
+                      <li><a href="settings-git.html"><i class="fas fa-code-branch"></i> Configs</a></li>
                       <li><a href="settings-templates.html"><i class="fas fa-file-code"></i> Templates</a></li>
                     </ul>
                   </li>
@@ -690,12 +690,6 @@
                             <div id="historyContent">
                               <!-- History timeline will be populated here -->
                             </div>
-                          </div>
-                          <div class="card-footer">
-                            <button type="button" class="btn btn-primary" id="compareSelectedBtn" disabled>
-                              <i class="fas fa-exchange-alt"></i> Compare Selected
-                            </button>
-                            <small class="text-muted ms-2">Select two commits to compare them</small>
                           </div>
                         </div>
                       </div>
@@ -1264,7 +1258,6 @@
                 document.getElementById('closeHistoryBtn').addEventListener('click', () => this.closeFileHistory());
                 document.getElementById('closeResultsBtn').addEventListener('click', () => this.closeComparisonResults());
                 document.getElementById('closeFileHistoryDisplayBtn').addEventListener('click', () => this.closeFileHistoryDisplay());
-                document.getElementById('compareSelectedBtn').addEventListener('click', () => this.compareSelectedHistoryRows());
                 
                 // File search will be initialized when files are loaded by populateFileSelects
 
@@ -2015,6 +2008,56 @@
                 }
               }
 
+              async compareSelectedHistoryRows() {
+                if (this.selectedHistoryRows.length !== 2) {
+                  this.showError('Please select exactly two commits to compare');
+                  return;
+                }
+
+                const fileName = document.getElementById('historyFileName').textContent;
+                if (!fileName) {
+                  this.showError('No file selected for comparison');
+                  return;
+                }
+
+                // Sort by chronological order (older first, newer second)
+                const sortedRows = this.selectedHistoryRows.sort((a, b) => {
+                  // Assume the order in the timeline is chronological (newer first)
+                  const aElement = a.element;
+                  const bElement = b.element;
+                  const aIndex = Array.from(aElement.parentNode.children).indexOf(aElement);
+                  const bIndex = Array.from(bElement.parentNode.children).indexOf(bElement);
+                  return bIndex - aIndex; // Reverse order for chronological
+                });
+
+                const olderCommit = sortedRows[0];
+                const newerCommit = sortedRows[1];
+
+                this.showLoading();
+
+                try {
+                  const diffData = await window.authManager.apiRequest('/api/git/diff', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      commit1: olderCommit.hash,
+                      commit2: newerCommit.hash,
+                      file_path: fileName
+                    })
+                  });
+                  
+                  const formattedDiff = this.formatGitDiff(diffData, fileName, olderCommit.shortHash, newerCommit.shortHash);
+                  
+                  this.displayComparison(formattedDiff, `Compare ${olderCommit.shortHash} vs ${newerCommit.shortHash}: ${fileName}`);
+                  
+                  document.getElementById('comparisonSection').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
+                } catch (error) {
+                  this.showError(`Error comparing commits: ${error.message}`);
+                }
+              }
+
               async loadGitStatus() {
                 try {
                   // Check if authManager is available
@@ -2360,7 +2403,6 @@
                 
                 // Clear the selected rows if any
                 this.selectedHistoryRows = [];
-                this.updateCompareSelectedButton();
               }
 
               toggleHistoryRowSelection(commitHash, event) {
@@ -2387,73 +2429,7 @@
                   timelineItem.classList.remove('timeline-selected');
                 }
                 
-                this.updateCompareSelectedButton();
                 this.updateCompareButton(); // Update the history compare button as well
-              }
-
-              updateCompareSelectedButton() {
-                const compareBtn = document.getElementById('compareSelectedBtn');
-                const isEnabled = this.selectedHistoryRows.length === 2;
-                compareBtn.disabled = !isEnabled;
-                
-                const helpText = compareBtn.nextElementSibling;
-                if (this.selectedHistoryRows.length === 0) {
-                  helpText.textContent = 'Select two commits to compare them';
-                } else if (this.selectedHistoryRows.length === 1) {
-                  helpText.textContent = 'Select one more commit to compare';
-                } else {
-                  helpText.textContent = 'Ready to compare selected commits';
-                }
-              }
-
-              async compareSelectedHistoryRows() {
-                if (this.selectedHistoryRows.length !== 2) {
-                  this.showError('Please select exactly two commits to compare');
-                  return;
-                }
-
-                const fileName = document.getElementById('historyFileName').textContent;
-                if (!fileName) {
-                  this.showError('No file selected for comparison');
-                  return;
-                }
-
-                // Sort by chronological order (older first, newer second)
-                const sortedRows = this.selectedHistoryRows.sort((a, b) => {
-                  // Assume the order in the timeline is chronological (newer first)
-                  const aElement = a.element;
-                  const bElement = b.element;
-                  const aIndex = Array.from(aElement.parentNode.children).indexOf(aElement);
-                  const bIndex = Array.from(bElement.parentNode.children).indexOf(bElement);
-                  return bIndex - aIndex; // Reverse order for chronological
-                });
-
-                const olderCommit = sortedRows[0];
-                const newerCommit = sortedRows[1];
-
-                this.showLoading();
-
-                try {
-                  const diffData = await window.authManager.apiRequest('/api/git/diff', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                      commit1: olderCommit.hash,
-                      commit2: newerCommit.hash,
-                      file_path: fileName
-                    })
-                  });
-                  
-                  const formattedDiff = this.formatGitDiff(diffData, fileName, olderCommit.shortHash, newerCommit.shortHash);
-                  
-                  this.displayComparison(formattedDiff, `Compare ${olderCommit.shortHash} vs ${newerCommit.shortHash}: ${fileName}`);
-                  
-                  document.getElementById('comparisonSection').scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'start'
-                  });
-                } catch (error) {
-                  this.showError(`Error comparing commits: ${error.message}`);
-                }
               }
 
               async downloadHistoryFile(commitHash, shortHash) {
@@ -2504,23 +2480,16 @@
               }
 
               getTimeAgo(date) {
-                const now = new Date();
-                const diff = now - date;
-                const seconds = Math.floor(diff / 1000);
-                const minutes = Math.floor(seconds / 60);
-                const hours = Math.floor(minutes / 60);
-                const days = Math.floor(hours / 24);
-                const weeks = Math.floor(days / 7);
-                const months = Math.floor(days / 30);
-                const years = Math.floor(days / 365);
-
-                if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`;
-                if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
-                if (weeks > 0) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-                if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-                if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-                if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-                return 'Just now';
+                // Return exact date instead of relative time
+                const options = { 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric', 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  hour12: false
+                };
+                return date.toLocaleString('en-US', options);
               }
 
               // File History Mode Methods
@@ -2842,7 +2811,6 @@
                 
                 // Initialize button state
                 this.selectedHistoryRows = [];
-                this.updateCompareSelectedButton();
               }
 
               async compareHistoryCommit(commitHash, shortHash) {
