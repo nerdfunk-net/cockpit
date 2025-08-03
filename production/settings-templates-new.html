@@ -61,6 +61,9 @@
 
             <!-- menu profile quick info -->
             <div class="profile clearfix">
+              <div class="profile_pic">
+                <img src="images/img.jpg" alt="..." class="img-circle profile_img">
+              </div>
               <div class="profile_info">
                 <span>Welcome,</span>
                 <h2 id="sidebar-username">Loading...</h2>
@@ -452,6 +455,9 @@
         <div class="modal-content">
           <div class="modal-header">
             <h4 class="modal-title" id="editTemplateModalLabel">Edit Template</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
           <div class="modal-body">
             <form id="edit-template-form">
@@ -561,7 +567,6 @@
           this.templates = [];
           this.categories = [];
           this.currentEditId = null;
-          this.originalEditValues = null; // Track original values for change detection
           this.init();
         }
 
@@ -593,14 +598,6 @@
 
           // Edit modal
           document.getElementById('save-template-edit').addEventListener('click', () => this.saveTemplateEdit());
-          
-          // Custom cancel button handler for change detection
-          $(document).on('click', '[data-dismiss="modal"]', (e) => {
-            if (e.target.closest('#editTemplateModal')) {
-              e.preventDefault();
-              this.handleCancelEdit();
-            }
-          });
         }
 
         async loadTemplates() {
@@ -893,15 +890,6 @@
             const content = await window.authManager.apiRequest(`/api/templates/${templateId}/content`);
             
             this.currentEditId = templateId;
-            
-            // Store original values for change detection
-            this.originalEditValues = {
-              name: template.name,
-              category: template.category || '',
-              description: template.description || '',
-              content: content.content || ''
-            };
-            
             document.getElementById('edit-template-id').value = templateId;
             document.getElementById('edit-template-name').value = template.name;
             document.getElementById('edit-template-category').value = template.category || '';
@@ -932,51 +920,9 @@
 
             this.showStatus('Template updated successfully!', 'success');
             $('#editTemplateModal').modal('hide');
-            this.currentEditId = null;
-            this.originalEditValues = null;
             this.loadTemplates();
           } catch (error) {
-            console.error('Error updating template:', error);
-            let errorMessage = 'Unknown error occurred';
-            if (error.message) {
-              errorMessage = error.message;
-            } else if (error.detail) {
-              errorMessage = error.detail;
-            } else if (typeof error === 'string') {
-              errorMessage = error;
-            }
-            this.showStatus('Error updating template: ' + errorMessage, 'error');
-          }
-        }
-
-        handleCancelEdit() {
-          if (!this.originalEditValues) {
-            $('#editTemplateModal').modal('hide');
-            return;
-          }
-
-          // Check if any values have changed
-          const currentValues = {
-            name: document.getElementById('edit-template-name').value,
-            category: document.getElementById('edit-template-category').value,
-            description: document.getElementById('edit-template-description').value,
-            content: document.getElementById('edit-template-content').value
-          };
-
-          const hasChanges = Object.keys(this.originalEditValues).some(key => 
-            this.originalEditValues[key] !== currentValues[key]
-          );
-
-          if (hasChanges) {
-            if (confirm('You have unsaved changes. Are you sure you want to close without saving?')) {
-              $('#editTemplateModal').modal('hide');
-              this.currentEditId = null;
-              this.originalEditValues = null;
-            }
-          } else {
-            $('#editTemplateModal').modal('hide');
-            this.currentEditId = null;
-            this.originalEditValues = null;
+            this.showStatus('Error updating template: ' + error.message, 'error');
           }
         }
 

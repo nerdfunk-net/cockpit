@@ -344,3 +344,28 @@ async def check_settings_health(current_user: str = Depends(verify_token)):
             "message": f"Health check failed: {str(e)}",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+
+
+# Legacy template settings endpoints for backward compatibility
+@router.get("/templates")
+async def get_template_settings(current_user: str = Depends(verify_token)):
+    """Get template settings (legacy endpoint - redirects to new template management)."""
+    return {
+        "message": "Template settings have been moved to /api/templates",
+        "redirect_url": "/api/templates",
+        "legacy": True
+    }
+
+
+@router.post("/templates")
+async def update_template_settings(
+    template_data: dict,
+    current_user: str = Depends(verify_token)
+):
+    """Update template settings (legacy endpoint - redirects to new template management)."""
+    return {
+        "message": "Template settings have been moved to /api/templates",
+        "redirect_url": "/api/templates",
+        "legacy": True,
+        "note": "Please use the new template management interface"
+    }
