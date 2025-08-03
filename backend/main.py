@@ -17,6 +17,7 @@ from routers.git import router as git_router
 from routers.files import router as files_router
 from routers.settings import router as settings_router
 from routers.templates import router as templates_router
+from routers.git_repositories import router as git_repositories_router
 
 # Import auth dependency
 from core.auth import verify_token
@@ -31,7 +32,8 @@ app = FastAPI(
     description="Network Device Management Dashboard API",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    redirect_slashes=False
 )
 
 # Include routers
@@ -41,6 +43,7 @@ app.include_router(git_router)
 app.include_router(files_router)
 app.include_router(settings_router)
 app.include_router(templates_router)
+app.include_router(git_repositories_router)
 
 # Health check and basic endpoints
 @app.get("/")
