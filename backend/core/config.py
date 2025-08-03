@@ -17,12 +17,6 @@ def get_nautobot_service():
     return nautobot_service
 
 
-def get_git_manager():
-    """Get Git manager instance."""
-    from git_manager import GitManager
-    return GitManager()
-
-
 def get_settings_manager():
     """Get settings manager instance."""
     from settings_manager import settings_manager

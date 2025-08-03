@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 """
-Cockpit Backend Startup Script
-Loads configuration and starts the FastAPI server.
+Isolated Cockpit Backend Startup Script
+Runs Uvicorn from backend directory with strict file watching isolation.
 """
 
 import uvicorn
+import os
+import sys
+
+# Ensure we're running from the backend directory
+if not os.path.basename(os.getcwd()) == 'backend':
+    backend_dir = os.path.dirname(__file__)
+    os.chdir(backend_dir)
+    print(f"Changed to backend directory: {os.getcwd()}")
+
+# Import settings after changing directory
 from config_manual import settings
 from settings_manager import settings_manager
 import logging
@@ -37,7 +47,7 @@ def initialize_database_settings():
         logger.error(f"Error initializing database settings: {e}")
 
 def main():
-    """Start the FastAPI server with configuration."""
+    """Start the FastAPI server with strict file watching isolation."""
     
     # Configure logging
     logging.basicConfig(
@@ -52,36 +62,24 @@ def main():
     initialize_database_settings()
     
     # Log startup information
-    logger.info("Starting Cockpit Backend Server")
+    logger.info("Starting Cockpit Backend Server (Isolated Mode)")
+    logger.info(f"Working Directory: {os.getcwd()}")
     logger.info(f"Server: {settings.host}:{settings.port}")
     logger.info(f"Debug: {settings.debug}")
     logger.info(f"Data Directory: {settings.data_directory}")
     logger.info(f"Nautobot (env): {settings.nautobot_url}")
     logger.info(f"Git SSL Verification: {settings.git_ssl_verify}")
     
-    # Start the server
-    import os
-    
-    # Get the backend directory path
-    backend_dir = os.path.dirname(__file__)
-    
-    # Change to backend directory to ensure Uvicorn only watches backend files
-    original_cwd = os.getcwd()
-    os.chdir(backend_dir)
-    
-    try:
-        uvicorn.run(
-            "main:app",
-            host=settings.host,
-            port=settings.port,
-            reload=settings.debug,
-            reload_dirs=["."],  # Only watch current directory (backend)
-            reload_excludes=["../data/**", "data/**"],  # Exclude data directories  
-            log_level=settings.log_level.lower(),
-            access_log=True
-        )
-    finally:
-        os.chdir(original_cwd)
+    # Start the server with strict isolation
+    uvicorn.run(
+        "main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
+        reload_dirs=["."],  # Only watch backend directory
+        log_level=settings.log_level.lower(),
+        access_log=True
+    )
 
 if __name__ == "__main__":
     main()

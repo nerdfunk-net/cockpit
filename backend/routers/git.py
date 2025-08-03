@@ -6,9 +6,10 @@ from __future__ import annotations
 import difflib
 import logging
 import os
-import fnmatch
+import shutil
 from pathlib import Path
 from typing import Dict, Any, Optional
+from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, status
 from git import Repo, InvalidGitRepositoryError, GitCommandError
 
@@ -20,29 +21,124 @@ router = APIRouter(prefix="/api/git", tags=["git"])
 
 
 def get_git_repo():
-    """Get Git repository instance for the config directory."""
+    """Get Git repository instance for the selected config repository."""
     try:
-        # Use GitManager's base path instead of settings.config_files_directory
-        from git_manager import GitManager
-        git_manager = GitManager()
-        config_dir = Path(git_manager.base_path)
-        repo = Repo(config_dir)
-        return repo
-    except InvalidGitRepositoryError:
-        # Try to initialize a new repo
-        try:
-            from git_manager import GitManager
-            git_manager = GitManager()
-            config_dir = Path(git_manager.base_path)
-            config_dir.mkdir(parents=True, exist_ok=True)
-            repo = Repo.init(config_dir)
-            return repo
-        except Exception as e:
+        from settings_manager import settings_manager
+        from git_repositories_manager import GitRepositoryManager
+        
+        # Get the selected repository from Git Management
+        selected_id = settings_manager.get_selected_git_repository()
+        if not selected_id:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to initialize Git repository: {str(e)}"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No Git repository selected for configuration comparison. Please select a repository in Git Management."
             )
+        
+        # Get repository details
+        git_repo_manager = GitRepositoryManager()
+        repository = git_repo_manager.get_repository(selected_id)
+        if not repository:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Selected Git repository not found. Please select a valid repository in Git Management."
+            )
+        
+        if not repository['is_active']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Selected Git repository is inactive. Please activate it or select a different repository."
+            )
+        
+        # Use the repository name from the database for the directory path
+        from config_manual import settings as config_settings
+        from pathlib import Path
+        repo_dir = Path(config_settings.data_directory) / 'git' / repository['name']
+        
+        # Create the directory if it doesn't exist
+        repo_dir.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            # Try to open existing repository
+            repo = Repo(repo_dir)
+            
+            # Verify this is the correct repository by checking remote URL
+            if repo.remotes:
+                current_remote = repo.remotes.origin.url
+                
+                # Compare URLs by normalizing them (remove authentication parts)
+                def normalize_git_url(url):
+                    """Remove authentication from Git URL for comparison"""
+                    from urllib.parse import urlparse, urlunparse
+                    parsed = urlparse(url)
+                    # Remove userinfo (username:password@) from netloc
+                    if '@' in parsed.netloc:
+                        netloc = parsed.netloc.split('@')[-1]
+                    else:
+                        netloc = parsed.netloc
+                    return urlunparse((parsed.scheme, netloc, parsed.path, '', '', ''))
+                
+                expected_url = normalize_git_url(repository['url'])
+                current_url = normalize_git_url(current_remote)
+                
+                if current_url != expected_url:
+                    logger.warning(f"Repository URL mismatch. Expected: {expected_url}, Found: {current_url}")
+                    # Remove the directory and clone fresh
+                    shutil.rmtree(repo_dir)
+                    repo_dir.mkdir(parents=True, exist_ok=True)
+                    raise InvalidGitRepositoryError("URL mismatch, need to re-clone")
+            
+            return repo
+            
+        except (InvalidGitRepositoryError, Exception):
+            # Repository doesn't exist or is corrupted, clone it
+            if repo_dir.exists():
+                shutil.rmtree(repo_dir)
+            repo_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Clone the repository
+            clone_url = repository['url']
+            
+            # Add authentication if provided
+            if repository.get('username') and repository.get('token'):
+                parsed_url = urlparse(repository['url'])
+                clone_url = f"{parsed_url.scheme}://{repository['username']}:{repository['token']}@{parsed_url.netloc}{parsed_url.path}"
+            
+            try:
+                # Configure Git environment for SSL
+                env = os.environ.copy()
+                if not repository.get('verify_ssl', True):
+                    env['GIT_SSL_NO_VERIFY'] = '1'
+                
+                repo = Repo.clone_from(
+                    clone_url, 
+                    repo_dir,
+                    branch=repository.get('branch', 'main'),
+                    env=env
+                )
+                
+                # Switch to the correct path within the repository if specified
+                if repository.get('path'):
+                    config_path = repo_dir / repository['path']
+                    if config_path.exists() and config_path.is_dir():
+                        # Return a repo object that points to the subdirectory
+                        # Note: Git repos can't have subdirectories as separate repos,
+                        # but we can work with the files in the subdirectory
+                        pass
+                
+                logger.info(f"Successfully cloned repository {repository['name']} from {repository['url']}")
+                return repo
+                
+            except Exception as e:
+                logger.error(f"Failed to clone repository {repository['name']}: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to clone Git repository: {str(e)}"
+                )
+                
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Error getting Git repository: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Git repository error: {str(e)}"
@@ -582,195 +678,3 @@ async def debug_git(current_user: str = Depends(verify_token)):
         }
 
 
-# Repository management endpoints
-@router.get("/repo/status")
-async def get_git_repository_status(current_user: str = Depends(verify_token)):
-    """Get Git repository status and information."""
-    try:
-        from git_manager import GitManager
-        git_manager = GitManager()
-        status = git_manager.get_repository_status()
-        return {
-            "success": True,
-            "data": status
-        }
-    except Exception as e:
-        logger.error(f"Error getting Git repository status: {e}")
-        return {
-            "success": False,
-            "message": f"Failed to get repository status: {str(e)}"
-        }
-
-
-@router.post("/repo/sync")
-async def sync_git_repository(current_user: str = Depends(verify_token)):
-    """Sync Git repository (clone if not exists, pull if exists)."""
-    try:
-        from git_manager import GitManager
-        git_manager = GitManager()
-        success, message = git_manager.sync_repository()
-        
-        if success:
-            # Get updated status after sync
-            status = git_manager.get_repository_status()
-            return {
-                "success": True,
-                "message": message,
-                "data": status
-            }
-        else:
-            return {
-                "success": False,
-                "message": message
-            }
-    except Exception as e:
-        logger.error(f"Error syncing Git repository: {e}")
-        return {
-            "success": False,
-            "message": f"Repository sync failed: {str(e)}"
-        }
-
-
-@router.post("/repo/clone")
-async def clone_git_repository(current_user: str = Depends(verify_token)):
-    """Force clone Git repository (backup existing and clone fresh)."""
-    try:
-        from git_manager import GitManager
-        git_manager = GitManager()
-        success, message = git_manager.clone_repository()
-        
-        if success:
-            # Get updated status after clone
-            status = git_manager.get_repository_status()
-            return {
-                "success": True,
-                "message": message,
-                "data": status
-            }
-        else:
-            return {
-                "success": False,
-                "message": message
-            }
-    except Exception as e:
-        logger.error(f"Error cloning Git repository: {e}")
-        return {
-            "success": False,
-            "message": f"Repository clone failed: {str(e)}"
-        }
-
-
-@router.get("/repo/files/search")
-async def search_repository_files(
-    query: str = "", 
-    limit: int = 50,
-    current_user: str = Depends(verify_token)
-):
-    """Search for files in the Git repository with filtering and pagination."""
-    try:
-        from git_manager import GitManager
-        git_manager = GitManager()
-        
-        # Get all files from the repository
-        all_files = git_manager.get_repository_status().get('config_files', [])
-        
-        if not all_files:
-            return {
-                "success": True,
-                "data": {
-                    "files": [],
-                    "total_count": 0,
-                    "filtered_count": 0,
-                    "query": query
-                }
-            }
-        
-        # Add directory structure by scanning the actual git directory
-        git_path = git_manager.base_path
-        structured_files = []
-        
-        if os.path.exists(git_path):
-            for root, dirs, files in os.walk(git_path):
-                # Skip .git directory
-                if '.git' in root:
-                    continue
-                    
-                rel_root = os.path.relpath(root, git_path)
-                if rel_root == '.':
-                    rel_root = ''
-                
-                for file in files:
-                    if file.startswith('.'):
-                        continue
-                        
-                    full_path = os.path.join(rel_root, file) if rel_root else file
-                    file_info = {
-                        "name": file,
-                        "path": full_path,
-                        "directory": rel_root,
-                        "size": os.path.getsize(os.path.join(root, file)) if os.path.exists(os.path.join(root, file)) else 0
-                    }
-                    structured_files.append(file_info)
-        
-        # Filter files based on query
-        filtered_files = structured_files
-        if query:
-            query_lower = query.lower()
-            filtered_files = []
-            
-            for file_info in structured_files:
-                # Search in filename, path, and directory
-                if (query_lower in file_info['name'].lower() or 
-                    query_lower in file_info['path'].lower() or
-                    query_lower in file_info['directory'].lower()):
-                    filtered_files.append(file_info)
-                # Also support wildcard matching
-                elif (fnmatch.fnmatch(file_info['name'].lower(), f'*{query_lower}*') or
-                      fnmatch.fnmatch(file_info['path'].lower(), f'*{query_lower}*')):
-                    filtered_files.append(file_info)
-        
-        # Sort by relevance (exact matches first, then by path)
-        if query:
-            def sort_key(item):
-                name_lower = item['name'].lower()
-                path_lower = item['path'].lower()
-                query_lower = query.lower()
-                
-                # Exact filename match gets highest priority
-                if name_lower == query_lower:
-                    return (0, item['path'])
-                # Filename starts with query
-                elif name_lower.startswith(query_lower):
-                    return (1, item['path'])
-                # Filename contains query
-                elif query_lower in name_lower:
-                    return (2, item['path'])
-                # Path contains query
-                else:
-                    return (3, item['path'])
-            
-            filtered_files.sort(key=sort_key)
-        else:
-            # No query, sort alphabetically by path
-            filtered_files.sort(key=lambda x: x['path'])
-        
-        # Apply pagination
-        paginated_files = filtered_files[:limit]
-        
-        return {
-            "success": True,
-            "data": {
-                "files": paginated_files,
-                "total_count": len(structured_files),
-                "filtered_count": len(filtered_files),
-                "query": query,
-                "has_more": len(filtered_files) > limit
-            }
-        }
-    
-    except Exception as e:
-        logger.error(f"Error searching repository files: {e}")
-        return {
-            "success": False,
-            "message": f"File search failed: {str(e)}"
-        }

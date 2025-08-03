@@ -86,15 +86,25 @@ async def compare_files(
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Git repository not found: {e}")
         
-        # Initialize result with proper structure for frontend
-        file1_content = ""
-        file2_content = ""
+        result = {
+            "success": True,
+            "file1_content": "",
+            "file2_content": "",
+            "diff": "",
+            "file1_info": {},
+            "file2_info": {}
+        }
         
         # Get file content from left file
         try:
             file1_path = Path(repo.working_dir) / file_comparison.left_file
             if file1_path.exists():
-                file1_content = file1_path.read_text()
+                result["file1_content"] = file1_path.read_text()
+                result["file1_info"] = {
+                    "name": file_comparison.left_file,
+                    "size": file1_path.stat().st_size,
+                    "modified": file1_path.stat().st_mtime
+                }
         except Exception as e:
             logger.error(f"Error reading left file: {e}")
             
@@ -102,122 +112,24 @@ async def compare_files(
         try:
             file2_path = Path(repo.working_dir) / file_comparison.right_file
             if file2_path.exists():
-                file2_content = file2_path.read_text()
+                result["file2_content"] = file2_path.read_text()
+                result["file2_info"] = {
+                    "name": file_comparison.right_file,
+                    "size": file2_path.stat().st_size,
+                    "modified": file2_path.stat().st_mtime
+                }
         except Exception as e:
             logger.error(f"Error reading right file: {e}")
             
-        # Create a proper side-by-side diff with line-by-line comparison
-        left_lines = []
-        right_lines = []
-        
-        # Split content into lines
-        file1_lines = file1_content.splitlines() if file1_content else []
-        file2_lines = file2_content.splitlines() if file2_content else []
-        
-        # Use difflib to get the differences
-        matcher = difflib.SequenceMatcher(None, file1_lines, file2_lines)
-        
-        left_line_num = 1
-        right_line_num = 1
-        
-        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-            if tag == 'equal':
-                # Lines are the same
-                for i in range(i1, i2):
-                    left_lines.append({
-                        "line_number": left_line_num,
-                        "content": file1_lines[i],
-                        "type": "equal"
-                    })
-                    right_lines.append({
-                        "line_number": right_line_num,
-                        "content": file2_lines[j1 + (i - i1)],
-                        "type": "equal"
-                    })
-                    left_line_num += 1
-                    right_line_num += 1
-                    
-            elif tag == 'delete':
-                # Lines only in left file (deleted)
-                for i in range(i1, i2):
-                    left_lines.append({
-                        "line_number": left_line_num,
-                        "content": file1_lines[i],
-                        "type": "delete"
-                    })
-                    right_lines.append({
-                        "line_number": None,
-                        "content": "",
-                        "type": "empty"
-                    })
-                    left_line_num += 1
-                    
-            elif tag == 'insert':
-                # Lines only in right file (added)
-                for j in range(j1, j2):
-                    left_lines.append({
-                        "line_number": None,
-                        "content": "",
-                        "type": "empty"
-                    })
-                    right_lines.append({
-                        "line_number": right_line_num,
-                        "content": file2_lines[j],
-                        "type": "insert"
-                    })
-                    right_line_num += 1
-                    
-            elif tag == 'replace':
-                # Lines are different
-                max_lines = max(i2 - i1, j2 - j1)
-                for k in range(max_lines):
-                    if k < (i2 - i1):
-                        left_lines.append({
-                            "line_number": left_line_num,
-                            "content": file1_lines[i1 + k],
-                            "type": "delete" if k >= (j2 - j1) else "replace"
-                        })
-                        left_line_num += 1
-                    else:
-                        left_lines.append({
-                            "line_number": None,
-                            "content": "",
-                            "type": "empty"
-                        })
-                        
-                    if k < (j2 - j1):
-                        right_lines.append({
-                            "line_number": right_line_num,
-                            "content": file2_lines[j1 + k],
-                            "type": "insert" if k >= (i2 - i1) else "replace"
-                        })
-                        right_line_num += 1
-                    else:
-                        right_lines.append({
-                            "line_number": None,
-                            "content": "",
-                            "type": "empty"
-                        })
-        
         # Generate diff
-        diff_content = ""
-        if file1_content and file2_content:
+        if result["file1_content"] and result["file2_content"]:
             diff = difflib.unified_diff(
-                file1_content.splitlines(keepends=True),
-                file2_content.splitlines(keepends=True),
+                result["file1_content"].splitlines(keepends=True),
+                result["file2_content"].splitlines(keepends=True),
                 fromfile=file_comparison.left_file,
                 tofile=file_comparison.right_file
             )
-            diff_content = "".join(diff)
-            
-        result = {
-            "success": True,
-            "left_lines": left_lines,
-            "right_lines": right_lines,
-            "diff": diff_content,
-            "left_file": file_comparison.left_file,
-            "right_file": file_comparison.right_file
-        }
+            result["diff"] = "".join(diff)
             
         return result
         

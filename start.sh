@@ -6,7 +6,7 @@ echo "Starting Cockpit container..."
 # Start backend in the background
 echo "Starting backend server..."
 cd /app/backend
-python start.py &
+python start_isolated.py &
 BACKEND_PID=$!
 
 # Wait a moment for backend to start

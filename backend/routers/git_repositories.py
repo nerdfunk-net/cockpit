@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from typing import List, Optional
 import logging
+import os
 
 from models.git_repositories import (
     GitRepositoryRequest,
@@ -55,6 +56,92 @@ async def get_repositories(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/configs")
+async def get_config_repositories(current_user: dict = Depends(verify_token)):
+    """Get all Git repositories in the 'configs' category."""
+    try:
+        repositories = git_repo_manager.get_repositories(category='configs', active_only=True)
+        
+        # Convert to response models (excluding sensitive data like tokens)
+        repo_responses = []
+        for repo in repositories:
+            repo_dict = dict(repo)
+            # Remove token from response for security
+            repo_dict.pop('token', None)
+            repo_responses.append(GitRepositoryResponse(**repo_dict))
+        
+        return GitRepositoryListResponse(
+            repositories=repo_responses,
+            total=len(repo_responses)
+        )
+    except Exception as e:
+        logger.error(f"Error getting config repositories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/selected")
+async def get_selected_repository(current_user: dict = Depends(verify_token)):
+    """Get the currently selected Git repository for configuration comparison."""
+    try:
+        from settings_manager import settings_manager
+        
+        selected_id = settings_manager.get_selected_git_repository()
+        if selected_id is None:
+            return {"selected_repository": None}
+        
+        # Get the repository details
+        repository = git_repo_manager.get_repository(selected_id)
+        if not repository:
+            # Repository was deleted, clear the selection
+            settings_manager.set_selected_git_repository(0)
+            return {"selected_repository": None}
+        
+        # Remove sensitive data
+        repo_dict = dict(repository)
+        repo_dict.pop('token', None)
+        
+        return {
+            "selected_repository": GitRepositoryResponse(**repo_dict),
+            "selected_id": selected_id
+        }
+    except Exception as e:
+        logger.error(f"Error getting selected repository: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/selected/{repository_id}")
+async def set_selected_repository(
+    repository_id: int, 
+    current_user: dict = Depends(verify_token)
+):
+    """Set the selected Git repository for configuration comparison."""
+    try:
+        from settings_manager import settings_manager
+        
+        # Verify repository exists and is in configs category
+        repository = git_repo_manager.get_repository(repository_id)
+        if not repository:
+            raise HTTPException(status_code=404, detail="Repository not found")
+        
+        if repository['category'] != 'configs':
+            raise HTTPException(status_code=400, detail="Only repositories in 'configs' category can be selected")
+        
+        if not repository['is_active']:
+            raise HTTPException(status_code=400, detail="Repository must be active to be selected")
+        
+        # Set the selected repository
+        success = settings_manager.set_selected_git_repository(repository_id)
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to save selected repository")
+        
+        return {"message": f"Repository '{repository['name']}' selected successfully", "repository_id": repository_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error setting selected repository: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{repo_id}", response_model=GitRepositoryResponse)
 async def get_repository(
     repo_id: int,
@@ -75,6 +162,27 @@ async def get_repository(
         raise
     except Exception as e:
         logger.error(f"Error getting repository {repo_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{repo_id}/edit")
+async def get_repository_for_edit(
+    repo_id: int,
+    current_user: dict = Depends(verify_token)
+):
+    """Get a specific git repository by ID with all fields for editing."""
+    try:
+        repository = git_repo_manager.get_repository(repo_id)
+        if not repository:
+            raise HTTPException(status_code=404, detail="Repository not found")
+        
+        # Return all fields including token for editing purposes
+        # Token field is needed to maintain existing credentials in edit form
+        return repository
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting repository {repo_id} for edit: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -254,12 +362,158 @@ async def test_git_connection(
         )
 
 
+@router.get("/{repo_id}/status")
+async def get_repository_status(
+    repo_id: int,
+    current_user: dict = Depends(verify_token)
+):
+    """Get the status of a specific repository (exists, sync status, commit info)."""
+    import subprocess
+    
+    try:
+        # Get repository details
+        repository = git_repo_manager.get_repository(repo_id)
+        if not repository:
+            raise HTTPException(status_code=404, detail="Repository not found")
+        
+        # Get data directory from configuration
+        from config_manual import settings as config_settings
+        repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
+        
+        status_info = {
+            "repository_name": repository['name'],
+            "repository_url": repository['url'],
+            "repository_branch": repository['branch'],
+            "sync_status": repository.get('sync_status', 'unknown'),
+            "exists": os.path.exists(repo_path),
+            "is_git_repo": False,
+            "is_synced": False,
+            "behind_count": 0,
+            "ahead_count": 0,
+            "current_commit": None,
+            "last_commit_message": None,
+            "last_commit_date": None,
+            "config_files": []
+        }
+        
+        if status_info["exists"]:
+            # Check if it's a valid Git repository
+            try:
+                result = subprocess.run(
+                    ['git', 'status', '--porcelain'], 
+                    cwd=repo_path, 
+                    capture_output=True, 
+                    text=True, 
+                    timeout=10
+                )
+                if result.returncode == 0:
+                    status_info["is_git_repo"] = True
+                    
+                    # Get current commit info
+                    try:
+                        commit_result = subprocess.run(
+                            ['git', 'log', '-1', '--format=%H|%s|%ai|%an|%ae'], 
+                            cwd=repo_path, 
+                            capture_output=True, 
+                            text=True, 
+                            timeout=10
+                        )
+                        if commit_result.returncode == 0 and commit_result.stdout.strip():
+                            commit_info = commit_result.stdout.strip().split('|', 4)
+                            if len(commit_info) >= 5:
+                                status_info["current_commit"] = commit_info[0][:8]  # Short hash
+                                status_info["last_commit_message"] = commit_info[1]
+                                status_info["last_commit_date"] = commit_info[2]
+                                status_info["last_commit_author"] = commit_info[3]  # Author name
+                                status_info["last_commit_author_email"] = commit_info[4]  # Author email
+                    except Exception as e:
+                        logger.warning(f"Could not get commit info: {e}")
+                    
+                    # Check if repository is synced with remote
+                    try:
+                        # Fetch latest remote refs (timeout quickly)
+                        subprocess.run(
+                            ['git', 'fetch', '--dry-run'], 
+                            cwd=repo_path, 
+                            capture_output=True, 
+                            timeout=5
+                        )
+                        
+                        # Check how many commits behind/ahead
+                        behind_result = subprocess.run(
+                            ['git', 'rev-list', '--count', f'HEAD..origin/{repository["branch"]}'], 
+                            cwd=repo_path, 
+                            capture_output=True, 
+                            text=True, 
+                            timeout=5
+                        )
+                        if behind_result.returncode == 0:
+                            status_info["behind_count"] = int(behind_result.stdout.strip() or 0)
+                        
+                        ahead_result = subprocess.run(
+                            ['git', 'rev-list', '--count', f'origin/{repository["branch"]}..HEAD'], 
+                            cwd=repo_path, 
+                            capture_output=True, 
+                            text=True, 
+                            timeout=5
+                        )
+                        if ahead_result.returncode == 0:
+                            status_info["ahead_count"] = int(ahead_result.stdout.strip() or 0)
+                            
+                        status_info["is_synced"] = (status_info["behind_count"] == 0)
+                        
+                    except Exception as e:
+                        logger.warning(f"Could not check sync status: {e}")
+                        # If we can't check sync status, assume it needs sync
+                        status_info["is_synced"] = False
+                    
+                    # Get list of configuration files
+                    try:
+                        for root, dirs, files in os.walk(repo_path):
+                            # Skip .git directory
+                            if '.git' in root:
+                                continue
+                            
+                            for file in files:
+                                if not file.startswith('.'):
+                                    rel_path = os.path.relpath(os.path.join(root, file), repo_path)
+                                    status_info["config_files"].append(rel_path)
+                                    
+                        # Sort files for consistency
+                        status_info["config_files"].sort()
+                        
+                    except Exception as e:
+                        logger.warning(f"Could not scan config files: {e}")
+                        
+            except Exception as e:
+                logger.warning(f"Error checking Git repository status: {e}")
+        
+        return {
+            "success": True,
+            "data": status_info
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting repository status: {e}")
+        return {
+            "success": False,
+            "message": f"Failed to get repository status: {str(e)}"
+        }
+
+
 @router.post("/{repo_id}/sync")
 async def sync_repository(
     repo_id: int,
     current_user: dict = Depends(verify_token)
 ):
-    """Sync a git repository."""
+    """Sync a git repository (clone if not exists, pull if exists)."""
+    import subprocess
+    import shutil
+    import time
+    from urllib.parse import urlparse
+    
     try:
         # Check if repository exists
         repository = git_repo_manager.get_repository(repo_id)
@@ -269,11 +523,141 @@ async def sync_repository(
         # Update sync status to indicate sync started
         git_repo_manager.update_sync_status(repo_id, "syncing")
         
-        # TODO: Implement actual sync logic here
-        # For now, just mark as synced
-        git_repo_manager.update_sync_status(repo_id, "synced")
+        # Get data directory from configuration (outside project to avoid file watching)
+        from config_manual import settings as config_settings
+        repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
         
-        return {"message": "Repository synced successfully"}
+        logger.info(f"Syncing repository '{repository['name']}' to path: {repo_path}")
+        logger.info(f"Repository URL: {repository['url']}")
+        logger.info(f"Repository branch: {repository['branch']}")
+        
+        # Create the git directory if it doesn't exist
+        os.makedirs(os.path.dirname(repo_path), exist_ok=True)
+        
+        # Check if repository directory already exists
+        needs_clone = True
+        if os.path.exists(repo_path):
+            # Check if it's a valid Git repository
+            try:
+                result = subprocess.run(
+                    ['git', 'status'], 
+                    cwd=repo_path, 
+                    capture_output=True, 
+                    text=True, 
+                    timeout=10
+                )
+                if result.returncode == 0:
+                    # It's a valid Git repo, try to pull instead
+                    needs_clone = False
+                    logger.info(f"Repository exists, attempting to pull latest changes")
+                else:
+                    logger.info(f"Directory exists but is not a valid Git repository, will re-clone")
+            except Exception as e:
+                logger.warning(f"Error checking Git status: {e}, will re-clone")
+        
+        success = False
+        message = ""
+        
+        if needs_clone:
+            # Clone the repository
+            try:
+                # If directory exists and is not a Git repo, backup it
+                if os.path.exists(repo_path):
+                    backup_path = f"{repo_path}_backup_{int(time.time())}"
+                    shutil.move(repo_path, backup_path)
+                    logger.info(f"Backed up existing directory to {backup_path}")
+                
+                # Prepare repository URL with authentication if provided
+                clone_url = repository['url']
+                if repository.get('username') and repository.get('token'):
+                    parsed = urlparse(repository['url'])
+                    if parsed.scheme in ['http', 'https']:
+                        clone_url = f"{parsed.scheme}://{repository['username']}:{repository['token']}@{parsed.netloc}{parsed.path}"
+                
+                # Configure environment for SSL settings
+                env = os.environ.copy()
+                if not repository.get('verify_ssl', True):
+                    env['GIT_SSL_NO_VERIFY'] = '1'
+                    logger.warning("Git SSL verification disabled - not recommended for production")
+                
+                # Clone the repository
+                cmd = ['git', 'clone', '--branch', repository['branch'], clone_url, repo_path]
+                logger.info(f"Executing: git clone --branch {repository['branch']} <url> {repo_path}")
+                
+                result = subprocess.run(
+                    cmd, 
+                    capture_output=True, 
+                    text=True, 
+                    timeout=120,  # 2 minutes timeout
+                    env=env
+                )
+                
+                if result.returncode == 0:
+                    success = True
+                    message = f"Repository '{repository['name']}' cloned successfully to {repo_path}"
+                    logger.info(message)
+                else:
+                    error_msg = result.stderr.strip()
+                    logger.error(f"Git clone failed: {error_msg}")
+                    
+                    # Provide user-friendly error messages
+                    if 'authentication failed' in error_msg.lower():
+                        message = "Authentication failed. Please check your Git username and token."
+                    elif 'not found' in error_msg.lower() or 'repository not found' in error_msg.lower():
+                        message = f"Repository not found: {repository['url']}. Please verify the URL."
+                    elif 'branch' in error_msg.lower() and 'not found' in error_msg.lower():
+                        message = f"Branch '{repository['branch']}' not found. Please check the branch name."
+                    else:
+                        message = f"Git clone failed: {error_msg}"
+                        
+            except subprocess.TimeoutExpired:
+                message = "Git clone operation timed out. Please check your network connection."
+            except FileNotFoundError:
+                message = "Git command not found. Please ensure Git is installed on the server."
+            except Exception as e:
+                logger.error(f"Unexpected error during Git clone: {e}")
+                message = f"Unexpected error: {str(e)}"
+        else:
+            # Pull latest changes
+            try:
+                # Configure environment for SSL settings
+                env = os.environ.copy()
+                if not repository.get('verify_ssl', True):
+                    env['GIT_SSL_NO_VERIFY'] = '1'
+                
+                # Pull latest changes
+                result = subprocess.run(
+                    ['git', 'pull', 'origin', repository['branch']], 
+                    cwd=repo_path, 
+                    capture_output=True, 
+                    text=True, 
+                    timeout=60,
+                    env=env
+                )
+                
+                if result.returncode == 0:
+                    success = True
+                    message = f"Repository '{repository['name']}' updated successfully"
+                    logger.info(message)
+                else:
+                    error_msg = result.stderr.strip()
+                    logger.error(f"Git pull failed: {error_msg}")
+                    message = f"Git pull failed: {error_msg}"
+                    
+            except subprocess.TimeoutExpired:
+                message = "Git pull operation timed out. Please check your network connection."
+            except Exception as e:
+                logger.error(f"Error during Git pull: {e}")
+                message = f"Pull failed: {str(e)}"
+        
+        # Update sync status based on result
+        if success:
+            git_repo_manager.update_sync_status(repo_id, "synced")
+            return {"success": True, "message": message, "repository_path": repo_path}
+        else:
+            git_repo_manager.update_sync_status(repo_id, f"error: {message}")
+            raise HTTPException(status_code=500, detail=message)
+            
     except HTTPException:
         raise
     except Exception as e:
@@ -332,6 +716,130 @@ async def sync_repositories(
     except Exception as e:
         logger.error(f"Error syncing repositories: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{repo_id}/files/search")
+async def search_repository_files(
+    repo_id: int,
+    query: str = "", 
+    limit: int = 50,
+    current_user: dict = Depends(verify_token)
+):
+    """Search for files in a specific Git repository with filtering and pagination."""
+    import fnmatch
+    
+    try:
+        # Get repository details
+        repository = git_repo_manager.get_repository(repo_id)
+        if not repository:
+            raise HTTPException(status_code=404, detail="Repository not found")
+        
+        # Get data directory from configuration
+        from config_manual import settings as config_settings
+        repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
+        
+        if not os.path.exists(repo_path):
+            return {
+                "success": True,
+                "data": {
+                    "files": [],
+                    "total_count": 0,
+                    "filtered_count": 0,
+                    "query": query,
+                    "repository_name": repository['name']
+                }
+            }
+        
+        # Scan the repository directory for files
+        structured_files = []
+        
+        for root, dirs, files in os.walk(repo_path):
+            # Skip .git directory
+            if '.git' in root:
+                continue
+                
+            rel_root = os.path.relpath(root, repo_path)
+            if rel_root == '.':
+                rel_root = ''
+            
+            for file in files:
+                if file.startswith('.'):
+                    continue
+                    
+                full_path = os.path.join(rel_root, file) if rel_root else file
+                file_info = {
+                    "name": file,
+                    "path": full_path,
+                    "directory": rel_root,
+                    "size": os.path.getsize(os.path.join(root, file)) if os.path.exists(os.path.join(root, file)) else 0
+                }
+                structured_files.append(file_info)
+        
+        # Filter files based on query
+        filtered_files = structured_files
+        if query:
+            query_lower = query.lower()
+            filtered_files = []
+            
+            for file_info in structured_files:
+                # Search in filename, path, and directory
+                if (query_lower in file_info['name'].lower() or 
+                    query_lower in file_info['path'].lower() or
+                    query_lower in file_info['directory'].lower()):
+                    filtered_files.append(file_info)
+                # Also support wildcard matching
+                elif (fnmatch.fnmatch(file_info['name'].lower(), f'*{query_lower}*') or
+                      fnmatch.fnmatch(file_info['path'].lower(), f'*{query_lower}*')):
+                    filtered_files.append(file_info)
+        
+        # Sort by relevance (exact matches first, then by path)
+        if query:
+            def sort_key(item):
+                name_lower = item['name'].lower()
+                path_lower = item['path'].lower()
+                query_lower = query.lower()
+                
+                # Exact filename match gets highest priority
+                if name_lower == query_lower:
+                    return (0, item['path'])
+                # Filename starts with query
+                elif name_lower.startswith(query_lower):
+                    return (1, item['path'])
+                # Filename contains query
+                elif query_lower in name_lower:
+                    return (2, item['path'])
+                # Path contains query
+                else:
+                    return (3, item['path'])
+            
+            filtered_files.sort(key=sort_key)
+        else:
+            # No query, sort alphabetically by path
+            filtered_files.sort(key=lambda x: x['path'])
+        
+        # Apply pagination
+        paginated_files = filtered_files[:limit]
+        
+        return {
+            "success": True,
+            "data": {
+                "files": paginated_files,
+                "total_count": len(structured_files),
+                "filtered_count": len(filtered_files),
+                "query": query,
+                "repository_name": repository['name'],
+                "has_more": len(filtered_files) > limit
+            }
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error searching repository files: {e}")
+        return {
+            "success": False,
+            "message": f"File search failed: {str(e)}"
+        }
 
 
 @router.get("/health")

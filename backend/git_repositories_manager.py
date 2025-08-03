@@ -17,8 +17,9 @@ class GitRepositoryManager:
     
     def __init__(self, db_path: str = None):
         if db_path is None:
-            # Default to data/settings directory
-            data_dir = Path(__file__).parent.parent.parent / "data" / "settings"
+            # Use data directory from configuration
+            from config_manual import settings as config_settings
+            data_dir = Path(config_settings.data_directory) / "settings"
             data_dir.mkdir(parents=True, exist_ok=True)
             db_path = data_dir / "git_repositories.db"
         

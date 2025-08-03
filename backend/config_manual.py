@@ -60,6 +60,9 @@ class Settings:
     config_files_directory: str = os.getenv('CONFIG_FILES_DIRECTORY', 'config_files')
     allowed_file_extensions: list = get_env_list('ALLOWED_FILE_EXTENSIONS', ['.txt', '.conf', '.cfg', '.config', '.ini'])
     max_file_size_mb: int = int(os.getenv('MAX_FILE_SIZE_MB', '10'))
+    
+    # Data directory configuration - use project-relative path for Docker compatibility
+    data_directory: str = os.getenv('DATA_DIRECTORY', os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data'))
 
 # Global settings instance
 settings = Settings()

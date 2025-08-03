@@ -692,12 +692,9 @@
 
         async editRepository(repoId) {
           try {
-            const repo = this.repositories.find(r => r.id === repoId);
-            if (!repo) {
-              this.showStatus('Repository not found', 'error');
-              return;
-            }
-
+            // Use the edit endpoint to get all fields including token and path
+            const repo = await window.authManager.apiRequest(`/api/git-repositories/${repoId}/edit`);
+            
             this.currentEditId = repoId;
             this.originalEditValues = { ...repo };
 

@@ -19,10 +19,9 @@ class GitManager:
     
     def __init__(self, base_path: str = None):
         if base_path is None:
-            # Use ./data/git/configs relative to the project root
-            # Go up one directory from backend/ to get to project root
-            project_root = os.path.dirname(os.path.dirname(__file__))
-            self.base_path = os.path.join(project_root, 'data', 'git', 'configs')
+            # Use data directory from configuration (outside project to avoid file watching)
+            from config_manual import settings as config_settings
+            self.base_path = os.path.join(config_settings.data_directory, 'git', 'configs')
         else:
             self.base_path = base_path
         

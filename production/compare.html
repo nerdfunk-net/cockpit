@@ -358,78 +358,65 @@
 
           <div class="clearfix"></div>
 
-          <!-- Git Repository Status Section -->
-          <div class="row" id="gitStatusSection">
+          <!-- Git Repository Selection Section -->
+          <div class="row" id="gitRepositorySection">
             <div class="col-md-12 col-sm-12">
               <div class="x_panel">
                 <div class="x_title">
-                  <h2>Git Repository Status <small>Configuration repository synchronization</small></h2>
+                  <h2>Git Repository Configuration <small>Select repository for configuration comparison</small></h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li><a class="collapse-link"><i class="fas fa-chevron-down"></i></a></li>
-                    <li><button class="btn btn-sm btn-primary" id="refreshGitStatus" title="Refresh status">
-                      <i class="fas fa-sync-alt"></i>
-                    </button></li>
-                    <li><button class="btn btn-sm btn-info" id="gitStatusBtn" title="Show Git Status">
-                      <i class="fas fa-info-circle"></i>
-                    </button></li>
                   </ul>
                   <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
                   
-                  <!-- Git Status Information -->
-                  <div class="row" id="gitStatusInfo">
+                  <!-- Repository Selection -->
+                  <div class="row" id="repositorySelection">
                     <div class="col-md-8">
-                      <div class="alert alert-info" id="gitStatusMessage">
-                        <i class="fas fa-spinner fa-spin"></i> Checking repository status...
+                      <div class="form-group">
+                        <label for="repoSelector" class="control-label">Select Git Repository:</label>
+                        <div class="d-flex align-items-center">
+                          <select id="repoSelector" class="form-control">
+                            <option value="">Loading repositories...</option>
+                          </select>
+                          <span id="repoStatusCheck" style="display: none; margin-left: 10px;">
+                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 18px;" title="Repository ready"></i>
+                          </span>
+                        </div>
+                        <small class="form-text text-muted">Choose a repository from the "configs" category for configuration comparison</small>
+                        <!-- Compact repository info display -->
+                        <div id="selectedRepoInfoInline" style="display: none; margin-top: 5px;">
+                          <small class="text-muted">
+                            <strong><span id="selectedRepoName">-</span></strong> |
+                            Branch: <span id="selectedRepoBranch">-</span> |
+                            URL: <code id="selectedRepoUrl" style="font-size: 10px;">-</code>
+                          </small>
+                        </div>
                       </div>
                     </div>
                     <div class="col-md-4">
-                      <div class="btn-group w-100" role="group">
+                      <div class="btn-group w-100" role="group" style="margin-top: 25px;">
                         <button class="btn btn-success" id="syncRepository" disabled>
                           <i class="fas fa-sync"></i> Sync Repository
                         </button>
-                        <button class="btn btn-warning" id="cloneRepository" disabled>
-                          <i class="fas fa-clone"></i> Force Clone
+                        <button class="btn btn-info" id="gitStatusBtn" disabled>
+                          <i class="fas fa-info-circle"></i> Git Status
                         </button>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Repository Information -->
-                  <div class="row mt-3" id="gitRepoInfo" style="display: none;">
-                    <div class="col-md-6">
-                      <div class="card">
-                        <div class="card-header">
-                          <h5><i class="fas fa-info-circle"></i> Repository Details</h5>
-                        </div>
-                        <div class="card-body">
-                          <dl class="row">
-                            <dt class="col-sm-4">URL:</dt>
-                            <dd class="col-sm-8" id="repoUrl">-</dd>
-                            <dt class="col-sm-4">Branch:</dt>
-                            <dd class="col-sm-8" id="repoBranch">-</dd>
-                            <dt class="col-sm-4">Status:</dt>
-                            <dd class="col-sm-8" id="repoStatus">-</dd>
-                          </dl>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="card">
-                        <div class="card-header">
-                          <h5><i class="fas fa-clock"></i> Last Updated</h5>
-                        </div>
-                        <div class="card-body">
-                          <dl class="row">
-                            <dt class="col-sm-4">Last Commit:</dt>
-                            <dd class="col-sm-8" id="lastCommit">-</dd>
-                            <dt class="col-sm-4">Files Count:</dt>
-                            <dd class="col-sm-8" id="filesCount">-</dd>
-                            <dt class="col-sm-4">Directory:</dt>
-                            <dd class="col-sm-8"><code>backend/git/configs</code></dd>
-                          </dl>
-                        </div>
+                  <!-- No Repositories Message -->
+                  <div class="row" id="noRepositoriesMessage" style="display: none;">
+                    <div class="col-md-12">
+                      <div class="alert alert-warning">
+                        <h5><i class="fas fa-exclamation-triangle"></i> No Configuration Repositories Found</h5>
+                        <p>No Git repositories in the "configs" category are available for configuration comparison.</p>
+                        <p>Please configure a Git repository in the Git Management system:</p>
+                        <a href="settings-git.html" class="btn btn-primary">
+                          <i class="fab fa-git-alt"></i> Go to Git Management
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -1224,6 +1211,7 @@
           <script>
             class ConfigCompare {
               constructor() {
+                console.log('ConfigCompare: Constructor called');
                 this.files = [];
                 this.gitFiles = [];
                 this.gitFileSearchInitialized = false;
@@ -1242,39 +1230,56 @@
                   currentBranch: null,
                   status: null
                 };
+                this.repositories = [];
+                this.selectedRepository = null;
+                console.log('ConfigCompare: Calling init()');
                 this.init();
               }
 
               init() {
-                // Initialize event listeners
-                document.getElementById('compareBtn').addEventListener('click', () => this.handleCompare());
-                document.getElementById('exportBtn').addEventListener('click', () => this.exportDiff());
-                document.getElementById('historyCompareBtn').addEventListener('click', () => this.handleCompare());
-                document.getElementById('historyExportBtn').addEventListener('click', () => this.exportDiff());
-                document.getElementById('prevDiffBtn').addEventListener('click', () => this.navigateDiff(-1));
-                document.getElementById('nextDiffBtn').addEventListener('click', () => this.navigateDiff(1));
-                document.getElementById('toggleUnchangedBtn').addEventListener('click', () => this.toggleUnchanged());
-                document.getElementById('fontSizeSelect').addEventListener('change', (e) => this.changeFontSize(e.target.value));
-                document.getElementById('gitStatusBtn').addEventListener('click', () => this.showGitStatus());
-                document.getElementById('closeHistoryBtn').addEventListener('click', () => this.closeFileHistory());
-                document.getElementById('closeResultsBtn').addEventListener('click', () => this.closeComparisonResults());
-                document.getElementById('closeFileHistoryDisplayBtn').addEventListener('click', () => this.closeFileHistoryDisplay());
+                // Initialize event listeners with null checks
+                const addEventListenerSafe = (id, event, handler) => {
+                  const element = document.getElementById(id);
+                  if (element) {
+                    element.addEventListener(event, handler);
+                  } else {
+                    console.warn(`ConfigCompare: Element '${id}' not found, skipping event listener`);
+                  }
+                };
+
+                addEventListenerSafe('compareBtn', 'click', () => this.handleCompare());
+                addEventListenerSafe('exportBtn', 'click', () => this.exportDiff());
+                addEventListenerSafe('historyCompareBtn', 'click', () => this.handleCompare());
+                addEventListenerSafe('historyExportBtn', 'click', () => this.exportDiff());
+                addEventListenerSafe('prevDiffBtn', 'click', () => this.navigateDiff(-1));
+                addEventListenerSafe('nextDiffBtn', 'click', () => this.navigateDiff(1));
+                addEventListenerSafe('toggleUnchangedBtn', 'click', () => this.toggleUnchanged());
+                addEventListenerSafe('fontSizeSelect', 'change', (e) => this.changeFontSize(e.target.value));
+                addEventListenerSafe('gitStatusBtn', 'click', () => this.showGitStatus());
+                addEventListenerSafe('closeHistoryBtn', 'click', () => this.closeFileHistory());
+                addEventListenerSafe('closeResultsBtn', 'click', () => this.closeComparisonResults());
+                addEventListenerSafe('closeFileHistoryDisplayBtn', 'click', () => this.closeFileHistoryDisplay());
+                
+                // Repository selection event listeners
+                addEventListenerSafe('repoSelector', 'change', (e) => this.handleRepositorySelection(e));
+                addEventListenerSafe('syncRepository', 'click', () => this.syncSelectedRepository());
                 
                 // File search will be initialized when files are loaded by populateFileSelects
 
-                // Git selection change handlers
-                document.getElementById('leftCommitSelect').addEventListener('change', () => {
+                
+                // Git selection change handlers with safe wrapper
+                addEventListenerSafe('leftCommitSelect', 'change', () => {
                   this.populateGitFiles();
                   this.updateCompareButton();
                   this.loadGitFileHistory();
                 });
-                document.getElementById('rightCommitSelect').addEventListener('change', () => {
+                addEventListenerSafe('rightCommitSelect', 'change', () => {
                   this.populateGitFiles();
                   this.updateCompareButton();
                   this.loadGitFileHistory();
                 });
                 
-                document.getElementById('gitBranchSelect').addEventListener('change', async (e) => {
+                addEventListenerSafe('gitBranchSelect', 'change', async (e) => {
                   const selectedBranch = e.target.value;
                   if (selectedBranch) {
                     await this.loadCommitsForBranch(selectedBranch);
@@ -1282,35 +1287,483 @@
                 });
 
                 // File History mode selection change handlers
-                document.getElementById('historyBranchSelect').addEventListener('change', async (e) => {
+                addEventListenerSafe('historyBranchSelect', 'change', async (e) => {
                   const selectedBranch = e.target.value;
                   if (selectedBranch) {
                     await this.loadHistoryCommitsForBranch(selectedBranch);
                   }
                 });
-                document.getElementById('historyCommitSelect').addEventListener('change', () => {
+                addEventListenerSafe('historyCommitSelect', 'change', () => {
                   // Update the show history button state
                   this.updateShowHistoryButton();
                 });
-                document.getElementById('showHistoryBtn').addEventListener('click', () => {
+                addEventListenerSafe('showHistoryBtn', 'click', () => {
                   this.showFileHistory();
-                });
-
-                // Comparison mode toggle
+                });                // Comparison mode toggle
                 document.querySelectorAll('input[name="comparisonMode"]').forEach(radio => {
-                  radio.addEventListener('change', (e) => this.handleModeChange(e.target.value));
+                  radio.addEventListener('change', async (e) => await this.handleModeChange(e.target.value));
                 });
 
                 // Load files and Git data on page load (with delay for authManager)
                 this.loadFiles();
                 
-                // Delay Git status loading to ensure authManager is ready
-                setTimeout(() => {
-                  this.loadGitStatus();
-                }, 1500);
-                
                 // Load saved font size preference
                 this.loadFontSizePreference();
+                
+                // Load repositories and initialize repository selection
+                this.loadRepositories();
+              }
+
+              // Repository Management
+              async loadRepositories() {
+                console.log('ConfigCompare: Starting to load repositories...');
+                
+                if (!window.authManager) {
+                  console.log('ConfigCompare: AuthManager not ready, retrying in 500ms...');
+                  setTimeout(() => this.loadRepositories(), 500);
+                  return;
+                }
+
+                console.log('ConfigCompare: AuthManager ready, loading repositories...');
+                console.log('ConfigCompare: AuthManager authenticated?', window.authManager.isAuthenticated());
+                console.log('ConfigCompare: AuthManager token?', !!window.authManager.token);
+                console.log('ConfigCompare: AuthManager user?', !!window.authManager.user);
+
+                try {
+                  // Load config repositories
+                  console.log('ConfigCompare: Calling /api/git-repositories/configs...');
+                  const response = await window.authManager.apiRequest('/api/git-repositories/configs');
+                  console.log('ConfigCompare: Repositories response:', response);
+                  this.repositories = response.repositories || [];
+                  console.log('ConfigCompare: Found', this.repositories.length, 'repositories');
+                  
+                  // Load currently selected repository
+                  console.log('ConfigCompare: Calling /api/git-repositories/selected...');
+                  let selectedResponse;
+                  try {
+                    selectedResponse = await window.authManager.apiRequest('/api/git-repositories/selected');
+                    console.log('ConfigCompare: Selected repository response:', selectedResponse);
+                  } catch (selectedError) {
+                    console.log('ConfigCompare: Error calling /api/git-repositories/selected:', selectedError);
+                    console.log('ConfigCompare: Selected error details:', {
+                      message: selectedError.message,
+                      status: selectedError.status,
+                      statusText: selectedError.statusText,
+                      url: selectedError.url,
+                      stack: selectedError.stack
+                    });
+                    // Continue without selected repository
+                    selectedResponse = { selected_repository: null };
+                  }
+                  
+                  this.populateRepositorySelector();
+                  
+                  if (selectedResponse.selected_repository) {
+                    this.selectedRepository = selectedResponse.selected_repository;
+                    this.selectRepository(selectedResponse.selected_repository.id, false);
+                  } else if (this.repositories.length === 1) {
+                    // Auto-select if only one repository available
+                    console.log('ConfigCompare: Auto-selecting single repository:', this.repositories[0].name);
+                    this.selectRepository(this.repositories[0].id, true);
+                  } else if (this.repositories.length === 0) {
+                    console.log('ConfigCompare: No repositories found, showing message');
+                    this.showNoRepositoriesMessage();
+                  }
+                } catch (error) {
+                  console.error('ConfigCompare: Error loading repositories:', error);
+                  console.error('ConfigCompare: Error details:', {
+                    message: error.message,
+                    status: error.status,
+                    statusText: error.statusText,
+                    url: error.url
+                  });
+                  
+                  // Check if it's an authentication error
+                  if (error.message.includes('Not authenticated') || error.message.includes('Authentication expired')) {
+                    console.log('ConfigCompare: Authentication issue, redirecting to login...');
+                    window.location.href = 'login.html';
+                    return;
+                  }
+                  
+                  // Show user-friendly error message
+                  this.showStatus('Failed to load repositories: ' + error.message, 'error');
+                  this.showNoRepositoriesMessage();
+                }
+              }
+
+              populateRepositorySelector() {
+                console.log('ConfigCompare: Populating repository selector with', this.repositories.length, 'repositories');
+                const selector = document.getElementById('repoSelector');
+                
+                if (this.repositories.length === 0) {
+                  console.log('ConfigCompare: No repositories available');
+                  selector.innerHTML = '<option value="">No repositories available</option>';
+                  selector.disabled = true;
+                  this.showNoRepositoriesMessage();
+                  return;
+                }
+
+                console.log('ConfigCompare: Adding repositories to selector');
+                selector.innerHTML = '<option value="">Select a repository...</option>';
+                this.repositories.forEach(repo => {
+                  console.log('ConfigCompare: Adding repository:', repo.name, repo.id);
+                  const option = document.createElement('option');
+                  option.value = repo.id;
+                  option.textContent = `${repo.name} (${repo.url})`;
+                  selector.appendChild(option);
+                });
+                
+                selector.disabled = false;
+                document.getElementById('noRepositoriesMessage').style.display = 'none';
+                console.log('ConfigCompare: Repository selector populated successfully');
+              }
+
+              showNoRepositoriesMessage() {
+                document.getElementById('repositorySelection').style.display = 'none';
+                document.getElementById('noRepositoriesMessage').style.display = 'block';
+                
+                // Hide inline repository info
+                document.getElementById('repoStatusCheck').style.display = 'none';
+                document.getElementById('selectedRepoInfoInline').style.display = 'none';
+                
+                // Disable comparison modes that require Git
+                this.updateRepositoryControls('error');
+              }
+
+              async handleRepositorySelection(event) {
+                const repositoryId = parseInt(event.target.value);
+                if (repositoryId) {
+                  await this.selectRepository(repositoryId, true);
+                }
+              }
+
+              async selectRepository(repositoryId, saveSelection = true) {
+                try {
+                  const repository = this.repositories.find(r => r.id === repositoryId);
+                  if (!repository) {
+                    console.error('Repository not found:', repositoryId);
+                    return;
+                  }
+
+                  this.selectedRepository = repository;
+                  
+                  // Update the selector
+                  document.getElementById('repoSelector').value = repositoryId;
+                  
+                  // Save selection to database if requested
+                  if (saveSelection) {
+                    await window.authManager.apiRequest(`/api/git-repositories/selected/${repositoryId}`, {
+                      method: 'POST'
+                    });
+                  }
+                  
+                  // Immediately check repository state and sync status
+                  await this.checkRepositoryState();
+                  
+                  console.log('Repository selected:', repository.name);
+                } catch (error) {
+                  console.error('Error selecting repository:', error);
+                  this.showStatus('Error selecting repository: ' + error.message, 'error');
+                }
+              }
+
+              async checkRepositoryState() {
+                if (!this.selectedRepository) return;
+                
+                try {
+                  console.log('ConfigCompare: Checking repository state for:', this.selectedRepository.name);
+                  
+                  // Show loading state
+                  this.updateRepositoryInfo('checking');
+                  
+                  // Check if repository exists and is accessible via Git API
+                  let repoStatus = null;
+                  
+                  try {
+                    // Get repository status using the unified git-repositories API
+                    const repoResponse = await window.authManager.apiRequest(`/api/git-repositories/${this.selectedRepository.id}/status`);
+                    if (repoResponse && repoResponse.success) {
+                      repoStatus = repoResponse.data;
+                      console.log('ConfigCompare: Repository status:', repoStatus);
+                    } else {
+                      console.log('ConfigCompare: Repository status check failed:', repoResponse.message);
+                    }
+                  } catch (repoError) {
+                    console.log('ConfigCompare: Repository status API error:', repoError.message);
+                  }
+                  
+                  // Determine repository state
+                  let repositoryState = 'unknown';
+                  let statusMessage = 'Repository status unknown';
+                  
+                  if (repoStatus) {
+                    if (repoStatus.exists && repoStatus.is_git_repo) {
+                      if (repoStatus.is_synced === false || repoStatus.behind_count > 0) {
+                        repositoryState = 'needs_sync';
+                        statusMessage = `Repository needs sync (${repoStatus.behind_count || 0} commits behind)`;
+                      } else {
+                        repositoryState = 'ready';
+                        statusMessage = 'Repository ready and synced';
+                      }
+                    } else if (repoStatus.exists && !repoStatus.is_git_repo) {
+                      repositoryState = 'needs_clone';
+                      statusMessage = 'Directory exists but is not a Git repository - needs re-cloning';
+                    } else {
+                      repositoryState = 'needs_clone';
+                      statusMessage = 'Repository needs to be cloned';
+                    }
+                  } else {
+                    repositoryState = 'error';
+                    statusMessage = 'Could not determine repository status';
+                  }
+                  
+                  // Store repository data for UI updates
+                  this.gitData.status = repoStatus;
+                  this.gitData.repositoryState = repositoryState;
+                  this.gitData.statusMessage = statusMessage;
+                  
+                  // If repository is ready, load Git data for branches and commits
+                  if (repositoryState === 'ready' || repositoryState === 'needs_sync') {
+                    try {
+                      await this.loadGitData();
+                    } catch (error) {
+                      console.warn('Could not load Git data:', error.message);
+                    }
+                  } else {
+                    // Clear Git data if repository is not ready
+                    this.gitData.currentBranch = null;
+                    this.gitData.commits = [];
+                    this.gitData.branches = [];
+                  }
+                  
+                  // Update UI based on state
+                  this.updateRepositoryInfo(repositoryState, statusMessage);
+                  this.updateRepositoryControls(repositoryState);
+                  
+                  console.log('ConfigCompare: Repository state check complete:', repositoryState);
+                  
+                } catch (error) {
+                  console.error('ConfigCompare: Error checking repository state:', error);
+                  this.updateRepositoryInfo('error', 'Error checking repository: ' + error.message);
+                  this.updateRepositoryControls('error');
+                }
+              }
+
+              async loadGitData() {
+                try {
+                  console.log('ConfigCompare: Loading Git data (status, branches, commits)...');
+                  
+                  // Load Git status to get current branch and commits
+                  try {
+                    const gitResponse = await window.authManager.apiRequest('/api/git/status');
+                    if (gitResponse && gitResponse.current_branch) {
+                      this.gitData.currentBranch = gitResponse.current_branch;
+                      this.gitData.commits = gitResponse.commits || [];
+                      console.log('ConfigCompare: Loaded', this.gitData.commits.length, 'commits from Git status');
+                    }
+                  } catch (error) {
+                    console.warn('ConfigCompare: Could not load Git status:', error.message);
+                  }
+                  
+                  // Load Git branches
+                  try {
+                    await this.populateGitBranches();
+                  } catch (error) {
+                    console.warn('ConfigCompare: Could not load Git branches:', error.message);
+                  }
+                  
+                  // Populate commits in UI dropdowns if we have commits
+                  if (this.gitData.commits && this.gitData.commits.length > 0) {
+                    this.populateGitCommits();
+                  }
+                  
+                  console.log('ConfigCompare: Git data loaded successfully');
+                  
+                } catch (error) {
+                  console.error('ConfigCompare: Error loading Git data:', error);
+                  throw error;
+                }
+              }
+
+              updateRepositoryInfo(state = 'ready', message = null) {
+                if (!this.selectedRepository) return;
+                
+                // Update repository details
+                document.getElementById('selectedRepoName').textContent = this.selectedRepository.name;
+                document.getElementById('selectedRepoUrl').textContent = this.selectedRepository.url;
+                document.getElementById('selectedRepoBranch').textContent = this.selectedRepository.branch;
+                
+                // Show/hide elements based on state
+                const statusCheck = document.getElementById('repoStatusCheck');
+                const inlineInfo = document.getElementById('selectedRepoInfoInline');
+                const repoSelection = document.getElementById('repositorySelection');
+                const noReposMessage = document.getElementById('noRepositoriesMessage');
+                
+                repoSelection.style.display = 'block';
+                noReposMessage.style.display = 'none';
+                
+                // Update status indicator based on state
+                if (statusCheck) {
+                  const icon = statusCheck.querySelector('i');
+                  const title = statusCheck.querySelector('i');
+                  
+                  statusCheck.style.display = 'inline';
+                  
+                  // Reset classes
+                  icon.className = '';
+                  icon.style.color = '';
+                  
+                  switch (state) {
+                    case 'ready':
+                      icon.className = 'fas fa-check-circle';
+                      icon.style.color = '#28a745';
+                      title.title = message || 'Repository ready';
+                      break;
+                    case 'needs_sync':
+                      icon.className = 'fas fa-exclamation-triangle';
+                      icon.style.color = '#ffc107';
+                      title.title = message || 'Repository needs sync';
+                      break;
+                    case 'needs_clone':
+                      icon.className = 'fas fa-download';
+                      icon.style.color = '#17a2b8';
+                      title.title = message || 'Repository needs cloning';
+                      break;
+                    case 'checking':
+                      icon.className = 'fas fa-spinner fa-spin';
+                      icon.style.color = '#6c757d';
+                      title.title = 'Checking repository status...';
+                      break;
+                    case 'error':
+                      icon.className = 'fas fa-times-circle';
+                      icon.style.color = '#dc3545';
+                      title.title = message || 'Repository error';
+                      break;
+                    case 'invalid':
+                      icon.className = 'fas fa-times-circle';
+                      icon.style.color = '#dc3545';
+                      title.title = message || 'Invalid repository';
+                      break;
+                    default:
+                      icon.className = 'fas fa-question-circle';
+                      icon.style.color = '#6c757d';
+                      title.title = message || 'Unknown status';
+                  }
+                }
+                
+                // Show inline info
+                if (inlineInfo) {
+                  inlineInfo.style.display = 'block';
+                }
+              }
+
+              updateRepositoryControls(state) {
+                const syncBtn = document.getElementById('syncRepository');
+                const statusBtn = document.getElementById('gitStatusBtn');
+                const gitModeRadio = document.getElementById('gitMode');
+                const historyModeRadio = document.getElementById('historyMode');
+                
+                // Enable/disable buttons based on state
+                if (syncBtn) {
+                  syncBtn.disabled = (state === 'checking' || state === 'error');
+                  
+                  // Update sync button text based on state
+                  const syncText = syncBtn.querySelector('i').nextSibling;
+                  if (syncText) {
+                    switch (state) {
+                      case 'needs_clone':
+                        syncText.textContent = ' Clone Repository';
+                        break;
+                      case 'needs_sync':
+                        syncText.textContent = ' Sync Repository';
+                        break;
+                      default:
+                        syncText.textContent = ' Sync Repository';
+                    }
+                  }
+                }
+                
+                if (statusBtn) {
+                  statusBtn.disabled = (state === 'checking' || state === 'error' || state === 'needs_clone');
+                }
+                
+                // Enable/disable Git comparison modes
+                const gitModesEnabled = (state === 'ready' || state === 'needs_sync');
+                
+                if (gitModeRadio) {
+                  gitModeRadio.disabled = !gitModesEnabled;
+                  if (gitModesEnabled) {
+                    gitModeRadio.parentElement.classList.remove('disabled');
+                  } else {
+                    gitModeRadio.parentElement.classList.add('disabled');
+                  }
+                }
+                
+                if (historyModeRadio) {
+                  historyModeRadio.disabled = !gitModesEnabled;
+                  if (gitModesEnabled) {
+                    historyModeRadio.parentElement.classList.remove('disabled');
+                  } else {
+                    historyModeRadio.parentElement.classList.add('disabled');
+                  }
+                }
+              }
+
+              async syncSelectedRepository() {
+                if (!this.selectedRepository) return;
+                
+                try {
+                  console.log('ConfigCompare: Syncing repository...');
+                  
+                  // Show syncing state
+                  this.updateRepositoryInfo('checking', 'Syncing repository...');
+                  this.updateRepositoryControls('checking');
+                  
+                  const response = await window.authManager.apiRequest(`/api/git-repositories/${this.selectedRepository.id}/sync`, {
+                    method: 'POST'
+                  });
+                  
+                  console.log('ConfigCompare: Repository sync response:', response);
+                  
+                  if (response.success) {
+                    console.log('ConfigCompare: Repository synced successfully');
+                    console.log('ConfigCompare: Repository path:', response.repository_path);
+                    
+                    // Show success message temporarily
+                    this.updateRepositoryInfo('ready', response.message || 'Repository synced successfully');
+                    
+                    // Immediately check repository state after sync to update UI properly
+                    setTimeout(async () => {
+                      await this.checkRepositoryState();
+                    }, 1000);
+                  } else {
+                    console.error('ConfigCompare: Repository sync failed:', response.message);
+                    this.updateRepositoryInfo('error', response.message || 'Sync failed');
+                    this.updateRepositoryControls('error');
+                  }
+                  
+                } catch (error) {
+                  console.error('Error syncing repository:', error);
+                  let errorMessage = 'Sync failed: ' + error.message;
+                  
+                  // Extract more specific error message if available
+                  if (error.detail) {
+                    errorMessage = error.detail;
+                  } else if (error.message && error.message.includes('detail:')) {
+                    const detailMatch = error.message.match(/detail:\s*(.+)/);
+                    if (detailMatch) {
+                      errorMessage = detailMatch[1];
+                    }
+                  }
+                  
+                  this.updateRepositoryInfo('error', errorMessage);
+                  this.updateRepositoryControls('error');
+                }
+              }
+
+              showStatus(message, type) {
+                // You can implement a status display here if needed
+                console.log(`Status (${type}):`, message);
               }
 
               // File Search Functionality
@@ -1436,7 +1889,13 @@
                     return;
                   }
 
-                  const response = await window.authManager.apiRequest(`/api/git/repo/files/search?query=${encodeURIComponent(query)}&limit=20`);
+                  if (!this.selectedRepository) {
+                    console.warn('No repository selected for file search');
+                    this.showSearchError(side, 'Please select a repository first.');
+                    return;
+                  }
+
+                  const response = await window.authManager.apiRequest(`/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}&limit=20`);
                   
                   if (response.success) {
                     this.displaySearchResults(side, response.data.files, query);
@@ -1455,17 +1914,20 @@
                 const listGroup = resultsDiv.querySelector('.list-group');
                 const searchInput = document.getElementById(`${side}FileSearch`);
                 
+                // Filter out files with repo_ prefix
+                const filteredFiles = files.filter(file => !file.path.startsWith('repo_'));
+                
                 // Clear previous results
                 listGroup.innerHTML = '';
                 
-                if (files.length === 0) {
+                if (filteredFiles.length === 0) {
                   listGroup.innerHTML = `
                     <div class="list-group-item text-muted">
                       <i class="fas fa-search"></i> No files found matching "${query}"
                     </div>
                   `;
                 } else {
-                  files.forEach((file, index) => {
+                  filteredFiles.forEach((file, index) => {
                     const item = document.createElement('div');
                     item.className = 'list-group-item list-group-item-action';
                     item.dataset.index = index;
@@ -1537,16 +1999,24 @@
               // Git File Search Methods
               async searchGitFiles(query) {
                 try {
-                  // Use same search endpoint as file compare mode
-                  const result = await window.authManager.apiRequest(`/api/git/repo/files/search?query=${encodeURIComponent(query)}`);
+                  if (!this.selectedRepository) {
+                    console.warn('No repository selected for Git file search');
+                    this.showGitSearchError('Please select a repository first.');
+                    return;
+                  }
+
+                  // Use new unified git-repositories search endpoint
+                  const result = await window.authManager.apiRequest(`/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}`);
 
                   if (result.success && result.data && result.data.files) {
-                    // Convert to same format as local gitFiles
-                    const formattedFiles = result.data.files.map(fileInfo => ({
-                      path: fileInfo.path,
-                      name: fileInfo.name,
-                      directory: fileInfo.directory || ''
-                    }));
+                    // Filter out files with repo_ prefix and convert to same format as local gitFiles
+                    const formattedFiles = result.data.files
+                      .filter(fileInfo => !fileInfo.path.startsWith('repo_'))
+                      .map(fileInfo => ({
+                        path: fileInfo.path,
+                        name: fileInfo.name,
+                        directory: fileInfo.directory || ''
+                      }));
                     this.displayGitSearchResults(formattedFiles, query);
                   } else {
                     this.showGitSearchError('No files found');
@@ -1802,16 +2272,24 @@
 
               async searchHistoryFiles(query) {
                 try {
-                  // Use same approach as Git mode file search
-                  const result = await window.authManager.apiRequest(`/api/git/repo/files/search?query=${encodeURIComponent(query)}`);
+                  if (!this.selectedRepository) {
+                    console.warn('No repository selected for history file search');
+                    this.showHistorySearchError('Please select a repository first.');
+                    return;
+                  }
+
+                  // Use new unified git-repositories search endpoint
+                  const result = await window.authManager.apiRequest(`/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}`);
 
                   if (result.success && result.data && result.data.files) {
-                    // Convert to same format as other modes
-                    const formattedFiles = result.data.files.map(fileInfo => ({
-                      path: fileInfo.path,
-                      name: fileInfo.name,
-                      directory: fileInfo.directory || ''
-                    }));
+                    // Filter out files with repo_ prefix and convert to same format as other modes
+                    const formattedFiles = result.data.files
+                      .filter(fileInfo => !fileInfo.path.startsWith('repo_'))
+                      .map(fileInfo => ({
+                        path: fileInfo.path,
+                        name: fileInfo.name,
+                        directory: fileInfo.directory || ''
+                      }));
                     this.displayHistorySearchResults(formattedFiles, query);
                   } else {
                     this.showHistorySearchError('No files found');
@@ -1937,7 +2415,7 @@
                 }
               }
 
-              handleModeChange(mode) {
+              async handleModeChange(mode) {
                 console.log('Mode changed to:', mode);
                 
                 const fileMode = document.getElementById('fileComparisonMode');
@@ -1960,8 +2438,8 @@
                   
                   // Ensure commits are loaded when switching to Git mode
                   if (this.gitData.commits.length === 0) {
-                    console.log('No commits loaded, reloading Git status...');
-                    this.loadGitStatus();
+                    console.log('No commits loaded, checking repository state...');
+                    await this.checkRepositoryState();
                   } else {
                     // Refresh the commit dropdowns to make sure they're populated
                     this.populateGitCommits();
@@ -1989,12 +2467,12 @@
                 this.updateCompareButton();
               }
 
-              handleRefresh() {
+              async handleRefresh() {
                 const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
                 if (mode === 'files') {
                   this.loadFiles();
                 } else {
-                  this.loadGitStatus();
+                  await this.checkRepositoryState();
                 }
               }
 
@@ -2056,45 +2534,6 @@
                   });
                 } catch (error) {
                   this.showError(`Error comparing commits: ${error.message}`);
-                }
-              }
-
-              async loadGitStatus() {
-                try {
-                  // Check if authManager is available
-                  if (!window.authManager) {
-                    console.log('ConfigCompare: AuthManager not ready, skipping Git status load');
-                    return;
-                  }
-
-                  const response = await window.authManager.apiRequest('/api/git/status');
-                  
-                  if (response && response.current_branch) {
-                    this.gitData.status = response;
-                    this.gitData.currentBranch = response.current_branch;
-                    this.gitData.commits = response.commits || [];
-                    
-                    await this.populateGitBranches();
-                    this.populateGitCommits();
-                    
-                    console.log('ConfigCompare: Git status loaded with', this.gitData.commits.length, 'commits');
-                  } else {
-                    // Git not available, disable Git mode
-                    console.log('ConfigCompare: Git status not available, disabling Git mode');
-                    const gitModeRadio = document.getElementById('gitMode');
-                    if (gitModeRadio) {
-                      gitModeRadio.disabled = true;
-                      gitModeRadio.parentElement.classList.add('disabled');
-                    }
-                  }
-                } catch (error) {
-                  console.error('ConfigCompare: Error loading Git status:', error);
-                  // Git not available, disable Git mode
-                  const gitModeRadio = document.getElementById('gitMode');
-                  if (gitModeRadio) {
-                    gitModeRadio.disabled = true;
-                    gitModeRadio.parentElement.classList.add('disabled');
-                  }
                 }
               }
 
@@ -2279,7 +2718,7 @@
                     <div class="file-history-info">
                       <p><strong>Last Modified:</strong> ${timeAgo}</p>
                       <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
-                      <p><strong>Author:</strong> ${commit.author.name}</p>
+                      <p><strong>Author:</strong> ${commit.author}</p>
                       <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
                       <p><strong>Message:</strong> ${commit.message}</p>
                       ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
@@ -2372,7 +2811,7 @@
                     <div class="file-history-info">
                       <p><strong>${commitLabel}:</strong> ${timeAgo}</p>
                       <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
-                      <p><strong>Author:</strong> ${commit.author.name}</p>
+                      <p><strong>Author:</strong> ${commit.author}</p>
                       <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
                       <p><strong>Message:</strong> ${commit.message}</p>
                       ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
@@ -2774,7 +3213,7 @@
                             ${isSelectedCommit ? '<br><span class="badge bg-info" style="font-size: 0.6rem;">Selected</span>' : ''}
                           </div>
                           <div class="timeline-author-info">
-                            <strong>${commit.author.name}</strong>
+                            <strong>${commit.author}</strong>
                           </div>
                           <div class="timeline-message-info" title="${commit.message}">
                             ${commit.message}
@@ -2961,8 +3400,8 @@
                   const data = await window.authManager.apiRequest('/api/files/compare', {
                     method: 'POST',
                     body: JSON.stringify({
-                      file1: leftFile,
-                      file2: rightFile
+                      left_file: leftFile,
+                      right_file: rightFile
                     })
                   });
                   
@@ -3198,8 +3637,13 @@
               }
 
               async showGitStatus() {
+                if (!this.selectedRepository) {
+                  alert('No repository selected. Please select a repository first.');
+                  return;
+                }
+
                 if (!this.gitData.status) {
-                  await this.loadGitStatus();
+                  await this.checkRepositoryState();
                 }
 
                 let statusHtml = `
@@ -3207,53 +3651,91 @@
                     <div class="modal-dialog modal-lg">
                       <div class="modal-content">
                         <div class="modal-header">
-                          <h5 class="modal-title">Git Repository Status</h5>
+                          <h5 class="modal-title">Git Repository Status - ${this.selectedRepository.name}</h5>
                           <button type="button" class="btn-close" id="closeGitStatusModal"></button>
                         </div>
                         <div class="modal-body">
                           <div class="row">
                             <div class="col-md-6">
-                              <h6>Current Branch:</h6>
-                              <p class="text-primary">${this.gitData.status?.current_branch || 'Unknown'}</p>
+                              <h6>Repository Details:</h6>
+                              <dl class="row">
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8">${this.selectedRepository.name}</dd>
+                                <dt class="col-sm-4">URL:</dt>
+                                <dd class="col-sm-8"><a href="${this.selectedRepository.url}" target="_blank">${this.selectedRepository.url}</a></dd>
+                                <dt class="col-sm-4">Branch:</dt>
+                                <dd class="col-sm-8"><code>${this.gitData.status?.current_branch || this.selectedRepository.branch}</code></dd>
+                              </dl>
                               
                               <h6>Repository Status:</h6>
                               <p class="${this.gitData.status?.is_dirty ? 'text-warning' : 'text-success'}">
+                                <i class="fas ${this.gitData.status?.is_dirty ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i>
                                 ${this.gitData.status?.is_dirty ? 'Modified files present' : 'Clean working directory'}
                               </p>
                             </div>
                             <div class="col-md-6">
                               <h6>Available Branches:</h6>
-                              <ul class="list-unstyled">
-                                ${this.gitData.branches.map(branch => 
-                                  `<li class="${branch.is_current ? 'text-primary fw-bold' : ''}">${branch.name}${branch.is_current ? ' (current)' : ''}</li>`
-                                ).join('')}
-                              </ul>
+                              ${this.gitData.branches && this.gitData.branches.length > 0 ? `
+                                <ul class="list-unstyled">
+                                  ${this.gitData.branches.map(branch => {
+                                    const branchName = typeof branch === 'string' ? branch : branch.name;
+                                    const isCurrent = branchName === this.gitData.status?.current_branch;
+                                    return `<li class="${isCurrent ? 'text-primary fw-bold' : ''}">${branchName}${isCurrent ? ' (current)' : ''}</li>`;
+                                  }).join('')}
+                                </ul>
+                              ` : '<p class="text-muted">No branches available</p>'}
                             </div>
                           </div>
                           
-                          <h6>Recent Commits:</h6>
-                          <div class="table-responsive">
-                            <table class="table table-sm">
-                              <thead>
-                                <tr>
-                                  <th>Hash</th>
-                                  <th>Message</th>
-                                  <th>Author</th>
-                                  <th>Date</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                ${this.gitData.commits.slice(0, 10).map(commit => `
-                                  <tr>
-                                    <td><code>${commit.hash.substring(0, 8)}</code></td>
-                                    <td>${commit.message}</td>
-                                    <td>${typeof commit.author === 'object' ? commit.author.name : commit.author}</td>
-                                    <td>${new Date(commit.date).toLocaleDateString()}</td>
-                                  </tr>
-                                `).join('')}
-                              </tbody>
-                            </table>
-                          </div>
+                          ${this.gitData.status?.is_dirty ? `
+                            <div class="row mt-3">
+                              <div class="col-md-12">
+                                <h6>Working Directory Changes:</h6>
+                                ${this.gitData.status.modified_files && this.gitData.status.modified_files.length > 0 ? `
+                                  <p><strong>Modified Files:</strong></p>
+                                  <ul class="list-unstyled">
+                                    ${this.gitData.status.modified_files.map(file => `<li class="text-warning"><i class="fas fa-edit"></i> ${file}</li>`).join('')}
+                                  </ul>
+                                ` : ''}
+                                ${this.gitData.status.untracked_files && this.gitData.status.untracked_files.length > 0 ? `
+                                  <p><strong>Untracked Files:</strong></p>
+                                  <ul class="list-unstyled">
+                                    ${this.gitData.status.untracked_files.map(file => `<li class="text-info"><i class="fas fa-plus"></i> ${file}</li>`).join('')}
+                                  </ul>
+                                ` : ''}
+                              </div>
+                            </div>
+                          ` : ''}
+                          
+                          ${this.gitData.commits && this.gitData.commits.length > 0 ? `
+                            <div class="row mt-3">
+                              <div class="col-md-12">
+                                <h6>Recent Commits:</h6>
+                                <div class="table-responsive">
+                                  <table class="table table-sm">
+                                    <thead>
+                                      <tr>
+                                        <th>Hash</th>
+                                        <th>Message</th>
+                                        <th>Author</th>
+                                        <th>Date</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      ${this.gitData.commits.slice(0, 10).map(commit => `
+                                        <tr>
+                                          <td><code>${commit.hash.substring(0, 8)}</code></td>
+                                          <td>${commit.message}</td>
+                                          <td>${typeof commit.author === 'object' ? commit.author.name : commit.author}</td>
+                                          <td>${new Date(commit.date).toLocaleDateString()}</td>
+                                        </tr>
+                                      `).join('')}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          ` : '<div class="alert alert-info mt-3">No commits available</div>'}
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn btn-secondary" id="closeGitStatusModalBtn">Close</button>
@@ -3749,7 +4231,7 @@
                   
                   if (response.success) {
                     const status = response.data;
-                    this.updateRepositoryInfo(status);
+                    // this.updateRepositoryInfo(status); // Disabled - using new repository selector
                     
                     if (status.is_git_repo) {
                       if (status.has_configs) {
@@ -3805,30 +4287,26 @@
               }
 
               async syncRepository() {
+                if (!this.selectedRepository) {
+                  this.updateStatusMessage('danger', '<i class="fas fa-exclamation-triangle"></i> No repository selected');
+                  return;
+                }
+
                 this.updateStatusMessage('info', '<i class="fas fa-spinner fa-spin"></i> Synchronizing repository...', true);
                 this.setButtonsDisabled(true);
 
                 try {
-                  const response = await window.authManager.apiRequest('/api/git/repo/sync', {
+                  const response = await window.authManager.apiRequest(`/api/git-repositories/${this.selectedRepository.id}/sync`, {
                     method: 'POST'
                   });
                   
                   if (response.success) {
                     this.updateStatusMessage('success', 
                       `<i class="fas fa-check-circle"></i> ${response.message}`);
-                    this.updateRepositoryInfo(response.data);
-                    this.setButtonsDisabled(false);
                     
-                    // Auto-collapse panel if repository is ready after sync
-                    if (response.data && response.data.has_configs) {
-                      setTimeout(() => {
-                        const gitStatusPanel = document.querySelector('#gitStatusSection .collapse-link');
-                        if (gitStatusPanel) {
-                          gitStatusPanel.click();
-                          console.log('GitManager: Auto-collapsed Git Repository Status panel after sync (status: ready)');
-                        }
-                      }, 2000); // Wait 2 seconds to let user see the success message
-                    }
+                    // Update repository state after sync
+                    await this.checkRepositoryState();
+                    this.setButtonsDisabled(false);
                   } else {
                     this.updateStatusMessage('danger', 
                       `<i class="fas fa-times-circle"></i> Sync failed: ${response.message}`);
@@ -3843,6 +4321,11 @@
               }
 
               async cloneRepository() {
+                if (!this.selectedRepository) {
+                  this.updateStatusMessage('danger', '<i class="fas fa-exclamation-triangle"></i> No repository selected');
+                  return;
+                }
+
                 if (!confirm('This will backup any existing repository and clone fresh. Continue?')) {
                   return;
                 }
@@ -3851,26 +4334,17 @@
                 this.setButtonsDisabled(true);
 
                 try {
-                  const response = await window.authManager.apiRequest('/api/git/repo/clone', {
+                  const response = await window.authManager.apiRequest(`/api/git-repositories/${this.selectedRepository.id}/sync`, {
                     method: 'POST'
                   });
                   
                   if (response.success) {
                     this.updateStatusMessage('success', 
                       `<i class="fas fa-check-circle"></i> ${response.message}`);
-                    this.updateRepositoryInfo(response.data);
-                    this.setButtonsDisabled(false);
                     
-                    // Auto-collapse panel if repository is ready after clone
-                    if (response.data && response.data.has_configs) {
-                      setTimeout(() => {
-                        const gitStatusPanel = document.querySelector('#gitStatusSection .collapse-link');
-                        if (gitStatusPanel) {
-                          gitStatusPanel.click();
-                          console.log('GitManager: Auto-collapsed Git Repository Status panel after clone (status: ready)');
-                        }
-                      }, 2000); // Wait 2 seconds to let user see the success message
-                    }
+                    // Update repository state after clone
+                    await this.checkRepositoryState();
+                    this.setButtonsDisabled(false);
                   } else {
                     this.updateStatusMessage('danger', 
                       `<i class="fas fa-times-circle"></i> Clone failed: ${response.message}`);
@@ -3885,38 +4359,8 @@
               }
 
               updateStatusMessage(type, message, loading = false) {
-                const statusElement = document.getElementById('gitStatusMessage');
-                statusElement.className = `alert alert-${type}`;
-                statusElement.innerHTML = message;
-              }
-
-              updateRepositoryInfo(status) {
-                const repoInfoDiv = document.getElementById('gitRepoInfo');
-                
-                if (status.is_git_repo) {
-                  // Clean the remote URL by removing credentials
-                  let displayUrl = 'Not configured';
-                  if (status.remote_url) {
-                    try {
-                      // Remove credentials from URL for display
-                      displayUrl = status.remote_url.replace(/\/\/[^@]+@/, '//');
-                    } catch (e) {
-                      displayUrl = status.remote_url;
-                    }
-                  }
-                  
-                  document.getElementById('repoUrl').textContent = displayUrl;
-                  document.getElementById('repoBranch').textContent = status.current_branch || 'Unknown';
-                  document.getElementById('repoStatus').innerHTML = status.has_configs ? 
-                    '<span class="badge bg-success">Ready</span>' :
-                    '<span class="badge bg-warning">No configs</span>';
-                  document.getElementById('lastCommit').textContent = status.last_commit || 'No commits';
-                  document.getElementById('filesCount').textContent = status.config_files.length || '0';
-                  
-                  repoInfoDiv.style.display = 'block';
-                } else {
-                  repoInfoDiv.style.display = 'none';
-                }
+                // Status messages now logged to console since UI element was removed
+                console.log(`Status (${type}):`, message);
               }
 
               setButtonsDisabled(disabled) {
@@ -3931,13 +4375,18 @@
             // Initialize when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
               console.log('Compare page: DOM loaded, initializing components...');
-              configCompare = new ConfigCompare();
               
-              // Delay GitManager initialization to ensure authManager is fully ready
+              // Delay ConfigCompare initialization to ensure authManager is fully ready
               setTimeout(() => {
-                console.log('Compare page: Creating GitManager...', !!window.authManager);
-                gitManager = new GitManager();
-              }, 1000);
+                console.log('Compare page: Creating ConfigCompare...', !!window.authManager);
+                configCompare = new ConfigCompare();
+              }, 800);
+              
+              // GitManager disabled - repository management now handled by ConfigCompare
+              // setTimeout(() => {
+              //   console.log('Compare page: Creating GitManager...', !!window.authManager);
+              //   gitManager = new GitManager();
+              // }, 1000);
             });
           </script>
 

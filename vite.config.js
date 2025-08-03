@@ -122,6 +122,18 @@ export default defineConfig({
     port: 3000,
     host: process.env.VITE_HOST || 'localhost',
     allowedHosts: process.env.VITE_ALLOWED_HOSTS ? process.env.VITE_ALLOWED_HOSTS.split(',') : 'auto',
+    watch: {
+      ignored: [
+        '**/data/**',
+        '**/backend/**', 
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/docs/**',
+        '**/.git/**',
+        '**/.venv/**',
+        '**/.*'
+      ]
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8000',

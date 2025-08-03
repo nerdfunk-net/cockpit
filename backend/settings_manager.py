@@ -42,8 +42,9 @@ class SettingsManager:
     
     def __init__(self, db_path: str = None):
         if db_path is None:
-            # Use data/settings directory for persistence across containers
-            settings_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'settings')
+            # Use data directory from configuration for persistence
+            from config_manual import settings as config_settings
+            settings_dir = os.path.join(config_settings.data_directory, 'settings')
             os.makedirs(settings_dir, exist_ok=True)
             self.db_path = os.path.join(settings_dir, 'cockpit_settings.db')
         else:
@@ -459,6 +460,58 @@ class SettingsManager:
                 'error': str(e),
                 'recovery_needed': True
             }
+
+    def get_selected_git_repository(self) -> Optional[int]:
+        """Get the currently selected Git repository ID for configuration comparison."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Ensure table exists
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS selected_git_repository (
+                        id INTEGER PRIMARY KEY,
+                        repository_id INTEGER NOT NULL,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                
+                cursor.execute('SELECT repository_id FROM selected_git_repository WHERE id = 1')
+                result = cursor.fetchone()
+                return result[0] if result else None
+                
+        except Exception as e:
+            logger.error(f"Error getting selected Git repository: {e}")
+            return None
+
+    def set_selected_git_repository(self, repository_id: int) -> bool:
+        """Set the selected Git repository ID for configuration comparison."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Ensure table exists
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS selected_git_repository (
+                        id INTEGER PRIMARY KEY,
+                        repository_id INTEGER NOT NULL,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                
+                # Use INSERT OR REPLACE to handle both insert and update
+                cursor.execute('''
+                    INSERT OR REPLACE INTO selected_git_repository (id, repository_id, updated_at)
+                    VALUES (1, ?, CURRENT_TIMESTAMP)
+                ''', (repository_id,))
+                
+                conn.commit()
+                logger.info(f"Selected Git repository set to ID: {repository_id}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error setting selected Git repository: {e}")
+            return False
 
 # Global settings manager instance
 settings_manager = SettingsManager()
