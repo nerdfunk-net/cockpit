@@ -79,15 +79,14 @@
                   <li><a><i class="fas fa-rocket"></i> Onboarding <span class="fas fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="onboard-device.html"><i class="fas fa-plus-circle"></i> Onboard Device</a></li>
-                      <li><a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a></li>
-                    </ul>
-                  </li>
                   <li><a><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="backup.html"><i class="fas fa-save"></i> Backup</a></li>
                       <li><a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a></li>
                     </ul>
-                  </li>                  </li>
+                  </li>
+                    </ul>
+                  </li>
                   <li><a><i class="fas fa-wrench"></i> Settings <span class="fas fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a></li>
