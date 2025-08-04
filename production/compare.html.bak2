@@ -2717,7 +2717,7 @@
                     <div class="file-history-info">
                       <p><strong>Last Modified:</strong> ${timeAgo}</p>
                       <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
-                      <p><strong>Author:</strong> ${typeof commit.author === 'object' ? commit.author.name : commit.author}</p>
+                      <p><strong>Author:</strong> ${commit.author.name}</p>
                       <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
                       <p><strong>Message:</strong> ${commit.message}</p>
                       ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
@@ -2810,7 +2810,7 @@
                     <div class="file-history-info">
                       <p><strong>${commitLabel}:</strong> ${timeAgo}</p>
                       <p><strong>Date:</strong> ${commitDate.toLocaleString()}</p>
-                      <p><strong>Author:</strong> ${typeof commit.author === 'object' ? commit.author.name : commit.author}</p>
+                      <p><strong>Author:</strong> ${commit.author.name}</p>
                       <p><strong>Commit:</strong> <code>${commit.short_hash}</code></p>
                       <p><strong>Message:</strong> ${commit.message}</p>
                       ${!data.file_exists ? '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> File was deleted in this commit</p>' : ''}
@@ -3212,7 +3212,7 @@
                             ${isSelectedCommit ? '<br><span class="badge bg-info" style="font-size: 0.6rem;">Selected</span>' : ''}
                           </div>
                           <div class="timeline-author-info">
-                            <strong>${typeof commit.author === 'object' ? commit.author.name : commit.author}</strong>
+                            <strong>${commit.author.name}</strong>
                           </div>
                           <div class="timeline-message-info" title="${commit.message}">
                             ${commit.message}
