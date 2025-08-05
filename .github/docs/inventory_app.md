@@ -1,3 +1,35 @@
+# General Instructions
+
+## Technology Stack
+
+This App should be integrated into the existing Cockpit application.
+
+## File reference
+
+Look in .github/docs/nautobot_graphql_queries.md to get all the queries you need for the backend.
+
+## Navigation integration
+
+Integrate this App into the existing Cockpit navigation system. The agent can see in the repository.
+
+This app the is Inventory App. The Menu of this App is called "Ansible", the submenu is called "Inventory". the navigation bar at the left side must be modified so that the app is reachable using the link "Ansible/Inventory"
+
+## Nautobot Integration
+
+Use the existing Nautobot integration. There is a python based backend that contains some but not all graphql calls to nautobot. Add the missing graphql queries to the backend. 
+
+## UI Framework
+
+Follow the existing Cockpit UI patterns that you find.
+
+## Authentication
+
+Use the existing Cockpit authentication system.
+
+## File Structure
+
+1. The frontend should be placed in the production directory and named "ansible-inventory.html". The backend exists at ./backend and must be expanded. The backend has a model directory as well as a routers directory.
+
 # What the Application does
 
 * The app provides a user interface for constructing an Ansible inventory.
