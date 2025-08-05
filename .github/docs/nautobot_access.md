@@ -260,7 +260,7 @@
   * The parameter location_filter is the location we are looking for
   * Use this query:
 
-    query devives_in_location (
+    query devices_by_location (
         $location_filter: [String]
     ) {
         locations (name__re: $location_filter) {
