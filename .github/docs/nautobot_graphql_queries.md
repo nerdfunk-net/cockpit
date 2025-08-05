@@ -1,4 +1,4 @@
-# devices by name
+# devices by name (regular expression)
 
     query devices_by_name($name_filter: [String]) {
         devices(name__ire: $name_filter) {
@@ -16,10 +16,28 @@
         }
     }
 
-# devices by location
+# devices by name (exact name)
+
+    query devices_by_name($name_filter: [String]) {
+        devices(name: $name_filter) {
+            id
+            name
+            primary_ip4 {
+            address
+            }
+            status {
+                name
+            }
+            device_type {
+                model
+            }
+        }
+    }
+
+# devices by location (regular expression)
 
     query devices_by_location ($location_filter: [String]) {
-        locations (name__re: $location_filter) {
+        locations (name__ire: $location_filter) {
             name
             devices {
                 id
@@ -40,6 +58,29 @@
         }
     }
 
+# devices by location (exact name)
+
+    query devices_by_location ($location_filter: [String]) {
+        locations (name: $location_filter) {
+            name
+            devices {
+                id
+                name
+                role {
+                    name
+                }
+                location {
+                    name
+                }
+                primary_ip4 {
+                    address
+                }
+                status {
+                    name
+                }
+            }
+        }
+    }
 # devices by role
 
     query devices_by_role($role_filter: [String]) {
@@ -57,6 +98,7 @@
             }
         }
     }
+
 # devices by tag
 
     query devices_by_tag($tag_filter: [String]) {

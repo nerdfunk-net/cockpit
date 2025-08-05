@@ -18,6 +18,7 @@ from routers.files import router as files_router
 from routers.settings import router as settings_router
 from routers.templates import router as templates_router
 from routers.git_repositories import router as git_repositories_router
+from routers.ansible_inventory import router as ansible_inventory_router
 
 # Import auth dependency
 from core.auth import verify_token
@@ -44,6 +45,7 @@ app.include_router(files_router)
 app.include_router(settings_router)
 app.include_router(templates_router)
 app.include_router(git_repositories_router)
+app.include_router(ansible_inventory_router)
 
 # Health check and basic endpoints
 @app.get("/")

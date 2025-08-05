@@ -95,3 +95,23 @@ To implement logical operations:
 * Below the input section, there is a dynamic table that executes the defined logical operation. This table displays the resulting inventory structure, showing which hosts belong to which groups, assigned variables, and any computed results. The table updates in real time as the user modifies the logical operations.
 
 * At the bottom, there is a "Result" button. When clicked, the app processes all inputs and displays the final Ansible inventory in YAML or INI format, with options to download or copy the result. Error messages and validation feedback are shown inline if needed.
+
+# Ansible Inventory Format
+
+This app has the ability to use jinja2 templates (Settings / templates). To build the final inventory this app must ask the user for the template name and the category (name and category are part of each template). To build the inventory do this:
+    
+    1. Build a dict "all_devices" that includes the final result that is shown in the table. all_devices must incude the following data: 
+        * name
+        * uuid of the device
+        * location
+        * role
+        * all tags
+        * device_type
+        * manufacturer
+        * platform
+    2. Render the jinja2 template using this dict and show it the user. 
+    3. Add a Download Inventory Button to the output. If the user clicks this button the inventory is downloaded named inventory.yaml
+
+# Real-time Table Update
+
+The result should only be updated if the user clicks the "Preview" Button.
