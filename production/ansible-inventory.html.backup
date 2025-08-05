@@ -46,58 +46,6 @@
         }, 500);
       });
     </script>
-    
-    <!-- Custom styles - EXACT SAME AS SYNC_DEVICES -->
-    <style>
-      /* Add bottom spacing to prevent scrollbar overlap with pagination */
-      .right_col {
-        padding-bottom: 60px !important; /* Extra space at bottom of main content */
-      }
-      
-      .pagination-container {
-        margin-bottom: 40px; /* Extra margin below pagination */
-      }
-      
-      .table-responsive {
-        margin-bottom: 20px; /* Space between table and pagination */
-      }
-      
-      /* Pagination styling */
-      .pagination {
-        margin-bottom: 0;
-      }
-      
-      .pagination .page-link {
-        color: #337ab7;
-        background-color: #fff;
-        border: 1px solid #ddd;
-        padding: 6px 12px;
-      }
-      
-      .pagination .page-item.active .page-link {
-        background-color: #337ab7;
-        border-color: #337ab7;
-        color: white;
-      }
-      
-      .pagination .page-item.disabled .page-link {
-        color: #999;
-        cursor: not-allowed;
-        background-color: #fff;
-        border-color: #ddd;
-      }
-      
-      .pagination .page-link:hover {
-        color: #23527c;
-        background-color: #eee;
-        border-color: #ddd;
-      }
-      
-      .dataTables_info {
-        padding-top: 8px;
-        color: #666;
-      }
-    </style>
   </head>
 
   <body class="nav-md">
@@ -224,7 +172,7 @@
 
             <div class="clearfix"></div>
 
-            <!-- Logical Operations Panel -->
+            <!-- Logical Operations Builder -->
             <div class="row">
               <div class="col-md-12 col-sm-12">
                 <div class="x_panel">
@@ -287,7 +235,7 @@
                     </div>
 
                     <!-- Preview Button -->
-                    <div class="row" style="margin-bottom: 20px;">
+                    <div class="row">
                       <div class="col-md-12 text-center">
                         <button id="preview-btn" class="btn btn-success btn-lg" disabled>
                           <i class="fas fa-eye"></i> Preview Results
@@ -298,12 +246,41 @@
                       </div>
                     </div>
 
-                    <!-- Status Display Only -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="row" id="results-section">
+              <div class="col-md-12 col-sm-12">
+                <div class="x_panel">
+                  <div class="x_title">
+                    <h2><i class="fas fa-table"></i> Preview Results</h2>
+                    <div class="clearfix"></div>
+                  </div>
+                  <div class="x_content">
+                    
+                    <!-- Status and Page Size - EXACT SAME STRUCTURE AS SYNC_DEVICES -->
                     <div class="row mb-3">
-                      <div class="col-md-12">
+                      <div class="col-md-6">
                         <div class="alert alert-info">
                           <strong id="device-count">0</strong> devices found
                           <span id="operations-count" class="text-muted"></span>
+                        </div>
+                      </div>
+                      <div class="col-md-6 text-right">
+                        <div class="form-inline" style="justify-content: flex-end;">
+                          <label class="mr-2">Show:</label>
+                          <select id="page-size" class="form-control form-control-sm mr-3" style="width: auto;">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                          </select>
+                          <span class="mr-2">entries</span>
                         </div>
                       </div>
                     </div>
@@ -323,19 +300,29 @@
                             <th class="column-title no-link last">Tags</th>
                           </tr>
                         </thead>
-                        <tbody id="device-table-body">
-                          <!-- Loading state -->
-                          <tr>
-                            <td colspan="8" class="text-center">
-                              <i class="fas fa-info-circle"></i> Add conditions and click "Preview Results" to load devices.
-                            </td>
-                          </tr>
+                        <tbody id="results-tbody">
+                          <!-- Results will be populated here by JavaScript -->
                         </tbody>
                       </table>
                     </div>
                     
                     <!-- Pagination Container - OUTSIDE table-responsive like sync_devices.html -->
-                    <div id="ansible-pagination" class="pagination-container"></div>
+                    <div id="pagination-section" class="pagination-container">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="dataTables_info">
+                            Showing <span id="pagination-start">0</span> to <span id="pagination-end">0</span> of <span id="pagination-total">0</span> entries
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="dataTables_paginate paging_simple_numbers" style="text-align: right;">
+                            <ul class="pagination pagination-sm" id="pagination-controls">
+                              <!-- Pagination controls will be populated by JavaScript -->
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                   </div>
                 </div>
@@ -430,7 +417,58 @@
       </div>
     </div>
 
-    <!-- JavaScript for Ansible Inventory App -->
+    <!-- Custom JavaScript for Ansible Inventory -->
+    <style>
+      /* EXACT SAME APPROACH AS SYNC_DEVICES.HTML */
+      /* Add bottom spacing to prevent scrollbar overlap with pagination */
+      .right_col {
+        padding-bottom: 60px !important; /* Extra space at bottom of main content */
+      }
+      
+      .pagination-container {
+        margin-bottom: 40px; /* Extra margin below pagination */
+      }
+      
+      .table-responsive {
+        margin-bottom: 20px; /* Space between table and pagination */
+      }
+      
+      /* Pagination styling */
+      .pagination {
+        margin-bottom: 0;
+      }
+      
+      .pagination .page-link {
+        color: #337ab7;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        padding: 6px 12px;
+      }
+      
+      .pagination .page-item.active .page-link {
+        background-color: #337ab7;
+        border-color: #337ab7;
+        color: white;
+      }
+      
+      .pagination .page-item.disabled .page-link {
+        color: #999;
+        cursor: not-allowed;
+        background-color: #fff;
+        border-color: #ddd;
+      }
+      
+      .pagination .page-link:hover {
+        color: #23527c;
+        background-color: #eee;
+        border-color: #ddd;
+      }
+      
+      .dataTables_info {
+        padding-top: 8px;
+        color: #666;
+      }
+    </style>
     <script>
       class AnsibleInventoryApp {
         constructor() {
@@ -496,6 +534,13 @@
             if (e.key === 'Enter') {
               this.addCondition();
             }
+          });
+
+          // Page size change
+          document.getElementById('page-size').addEventListener('change', (e) => {
+            this.pageSize = parseInt(e.target.value);
+            this.currentPage = 1;
+            this.displayCurrentPage();
           });
         }
 
@@ -583,9 +628,10 @@
           
           if (this.conditions.length === 0) {
             document.getElementById('preview-btn').disabled = true;
-            this.resetTable();
+            document.getElementById('results-section').style.display = 'none';
             document.getElementById('template-section').style.display = 'none';
             document.getElementById('inventory-section').style.display = 'none';
+            document.getElementById('pagination-section').style.display = 'none';
           }
         }
 
@@ -602,25 +648,12 @@
           this.currentPage = 1;
           this.updateConditionsDisplay();
           this.clearConditionInputs();
-          this.resetTable();
           
           document.getElementById('preview-btn').disabled = true;
+          document.getElementById('results-section').style.display = 'none';
           document.getElementById('template-section').style.display = 'none';
           document.getElementById('inventory-section').style.display = 'none';
-        }
-
-        resetTable() {
-          const tbody = document.getElementById('device-table-body');
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="8" class="text-center">
-                <i class="fas fa-info-circle"></i> Add conditions and click "Preview Results" to load devices.
-              </td>
-            </tr>
-          `;
-          document.getElementById('device-count').textContent = '0';
-          document.getElementById('operations-count').textContent = '';
-          document.getElementById('ansible-pagination').innerHTML = '';
+          document.getElementById('pagination-section').style.display = 'none';
         }
 
         async previewResults() {
@@ -653,9 +686,15 @@
               console.log('Setting currentResults to:', this.currentResults.length, 'devices');
               this.displayResults(response);
               
-              // Show template section
+              // Show results section
+              const resultsSection = document.getElementById('results-section');
+              resultsSection.style.display = 'block';
+              
               document.getElementById('template-section').style.display = 'block';
-              console.log('Results loaded successfully');
+              console.log('Results section should now be visible');
+              
+              // Scroll to results section to make sure it's visible
+              resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } else {
               console.error('Invalid response format. Response:', response);
               throw new Error('Invalid response format');
@@ -767,12 +806,15 @@
 
           // Show pagination if more than one page
           if (this.totalPages > 1) {
+            document.getElementById('pagination-section').style.display = 'block';
             this.updatePaginationControls();
+          } else {
+            document.getElementById('pagination-section').style.display = 'none';
           }
         }
 
         displayCurrentPage() {
-          const tbody = document.getElementById('device-table-body');
+          const tbody = document.getElementById('results-tbody');
           tbody.innerHTML = '';
 
           const startIndex = (this.currentPage - 1) * this.pageSize;
@@ -798,79 +840,81 @@
           });
           
           console.log('Finished populating table. Table rows count:', tbody.rows.length);
+
+          // Update pagination info
+          if (this.currentResults.length > 0) {
+            const startEl = document.getElementById('pagination-start');
+            const endEl = document.getElementById('pagination-end');
+            const totalEl = document.getElementById('pagination-total');
+            
+            if (startEl && endEl && totalEl) {
+              startEl.textContent = startIndex + 1;
+              endEl.textContent = endIndex;
+              totalEl.textContent = this.currentResults.length;
+            }
+          }
         }
 
         updatePaginationControls() {
-          const paginationContainer = document.getElementById('ansible-pagination');
-          
-          if (this.totalPages <= 1 && this.currentResults.length <= 20) {
-            paginationContainer.innerHTML = '';
-            return;
-          }
-
-          let paginationHTML = `
-            <div class="row">
-              <div class="col-md-6">
-                <div class="dataTables_info">
-                  Showing ${(this.currentPage - 1) * this.pageSize + 1} to ${Math.min(this.currentPage * this.pageSize, this.currentResults.length)} of ${this.currentResults.length} entries
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
-                  <div class="form-inline">
-                    <label class="mr-2">Show:</label>
-                    <select id="page-size" class="form-control form-control-sm" style="width: auto;">
-                      <option value="10" ${this.pageSize === 10 ? 'selected' : ''}>10</option>
-                      <option value="20" ${this.pageSize === 20 ? 'selected' : ''}>20</option>
-                      <option value="50" ${this.pageSize === 50 ? 'selected' : ''}>50</option>
-                      <option value="100" ${this.pageSize === 100 ? 'selected' : ''}>100</option>
-                      <option value="200" ${this.pageSize === 200 ? 'selected' : ''}>200</option>
-                      <option value="500" ${this.pageSize === 500 ? 'selected' : ''}>500</option>
-                    </select>
-                    <span class="ml-2">entries</span>
-                  </div>
-                  <div class="dataTables_paginate paging_simple_numbers">
-                    <ul class="pagination pagination-sm">
-          `;
+          const paginationControls = document.getElementById('pagination-controls');
+          paginationControls.innerHTML = '';
 
           // Previous button
-          paginationHTML += `
-            <li class="paginate_button page-item previous ${this.currentPage === 1 ? 'disabled' : ''}">
-              <a href="#" class="page-link" data-page="${this.currentPage - 1}">Previous</a>
-            </li>
-          `;
+          const prevLi = document.createElement('li');
+          prevLi.className = `paginate_button page-item previous ${this.currentPage === 1 ? 'disabled' : ''}`;
+          prevLi.innerHTML = `<a href="#" class="page-link" data-page="${this.currentPage - 1}">Previous</a>`;
+          paginationControls.appendChild(prevLi);
 
           // Page numbers
           const startPage = Math.max(1, this.currentPage - 2);
           const endPage = Math.min(this.totalPages, this.currentPage + 2);
 
+          // First page and ellipsis
+          if (startPage > 1) {
+            const firstLi = document.createElement('li');
+            firstLi.className = 'paginate_button page-item';
+            firstLi.innerHTML = '<a href="#" class="page-link" data-page="1">1</a>';
+            paginationControls.appendChild(firstLi);
+
+            if (startPage > 2) {
+              const ellipsisLi = document.createElement('li');
+              ellipsisLi.className = 'paginate_button page-item disabled';
+              ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+              paginationControls.appendChild(ellipsisLi);
+            }
+          }
+
+          // Page number buttons
           for (let i = startPage; i <= endPage; i++) {
-            paginationHTML += `
-              <li class="paginate_button page-item ${i === this.currentPage ? 'active' : ''}">
-                <a href="#" class="page-link" data-page="${i}">${i}</a>
-              </li>
-            `;
+            const li = document.createElement('li');
+            li.className = `paginate_button page-item ${i === this.currentPage ? 'active' : ''}`;
+            li.innerHTML = `<a href="#" class="page-link" data-page="${i}">${i}</a>`;
+            paginationControls.appendChild(li);
+          }
+
+          // Last page and ellipsis
+          if (endPage < this.totalPages) {
+            if (endPage < this.totalPages - 1) {
+              const ellipsisLi = document.createElement('li');
+              ellipsisLi.className = 'paginate_button page-item disabled';
+              ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+              paginationControls.appendChild(ellipsisLi);
+            }
+
+            const lastLi = document.createElement('li');
+            lastLi.className = 'paginate_button page-item';
+            lastLi.innerHTML = `<a href="#" class="page-link" data-page="${this.totalPages}">${this.totalPages}</a>`;
+            paginationControls.appendChild(lastLi);
           }
 
           // Next button
-          paginationHTML += `
-            <li class="paginate_button page-item next ${this.currentPage === this.totalPages ? 'disabled' : ''}">
-              <a href="#" class="page-link" data-page="${this.currentPage + 1}">Next</a>
-            </li>
-          `;
+          const nextLi = document.createElement('li');
+          nextLi.className = `paginate_button page-item next ${this.currentPage === this.totalPages ? 'disabled' : ''}`;
+          nextLi.innerHTML = `<a href="#" class="page-link" data-page="${this.currentPage + 1}">Next</a>`;
+          paginationControls.appendChild(nextLi);
 
-          paginationHTML += `
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-
-          paginationContainer.innerHTML = paginationHTML;
-
-          // Add click event listeners for pagination
-          paginationContainer.addEventListener('click', (e) => {
+          // Add click event listeners
+          paginationControls.addEventListener('click', (e) => {
             e.preventDefault();
             const link = e.target.closest('a[data-page]');
             if (link) {
@@ -882,18 +926,6 @@
               }
             }
           });
-
-          // Add change event listener for page size selector
-          const pageSizeSelect = paginationContainer.querySelector('#page-size');
-          if (pageSizeSelect) {
-            pageSizeSelect.addEventListener('change', (e) => {
-              this.pageSize = parseInt(e.target.value);
-              this.currentPage = 1;
-              this.totalPages = Math.ceil(this.currentResults.length / this.pageSize);
-              this.displayCurrentPage();
-              this.updatePaginationControls();
-            });
-          }
         }
 
         getStatusColor(status) {

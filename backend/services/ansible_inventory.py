@@ -57,14 +57,26 @@ class AnsibleInventoryService:
                 
                 # Apply the operation result to our main result set
                 if not result_devices:  # First operation
-                    result_devices = operation_result
-                    logger.info(f"First operation set result devices to {len(result_devices)} devices")
+                    if operation.operation_type.upper() == 'NOT':
+                        # NOT operation as first operation means start with empty set
+                        # (we can't subtract from nothing)
+                        result_devices = set()
+                        logger.info(f"First operation is NOT, starting with empty set")
+                    else:
+                        result_devices = operation_result
+                        logger.info(f"First operation set result devices to {len(result_devices)} devices")
                 else:
-                    # For subsequent operations, we assume they are combined with AND
-                    # TODO: This could be made more flexible with explicit combination operators
-                    old_count = len(result_devices)
-                    result_devices = result_devices.intersection(operation_result)
-                    logger.info(f"Combined with AND: {old_count} ∩ {len(operation_result)} = {len(result_devices)} devices")
+                    # Handle different operation types
+                    if operation.operation_type.upper() == 'NOT':
+                        # Subtract the NOT operation result from current result
+                        old_count = len(result_devices)
+                        result_devices = result_devices.difference(operation_result)
+                        logger.info(f"Applied NOT: {old_count} - {len(operation_result)} = {len(result_devices)} devices")
+                    else:
+                        # For AND/OR operations, combine with intersection (AND behavior)
+                        old_count = len(result_devices)
+                        result_devices = result_devices.intersection(operation_result)
+                        logger.info(f"Combined with AND: {old_count} ∩ {len(operation_result)} = {len(result_devices)} devices")
             
             # Convert result to list of DeviceInfo objects
             result_list = [all_devices_data[device_id] for device_id in result_devices if device_id in all_devices_data]
@@ -121,13 +133,13 @@ class AnsibleInventoryService:
             result = self._union_sets(condition_results)
             logger.info(f"  OR operation result: {len(result)} devices")
         elif operation.operation_type.upper() == 'NOT':
-            # For NOT operations, we need a base set to subtract from
-            # This is a simplified implementation - in practice you might want all devices first
+            # For NOT operations, return the devices that match the conditions
+            # The actual NOT logic will be applied in the main preview_inventory method
             if condition_results:
-                result = set()  # NOT without a base set results in empty set
+                result = self._union_sets(condition_results)  # Get all devices that match the NOT conditions
             else:
                 result = set()
-            logger.info(f"  NOT operation result: {len(result)} devices")
+            logger.info(f"  NOT operation devices to exclude: {len(result)} devices")
         else:
             logger.warning(f"Unknown operation type: {operation.operation_type}")
             result = set()

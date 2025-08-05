@@ -298,12 +298,26 @@
                       </div>
                     </div>
 
-                    <!-- Status Display Only -->
+                    <!-- Status and Page Size Display -->
                     <div class="row mb-3">
-                      <div class="col-md-12">
+                      <div class="col-md-6">
                         <div class="alert alert-info">
                           <strong id="device-count">0</strong> devices found
                           <span id="operations-count" class="text-muted"></span>
+                        </div>
+                      </div>
+                      <div class="col-md-6 text-right">
+                        <div class="form-inline" style="justify-content: flex-end;">
+                          <label class="mr-2">Show:</label>
+                          <select id="page-size" class="form-control form-control-sm mr-3" style="width: auto;">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                          </select>
+                          <span class="mr-2">entries</span>
                         </div>
                       </div>
                     </div>
@@ -496,6 +510,13 @@
             if (e.key === 'Enter') {
               this.addCondition();
             }
+          });
+
+          // Page size change
+          document.getElementById('page-size').addEventListener('change', (e) => {
+            this.pageSize = parseInt(e.target.value);
+            this.currentPage = 1;
+            this.displayCurrentPage();
           });
         }
 
@@ -803,7 +824,7 @@
         updatePaginationControls() {
           const paginationContainer = document.getElementById('ansible-pagination');
           
-          if (this.totalPages <= 1 && this.currentResults.length <= 20) {
+          if (this.totalPages <= 1) {
             paginationContainer.innerHTML = '';
             return;
           }
@@ -816,21 +837,8 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
-                  <div class="form-inline">
-                    <label class="mr-2">Show:</label>
-                    <select id="page-size" class="form-control form-control-sm" style="width: auto;">
-                      <option value="10" ${this.pageSize === 10 ? 'selected' : ''}>10</option>
-                      <option value="20" ${this.pageSize === 20 ? 'selected' : ''}>20</option>
-                      <option value="50" ${this.pageSize === 50 ? 'selected' : ''}>50</option>
-                      <option value="100" ${this.pageSize === 100 ? 'selected' : ''}>100</option>
-                      <option value="200" ${this.pageSize === 200 ? 'selected' : ''}>200</option>
-                      <option value="500" ${this.pageSize === 500 ? 'selected' : ''}>500</option>
-                    </select>
-                    <span class="ml-2">entries</span>
-                  </div>
-                  <div class="dataTables_paginate paging_simple_numbers">
-                    <ul class="pagination pagination-sm">
+                <div class="dataTables_paginate paging_simple_numbers" style="text-align: right;">
+                  <ul class="pagination pagination-sm">
           `;
 
           // Previous button
@@ -860,8 +868,7 @@
           `;
 
           paginationHTML += `
-                    </ul>
-                  </div>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -869,7 +876,7 @@
 
           paginationContainer.innerHTML = paginationHTML;
 
-          // Add click event listeners for pagination
+          // Add click event listeners
           paginationContainer.addEventListener('click', (e) => {
             e.preventDefault();
             const link = e.target.closest('a[data-page]');
@@ -882,18 +889,6 @@
               }
             }
           });
-
-          // Add change event listener for page size selector
-          const pageSizeSelect = paginationContainer.querySelector('#page-size');
-          if (pageSizeSelect) {
-            pageSizeSelect.addEventListener('change', (e) => {
-              this.pageSize = parseInt(e.target.value);
-              this.currentPage = 1;
-              this.totalPages = Math.ceil(this.currentResults.length / this.pageSize);
-              this.displayCurrentPage();
-              this.updatePaginationControls();
-            });
-          }
         }
 
         getStatusColor(status) {
