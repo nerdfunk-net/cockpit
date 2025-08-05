@@ -3195,6 +3195,10 @@
                     changeType = 'deleted';
                     changeIcon = 'fas fa-trash';
                     changeColor = 'danger';
+                  } else if (commit.change_type === 'N') {
+                    changeType = 'no change';
+                    changeIcon = 'fas fa-eye';
+                    changeColor = 'secondary';
                   }
 
                   historyHtml += `
@@ -3216,6 +3220,7 @@
                           </div>
                           <div class="timeline-message-info" title="${commit.message}">
                             ${commit.message}
+                            ${commit.change_type === 'N' ? '<div class="mt-1"><small class="text-muted"><i class="fas fa-info-circle"></i> No changes to this file</small></div>' : ''}
                           </div>
                           <div class="timeline-time-info">
                             <i class="fas fa-clock"></i> ${timeAgo}
@@ -3227,6 +3232,11 @@
                                     onclick="configCompare.viewHistoryFile('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"
                                     title="View file content at this commit">
                               <i class="fas fa-file-alt"></i>
+                            </button>` :
+                            commit.change_type === 'N' ?
+                            `<button class="btn btn-outline-secondary" disabled
+                                    title="No changes to show for this commit">
+                              <i class="fas fa-eye-slash"></i>
                             </button>` :
                             `<button class="btn btn-outline-primary" 
                                     onclick="configCompare.compareHistoryCommit('${commit.hash}', '${commit.short_hash}'); event.stopPropagation();"

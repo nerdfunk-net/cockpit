@@ -615,6 +615,45 @@ async def get_file_complete_history(file_path: str, from_commit: str = None, cur
         
         history_commits = []
         
+        # If we have a specific from_commit, check if it's included in the results
+        selected_commit_found = False
+        if from_commit:
+            for commit in commits:
+                if (commit.hexsha == from_commit or 
+                    commit.hexsha.startswith(from_commit) or
+                    from_commit.startswith(commit.hexsha)):
+                    selected_commit_found = True
+                    break
+        
+        # If the selected commit is not found in the file history,
+        # it means the commit exists but didn't modify the file
+        # Add it to the beginning of the results for context
+        if from_commit and not selected_commit_found:
+            try:
+                commit_obj = repo.commit(from_commit)
+                # Check if file exists in this commit
+                try:
+                    commit_obj.tree[file_path]
+                    # File exists in this commit, add it as context
+                    history_commits.append({
+                        "hash": commit_obj.hexsha,
+                        "short_hash": commit_obj.hexsha[:8],
+                        "message": commit_obj.message.strip(),
+                        "author": {
+                            "name": commit_obj.author.name,
+                            "email": commit_obj.author.email
+                        },
+                        "date": commit_obj.committed_datetime.isoformat(),
+                        "change_type": "N"  # No change to file (exists but not modified)
+                    })
+                except KeyError:
+                    # File doesn't exist in this commit, skip it
+                    pass
+            except Exception:
+                # If we can't get the commit, just continue
+                pass
+        
+        # Process the commits that actually modified the file
         for i, commit in enumerate(commits):
             # Determine change type
             change_type = "M"  # Modified (default)
