@@ -51,7 +51,8 @@
     <style>
       /* Add bottom spacing to prevent scrollbar overlap with pagination */
       .right_col {
-        padding-bottom: 60px !important; /* Extra space at bottom of main content */
+        padding-bottom: 300px !important; /* Extra space at bottom of main content */
+        min-height: 100vh; /* Ensure minimum height */
       }
       
       .pagination-container {
@@ -60,6 +61,16 @@
       
       .table-responsive {
         margin-bottom: 20px; /* Space between table and pagination */
+      }
+      
+      /* Ensure panels have proper spacing */
+      .x_panel {
+        margin-bottom: 30px;
+      }
+      
+      /* Footer spacing */
+      footer {
+        margin-top: 50px;
       }
       
       /* Pagination styling */
