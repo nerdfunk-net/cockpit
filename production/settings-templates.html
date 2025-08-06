@@ -522,6 +522,7 @@
         line-height: 1.4;
         min-height: 300px;
         resize: vertical;
+        height: 300px;
       }
 
       .source-config-section, .import-config-section {
@@ -553,13 +554,10 @@
        font-family: "Segoe UI", "Arial", "Helvetica Neue", sans-serif !important;
        font-size: 15px !important;
      }
-     .table td strong {
-       font-size: 15px !important;
-       font-weight: bold;
-     }
      .badge {
        font-size: 15px !important;
-     }
+       color: #111 !important;
+       font-weight: normal !important;
      }
 
       .btn-group-sm > .btn, .btn-sm {
@@ -685,7 +683,7 @@
           this.templates.forEach(template => {
             const row = document.createElement('tr');
             row.innerHTML = `
-              <td><strong>${template.name}</strong></td>
+              <td><span>${template.name}</span></td>
               <td><span class="badge badge-${this.getSourceBadgeClass(template.source)}">${template.source}</span></td>
               <td>${template.template_type}</td>
               <td>${template.category || '-'}</td>
