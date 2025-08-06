@@ -39,6 +39,7 @@ const CockpitConfig = {
         locations: '/api/nautobot/locations',
         namespaces: '/api/nautobot/namespaces',
         roles: '/api/nautobot/roles',
+        deviceRoles: '/api/nautobot/roles/devices',
         platforms: '/api/nautobot/platforms',
         statuses: '/api/nautobot/statuses',
         deviceStatuses: '/api/nautobot/statuses/device',

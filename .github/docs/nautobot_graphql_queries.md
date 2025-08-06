@@ -170,6 +170,34 @@
         }
     }
 
+# get the roles by content_type (eg. dcim.device)   
+
+## GraphQL
+
+    query roles($role_filter: [String]) {
+        roles(content_types: $role_filter) {
+            name
+        }
+    }
+
+## REST API
+
+    {nautobot_url}/api/extras/roles?content_types=dcim.device
+
+# to get ALL tags
+
+## GraphQL
+
+    query tags($tags_filter: [String]) {
+        tags(content_types: $tags_filter) {
+            name
+        }
+    }
+
+## REST api
+
+    {nautobot_url}/api/extras/tags/?content_types=dcim.device
+
 # There is no graphql query to get ALL custom fields. We have to use the REST API
 
 {nautobot_url}/api/extras/custom-fields/?depth=0&exclude_m2m=false

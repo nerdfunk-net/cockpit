@@ -856,6 +856,19 @@ async def get_nautobot_roles(current_user: str = Depends(verify_token)):
         )
 
 
+@router.get("/roles/devices")
+async def get_nautobot_device_roles(current_user: str = Depends(verify_token)):
+    """Get Nautobot roles specifically for dcim.device content type."""
+    try:
+        result = await nautobot_service.rest_request("extras/roles/?content_types=dcim.device")
+        return result.get("results", [])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch device roles: {str(e)}"
+        )
+
+
 @router.get("/platforms")
 async def get_nautobot_platforms(current_user: str = Depends(verify_token)):
     """Get Nautobot platforms."""
@@ -1009,6 +1022,19 @@ async def get_nautobot_tags(current_user: str = Depends(verify_token)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch tags: {str(e)}"
+        )
+
+
+@router.get("/tags/devices")
+async def get_nautobot_device_tags(current_user: str = Depends(verify_token)):
+    """Get Nautobot tags specifically for dcim.device content type."""
+    try:
+        result = await nautobot_service.rest_request("extras/tags/?content_types=dcim.device")
+        return result.get("results", [])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch device tags: {str(e)}"
         )
 
 

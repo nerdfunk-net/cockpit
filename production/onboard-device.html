@@ -830,7 +830,7 @@
             console.log('API endpoints:', {
               locations: window.CockpitConfig.api.endpoints.nautobot.locations,
               namespaces: window.CockpitConfig.api.endpoints.nautobot.namespaces,
-              roles: window.CockpitConfig.api.endpoints.nautobot.roles,
+              deviceRoles: window.CockpitConfig.api.endpoints.nautobot.deviceRoles,
               platforms: window.CockpitConfig.api.endpoints.nautobot.platforms,
               deviceStatuses: window.CockpitConfig.api.endpoints.nautobot.deviceStatuses,
               interfaceStatuses: window.CockpitConfig.api.endpoints.nautobot.interfaceStatuses,
@@ -843,7 +843,7 @@
             const [locations, namespaces, roles, platforms, deviceStatuses, interfaceStatuses, ipAddressStatuses, secretGroups] = await Promise.all([
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.locations),
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.namespaces),
-              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.roles),
+              this.fetchData(window.CockpitConfig.api.endpoints.nautobot.deviceRoles),
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.platforms),
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.deviceStatuses),
               this.fetchData(window.CockpitConfig.api.endpoints.nautobot.interfaceStatuses),
