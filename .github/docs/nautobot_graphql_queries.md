@@ -169,3 +169,8 @@
             }
         }
     }
+
+# There is no graphql query to get ALL custom fields. We have to use the REST API
+
+{nautobot_url}/api/extras/custom-fields/?depth=0&exclude_m2m=false
+

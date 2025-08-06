@@ -51,7 +51,7 @@
     <style>
       /* Add bottom spacing to prevent scrollbar overlap with pagination */
       .right_col {
-        padding-bottom: 300px !important; /* Extra space at bottom of main content */
+        padding-bottom: 1000px !important; /* Increased from 500px to 1000px for much more space */
         min-height: 100vh; /* Ensure minimum height */
       }
       
@@ -66,6 +66,50 @@
       /* Ensure panels have proper spacing */
       .x_panel {
         margin-bottom: 30px;
+      }
+      
+      /* Extra spacing for inventory section to prevent footer overlap */
+      #inventory-section {
+        margin-bottom: 400px !important; /* Increased from 200px to 400px */
+      }
+      
+      #inventory-section .x_panel {
+        margin-bottom: 300px !important; /* Increased from 150px to 300px */
+      }
+      
+      #inventory-content {
+        margin-bottom: 150px !important; /* Increased from 50px to 150px for much more space */
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.4;
+        scrollbar-width: thin; /* For Firefox */
+        scrollbar-color: #888 #f1f1f1; /* For Firefox */
+      }
+      
+      /* Ensure the well container has extra spacing too */
+      #inventory-section .well {
+        margin-bottom: 200px !important; /* Add substantial margin to the well container */
+        padding: 20px; /* More padding inside the well */
+      }
+      
+      /* Custom scrollbar for webkit browsers */
+      #inventory-content::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      #inventory-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+      
+      #inventory-content::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+      
+      #inventory-content::-webkit-scrollbar-thumb:hover {
+        background: #555;
       }
       
       /* Footer spacing */
@@ -418,7 +462,7 @@
                     </div>
 
                     <div class="well">
-                      <pre id="inventory-content" style="max-height: 500px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 5px;"></pre>
+                      <pre id="inventory-content" style="min-height: 200px; max-height: 500px; overflow-y: auto; overflow-x: auto; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 50px; white-space: pre-wrap; word-wrap: break-word; border: 1px solid #ddd;"></pre>
                     </div>
 
                   </div>
@@ -776,10 +820,8 @@
           // Display current page
           this.displayCurrentPage();
 
-          // Show pagination if more than one page
-          if (this.totalPages > 1) {
-            this.updatePaginationControls();
-          }
+          // Show pagination for any results
+          this.updatePaginationControls();
         }
 
         displayCurrentPage() {
@@ -814,7 +856,8 @@
         updatePaginationControls() {
           const paginationContainer = document.getElementById('ansible-pagination');
           
-          if (this.totalPages <= 1 && this.currentResults.length <= 20) {
+          // Always show pagination if we have results
+          if (this.currentResults.length === 0) {
             paginationContainer.innerHTML = '';
             return;
           }

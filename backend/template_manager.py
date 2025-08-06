@@ -381,6 +381,40 @@ class TemplateManager:
             logger.error(f"Error getting template content for {template_id}: {e}")
             return None
     
+    def render_template(self, template_name: str, category: str, data: Dict[str, Any]) -> str:
+        """Render a template using Jinja2 with provided data"""
+        try:
+            # Import Jinja2 here to avoid import errors if not installed
+            from jinja2 import Template, Environment, BaseLoader
+            
+            # Find template by name and category
+            template = self.get_template_by_name(template_name)
+            if not template:
+                # If no exact name match, try searching templates
+                templates = self.list_templates(category=category if category else None)
+                matching_templates = [t for t in templates if t['name'] == template_name]
+                if matching_templates:
+                    template = matching_templates[0]
+                else:
+                    raise ValueError(f"Template '{template_name}' not found in category '{category}'")
+            
+            # Get template content
+            content = self.get_template_content(template['id'])
+            if not content:
+                raise ValueError(f"Template content not found for '{template_name}'")
+            
+            # Create Jinja2 template and render
+            env = Environment(loader=BaseLoader())
+            jinja_template = env.from_string(content)
+            rendered = jinja_template.render(**data)
+            
+            logger.info(f"Successfully rendered template '{template_name}' from category '{category}'")
+            return rendered
+            
+        except Exception as e:
+            logger.error(f"Error rendering template '{template_name}' in category '{category}': {e}")
+            raise e
+    
     def get_template_versions(self, template_id: int) -> List[Dict[str, Any]]:
         """Get version history for a template"""
         try:
