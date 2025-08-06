@@ -214,6 +214,60 @@
         background-color: #e8f5e8;
         border-color: #4e73df;
       }
+      
+      /* Custom Fields Hover Menu Styles */
+      .custom-fields-container {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .custom-fields-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 250px;
+        max-width: 400px;
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+      }
+      
+      .custom-fields-menu.show {
+        display: block;
+      }
+      
+      .custom-field-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      
+      .custom-field-item:last-child {
+        border-bottom: none;
+      }
+      
+      .custom-field-item:hover {
+        background-color: #4e73df;
+        color: white;
+      }
+      
+      .custom-field-item.no-results {
+        color: #858796;
+        font-style: italic;
+        cursor: default;
+      }
+      
+      .custom-field-item.no-results:hover {
+        background-color: transparent;
+        color: #858796;
+      }
     </style>
   </head>
 
@@ -364,7 +418,14 @@
                           <option value="device_type">Device Type</option>
                           <option value="manufacturer">Manufacturer</option>
                           <option value="platform">Platform</option>
+                          <option value="custom_fields" class="custom-fields-trigger">Custom fields...</option>
                         </select>
+                        <!-- Custom Fields Hover Menu -->
+                        <div class="custom-fields-container" id="custom-fields-container" style="display: none;">
+                          <div class="custom-fields-menu" id="custom-fields-menu">
+                            <div class="custom-field-item no-results">Loading custom fields...</div>
+                          </div>
+                        </div>
                       </div>
                       <div class="col-md-2">
                         <label>Operator:</label>
@@ -668,12 +729,22 @@
           const operatorSelect = document.getElementById('condition-operator');
           const restrictedFields = ['role', 'tag', 'device_type', 'manufacturer', 'platform'];
           
+          // Check if this is a custom field (starts with cf_)
+          const isCustomField = fieldName && fieldName.startsWith('cf_');
+          
           if (restrictedFields.includes(fieldName)) {
             // Only allow "equals" for dropdown fields
             operatorSelect.innerHTML = '<option value="equals">Equals</option>';
             operatorSelect.disabled = true;
           } else if (fieldName === 'location') {
             // Location supports both equals and contains
+            operatorSelect.innerHTML = `
+              <option value="equals">Equals</option>
+              <option value="contains">Contains</option>
+            `;
+            operatorSelect.disabled = false;
+          } else if (isCustomField || fieldName === 'name') {
+            // Custom fields and name support both equals and contains
             operatorSelect.innerHTML = `
               <option value="equals">Equals</option>
               <option value="contains">Contains</option>
@@ -783,6 +854,14 @@
         async handleFieldChange(fieldName) {
           console.log('handleFieldChange called with:', fieldName); // Debug log
           
+          // Handle custom fields trigger
+          if (fieldName === 'custom_fields') {
+            await this.showCustomFieldsMenu();
+            // Reset the select to empty state after showing menu
+            document.getElementById('condition-field').value = '';
+            return;
+          }
+
           // Update operator options based on field
           this.updateOperatorOptions(fieldName);
 
@@ -1596,6 +1675,138 @@
           searchInput.classList.remove('has-selection');
           hiddenInput.value = '';
           this.hideLocationDropdown();
+        }
+
+        async showCustomFieldsMenu() {
+          console.log('showCustomFieldsMenu called');
+          
+          try {
+            // Load custom fields from API
+            const response = await window.authManager.apiRequest('/api/ansible-inventory/custom-fields');
+            console.log('Custom fields response:', response);
+            
+            const menu = document.getElementById('custom-fields-menu');
+            const container = document.getElementById('custom-fields-container');
+            
+            if (response && response.custom_fields && response.custom_fields.length > 0) {
+              // Clear existing content
+              menu.innerHTML = '';
+              
+              // Add each custom field as a menu item
+              response.custom_fields.forEach(cf => {
+                const item = document.createElement('div');
+                item.className = 'custom-field-item';
+                item.textContent = cf.label;
+                item.dataset.value = cf.key; // Use the key (e.g., "net") which will be transformed to cf_net in backend
+                item.dataset.label = cf.label;
+                
+                // Add click handler to select the custom field
+                item.addEventListener('click', () => {
+                  this.selectCustomField(cf.key, cf.label);
+                  this.hideCustomFieldsMenu();
+                });
+                
+                menu.appendChild(item);
+              });
+            } else {
+              // No custom fields available
+              menu.innerHTML = '<div class="custom-field-item no-results">No custom fields available</div>';
+            }
+            
+            // Position and show the menu
+            this.positionCustomFieldsMenu();
+            container.style.display = 'block';
+            menu.classList.add('show');
+            
+            // Add click outside handler to close menu
+            this.addCustomFieldsMenuCloseHandler();
+            
+          } catch (error) {
+            console.error('Error loading custom fields:', error);
+            const menu = document.getElementById('custom-fields-menu');
+            menu.innerHTML = '<div class="custom-field-item no-results">Error loading custom fields</div>';
+          }
+        }
+
+        selectCustomField(value, label) {
+          console.log('Selected custom field:', value, label);
+          
+          // Add cf_ prefix for backend compatibility
+          const cfValue = `cf_${value}`;
+          
+          // Set the field select to the custom field value (with cf_ prefix)
+          const fieldSelect = document.getElementById('condition-field');
+          
+          // Check if this custom field option already exists
+          let existingOption = fieldSelect.querySelector(`option[value="${cfValue}"]`);
+          if (!existingOption) {
+            // Add a new option for this custom field
+            existingOption = document.createElement('option');
+            existingOption.value = cfValue;
+            existingOption.textContent = `${label} (Custom)`;
+            existingOption.classList.add('custom-field-option');
+            
+            // Insert before the "Custom fields..." option
+            const customFieldsTrigger = fieldSelect.querySelector('option[value="custom_fields"]');
+            fieldSelect.insertBefore(existingOption, customFieldsTrigger);
+          }
+          
+          // Select the custom field
+          fieldSelect.value = cfValue;
+          
+          // Trigger field change to load appropriate input type (should be text for custom fields)
+          this.handleFieldChange(cfValue);
+        }
+
+        positionCustomFieldsMenu() {
+          const fieldSelect = document.getElementById('condition-field');
+          const container = document.getElementById('custom-fields-container');
+          const menu = document.getElementById('custom-fields-menu');
+          
+          // Position the container relative to the field select
+          const rect = fieldSelect.getBoundingClientRect();
+          const containerRect = fieldSelect.offsetParent.getBoundingClientRect();
+          
+          container.style.position = 'absolute';
+          container.style.left = `${rect.left - containerRect.left}px`;
+          container.style.top = `${rect.bottom - containerRect.top}px`;
+          container.style.width = `${rect.width}px`;
+        }
+
+        hideCustomFieldsMenu() {
+          const menu = document.getElementById('custom-fields-menu');
+          const container = document.getElementById('custom-fields-container');
+          
+          menu.classList.remove('show');
+          container.style.display = 'none';
+          
+          // Remove event listeners
+          document.removeEventListener('click', this._customFieldsMenuClickHandler);
+        }
+
+        addCustomFieldsMenuCloseHandler() {
+          // Remove existing handler if any
+          if (this._customFieldsMenuClickHandler) {
+            document.removeEventListener('click', this._customFieldsMenuClickHandler);
+          }
+          
+          // Add new click outside handler
+          this._customFieldsMenuClickHandler = (event) => {
+            const menu = document.getElementById('custom-fields-menu');
+            const container = document.getElementById('custom-fields-container');
+            const fieldSelect = document.getElementById('condition-field');
+            
+            if (!menu.contains(event.target) && 
+                !container.contains(event.target) && 
+                event.target !== fieldSelect) {
+              this.hideCustomFieldsMenu();
+            }
+          };
+          
+          // Delay adding the event listener to avoid immediate triggering
+          setTimeout(() => {
+            document.addEventListener('click', this._customFieldsMenuClickHandler);
+          }, 100);
         }
       }
 

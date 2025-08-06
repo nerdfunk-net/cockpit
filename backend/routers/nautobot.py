@@ -1038,3 +1038,16 @@ async def get_nautobot_device_tags(current_user: str = Depends(verify_token)):
         )
 
 
+@router.get("/custom-fields/devices")
+async def get_nautobot_device_custom_fields(current_user: str = Depends(verify_token)):
+    """Get Nautobot custom fields specifically for dcim.device content type."""
+    try:
+        result = await nautobot_service.rest_request("extras/custom-fields/?content_types=dcim.device")
+        return result.get("results", [])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch device custom fields: {str(e)}"
+        )
+
+

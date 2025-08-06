@@ -25,6 +25,8 @@ class AnsibleInventoryService:
             'manufacturer': self._query_devices_by_manufacturer,
             'platform': self._query_devices_by_platform
         }
+        # Cache for custom fields to avoid repeated API calls
+        self._custom_fields_cache = None
     
     async def preview_inventory(self, operations: List[LogicalOperation]) -> tuple[List[DeviceInfo], int]:
         """
@@ -158,6 +160,16 @@ class AnsibleInventoryService:
             Tuple of (device_ids_set, operations_count, devices_data)
         """
         try:
+            # Check if this is a custom field (starts with cf_)
+            if condition.field.startswith('cf_'):
+                # Keep the full field name with cf_ prefix for GraphQL query
+                use_contains = condition.operator == 'contains'
+                devices_data = await self._query_devices_by_custom_field(condition.field, condition.value, use_contains)
+                device_ids = {device.id for device in devices_data}
+                devices_dict = {device.id: device for device in devices_data}
+                return device_ids, 1, devices_dict
+            
+            # Handle regular fields
             query_func = self.field_to_query_map.get(condition.field)
             if not query_func:
                 logger.error(f"No query function found for field: {condition.field}")
@@ -613,6 +625,107 @@ class AnsibleInventoryService:
         
         return devices
     
+    async def _query_devices_by_custom_field(self, custom_field_name: str, custom_field_value: str, use_contains: bool = False) -> List[DeviceInfo]:
+        """
+        Query devices by custom field value.
+        
+        Args:
+            custom_field_name: Name of the custom field (with cf_ prefix)
+            custom_field_value: Value to search for
+            use_contains: Whether to use contains (icontains) or exact match
+            
+        Returns:
+            List of matching devices
+        """
+        try:
+            # Import here to avoid circular imports
+            from services.nautobot import nautobot_service
+            
+            # Use the custom field name directly (it should already have cf_ prefix)
+            filter_field = custom_field_name
+            
+            if use_contains:
+                # Use ic for partial matching (case-insensitive contains)
+                query = f"""
+                query devices_by_custom_field($field_value: [String]) {{
+                  devices({filter_field}__ic: $field_value) {{
+                    id
+                    name
+                    role {{
+                      name
+                    }}
+                    location {{
+                      name
+                    }}
+                    primary_ip4 {{
+                      address
+                    }}
+                    status {{
+                      name
+                    }}
+                    device_type {{
+                      model
+                      manufacturer {{
+                        name
+                      }}
+                    }}
+                    tags {{
+                      name
+                    }}
+                    platform {{
+                      name
+                    }}
+                  }}
+                }}
+                """
+            else:
+                # Use exact match
+                query = f"""
+                query devices_by_custom_field($field_value: String) {{
+                  devices({filter_field}: $field_value) {{
+                    id
+                    name
+                    role {{
+                      name
+                    }}
+                    location {{
+                      name
+                    }}
+                    primary_ip4 {{
+                      address
+                    }}
+                    status {{
+                      name
+                    }}
+                    device_type {{
+                      model
+                      manufacturer {{
+                        name
+                      }}
+                    }}
+                    tags {{
+                      name
+                    }}
+                    platform {{
+                      name
+                    }}
+                  }}
+                }}
+                """
+            
+            variables = {"field_value": [custom_field_value] if use_contains else custom_field_value}
+            result = await nautobot_service.graphql_query(query, variables)
+            
+            if "errors" in result:
+                logger.error(f"GraphQL errors in custom field query: {result['errors']}")
+                return []
+            
+            return self._parse_device_data(result.get('data', {}).get('devices', []))
+            
+        except Exception as e:
+            logger.error(f"Error querying devices by custom field '{custom_field_name}': {e}")
+            return []
+
     async def generate_inventory(
         self, 
         operations: List[LogicalOperation], 
@@ -671,12 +784,43 @@ class AnsibleInventoryService:
             logger.error(f"Error generating inventory: {e}")
             raise
 
+    async def get_custom_fields(self) -> List[Dict[str, Any]]:
+        """
+        Get available custom fields for devices.
+        
+        Returns:
+            List of custom field dictionaries
+        """
+        try:
+            # Use cached result if available
+            if self._custom_fields_cache is not None:
+                return self._custom_fields_cache
+                
+            # Import here to avoid circular imports
+            from services.nautobot import nautobot_service
+            
+            # Get custom fields for dcim.device
+            response = await nautobot_service.rest_request("extras/custom-fields/?content_types=dcim.device")
+            if not response or 'results' not in response:
+                logger.error("Invalid REST response for custom fields")
+                return []
+            
+            # Cache the results
+            self._custom_fields_cache = response['results']
+            logger.info(f"Retrieved {len(self._custom_fields_cache)} custom fields for devices")
+            
+            return self._custom_fields_cache
+            
+        except Exception as e:
+            logger.error(f"Error getting custom fields: {e}")
+            return []
+
     async def get_field_values(self, field_name: str) -> List[Dict[str, str]]:
         """
         Get available values for a specific field for dropdown population.
         
         Args:
-            field_name: Name of the field to get values for
+            field_name: Name of the field to get values for (may include 'cf_' prefix for custom fields)
             
         Returns:
             List of dictionaries with 'value' and 'label' keys
@@ -687,6 +831,34 @@ class AnsibleInventoryService:
             
             # Return empty list for fields that should remain as text input
             if field_name == 'name':
+                return []
+            
+            # Check if this is a custom field request
+            if field_name.startswith('cf_'):
+                # For custom fields, we return empty list as they should be text inputs
+                # The actual field name (without cf_) will be used to identify it as a custom field
+                logger.info(f"Custom field '{field_name}' identified - returning empty list for text input")
+                return []
+            
+            # Handle special case for custom fields list
+            if field_name == 'custom_fields':
+                custom_fields = await self.get_custom_fields()
+                values = []
+                for cf in custom_fields:
+                    # Create the cf_ prefixed value for backend queries
+                    cf_name = cf.get('name', '')
+                    if cf_name:
+                        values.append({
+                            'value': f"cf_{cf_name}",  # Backend expects cf_ prefix
+                            'label': cf.get('label') or cf_name  # Use label if available, fallback to name
+                        })
+                
+                # Sort values by label
+                values.sort(key=lambda x: x['label'].lower())
+                logger.info(f"Retrieved {len(values)} custom field options")
+                return values
+            
+            # Map field names to REST API endpoints
                 return []
             
             # Map field names to REST API endpoints

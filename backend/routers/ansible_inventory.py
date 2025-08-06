@@ -154,7 +154,8 @@ async def get_field_options(current_user: str = Depends(verify_token)) -> dict:
                 {"value": "tag", "label": "Tag"},
                 {"value": "device_type", "label": "Device Type"},
                 {"value": "manufacturer", "label": "Manufacturer"},
-                {"value": "platform", "label": "Platform"}
+                {"value": "platform", "label": "Platform"},
+                {"value": "custom_fields", "label": "Custom Fields..."}
             ],
             "operators": [
                 {"value": "equals", "label": "Equals"},
@@ -172,6 +173,25 @@ async def get_field_options(current_user: str = Depends(verify_token)) -> dict:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get field options: {str(e)}"
+        )
+
+
+@router.get("/custom-fields")
+async def get_custom_fields(current_user: str = Depends(verify_token)) -> dict:
+    """
+    Get available custom fields for building logical operations.
+    """
+    try:
+        custom_fields = await ansible_inventory_service.get_custom_fields()
+        return {
+            "custom_fields": custom_fields
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting custom fields: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get custom fields: {str(e)}"
         )
 
 

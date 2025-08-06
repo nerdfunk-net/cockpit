@@ -170,7 +170,7 @@
         }
     }
 
-# get the roles by content_type (eg. dcim.device)   
+# get roles by content_type (eg. dcim.device)   
 
 ## GraphQL
 
@@ -184,7 +184,7 @@
 
     {nautobot_url}/api/extras/roles?content_types=dcim.device
 
-# to get ALL tags
+# get tags
 
 ## GraphQL
 
@@ -200,5 +200,13 @@
 
 # There is no graphql query to get ALL custom fields. We have to use the REST API
 
+## all custom fields
 {nautobot_url}/api/extras/custom-fields/?depth=0&exclude_m2m=false
 
+## custom fields for dcim.device
+{nautobot_url}/api/extras/custom-fields/?content_types=dcim.device
+
+# get custom fields for devices via Cockpit API
+
+## REST API endpoint
+/api/nautobot/custom-fields/devices
