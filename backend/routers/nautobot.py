@@ -973,3 +973,42 @@ async def get_nautobot_secret_groups(current_user: str = Depends(verify_token)):
         return []
 
 
+@router.get("/device-types")
+async def get_nautobot_device_types(current_user: str = Depends(verify_token)):
+    """Get Nautobot device types."""
+    try:
+        result = await nautobot_service.rest_request("dcim/device-types/")
+        return result.get("results", [])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch device types: {str(e)}"
+        )
+
+
+@router.get("/manufacturers")
+async def get_nautobot_manufacturers(current_user: str = Depends(verify_token)):
+    """Get Nautobot manufacturers."""
+    try:
+        result = await nautobot_service.rest_request("dcim/manufacturers/")
+        return result.get("results", [])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch manufacturers: {str(e)}"
+        )
+
+
+@router.get("/tags")
+async def get_nautobot_tags(current_user: str = Depends(verify_token)):
+    """Get Nautobot tags."""
+    try:
+        result = await nautobot_service.rest_request("extras/tags/")
+        return result.get("results", [])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch tags: {str(e)}"
+        )
+
+

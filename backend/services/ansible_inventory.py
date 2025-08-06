@@ -671,6 +671,100 @@ class AnsibleInventoryService:
             logger.error(f"Error generating inventory: {e}")
             raise
 
+    async def get_field_values(self, field_name: str) -> List[Dict[str, str]]:
+        """
+        Get available values for a specific field for dropdown population.
+        
+        Args:
+            field_name: Name of the field to get values for
+            
+        Returns:
+            List of dictionaries with 'value' and 'label' keys
+        """
+        try:
+            # Import here to avoid circular imports
+            from services.nautobot import nautobot_service
+            
+            # Return empty list for fields that should remain as text input
+            if field_name == 'name':
+                return []
+            
+            # Map field names to REST API endpoints
+            endpoint_map = {
+                'location': 'dcim/locations/',
+                'role': 'extras/roles/',
+                'device_type': 'dcim/device-types/',
+                'manufacturer': 'dcim/manufacturers/',
+                'platform': 'dcim/platforms/',
+                'tag': 'extras/tags/'
+            }
+            
+            endpoint = endpoint_map.get(field_name)
+            if not endpoint:
+                logger.warning(f"No endpoint defined for field: {field_name}")
+                return []
+            
+            # Make REST request to Nautobot
+            response = await nautobot_service.rest_request(endpoint)
+            if not response or 'results' not in response:
+                logger.error(f"Invalid REST response for field {field_name}")
+                return []
+            
+            # Extract values based on field type
+            values = []
+            results = response['results']
+            
+            if field_name == 'location':
+                for location in results:
+                    values.append({
+                        'value': location['name'],
+                        'label': location['name']
+                    })
+            elif field_name == 'role':
+                for role in results:
+                    values.append({
+                        'value': role['name'],
+                        'label': role['name']
+                    })
+            elif field_name == 'device_type':
+                for device_type in results:
+                    # Create a descriptive label with manufacturer
+                    manufacturer_name = device_type.get('manufacturer', {}).get('name', 'Unknown')
+                    model = device_type.get('model', device_type.get('name', 'Unknown'))
+                    label = f"{manufacturer_name} {model}"
+                    values.append({
+                        'value': model,
+                        'label': label
+                    })
+            elif field_name == 'manufacturer':
+                for manufacturer in results:
+                    values.append({
+                        'value': manufacturer['name'],
+                        'label': manufacturer['name']
+                    })
+            elif field_name == 'platform':
+                for platform in results:
+                    values.append({
+                        'value': platform['name'],
+                        'label': platform['name']
+                    })
+            elif field_name == 'tag':
+                for tag in results:
+                    values.append({
+                        'value': tag['name'],
+                        'label': tag['name']
+                    })
+            
+            # Sort values by label
+            values.sort(key=lambda x: x['label'].lower())
+            
+            logger.info(f"Retrieved {len(values)} values for field '{field_name}'")
+            return values
+            
+        except Exception as e:
+            logger.error(f"Error getting field values for '{field_name}': {e}")
+            return []
+
 
 # Global service instance
 ansible_inventory_service = AnsibleInventoryService()

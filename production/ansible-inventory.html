@@ -313,7 +313,13 @@
                       </div>
                       <div class="col-md-3">
                         <label>Value:</label>
-                        <input type="text" id="condition-value" class="form-control" placeholder="Enter value...">
+                        <input type="text" id="condition-value" class="form-control" placeholder="Enter value..." style="display: none;">
+                        <select id="condition-value-select" class="form-control" style="display: none;">
+                          <option value="">Loading...</option>
+                        </select>
+                        <div id="condition-value-loading" class="form-control text-muted" style="display: block;">
+                          <i class="fas fa-info-circle"></i> Select a field first
+                        </div>
                       </div>
                       <div class="col-md-2">
                         <label>Logic:</label>
@@ -546,18 +552,162 @@
             document.getElementById('generate-btn').disabled = !e.target.value;
           });
 
+          // Field change - update value input type
+          // Field change handler
+          document.getElementById('condition-field').addEventListener('change', (e) => {
+            this.handleFieldChange(e.target.value);
+          });
+
+          // Operator change handler for location field
+          document.getElementById('condition-operator').addEventListener('change', (e) => {
+            const field = document.getElementById('condition-field').value;
+            if (field === 'location') {
+              this.handleLocationOperatorChange(e.target.value);
+            }
+          });
+
           // Enter key in value field
           document.getElementById('condition-value').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
               this.addCondition();
             }
           });
+
+          // Enter key in value select field
+          document.getElementById('condition-value-select').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              this.addCondition();
+            }
+          });
+        }
+
+        updateOperatorOptions(fieldName) {
+          const operatorSelect = document.getElementById('condition-operator');
+          const restrictedFields = ['role', 'tag', 'device_type', 'manufacturer', 'platform'];
+          
+          if (restrictedFields.includes(fieldName)) {
+            // Only allow "equals" for dropdown fields
+            operatorSelect.innerHTML = '<option value="equals">Equals</option>';
+            operatorSelect.disabled = true;
+          } else if (fieldName === 'location') {
+            // Location supports both equals and contains
+            operatorSelect.innerHTML = `
+              <option value="equals">Equals</option>
+              <option value="contains">Contains</option>
+            `;
+            operatorSelect.disabled = false;
+          } else {
+            // Default: all operators available
+            operatorSelect.innerHTML = `
+              <option value="equals">Equals</option>
+              <option value="contains">Contains</option>
+            `;
+            operatorSelect.disabled = false;
+          }
+        }
+
+        async handleLocationOperatorChange(operator) {
+          const textInput = document.getElementById('condition-value');
+          const selectInput = document.getElementById('condition-value-select');
+          const loadingDiv = document.getElementById('condition-value-loading');
+
+          if (operator === 'equals') {
+            // Use dropdown for equals
+            await this.loadFieldValues('location', 'select');
+          } else if (operator === 'contains') {
+            // Use text input for contains
+            textInput.placeholder = 'Enter location name...';
+            selectInput.style.display = 'none';
+            loadingDiv.style.display = 'none';
+            textInput.style.display = 'block';
+            textInput.focus();
+          }
+        }
+
+        async loadFieldValues(fieldName, forceInputType = null) {
+          const textInput = document.getElementById('condition-value');
+          const selectInput = document.getElementById('condition-value-select');
+          const loadingDiv = document.getElementById('condition-value-loading');
+
+          // Show loading state
+          textInput.style.display = 'none';
+          selectInput.style.display = 'none';
+          loadingDiv.style.display = 'block';
+          loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading values...';
+
+          try {
+            console.log('Making API request for field:', fieldName); // Debug log
+            const response = await window.authManager.apiRequest(`/api/ansible-inventory/field-values/${fieldName}`);
+            console.log('API response:', response); // Debug log
+            
+            const shouldUseSelect = forceInputType === 'select' || 
+              (forceInputType !== 'text' && response.input_type === 'select' && response.values && response.values.length > 0);
+            
+            if (shouldUseSelect) {
+              // Use select dropdown
+              console.log('Using select dropdown with', response.values.length, 'options'); // Debug log
+              selectInput.innerHTML = '<option value="">Choose value...</option>';
+              response.values.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.value;
+                option.textContent = item.label;
+                selectInput.appendChild(option);
+              });
+              
+              loadingDiv.style.display = 'none';
+              selectInput.style.display = 'block';
+              selectInput.focus();
+            } else {
+              // Use text input
+              console.log('Using text input for field:', fieldName); // Debug log
+              textInput.placeholder = `Enter ${fieldName}...`;
+              loadingDiv.style.display = 'none';
+              textInput.style.display = 'block';
+              textInput.focus();
+            }
+          } catch (error) {
+            console.error('Error loading field values:', error);
+            // Fallback to text input on error
+            textInput.placeholder = `Enter ${fieldName}...`;
+            loadingDiv.style.display = 'none';
+            textInput.style.display = 'block';
+          }
+        }
+
+        async handleFieldChange(fieldName) {
+          console.log('handleFieldChange called with:', fieldName); // Debug log
+          
+          // Update operator options based on field
+          this.updateOperatorOptions(fieldName);
+
+          if (!fieldName) {
+            // No field selected - show default message
+            const loadingDiv = document.getElementById('condition-value-loading');
+            const textInput = document.getElementById('condition-value');
+            const selectInput = document.getElementById('condition-value-select');
+            
+            textInput.style.display = 'none';
+            selectInput.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            loadingDiv.innerHTML = '<i class="fas fa-info-circle"></i> Select a field first';
+            console.log('No field selected'); // Debug log
+            return;
+          }
+
+          // Load field values using the new method
+          await this.loadFieldValues(fieldName);
         }
 
         addCondition() {
           const field = document.getElementById('condition-field').value;
           const operator = document.getElementById('condition-operator').value;
-          const value = document.getElementById('condition-value').value.trim();
+          
+          // Get value from the active input (text or select)
+          const textInput = document.getElementById('condition-value');
+          const selectInput = document.getElementById('condition-value-select');
+          const isSelectVisible = selectInput.style.display !== 'none';
+          const value = isSelectVisible ? selectInput.value : textInput.value.trim();
+          
           const logic = document.getElementById('condition-logic').value;
 
           if (!field || !value) {
@@ -647,8 +797,26 @@
         clearConditionInputs() {
           document.getElementById('condition-field').value = '';
           document.getElementById('condition-value').value = '';
-          document.getElementById('condition-operator').value = 'equals';
+          document.getElementById('condition-value-select').value = '';
           document.getElementById('condition-logic').value = 'AND';
+          
+          // Reset operators to default
+          const operatorSelect = document.getElementById('condition-operator');
+          operatorSelect.innerHTML = `
+            <option value="equals">Equals</option>
+            <option value="contains">Contains</option>
+          `;
+          operatorSelect.value = 'equals';
+          operatorSelect.disabled = false;
+          
+          // Reset to loading display
+          const textInput = document.getElementById('condition-value');
+          const selectInput = document.getElementById('condition-value-select');
+          const loadingDiv = document.getElementById('condition-value-loading');
+          textInput.style.display = 'none';
+          selectInput.style.display = 'none';
+          loadingDiv.style.display = 'block';
+          loadingDiv.innerHTML = '<i class="fas fa-info-circle"></i> Select a field first';
         }
 
         clearAll() {

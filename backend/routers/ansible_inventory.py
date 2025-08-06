@@ -173,3 +173,27 @@ async def get_field_options(current_user: str = Depends(verify_token)) -> dict:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get field options: {str(e)}"
         )
+
+
+@router.get("/field-values/{field_name}")
+async def get_field_values(
+    field_name: str,
+    current_user: str = Depends(verify_token)
+) -> dict:
+    """
+    Get available values for a specific field for dropdown population.
+    """
+    try:
+        field_values = await ansible_inventory_service.get_field_values(field_name)
+        return {
+            "field": field_name,
+            "values": field_values,
+            "input_type": "select" if field_values else "text"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting field values for '{field_name}': {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get field values: {str(e)}"
+        )
