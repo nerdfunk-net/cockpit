@@ -548,6 +548,19 @@
       .table-responsive {
         margin-top: 20px;
       }
+     /* Consistent font for all table elements */
+     .table, .table th, .table td {
+       font-family: "Segoe UI", "Arial", "Helvetica Neue", sans-serif !important;
+       font-size: 15px !important;
+     }
+     .table td strong {
+       font-size: 15px !important;
+       font-weight: bold;
+     }
+     .badge {
+       font-size: 15px !important;
+     }
+     }
 
       .btn-group-sm > .btn, .btn-sm {
         padding: 0.25rem 0.5rem;
@@ -559,6 +572,10 @@
         display: flex;
         gap: 5px;
       }
+     /* Make badge font color black for Source column readability */
+     .badge {
+       color: #111 !important;
+     }
     </style>
 
     <!-- JavaScript for Template Management -->
