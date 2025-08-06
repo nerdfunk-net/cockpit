@@ -152,6 +152,68 @@
         padding-top: 8px;
         color: #666;
       }
+
+      /* Location selector styles */
+      .location-selector-wrapper {
+        position: relative;
+      }
+
+      .location-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: #fff;
+        border: 1px solid #d1d3e2;
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        max-height: 300px;
+        overflow-y: auto;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+      }
+
+      .location-dropdown .dropdown-content {
+        padding: 0;
+      }
+
+      .location-dropdown-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f3f4;
+        transition: background-color 0.15s ease-in-out;
+        line-height: 1.4;
+        word-wrap: break-word;
+      }
+
+      .location-dropdown-item:hover {
+        background-color: #f8f9fc;
+      }
+
+      .location-dropdown-item:last-child {
+        border-bottom: none;
+        border-radius: 0 0 6px 6px;
+      }
+
+      .location-dropdown-item.selected {
+        background-color: #4e73df;
+        color: white;
+      }
+
+      .location-dropdown-item.no-results {
+        color: #858796;
+        font-style: italic;
+        cursor: default;
+      }
+
+      .location-dropdown-item.no-results:hover {
+        background-color: transparent;
+      }
+
+      #condition-value-location-search.has-selection {
+        background-color: #e8f5e8;
+        border-color: #4e73df;
+      }
     </style>
   </head>
 
@@ -317,6 +379,20 @@
                         <select id="condition-value-select" class="form-control" style="display: none;">
                           <option value="">Loading...</option>
                         </select>
+                        <div class="location-selector-wrapper" id="condition-value-location" style="display: none;">
+                          <input type="text" 
+                                 id="condition-value-location-search" 
+                                 class="form-control" 
+                                 placeholder="Search locations..." 
+                                 autocomplete="off">
+                          <input type="hidden" 
+                                 id="condition-value-location-hidden">
+                          <div id="condition-value-location-dropdown" class="location-dropdown" style="display: none;">
+                            <div class="dropdown-content">
+                              <!-- Filtered options will be populated here -->
+                            </div>
+                          </div>
+                        </div>
                         <div id="condition-value-loading" class="form-control text-muted" style="display: block;">
                           <i class="fas fa-info-circle"></i> Select a field first
                         </div>
@@ -579,6 +655,13 @@
               this.addCondition();
             }
           });
+
+          // Enter key in location search field
+          document.getElementById('condition-value-location-search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              this.addCondition();
+            }
+          });
         }
 
         updateOperatorOptions(fieldName) {
@@ -612,31 +695,54 @@
           const loadingDiv = document.getElementById('condition-value-loading');
 
           if (operator === 'equals') {
-            // Use dropdown for equals
+            // Use hierarchical selector for equals
             await this.loadFieldValues('location', 'select');
           } else if (operator === 'contains') {
             // Use text input for contains
-            textInput.placeholder = 'Enter location name...';
-            selectInput.style.display = 'none';
-            loadingDiv.style.display = 'none';
-            textInput.style.display = 'block';
-            textInput.focus();
+            await this.loadFieldValues('location', 'text');
           }
         }
 
         async loadFieldValues(fieldName, forceInputType = null) {
           const textInput = document.getElementById('condition-value');
           const selectInput = document.getElementById('condition-value-select');
+          const locationSelector = document.getElementById('condition-value-location');
           const loadingDiv = document.getElementById('condition-value-loading');
 
-          // Show loading state
+          // Hide all input types
           textInput.style.display = 'none';
           selectInput.style.display = 'none';
+          locationSelector.style.display = 'none';
           loadingDiv.style.display = 'block';
           loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading values...';
 
           try {
             console.log('Making API request for field:', fieldName); // Debug log
+            
+            // Special handling for location field
+            if (fieldName === 'location') {
+              if (forceInputType === 'text') {
+                // Use text input for contains operator
+                textInput.placeholder = 'Enter location name...';
+                loadingDiv.style.display = 'none';
+                textInput.style.display = 'block';
+                textInput.focus();
+                return;
+              } else {
+                // Use hierarchical selector for equals operator (default)
+                const response = await window.authManager.apiRequest('/api/nautobot/locations');
+                console.log('Location API response:', response); // Debug log
+                
+                // Initialize the hierarchical location selector
+                this.initializeLocationSelector(response);
+                
+                loadingDiv.style.display = 'none';
+                locationSelector.style.display = 'block';
+                document.getElementById('condition-value-location-search').focus();
+                return;
+              }
+            }
+            
             const response = await window.authManager.apiRequest(`/api/ansible-inventory/field-values/${fieldName}`);
             console.log('API response:', response); // Debug log
             
@@ -685,28 +791,53 @@
             const loadingDiv = document.getElementById('condition-value-loading');
             const textInput = document.getElementById('condition-value');
             const selectInput = document.getElementById('condition-value-select');
+            const locationSelector = document.getElementById('condition-value-location');
             
             textInput.style.display = 'none';
             selectInput.style.display = 'none';
+            locationSelector.style.display = 'none';
             loadingDiv.style.display = 'block';
             loadingDiv.innerHTML = '<i class="fas fa-info-circle"></i> Select a field first';
             console.log('No field selected'); // Debug log
             return;
           }
 
-          // Load field values using the new method
-          await this.loadFieldValues(fieldName);
+          // Special handling for location field - always use hierarchical selector for equals
+          if (fieldName === 'location') {
+            const operator = document.getElementById('condition-operator').value;
+            if (operator === 'equals') {
+              await this.loadFieldValues(fieldName, 'select');
+            } else {
+              // For contains operator, use text input
+              await this.loadFieldValues(fieldName, 'text');
+            }
+          } else {
+            // Load field values using the new method
+            await this.loadFieldValues(fieldName);
+          }
         }
 
         addCondition() {
           const field = document.getElementById('condition-field').value;
           const operator = document.getElementById('condition-operator').value;
           
-          // Get value from the active input (text or select)
+          // Get value from the active input (text, select, or location selector)
           const textInput = document.getElementById('condition-value');
           const selectInput = document.getElementById('condition-value-select');
-          const isSelectVisible = selectInput.style.display !== 'none';
-          const value = isSelectVisible ? selectInput.value : textInput.value.trim();
+          const locationSelector = document.getElementById('condition-value-location');
+          
+          let value = '';
+          
+          if (locationSelector.style.display !== 'none') {
+            // Location selector is active
+            value = this.getLocationSelectorValue();
+          } else if (selectInput.style.display !== 'none') {
+            // Regular select dropdown is active
+            value = selectInput.value;
+          } else {
+            // Text input is active
+            value = textInput.value.trim();
+          }
           
           const logic = document.getElementById('condition-logic').value;
 
@@ -800,6 +931,9 @@
           document.getElementById('condition-value-select').value = '';
           document.getElementById('condition-logic').value = 'AND';
           
+          // Clear location selector
+          this.clearLocationSelector();
+          
           // Reset operators to default
           const operatorSelect = document.getElementById('condition-operator');
           operatorSelect.innerHTML = `
@@ -812,9 +946,11 @@
           // Reset to loading display
           const textInput = document.getElementById('condition-value');
           const selectInput = document.getElementById('condition-value-select');
+          const locationSelector = document.getElementById('condition-value-location');
           const loadingDiv = document.getElementById('condition-value-loading');
           textInput.style.display = 'none';
           selectInput.style.display = 'none';
+          locationSelector.style.display = 'none';
           loadingDiv.style.display = 'block';
           loadingDiv.innerHTML = '<i class="fas fa-info-circle"></i> Select a field first';
         }
@@ -1291,6 +1427,175 @@
             alert('Failed to copy to clipboard. Please copy manually.');
           }
           document.body.removeChild(textArea);
+        }
+
+        // Location hierarchy methods
+        buildLocationHierarchy() {
+          console.log('Building location hierarchy...');
+          
+          // Create a map for quick location lookup by ID
+          const locationMap = new Map();
+          this.locationsData.forEach(location => {
+            locationMap.set(location.id, location);
+          });
+          
+          // Build hierarchical path for each location
+          this.locationsData.forEach(location => {
+            location.hierarchicalPath = this.buildLocationPath(location, locationMap);
+            location.displayName = location.hierarchicalPath;
+          });
+          
+          // Sort locations by their hierarchical path
+          this.locationsData.sort((a, b) => {
+            return a.hierarchicalPath.localeCompare(b.hierarchicalPath);
+          });
+          
+          console.log('Location hierarchy built and sorted:', this.locationsData.map(l => l.hierarchicalPath));
+        }
+
+        buildLocationPath(location, locationMap) {
+          const path = [];
+          let current = location;
+          
+          // Traverse up the hierarchy to build the full path
+          while (current) {
+            path.unshift(current.name); // Add to beginning of array
+            
+            // Move to parent if it exists
+            if (current.parent && current.parent.id) {
+              current = locationMap.get(current.parent.id);
+              
+              // Prevent infinite loops in case of circular references
+              if (path.includes(current?.name)) {
+                console.warn('Circular reference detected in location hierarchy for:', location.name);
+                break;
+              }
+            } else {
+              current = null; // No parent, we've reached the root
+            }
+          }
+          
+          // Join path with arrows, or return just the name if it's a root location
+          return path.length > 1 ? path.join(' → ') : path[0];
+        }
+
+        initializeLocationSelector(locations) {
+          console.log('Initializing location selector with', locations.length, 'locations');
+          
+          // Store locations data and build hierarchical paths
+          this.locationsData = locations;
+          this.buildLocationHierarchy();
+          
+          const searchInput = document.getElementById('condition-value-location-search');
+          const hiddenInput = document.getElementById('condition-value-location-hidden');
+          const dropdown = document.getElementById('condition-value-location-dropdown');
+          
+          // Initialize event listeners
+          searchInput.addEventListener('input', (e) => {
+            this.filterLocations(e.target.value);
+          });
+          
+          searchInput.addEventListener('focus', () => {
+            this.showLocationDropdown();
+          });
+          
+          // Hide dropdown when clicking outside
+          document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+              this.hideLocationDropdown();
+            }
+          });
+          
+          // Show all locations initially
+          this.filterLocations('');
+        }
+
+        filterLocations(searchTerm) {
+          const dropdown = document.getElementById('condition-value-location-dropdown');
+          const dropdownContent = dropdown.querySelector('.dropdown-content');
+          
+          if (!this.locationsData) {
+            console.error('No locations data available');
+            return;
+          }
+          
+          const searchLower = searchTerm.toLowerCase();
+          const filteredLocations = this.locationsData.filter(location => {
+            // Search on the full hierarchical path
+            const hierarchicalPath = location.hierarchicalPath.toLowerCase();
+            return hierarchicalPath.includes(searchLower);
+          });
+          
+          // Clear existing content
+          dropdownContent.innerHTML = '';
+          
+          if (filteredLocations.length === 0) {
+            const noResults = document.createElement('div');
+            noResults.className = 'location-dropdown-item no-results';
+            noResults.textContent = 'No locations found';
+            dropdownContent.appendChild(noResults);
+          } else {
+            filteredLocations.forEach(location => {
+              const item = document.createElement('div');
+              item.className = 'location-dropdown-item';
+              // Display the hierarchical path
+              item.textContent = location.hierarchicalPath;
+              item.dataset.value = location.id || location.value || location;
+              
+              item.addEventListener('click', () => {
+                this.selectLocation(location);
+              });
+              
+              dropdownContent.appendChild(item);
+            });
+          }
+          
+          // Show dropdown if we have search term or focus
+          if (searchTerm || document.activeElement === document.getElementById('condition-value-location-search')) {
+            this.showLocationDropdown();
+          }
+        }
+
+        selectLocation(location) {
+          const searchInput = document.getElementById('condition-value-location-search');
+          const hiddenInput = document.getElementById('condition-value-location-hidden');
+          
+          // Use the hierarchical path for display, but store the actual location name for filtering
+          const locationDisplayName = location.hierarchicalPath;
+          const locationValue = location.name; // Use name for filtering, not ID
+          
+          searchInput.value = locationDisplayName;
+          searchInput.classList.add('has-selection');
+          hiddenInput.value = locationValue;
+          
+          this.hideLocationDropdown();
+          
+          console.log(`Selected location: ${locationDisplayName} (value: ${locationValue})`);
+        }
+
+        showLocationDropdown() {
+          const dropdown = document.getElementById('condition-value-location-dropdown');
+          dropdown.style.display = 'block';
+        }
+
+        hideLocationDropdown() {
+          const dropdown = document.getElementById('condition-value-location-dropdown');
+          dropdown.style.display = 'none';
+        }
+
+        getLocationSelectorValue() {
+          const hiddenInput = document.getElementById('condition-value-location-hidden');
+          return hiddenInput.value;
+        }
+
+        clearLocationSelector() {
+          const searchInput = document.getElementById('condition-value-location-search');
+          const hiddenInput = document.getElementById('condition-value-location-hidden');
+          
+          searchInput.value = '';
+          searchInput.classList.remove('has-selection');
+          hiddenInput.value = '';
+          this.hideLocationDropdown();
         }
       }
 
