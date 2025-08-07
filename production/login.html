@@ -17,16 +17,34 @@
     <script src="js/config.js"></script>
     <!-- Container configuration (if in container mode) -->
     <script>
+      console.log('🚀 Login page: Container config detection starting');
+      console.log('🚀 Login page: Current location:', {
+        hostname: window.location.hostname,
+        port: window.location.port,
+        protocol: window.location.protocol,
+        href: window.location.href
+      });
+      
       // Load container config if in container environment
       // But NOT if we're running on Vite dev server ports (development mode)
       const currentPort = window.location.port;
       const isDevelopment = currentPort === '3000' || currentPort === '3001';
       const isNonLocalhost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
       
+      console.log('🚀 Login page: Detection results:', {
+        currentPort,
+        isDevelopment,
+        isNonLocalhost,
+        shouldLoadContainer: isNonLocalhost && !isDevelopment
+      });
+      
       if (isNonLocalhost && !isDevelopment) {
+        console.log('🚀 Login page: Loading container configuration');
         const script = document.createElement('script');
         script.src = 'js/config-container.js';
         document.head.appendChild(script);
+      } else {
+        console.log('🚀 Login page: NOT loading container configuration');
       }
     </script>
     <!-- API Manager -->
@@ -307,11 +325,20 @@
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
           e.preventDefault();
           
+          console.log('🔑 Login form: Form submission started');
+          console.log('🔑 Login form: AuthManager available:', !!window.authManager);
+          
           // Check if authManager is available
           if (!window.authManager) {
+            console.error('🔑 Login form: AuthManager not available!');
             alert('Login failed: Authentication system not ready. Please refresh the page.');
             return;
           }
+          
+          console.log('🔑 Login form: AuthManager config:', {
+            baseURL: window.authManager.baseURL,
+            isDevelopment: window.authManager.isDevelopment
+          });
           
           const submitBtn = this.querySelector('button[type="submit"]');
           const originalText = submitBtn.innerHTML;
@@ -323,8 +350,12 @@
           const username = document.getElementById('username').value;
           const password = document.getElementById('password').value;
           
+          console.log('🔑 Login form: Attempting login for user:', username);
+          
           try {
             const result = await window.authManager.login(username, password);
+            
+            console.log('🔑 Login form: Login result:', result);
             
             if (result.success) {
               // Show success message briefly
@@ -342,6 +373,8 @@
               throw new Error(result.error);
             }
           } catch (error) {
+            console.error('🔑 Login form: Login failed:', error);
+            
             // Show error message
             submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Login Failed';
             submitBtn.classList.add('btn-danger');

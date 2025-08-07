@@ -5,30 +5,75 @@
 
 class AuthManager {
     constructor() {
+        console.log('🔐 AuthManager: Constructor starting');
+        console.log('🔐 AuthManager: window.location =', {
+          hostname: window.location.hostname,
+          port: window.location.port,
+          protocol: window.location.protocol,
+          href: window.location.href
+        });
+        
         // Use configuration if available, default to localhost
         this.baseURL = window.CockpitConfig ? window.CockpitConfig.api.baseUrl : 'http://localhost:8000';
+        console.log('🔐 AuthManager: Initial baseURL from config:', this.baseURL);
+        
+        // Check for container override
+        if (window.COCKPIT_API_URL) {
+          console.log('🔐 AuthManager: Found COCKPIT_API_URL override:', window.COCKPIT_API_URL);
+          console.log('🔐 AuthManager: Container mode active:', !!window.COCKPIT_CONTAINER_MODE);
+        }
         
         // Determine if we're in development mode (Vite dev server)
         this.isDevelopment = window.location.port === '3000' || window.location.port === '3001' || this.baseURL === '';
+        console.log('🔐 AuthManager: Development mode detection:', {
+          port: window.location.port,
+          baseURLEmpty: this.baseURL === '',
+          isDevelopment: this.isDevelopment
+        });
         
         this.token = localStorage.getItem('auth_token');
         this.user = JSON.parse(localStorage.getItem('user_info') || 'null');
         this.tokenExpiry = localStorage.getItem('token_expiry');
+        
+        console.log('🔐 AuthManager: Auth state:', {
+          hasToken: !!this.token,
+          hasUser: !!this.user,
+          hasExpiry: !!this.tokenExpiry
+        });
         
         // Update user display immediately if we have user data
         if (this.user && typeof document !== 'undefined') {
             // Use a small delay to ensure DOM is ready
             setTimeout(() => this.updateUserDisplay(), 100);
         }
+        
+        console.log('🔐 AuthManager: Constructor complete. Final config:', {
+          baseURL: this.baseURL,
+          isDevelopment: this.isDevelopment
+        });
     }
 
     /**
      * Login user with credentials
      */
     async login(username, password) {
+        console.log('🔐 AuthManager: Login attempt started');
+        console.log('🔐 AuthManager: Current state:', {
+          baseURL: this.baseURL,
+          isDevelopment: this.isDevelopment,
+          username: username
+        });
+        
         try {
             // Use relative URL in development mode (Vite proxy handles routing)
             const url = this.isDevelopment ? '/auth/login' : `${this.baseURL}/auth/login`;
+            console.log('🔐 AuthManager: Login URL constructed:', url);
+            console.log('🔐 AuthManager: Request details:', {
+              url,
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              bodyData: { username, password: '***' }
+            });
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -36,6 +81,13 @@ class AuthManager {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ username, password })
+            });
+
+            console.log('🔐 AuthManager: Login response received:', {
+              status: response.status,
+              statusText: response.statusText,
+              ok: response.ok,
+              url: response.url
             });
 
             if (!response.ok) {

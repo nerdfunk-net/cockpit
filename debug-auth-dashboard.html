@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cockpit Debug Dashboard</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .debug-section { 
+            background: white; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-section h3 { 
+            margin-top: 0; 
+            color: #007bff;
+        }
+        .status-ok { border-left-color: #28a745; }
+        .status-warning { border-left-color: #ffc107; }
+        .status-error { border-left-color: #dc3545; }
+        .code-block { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover { background: #0056b3; }
+        .test-button.success { background: #28a745; }
+        .test-button.error { background: #dc3545; }
+        .test-button.warning { background: #ffc107; color: black; }
+        #console-output {
+            height: 200px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 Cockpit Authentication Debug Dashboard</h1>
+    <p>This page helps diagnose authentication configuration issues in your Docker container.</p>
+    
+    <div class="debug-section">
+        <h3>📍 Current Environment</h3>
+        <div id="env-info">Loading...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>⚙️ Configuration Analysis</h3>
+        <div id="config-info">Loading...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>🔗 URL Testing</h3>
+        <div id="url-testing">
+            <button class="test-button" onclick="testUrl('/auth/login', 'Auth Login Endpoint')">Test Auth Login</button>
+            <button class="test-button" onclick="testUrl('/api/test', 'API Endpoint')">Test API</button>
+            <button class="test-button" onclick="testUrl('/docs', 'Backend Docs')">Test Backend Docs</button>
+            <button class="test-button" onclick="testActualLogin()">Test Actual Login</button>
+        </div>
+        <div id="url-results"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>📝 Console Output</h3>
+        <div id="console-output"></div>
+        <button class="test-button" onclick="clearConsole()">Clear Console</button>
+    </div>
+    
+    <!-- Load the actual config files to test -->
+    <script src="js/config.js"></script>
+    <script>
+      // Load container config conditionally (same logic as login page)
+      const currentPort = window.location.port;
+      const isDevelopment = currentPort === '3000' || currentPort === '3001';
+      const isNonLocalhost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      
+      if (isNonLocalhost && !isDevelopment) {
+        const script = document.createElement('script');
+        script.src = 'js/config-container.js';
+        document.head.appendChild(script);
+      }
+    </script>
+    <script src="js/auth.js"></script>
+    
+    <script>
+        // Initialize debug info
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEnvironmentInfo();
+            updateConfigInfo();
+            
+            // Initialize auth manager and capture its output
+            try {
+                window.authManager = new AuthManager();
+                console.log('✅ AuthManager initialized successfully');
+            } catch (error) {
+                console.error('❌ Failed to initialize AuthManager:', error);
+            }
+        });
+        
+        function updateEnvironmentInfo() {
+            const envInfo = document.getElementById('env-info');
+            const info = {
+                'URL': window.location.href,
+                'Hostname': window.location.hostname,
+                'Port': window.location.port || 'default',
+                'Protocol': window.location.protocol,
+                'Is Development Port': (window.location.port === '3000' || window.location.port === '3001'),
+                'Is Non-Localhost': (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'),
+                'Container Mode Expected': window.COCKPIT_CONTAINER_MODE || false
+            };
+            
+            envInfo.innerHTML = Object.entries(info)
+                .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+                .join('<br>');
+        }
+        
+        function updateConfigInfo() {
+            const configInfo = document.getElementById('config-info');
+            let status = 'status-ok';
+            let info = [];
+            
+            // Check CockpitConfig
+            if (typeof CockpitConfig !== 'undefined') {
+                info.push(`<strong>CockpitConfig Base URL:</strong> "${CockpitConfig.api.baseUrl}"`);
+            } else {
+                info.push('<strong style="color: red;">CockpitConfig:</strong> NOT FOUND');
+                status = 'status-error';
+            }
+            
+            // Check container overrides
+            if (window.COCKPIT_API_URL) {
+                info.push(`<strong>Container Override URL:</strong> "${window.COCKPIT_API_URL}"`);
+                info.push(`<strong>Container Mode:</strong> ${window.COCKPIT_CONTAINER_MODE}`);
+            } else {
+                info.push('<strong>Container Override:</strong> Not active');
+            }
+            
+            // Check AuthManager
+            if (window.authManager) {
+                info.push(`<strong>AuthManager Base URL:</strong> "${window.authManager.baseURL}"`);
+                info.push(`<strong>AuthManager Development Mode:</strong> ${window.authManager.isDevelopment}`);
+            } else {
+                info.push('<strong style="color: red;">AuthManager:</strong> NOT INITIALIZED');
+                status = 'status-error';
+            }
+            
+            configInfo.innerHTML = info.join('<br>');
+            document.querySelector('#config-info').parentNode.className = `debug-section ${status}`;
+        }
+        
+        async function testActualLogin() {
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Testing Login...';
+            button.disabled = true;
+            
+            if (!window.authManager) {
+                console.error('AuthManager not available for login test');
+                button.textContent = '❌ No AuthManager';
+                button.className = 'test-button error';
+                return;
+            }
+            
+            try {
+                // Test with demo credentials
+                const result = await window.authManager.login('admin', 'admin');
+                
+                if (result.success) {
+                    console.log('✅ Login test successful:', result);
+                    button.textContent = '✅ Login Works';
+                    button.className = 'test-button success';
+                } else {
+                    console.error('❌ Login test failed:', result);
+                    button.textContent = '❌ Login Failed';
+                    button.className = 'test-button error';
+                }
+                
+            } catch (error) {
+                console.error('❌ Login test error:', error);
+                button.textContent = '❌ Login Error';
+                button.className = 'test-button error';
+            }
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.disabled = false;
+                button.className = 'test-button';
+            }, 5000);
+        }
+        
+        // Auto-refresh config info every 2 seconds to catch changes
+        setInterval(updateConfigInfo, 2000);
+    </script>
+</body>
+</html>

@@ -6,8 +6,17 @@ const CockpitConfig = {
   api: {
     // Auto-detect backend URL based on current environment
     baseUrl: (() => {
+      console.log('🔧 Config.js: Starting baseUrl detection');
+      console.log('🔧 Config.js: window.location =', {
+        hostname: window.location.hostname,
+        port: window.location.port,
+        protocol: window.location.protocol,
+        href: window.location.href
+      });
+      
       // Check for environment variable first (Docker containers)
       if (typeof window !== 'undefined' && window.COCKPIT_API_URL) {
+        console.log('🔧 Config.js: Found COCKPIT_API_URL override:', window.COCKPIT_API_URL);
         return window.COCKPIT_API_URL;
       }
       
@@ -16,16 +25,24 @@ const CockpitConfig = {
       const currentPort = window.location.port;
       const isDevelopment = currentPort === '3000' || currentPort === '3001';
       
+      console.log('🔧 Config.js: Port detection:', {
+        currentPort,
+        isDevelopment
+      });
+      
       if (isDevelopment) {
         // Development mode - use empty string to enable relative URLs
         // Vite proxy will handle forwarding to backend
+        console.log('🔧 Config.js: Development mode detected - using empty baseUrl for Vite proxy');
         return '';
       }
       
       // Production/container mode - backend on same host, port 8000
       const protocol = window.location.protocol;
       const hostname = window.location.hostname;
-      return `${protocol}//${hostname}:8000`;
+      const productionUrl = `${protocol}//${hostname}:8000`;
+      console.log('🔧 Config.js: Production mode detected - using baseUrl:', productionUrl);
+      return productionUrl;
     })(),
     
     // Alternative: detect from current host
