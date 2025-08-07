@@ -42,10 +42,31 @@
         addInfo(`Current URL: ${window.location.href}`);
         addInfo(`Current Port: ${window.location.port || 'default'}`);
         addInfo(`Current Hostname: ${window.location.hostname}`);
+        addInfo(`Container API URL: ${window.COCKPIT_API_URL || 'not set'}`);
+        addInfo(`Container Mode: ${window.COCKPIT_CONTAINER_MODE || 'false'}`);
+        
+        // Test container config loading logic
+        const currentPort = window.location.port;
+        const isDevelopment = currentPort === '3000' || currentPort === '3001';
+        const isNonLocalhost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const shouldLoadContainer = isNonLocalhost && !isDevelopment;
+        
+        addInfo(`Should load container config: ${shouldLoadContainer} (non-localhost: ${isNonLocalhost}, development: ${isDevelopment})`);
         
         // Test configuration detection
         if (typeof CockpitConfig !== 'undefined') {
             addInfo(`Config Base URL: "${CockpitConfig.api.baseUrl}"`);
+            
+            // Check if container config override is active
+            if (window.COCKPIT_API_URL) {
+                if (CockpitConfig.api.baseUrl === window.COCKPIT_API_URL) {
+                    addResult('Container Override Active', true, 
+                        `Container config is overriding base URL to: "${window.COCKPIT_API_URL}"`);
+                } else {
+                    addResult('Container Override Conflict', false, 
+                        `Config: "${CockpitConfig.api.baseUrl}", Container: "${window.COCKPIT_API_URL}"`);
+                }
+            }
             
             const currentPort = window.location.port;
             const isDevelopment = currentPort === '3000' || currentPort === '3001';
@@ -55,6 +76,15 @@
                 const success = CockpitConfig.api.baseUrl === expectedBaseUrl;
                 addResult('Development Mode Detection', success, 
                     `Expected empty base URL for Vite proxy, got: "${CockpitConfig.api.baseUrl}"`);
+                    
+                // In development mode, container config should NOT be loaded
+                if (window.COCKPIT_CONTAINER_MODE) {
+                    addResult('Container Config Prevention', false, 
+                        'Container config was loaded in development mode - this will break Vite proxy!');
+                } else {
+                    addResult('Container Config Prevention', true, 
+                        'Container config correctly not loaded in development mode');
+                }
             } else {
                 const expectedBaseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
                 const success = CockpitConfig.api.baseUrl === expectedBaseUrl;

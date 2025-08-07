@@ -18,7 +18,12 @@
     <!-- Container configuration (if in container mode) -->
     <script>
       // Load container config if in container environment
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      // But NOT if we're running on Vite dev server ports (development mode)
+      const currentPort = window.location.port;
+      const isDevelopment = currentPort === '3000' || currentPort === '3001';
+      const isNonLocalhost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      
+      if (isNonLocalhost && !isDevelopment) {
         const script = document.createElement('script');
         script.src = 'js/config-container.js';
         document.head.appendChild(script);
