@@ -31,20 +31,31 @@
       const isDevelopment = currentPort === '3000' || currentPort === '3001';
       const isNonLocalhost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
       
+      // Additional check: if we're behind a reverse proxy but still using Vite,
+      // we should detect Vite-specific indicators
+      const hasViteElements = !!(
+        document.querySelector('script[type="module"]') ||
+        document.querySelector('script[src*="/src/"]')
+      );
+      
+      // Don't load container config if we detect Vite environment
+      const shouldLoadContainer = isNonLocalhost && !isDevelopment && !hasViteElements;
+      
       console.log('🚀 Login page: Detection results:', {
         currentPort,
         isDevelopment,
         isNonLocalhost,
-        shouldLoadContainer: isNonLocalhost && !isDevelopment
+        hasViteElements,
+        shouldLoadContainer
       });
       
-      if (isNonLocalhost && !isDevelopment) {
+      if (shouldLoadContainer) {
         console.log('🚀 Login page: Loading container configuration');
         const script = document.createElement('script');
         script.src = 'js/config-container.js';
         document.head.appendChild(script);
       } else {
-        console.log('🚀 Login page: NOT loading container configuration');
+        console.log('🚀 Login page: NOT loading container configuration (Vite environment detected)');
       }
     </script>
     <!-- API Manager -->

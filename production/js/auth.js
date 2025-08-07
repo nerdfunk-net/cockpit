@@ -24,10 +24,19 @@ class AuthManager {
         }
         
         // Determine if we're in development mode (Vite dev server)
-        this.isDevelopment = window.location.port === '3000' || window.location.port === '3001' || this.baseURL === '';
+        // Check multiple indicators: port, baseURL, and whether container config was bypassed
+        const portBasedDev = window.location.port === '3000' || window.location.port === '3001';
+        const baseURLEmpty = this.baseURL === '';
+        const containerModeBypassed = !window.COCKPIT_CONTAINER_MODE; // If no container mode, we're likely in Vite
+        
+        this.isDevelopment = portBasedDev || baseURLEmpty || containerModeBypassed;
+        
         console.log('🔐 AuthManager: Development mode detection:', {
           port: window.location.port,
-          baseURLEmpty: this.baseURL === '',
+          portBasedDev,
+          baseURLEmpty,
+          containerModeBypassed,
+          containerMode: !!window.COCKPIT_CONTAINER_MODE,
           isDevelopment: this.isDevelopment
         });
         

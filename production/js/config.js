@@ -17,6 +17,20 @@ const CockpitConfig = {
       // Check for environment variable first (Docker containers)
       if (typeof window !== 'undefined' && window.COCKPIT_API_URL) {
         console.log('🔧 Config.js: Found COCKPIT_API_URL override:', window.COCKPIT_API_URL);
+        // But if we detect this is likely a Vite dev environment behind a proxy,
+        // we should still use relative URLs
+        const isLikelyViteProxy = (
+          window.location.pathname.includes('login.html') || 
+          window.location.pathname.includes('index.html') ||
+          document.querySelector('script[src*="vite"]') ||
+          document.querySelector('script[type="module"]')
+        );
+        
+        if (isLikelyViteProxy) {
+          console.log('🔧 Config.js: Detected Vite environment behind proxy - using relative URLs');
+          return '';
+        }
+        
         return window.COCKPIT_API_URL;
       }
       
@@ -34,6 +48,18 @@ const CockpitConfig = {
         // Development mode - use empty string to enable relative URLs
         // Vite proxy will handle forwarding to backend
         console.log('🔧 Config.js: Development mode detected - using empty baseUrl for Vite proxy');
+        return '';
+      }
+      
+      // Check if we're likely in a Vite environment (look for Vite-specific elements)
+      const hasViteElements = !!(
+        document.querySelector('script[type="module"]') ||
+        document.querySelector('script[src*="/src/"]') ||
+        window.__vite_plugin_react_preamble_installed__
+      );
+      
+      if (hasViteElements) {
+        console.log('🔧 Config.js: Detected Vite environment indicators - using empty baseUrl for proxy');
         return '';
       }
       
