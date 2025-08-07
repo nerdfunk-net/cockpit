@@ -7,6 +7,10 @@ class AuthManager {
     constructor() {
         // Use configuration if available, default to localhost
         this.baseURL = window.CockpitConfig ? window.CockpitConfig.api.baseUrl : 'http://localhost:8000';
+        
+        // Determine if we're in development mode (Vite dev server)
+        this.isDevelopment = window.location.port === '3000' || window.location.port === '3001' || this.baseURL === '';
+        
         this.token = localStorage.getItem('auth_token');
         this.user = JSON.parse(localStorage.getItem('user_info') || 'null');
         this.tokenExpiry = localStorage.getItem('token_expiry');
@@ -23,9 +27,8 @@ class AuthManager {
      */
     async login(username, password) {
         try {
-            // Use relative URL if we're in development mode (Vite proxy)
-            const isDevelopment = window.location.port === '3000' || window.location.port === '3001';
-            const url = isDevelopment ? '/auth/login' : `${this.baseURL}/auth/login`;
+            // Use relative URL in development mode (Vite proxy handles routing)
+            const url = this.isDevelopment ? '/auth/login' : `${this.baseURL}/auth/login`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -63,9 +66,8 @@ class AuthManager {
      */
     async register(username, password, email, fullName) {
         try {
-            // Use relative URL if we're in development mode (Vite proxy)
-            const isDevelopment = window.location.port === '3000' || window.location.port === '3001';
-            const url = isDevelopment ? '/auth/register' : `${this.baseURL}/auth/register`;
+            // Use relative URL in development mode (Vite proxy handles routing)
+            const url = this.isDevelopment ? '/auth/register' : `${this.baseURL}/auth/register`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -164,10 +166,8 @@ class AuthManager {
         };
 
         try {
-            // Use relative URL if we're in development mode (Vite proxy)
-            // or if we're running from the same origin as the API
-            const isDevelopment = window.location.port === '3000' || window.location.port === '3001';
-            const url = isDevelopment ? endpoint : `${this.baseURL}${endpoint}`;
+            // Use relative URL in development mode (Vite proxy handles routing)
+            const url = this.isDevelopment ? endpoint : `${this.baseURL}${endpoint}`;
             
             const response = await fetch(url, config);
             

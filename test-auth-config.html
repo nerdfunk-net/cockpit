@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth Configuration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Auth Configuration Test</h1>
+    <p>This page tests the authentication configuration logic for different hostnames and ports.</p>
+    
+    <div id="results"></div>
+    
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(test, success, message) {
+            const div = document.createElement('div');
+            div.className = `test-result ${success ? 'success' : 'error'}`;
+            div.innerHTML = `<strong>${test}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        function addInfo(message) {
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.innerHTML = `<strong>Info:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        // Display current environment info
+        addInfo(`Current URL: ${window.location.href}`);
+        addInfo(`Current Port: ${window.location.port || 'default'}`);
+        addInfo(`Current Hostname: ${window.location.hostname}`);
+        
+        // Test configuration detection
+        if (typeof CockpitConfig !== 'undefined') {
+            addInfo(`Config Base URL: "${CockpitConfig.api.baseUrl}"`);
+            
+            const currentPort = window.location.port;
+            const isDevelopment = currentPort === '3000' || currentPort === '3001';
+            
+            if (isDevelopment) {
+                const expectedBaseUrl = '';
+                const success = CockpitConfig.api.baseUrl === expectedBaseUrl;
+                addResult('Development Mode Detection', success, 
+                    `Expected empty base URL for Vite proxy, got: "${CockpitConfig.api.baseUrl}"`);
+            } else {
+                const expectedBaseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
+                const success = CockpitConfig.api.baseUrl === expectedBaseUrl;
+                addResult('Production Mode Detection', success, 
+                    `Expected "${expectedBaseUrl}", got: "${CockpitConfig.api.baseUrl}"`);
+            }
+        } else {
+            addResult('Config Loading', false, 'CockpitConfig not found');
+        }
+        
+        // Test AuthManager
+        try {
+            const authManager = new AuthManager();
+            addInfo(`AuthManager Base URL: "${authManager.baseURL}"`);
+            addInfo(`AuthManager Development Mode: ${authManager.isDevelopment}`);
+            
+            const currentPort = window.location.port;
+            const expectedDevelopment = currentPort === '3000' || currentPort === '3001' || authManager.baseURL === '';
+            const success = authManager.isDevelopment === expectedDevelopment;
+            addResult('AuthManager Development Detection', success, 
+                `Expected development mode: ${expectedDevelopment}, got: ${authManager.isDevelopment}`);
+                
+        } catch (error) {
+            addResult('AuthManager Creation', false, error.message);
+        }
+        
+        // Test URL construction for different scenarios
+        function testUrlConstruction() {
+            const authManager = new AuthManager();
+            
+            // Test login URL
+            const loginUrl = authManager.isDevelopment ? '/auth/login' : `${authManager.baseURL}/auth/login`;
+            addInfo(`Login URL would be: "${loginUrl}"`);
+            
+            // Test API URL
+            const apiUrl = authManager.isDevelopment ? '/api/test' : `${authManager.baseURL}/api/test`;
+            addInfo(`API URL would be: "${apiUrl}"`);
+            
+            if (authManager.isDevelopment) {
+                const relativeUrlsUsed = loginUrl.startsWith('/') && apiUrl.startsWith('/');
+                addResult('Relative URLs in Development', relativeUrlsUsed, 
+                    `Using relative URLs for Vite proxy: Login="${loginUrl}", API="${apiUrl}"`);
+            } else {
+                const absoluteUrlsUsed = loginUrl.includes(':8000') && apiUrl.includes(':8000');
+                addResult('Absolute URLs in Production', absoluteUrlsUsed, 
+                    `Using absolute URLs for direct backend: Login="${loginUrl}", API="${apiUrl}"`);
+            }
+        }
+        
+        testUrlConstruction();
+    </script>
+</body>
+</html>

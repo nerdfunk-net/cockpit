@@ -11,20 +11,21 @@ const CockpitConfig = {
         return window.COCKPIT_API_URL;
       }
       
-      // Auto-detect for container deployments
-      const protocol = window.location.protocol;
-      const hostname = window.location.hostname;
+      // Detect if we're running on Vite dev server (ports 3000 or 3001)
+      // In this case, we should use relative URLs for proxy support
+      const currentPort = window.location.port;
+      const isDevelopment = currentPort === '3000' || currentPort === '3001';
       
-      // For container deployments, backend typically runs on same host, different port
-      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        // Production/container mode - backend on same host, port 8000
-        return `${protocol}//${hostname}:8000`;
+      if (isDevelopment) {
+        // Development mode - use empty string to enable relative URLs
+        // Vite proxy will handle forwarding to backend
+        return '';
       }
       
-      // Development mode
-      return protocol === 'https:' 
-        ? 'https://localhost:8000'  // Use HTTPS in production
-        : 'http://localhost:8000';  // Use HTTP in development
+      // Production/container mode - backend on same host, port 8000
+      const protocol = window.location.protocol;
+      const hostname = window.location.hostname;
+      return `${protocol}//${hostname}:8000`;
     })(),
     
     // Alternative: detect from current host
