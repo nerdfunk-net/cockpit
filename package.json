@@ -1,7 +1,7 @@
 {
-  "name": "gentelella",
-  "version": "2.0.0",
-  "description": "Gentelella Admin is a free to use Bootstrap admin template",
+  "name": "nerdfunk",
+  "version": "0.9",
+  "description": "Cockpit is a network management tool",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/puikinsh/gentelella.git"
+    "url": "git+https://github.com/nerdfunk-net/cockpit.git"
   },
   "keywords": [
     "css",
@@ -24,16 +24,16 @@
     "responsive",
     "modern"
   ],
-  "author": "Aigars Silkalns",
+  "author": "mp at nerdfunk.net",
   "contributors": [
-    "Christian Esperar"
+    "mp"
   ],
   "license": "MIT",
   "main": "src/main.js",
   "bugs": {
-    "url": "https://github.com/puikinsh/gentelella/issues"
+    "url": "https://github.com/nerdfunk-net/cockpit/issues"
   },
-  "homepage": "https://github.com/puikinsh/gentelella#readme",
+  "homepage": "https://github.com/nerdfunk-net/",
   "devDependencies": {
     "glob": "^11.0.2",
     "sass": "^1.89.2",

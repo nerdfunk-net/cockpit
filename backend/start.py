@@ -5,7 +5,7 @@ Loads configuration and starts the FastAPI server.
 """
 
 import uvicorn
-from config_manual import settings
+from config import settings
 from settings_manager import settings_manager
 import logging
 

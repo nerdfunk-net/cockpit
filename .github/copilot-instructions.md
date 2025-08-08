@@ -14,6 +14,11 @@
    - Git-backed diff visualization with commit-based navigation
    - File search with regex support across repository history
 
+2. **Ansible Inventory App** (`production/ansible-inventory.html`, `production/ansible-inventory-new.html`)
+  - Visualizes and manages Ansible inventory data from Git or file sources
+  - Supports group/host hierarchy, variable inspection, and inventory file selection
+  - Integrates with Git history for versioned inventory comparison
+
 2. **Authentication System** (`production/js/auth.js` + JWT backend)
    - localStorage-based session management
    - Demo credentials: admin/admin, guest/guest
@@ -21,10 +26,11 @@
    - **Smart URL routing**: Auto-detects development/production for API calls
    - **Vite proxy integration**: Uses relative URLs in development mode
 
-3. **Settings Management** (`backend/settings_manager.py`)
-   - SQLite-based configuration storage
-   - Nautobot and Git repository settings
-   - Runtime configuration updates without restart
+3. **Settings & Template Management** (`backend/settings_manager.py`, `backend/template_manager.py`)
+  - SQLite-based configuration storage
+  - Nautobot and Git repository settings
+  - Runtime configuration updates without restart
+  - Template Manager for managing Jinja2 templates used in configuration rendering
 
 ## Development Workflow
 

@@ -40,7 +40,7 @@ class NautobotService:
         
         # Fallback to environment variables (cache these since they don't change)
         if not self.config or self.config.get('_source') != 'environment':
-            from config_manual import settings
+            from config import settings
             self.config = {
                 'url': settings.nautobot_url,
                 'token': settings.nautobot_token,

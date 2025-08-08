@@ -19,7 +19,7 @@ async def login(user_data: UserLogin):
     For demo purposes, using simple hardcoded auth.
     In production, this should validate against a proper user database.
     """
-    from config_manual import settings
+    from config import settings
     
     if user_data.username == settings.demo_username and user_data.password == settings.demo_password:
         access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)

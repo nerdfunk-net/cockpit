@@ -377,7 +377,7 @@ async def get_repository_status(
             raise HTTPException(status_code=404, detail="Repository not found")
         
         # Get data directory from configuration
-        from config_manual import settings as config_settings
+        from config import settings as config_settings
         repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
         
         status_info = {
@@ -524,7 +524,7 @@ async def sync_repository(
         git_repo_manager.update_sync_status(repo_id, "syncing")
         
         # Get data directory from configuration (outside project to avoid file watching)
-        from config_manual import settings as config_settings
+        from config import settings as config_settings
         repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
         
         logger.info(f"Syncing repository '{repository['name']}' to path: {repo_path}")
@@ -735,7 +735,7 @@ async def search_repository_files(
             raise HTTPException(status_code=404, detail="Repository not found")
         
         # Get data directory from configuration
-        from config_manual import settings as config_settings
+        from config import settings as config_settings
         repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
         
         if not os.path.exists(repo_path):

@@ -12,7 +12,7 @@ import json
 
 # Import config to get environment variable defaults
 try:
-    from config_manual import settings as env_settings
+    from config import settings as env_settings
 except ImportError:
     env_settings = None
 
@@ -43,7 +43,7 @@ class SettingsManager:
     def __init__(self, db_path: str = None):
         if db_path is None:
             # Use data directory from configuration for persistence
-            from config_manual import settings as config_settings
+            from config import settings as config_settings
             settings_dir = os.path.join(config_settings.data_directory, 'settings')
             os.makedirs(settings_dir, exist_ok=True)
             self.db_path = os.path.join(settings_dir, 'cockpit_settings.db')

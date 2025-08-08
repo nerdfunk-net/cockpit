@@ -5,7 +5,7 @@ Data migration script to move data from project directory to user data directory
 
 import os
 import shutil
-from config_manual import settings
+from config import settings
 
 def migrate_data():
     """Migrate data from old location to new location"""

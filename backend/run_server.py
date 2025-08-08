@@ -23,7 +23,7 @@ except Exception as e:
     sys.exit(1)
 
 import uvicorn
-from config_manual import settings
+from config import settings
 
 if __name__ == "__main__":
     print("Starting Cockpit API server...")

@@ -41,7 +41,7 @@ async def test_current_nautobot_connection(current_user: str = Depends(verify_to
                 raise Exception("No database settings")
         except Exception as e:
             # Fallback to environment variables
-            from config_manual import settings
+            from config import settings
             nautobot_config = {
                 'url': settings.nautobot_url,
                 'token': settings.nautobot_token,
@@ -541,7 +541,7 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
             else:
                 raise Exception("No database settings")
         except Exception:
-            from config_manual import settings
+            from config import settings
             nautobot_url = settings.nautobot_url.rstrip('/')
             nautobot_token = settings.nautobot_token
         
@@ -628,7 +628,7 @@ async def sync_network_data(request: SyncNetworkDataRequest, current_user: str =
             else:
                 raise Exception("No database settings")
         except Exception:
-            from config_manual import settings
+            from config import settings
             nautobot_url = settings.nautobot_url.rstrip('/')
             nautobot_token = settings.nautobot_token
         

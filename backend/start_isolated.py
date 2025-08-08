@@ -15,7 +15,7 @@ if not os.path.basename(os.getcwd()) == 'backend':
     print(f"Changed to backend directory: {os.getcwd()}")
 
 # Import settings after changing directory
-from config_manual import settings
+from config import settings
 from settings_manager import settings_manager
 import logging
 

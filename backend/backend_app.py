@@ -11,7 +11,7 @@ import mimetypes
 from pathlib import Path
 import json
 from datetime import datetime, timedelta, timezone
-from config_manual import settings
+from config import settings
 
 # Initialize FastAPI app
 app = FastAPI(

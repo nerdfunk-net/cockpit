@@ -35,7 +35,7 @@ def main():
     
     # Test config
     print("\n=== Testing Config ===")
-    test_import("config_manual", "config_manual")
+    test_import("config", "config")
     
     # Test services
     print("\n=== Testing Services ===")

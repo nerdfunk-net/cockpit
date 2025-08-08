@@ -25,7 +25,7 @@ def get_git_repo():
     try:
         from settings_manager import settings_manager
         from git_repositories_manager import GitRepositoryManager
-        
+
         # Get the selected repository from Git Management
         selected_id = settings_manager.get_selected_git_repository()
         if not selected_id:
@@ -33,7 +33,7 @@ def get_git_repo():
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No Git repository selected for configuration comparison. Please select a repository in Git Management."
             )
-        
+
         # Get repository details
         git_repo_manager = GitRepositoryManager()
         repository = git_repo_manager.get_repository(selected_id)
@@ -42,21 +42,21 @@ def get_git_repo():
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Selected Git repository not found. Please select a valid repository in Git Management."
             )
-        
+
         if not repository['is_active']:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Selected Git repository is inactive. Please activate it or select a different repository."
             )
-        
+
         # Use the repository name from the database for the directory path
-        from config_manual import settings as config_settings
+        from config import settings as config_settings
         from pathlib import Path
         repo_dir = Path(config_settings.data_directory) / 'git' / repository['name']
-        
+
         # Create the directory if it doesn't exist
         repo_dir.mkdir(parents=True, exist_ok=True)
-        
+
         try:
             # Try to open existing repository
             repo = Repo(repo_dir)
@@ -422,15 +422,13 @@ async def git_files(
                 files.append(item.path)
         
         # Filter for configuration files based on allowed extensions
-        from config_manual import settings
+        from config import settings
         config_extensions = settings.allowed_file_extensions
         config_files = [
             f for f in files 
             if any(f.endswith(ext) for ext in config_extensions)
         ]
-        
         return sorted(config_files)
-        
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

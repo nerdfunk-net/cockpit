@@ -20,7 +20,7 @@ class GitManager:
     def __init__(self, base_path: str = None):
         if base_path is None:
             # Use data directory from configuration (outside project to avoid file watching)
-            from config_manual import settings as config_settings
+            from config import settings as config_settings
             self.base_path = os.path.join(config_settings.data_directory, 'git', 'configs')
         else:
             self.base_path = base_path
@@ -30,7 +30,7 @@ class GitManager:
         
     def _configure_git_ssl(self) -> Dict[str, str]:
         """Configure Git SSL settings and return environment variables"""
-        from config_manual import settings as env_settings
+    from config import settings as env_settings
         
         env = os.environ.copy()
         

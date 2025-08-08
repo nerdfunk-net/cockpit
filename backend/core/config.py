@@ -7,7 +7,7 @@ from __future__ import annotations
 
 def get_settings():
     """Get application settings."""
-    from config_manual import get_config
+    from config import get_config
     return get_config()
 
 

@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.dirname(__file__))
 
 from settings_manager import settings_manager
-from config_manual import settings as env_settings
+from config import settings as env_settings
 
 def main():
     print("=== Cockpit Nautobot Configuration Test ===\n")
