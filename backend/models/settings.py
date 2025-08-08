@@ -30,6 +30,16 @@ class AllSettingsRequest(BaseModel):
     """All settings request model."""
     nautobot: NautobotSettingsRequest
     git: GitSettingsRequest
+    cache: Optional['CacheSettingsRequest'] = None
+
+
+class CacheSettingsRequest(BaseModel):
+    """Cache settings request model."""
+    enabled: bool = True
+    ttl_seconds: int = 600
+    prefetch_on_startup: bool = True
+    refresh_interval_minutes: int = 15
+    max_commits: int = 500
 
 
 class ConnectionTestRequest(BaseModel):

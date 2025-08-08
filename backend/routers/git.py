@@ -15,6 +15,7 @@ from git import Repo, InvalidGitRepositoryError, GitCommandError
 
 from core.auth import verify_token
 from models.git import GitCommitRequest, GitBranchRequest
+from services.cache_service import cache_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/git", tags=["git"])
@@ -352,18 +353,30 @@ async def git_commits(
 ):
     """Get commits for a specific branch."""
     try:
+        from settings_manager import settings_manager
+        cache_cfg = settings_manager.get_cache_settings()
+        selected_id = settings_manager.get_selected_git_repository()
         repo = get_git_repo()
-        
+
         # Check if branch exists
         if branch_name not in [ref.name for ref in repo.refs]:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Branch '{branch_name}' not found"
             )
-        
-        # Get commits from the branch
+
+        # Try cache first
+        repo_scope = f"repo:{selected_id}" if selected_id else "repo:default"
+        cache_key = f"{repo_scope}:commits:{branch_name}"
+        if cache_cfg.get('enabled', True):
+            cached = cache_service.get(cache_key)
+            if cached is not None:
+                return cached
+
+        # Get commits from the branch (respect max_commits)
+        limit = int(cache_cfg.get('max_commits', 500))
         commits = []
-        for commit in repo.iter_commits(branch_name, max_count=50):
+        for commit in repo.iter_commits(branch_name, max_count=limit):
             commits.append({
                 "hash": commit.hexsha,
                 "short_hash": commit.hexsha[:8],
@@ -375,9 +388,13 @@ async def git_commits(
                 "date": commit.committed_datetime.isoformat(),
                 "files_changed": len(commit.stats.files)
             })
-        
+
+        # Store in cache
+        if cache_cfg.get('enabled', True):
+            cache_service.set(cache_key, commits, int(cache_cfg.get('ttl_seconds', 600)))
+
         return commits
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -385,7 +402,6 @@ async def git_commits(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get commits: {str(e)}"
         )
-
 
 @router.get("/files/{commit_hash}")
 async def git_files(
@@ -597,7 +613,17 @@ async def get_file_last_change(
 async def get_file_complete_history(file_path: str, from_commit: str = None, current_user: str = Depends(verify_token)):
     """Get the complete history of a file from a specific commit backwards to its creation."""
     try:
+        from settings_manager import settings_manager
+        cache_cfg = settings_manager.get_cache_settings()
+        selected_id = settings_manager.get_selected_git_repository()
         repo = get_git_repo()
+        # Cache key per file and starting point
+        repo_scope = f"repo:{selected_id}" if selected_id else "repo:default"
+        cache_key = f"{repo_scope}:filehistory:{from_commit or 'HEAD'}:{file_path}"
+        if cache_cfg.get('enabled', True):
+            cached = cache_service.get(cache_key)
+            if cached is not None:
+                return cached
         
         # Start from the specified commit or HEAD
         start_commit = from_commit if from_commit else "HEAD"
@@ -678,12 +704,15 @@ async def get_file_complete_history(file_path: str, from_commit: str = None, cur
                 "change_type": change_type
             })
         
-        return {
+        result = {
             "file_path": file_path,
             "from_commit": start_commit,
             "total_commits": len(history_commits),
             "commits": history_commits
         }
+        if cache_cfg.get('enabled', True):
+            cache_service.set(cache_key, result, int(cache_cfg.get('ttl_seconds', 600)))
+        return result
         
     except (InvalidGitRepositoryError, GitCommandError) as e:
         raise HTTPException(

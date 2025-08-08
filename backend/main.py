@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from fastapi import FastAPI, Depends
+import asyncio
 
 # Import routers
 from routers.auth import router as auth_router
@@ -162,3 +163,82 @@ if __name__ == "__main__":
     from config import settings
     
     uvicorn.run(app, host="0.0.0.0", port=settings.port)
+
+# Startup prefetch for Git cache (commits, optionally refresh loop)
+@app.on_event("startup")
+async def startup_prefetch_cache():
+    """Warm up in-memory cache for Git commits on startup, and optionally refresh."""
+    try:
+        # Local imports to avoid circular dependencies at import time
+        from settings_manager import settings_manager
+        from routers.git import get_git_repo
+        from services.cache_service import cache_service
+
+        cache_cfg = settings_manager.get_cache_settings()
+        if not cache_cfg.get("enabled", True):
+            logger.info("Cache disabled; skipping startup prefetch")
+            return
+
+        async def prefetch_commits_once():
+            try:
+                repo = get_git_repo()
+                selected_id = settings_manager.get_selected_git_repository()
+                # Determine branch; handle empty repos safely
+                try:
+                    branch_name = repo.active_branch.name
+                except Exception:
+                    logger.warning("No active branch detected; skipping commits prefetch")
+                    return
+
+                # Skip if repo has no valid HEAD
+                try:
+                    if not repo.head.is_valid():
+                        logger.info("Repository has no commits yet; nothing to prefetch")
+                        return
+                except Exception:
+                    logger.info("Unable to validate HEAD; skipping prefetch")
+                    return
+
+                # Build commits payload similar to /api/git/commits
+                limit = int(cache_cfg.get("max_commits", 500))
+                commits = []
+                for commit in repo.iter_commits(branch_name, max_count=limit):
+                    commits.append({
+                        "hash": commit.hexsha,
+                        "short_hash": commit.hexsha[:8],
+                        "message": commit.message.strip(),
+                        "author": {
+                            "name": commit.author.name,
+                            "email": commit.author.email,
+                        },
+                        "date": commit.committed_datetime.isoformat(),
+                        "files_changed": len(commit.stats.files),
+                    })
+
+                ttl = int(cache_cfg.get("ttl_seconds", 600))
+                repo_scope = f"repo:{selected_id}" if selected_id else "repo:default"
+                cache_key = f"{repo_scope}:commits:{branch_name}"
+                cache_service.set(cache_key, commits, ttl)
+                logger.info(f"Prefetched {len(commits)} commits for branch '{branch_name}' (ttl={ttl}s)")
+            except Exception as e:
+                logger.warning(f"Startup prefetch failed: {e}")
+
+        async def refresh_loop():
+            # Periodically refresh cache if configured
+            interval_min = int(cache_cfg.get("refresh_interval_minutes", 0))
+            if interval_min <= 0:
+                return
+            # Small initial delay to let app finish bootstrapping
+            await asyncio.sleep(2)
+            while True:
+                await prefetch_commits_once()
+                await asyncio.sleep(interval_min * 60)
+
+        # Kick off a one-time prefetch without blocking startup (if enabled)
+        if cache_cfg.get("prefetch_on_startup", True):
+            asyncio.create_task(prefetch_commits_once())
+        # Start background refresh if requested
+        if int(cache_cfg.get("refresh_interval_minutes", 0)) > 0:
+            asyncio.create_task(refresh_loop())
+    except Exception as e:
+        logger.warning(f"Failed to initialize cache prefetch: {e}")

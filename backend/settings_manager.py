@@ -37,6 +37,15 @@ class GitSettings:
     sync_interval: int = 15
     verify_ssl: bool = True
 
+@dataclass
+class CacheSettings:
+    """Cache configuration for Git data"""
+    enabled: bool = True
+    ttl_seconds: int = 600  # 10 minutes
+    prefetch_on_startup: bool = True
+    refresh_interval_minutes: int = 15  # background refresh cadence
+    max_commits: int = 500  # limit per branch
+
 class SettingsManager:
     """Manages application settings in SQLite database"""
     
@@ -60,9 +69,10 @@ class SettingsManager:
             )
         else:
             self.default_nautobot = NautobotSettings()
-            
+
         self.default_git = GitSettings()
-        
+        self.default_cache = CacheSettings()
+
         # Initialize database
         self.init_database()
     
@@ -109,6 +119,20 @@ class SettingsManager:
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
+
+                # Create cache_settings table
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS cache_settings (
+                        id INTEGER PRIMARY KEY,
+                        enabled BOOLEAN NOT NULL DEFAULT 1,
+                        ttl_seconds INTEGER NOT NULL DEFAULT 600,
+                        prefetch_on_startup BOOLEAN NOT NULL DEFAULT 1,
+                        refresh_interval_minutes INTEGER NOT NULL DEFAULT 15,
+                        max_commits INTEGER NOT NULL DEFAULT 500,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
                 
                 # Run database migrations
                 self._run_migrations(cursor)
@@ -123,6 +147,11 @@ class SettingsManager:
                 if cursor.fetchone()[0] == 0:
                     logger.info("Inserting default Git settings")
                     self._insert_default_git_settings(cursor)
+
+                cursor.execute('SELECT COUNT(*) FROM cache_settings')
+                if cursor.fetchone()[0] == 0:
+                    logger.info("Inserting default Cache settings")
+                    self._insert_default_cache_settings(cursor)
                 
                 # Set database version
                 cursor.execute('''
@@ -148,6 +177,24 @@ class SettingsManager:
             if 'verify_ssl' not in columns:
                 logger.info("Adding verify_ssl column to git_settings table")
                 cursor.execute('ALTER TABLE git_settings ADD COLUMN verify_ssl BOOLEAN NOT NULL DEFAULT 1')
+            
+            # Ensure cache_settings table exists or has all columns
+            cursor.execute("PRAGMA table_info(cache_settings)")
+            cache_columns = [column[1] for column in cursor.fetchall()]
+            if not cache_columns:
+                logger.info("Creating cache_settings table via migration")
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS cache_settings (
+                        id INTEGER PRIMARY KEY,
+                        enabled BOOLEAN NOT NULL DEFAULT 1,
+                        ttl_seconds INTEGER NOT NULL DEFAULT 600,
+                        prefetch_on_startup BOOLEAN NOT NULL DEFAULT 1,
+                        refresh_interval_minutes INTEGER NOT NULL DEFAULT 15,
+                        max_commits INTEGER NOT NULL DEFAULT 500,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
                 
         except sqlite3.Error as e:
             logger.error(f"Migration failed: {e}")
@@ -177,6 +224,19 @@ class SettingsManager:
             self.default_git.config_path,
             self.default_git.sync_interval,
             self.default_git.verify_ssl
+        ))
+
+    def _insert_default_cache_settings(self, cursor):
+        """Insert default Cache settings"""
+        cursor.execute('''
+            INSERT INTO cache_settings (enabled, ttl_seconds, prefetch_on_startup, refresh_interval_minutes, max_commits)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            int(self.default_cache.enabled),
+            self.default_cache.ttl_seconds,
+            int(self.default_cache.prefetch_on_startup),
+            self.default_cache.refresh_interval_minutes,
+            self.default_cache.max_commits
         ))
     
     def get_nautobot_settings(self) -> Optional[Dict[str, Any]]:
@@ -241,8 +301,73 @@ class SettingsManager:
         return {
             'nautobot': self.get_nautobot_settings(),
             'git': self.get_git_settings(),
+            'cache': self.get_cache_settings(),
             'metadata': self._get_metadata()
         }
+
+    def get_cache_settings(self) -> Dict[str, Any]:
+        """Get current Cache settings"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM cache_settings ORDER BY id DESC LIMIT 1')
+                row = cursor.fetchone()
+                if row:
+                    return {
+                        'enabled': bool(row['enabled']),
+                        'ttl_seconds': int(row['ttl_seconds']),
+                        'prefetch_on_startup': bool(row['prefetch_on_startup']),
+                        'refresh_interval_minutes': int(row['refresh_interval_minutes']),
+                        'max_commits': int(row['max_commits'])
+                    }
+                return asdict(self.default_cache)
+        except sqlite3.Error as e:
+            logger.error(f"Error getting Cache settings: {e}")
+            self._handle_database_corruption()
+            return asdict(self.default_cache)
+
+    def update_cache_settings(self, settings: Dict[str, Any]) -> bool:
+        """Update Cache settings"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT COUNT(*) FROM cache_settings')
+                count = cursor.fetchone()[0]
+                if count == 0:
+                    cursor.execute('''
+                        INSERT INTO cache_settings (enabled, ttl_seconds, prefetch_on_startup, refresh_interval_minutes, max_commits)
+                        VALUES (?, ?, ?, ?, ?)
+                    ''', (
+                        int(settings.get('enabled', self.default_cache.enabled)),
+                        int(settings.get('ttl_seconds', self.default_cache.ttl_seconds)),
+                        int(settings.get('prefetch_on_startup', self.default_cache.prefetch_on_startup)),
+                        int(settings.get('refresh_interval_minutes', self.default_cache.refresh_interval_minutes)),
+                        int(settings.get('max_commits', self.default_cache.max_commits))
+                    ))
+                else:
+                    cursor.execute('''
+                        UPDATE cache_settings SET 
+                            enabled = ?,
+                            ttl_seconds = ?,
+                            prefetch_on_startup = ?,
+                            refresh_interval_minutes = ?,
+                            max_commits = ?,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = (SELECT id FROM cache_settings ORDER BY id DESC LIMIT 1)
+                    ''', (
+                        int(settings.get('enabled', self.default_cache.enabled)),
+                        int(settings.get('ttl_seconds', self.default_cache.ttl_seconds)),
+                        int(settings.get('prefetch_on_startup', self.default_cache.prefetch_on_startup)),
+                        int(settings.get('refresh_interval_minutes', self.default_cache.refresh_interval_minutes)),
+                        int(settings.get('max_commits', self.default_cache.max_commits))
+                    ))
+                conn.commit()
+                logger.info("Cache settings updated successfully")
+                return True
+        except sqlite3.Error as e:
+            logger.error(f"Error updating Cache settings: {e}")
+            return False
     
     def update_nautobot_settings(self, settings: Dict[str, Any]) -> bool:
         """Update Nautobot settings"""
@@ -355,6 +480,9 @@ class SettingsManager:
         if 'git' in settings:
             success &= self.update_git_settings(settings['git'])
         
+        if 'cache' in settings:
+            success &= self.update_cache_settings(settings['cache'])
+        
         return success
     
     def _get_metadata(self) -> Dict[str, Any]:
@@ -419,10 +547,12 @@ class SettingsManager:
                 # Clear existing settings
                 cursor.execute('DELETE FROM nautobot_settings')
                 cursor.execute('DELETE FROM git_settings')
+                cursor.execute('DELETE FROM cache_settings')
                 
                 # Insert defaults
                 self._insert_default_nautobot_settings(cursor)
                 self._insert_default_git_settings(cursor)
+                self._insert_default_cache_settings(cursor)
                 
                 conn.commit()
                 logger.info("Settings reset to defaults")
