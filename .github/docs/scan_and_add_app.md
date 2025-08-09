@@ -43,7 +43,7 @@ This app is a two-step wizard for discovering devices on local networks, authent
    - Add a button labeled **Onboard** below the table.
    - When clicked, send the selected devices (IP + credential) to the backend for onboarding.
    - The backend should onboard each selected device via the Nautobot onboard app.
-
+4. Use Bootstrap as UI/UX Library.
 ---
 
 ## Backend Requirements
@@ -59,12 +59,12 @@ This app is a two-step wizard for discovering devices on local networks, authent
 
 ## Concurrency & Performance
 - Limit the number of hosts probe to 10
-- The global timeout per host should be 500ms
+- Implement separate timeouts: ping_timeout=1500ms, login_timeout=5s
 - An abort Mechanism is not needed
 
 ## Credential Trial Logic
 - Credentials are used in the provided order
-- If a credentials work stop and use this credential
+- If a credentials work stop on first and use this credential
 
 ## Device Type Detection
 - First use ios then nxos and then iosxr
@@ -78,18 +78,21 @@ This app is a two-step wizard for discovering devices on local networks, authent
 
 ## Result Data Model
 - Fields per discovered device: {ip, credential_id, device_type, hostname, platform}
+- For linux map: hostname=uname -n, platform=linux
 - Do not include unreachable devices
 
 ## Step Transition UX
 - While scan runs: Switch to Step 2 with streaming updates
-- Single blocking request is acceptable
+- Single blocking request is acceptable; Do a Simple blocking + periodic frontend polling
 
 ## Long-Running Job Handling
 - It is not necessary to do a polling. 
 
 ## Onboarding Action
+- Add a table with the following columns: Hostname, IP-Address, Platform, Location, Namespace, Role, Status, Interface Status, IP Status
+- The values are all editable cells with dropdowns (see the onboarding app and use this dropdown)
+- The location should be editable. Look att the onboarding app. THere is a nice looking filter mechanism.
 ### Cisco
-- Add a table with the following columns: Location, Namespace, Role, Status, Interface Status, IP Status
 - Set default values "Active" for Status, Interface Status, IP Status
 - Set default value "Global" for Namespace
 - Set default value "network" for role
@@ -99,11 +102,12 @@ This app is a two-step wizard for discovering devices on local networks, authent
 - Set default value "server" for role
 
 ### Onboarding
-- To onboard a cisco device use the well known api of the onboarding app to onboard a device. Run it asynchronously with a job ID
+- To onboard a cisco device use the the api /api/nautobot/devices/onboard of the backend to onboard a device. Run it asynchronously with a job ID
 - To onboard a Linux server add the server to an inventory.yaml
 
 ## Inventory File Option
 - To add a host to the inventory use a template that the user has specified in the "Settings Templates" App. All the linux hosts are added to a python dictionary named "all_devices". Use this dict to render the specified template.
+- Inventory file path: ./data/inventory/inventory_{jobid}.yaml (create folder if missing)
 
 ## Validation & Error Messaging
 - Reject invalid CIDR early (client-side)
@@ -115,7 +119,7 @@ This app is a two-step wizard for discovering devices on local networks, authent
 - Send store scan results to frontend only
 
 ## Retry Logic
-- Retry failed connection attempts: 2
+- Retry failed connection attempts: 3 for each device
 
 ## Device Uniqueness
 - If same IP appears via multiple networks (overlap), ensure only one entry
@@ -125,16 +129,17 @@ This app is a two-step wizard for discovering devices on local networks, authent
 
 ## UX Polishing
 - Show counts: total hosts scanned, alive, authenticated.
-- Show progress bar
+- Show progress bar. The progress bar should be determinate (percent complete) based on total candidate IP count
 
 ## Failure Classification
 - Distinguish “host unreachable” vs “auth failed” vs “driver not supported”
+- Add a counter for failures (auth failed / unreachable) and display it. Include summary counts.
 
 ## Error Codes (API)
 - Standardize: 400 (bad input), 422 (validation), 504 (scan timeout)
 
 ## Rate of Napalm Driver Attempts
-- For each IP use a prioritized list: ios -> nxos -> linux until success or failure.
+- For each IP use a prioritized list: ios -> nxos -> iosxr -> linux until success or failure.
 
 ## Logging
 - Logging must not be stored but printed to the console
