@@ -13,10 +13,85 @@
 <body class="nav-md">
   <div class="container body">
     <div class="main_container">
+      <div class="col-md-3 left_col">
+        <div class="left_col scroll-view">
+          <div class="navbar nav_title" style="border:0;">
+            <a href="index.html" class="site_title"><i class="fas fa-paw"></i> <span>Cockpit!</span></a>
+          </div>
+          <div class="clearfix"></div>
+          <div class="profile clearfix">
+            <div class="profile_pic"></div>
+            <div class="profile_info">
+              <span id="welcome-message">Welcome,</span>
+              <h2 id="sidebar-username">Loading...</h2>
+            </div>
+          </div>
+          <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+            <div class="menu_section">
+              <h3>General</h3>
+              <ul class="nav side-menu">
+                <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a><i class="fas fa-rocket"></i> Onboarding <span class="fas fa-chevron-down"></span></a>
+                  <ul class="nav child_menu">
+                    <li><a href="onboard-device.html"><i class="fas fa-plus-circle"></i> Onboard Device</a></li>
+                    <li><a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a></li>
+                    <li><a href="scan-and-add.html" class="current-page"><i class="fas fa-search-plus"></i> Scan & Add</a></li>
+                  </ul>
+                </li>
+                <li><a><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span></a>
+                  <ul class="nav child_menu">
+                    <li><a href="backup.html">Backup</a></li>
+                    <li><a href="compare.html">Compare</a></li>
+                  </ul>
+                </li>
+                <li><a><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span></a>
+                  <ul class="nav child_menu">
+                    <li><a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a></li>
+                  </ul>
+                </li>
+                <li><a><i class="fas fa-wrench"></i> Settings <span class="fas fa-chevron-down"></span></a>
+                  <ul class="nav child_menu">
+                    <li><a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a></li>
+                    <li><a href="settings-templates.html"><i class="fas fa-file-code"></i> Templates</a></li>
+                    <li><a href="settings-git.html"><i class="fab fa-git-alt"></i> Git Management</a></li>
+                    <li><a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a></li>
+                    <li><a href="settings-credentials.html"><i class="fas fa-key"></i> Credentials</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebar-footer hidden-small">
+            <a href="settings-nautobot.html" title="Settings"><span class="fas fa-cog" aria-hidden="true"></span></a>
+            <a title="FullScreen"><span class="fas fa-expand" aria-hidden="true"></span></a>
+            <a title="Lock"><span class="fas fa-eye-slash" aria-hidden="true"></span></a>
+            <a title="Logout" href="login.html"><span class="fas fa-power-off" aria-hidden="true"></span></a>
+          </div>
+        </div>
+      </div>
+      <div class="top_nav">
+        <div class="nav_menu">
+          <div class="nav toggle"><a id="menu_toggle"><i class="fas fa-bars"></i></a></div>
+          <nav class="nav navbar-nav">
+            <ul class=" navbar-right">
+              <li class="nav-item dropdown open" style="padding-left:15px;">
+                <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">
+                  <span id="topbar-username">User</span>
+                </a>
+                <div class="dropdown-menu dropdown-usermenu pull-right" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="javascript:;" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+                </div>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
       <div class="right_col" role="main">
         <span id="nav-username" style="display:none"></span>
-        <div class="page-title"><h3>Scan & Add Devices</h3></div>
-        <div class="x_panel">
+        <div class="page-title" style="margin-top:10px;margin-bottom:15px;">
+          <h3 style="margin:0;">Scan & Add Devices</h3>
+        </div>
+        <div class="x_panel" style="margin-top:0;">
           <div class="x_content">
             <div class="steps-container" style="display:flex;align-items:center;margin-bottom:25px;">
               <div class="step active" id="step1-indicator">
@@ -223,7 +298,21 @@
     });
 
     async function initPage(){
-      try { await loadCredentials(); setupEventListeners(); } catch(e){ console.error('Init failed', e); }
+      try {
+        // Populate username in sidebar/topbar
+        const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+        const uname = userInfo.username || 'User';
+        const sb = document.getElementById('sidebar-username'); if(sb) sb.textContent = uname;
+        const tb = document.getElementById('topbar-username'); if(tb) tb.textContent = uname;
+        await loadCredentials();
+        setupEventListeners();
+  // Normalize initial CIDR button states
+  updateCIDRButtons();
+  // Normalize initial credential button states
+  updateCredentialButtons();
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.addEventListener('click', e => { e.preventDefault(); if(window.authManager) window.authManager.logout(); });
+      } catch(e){ console.error('Init failed', e); }
     }
 
     async function loadCredentials(){
@@ -282,7 +371,9 @@
       const groups=document.querySelectorAll('.cidr-input-group');
       groups.forEach((g,i)=>{
         const removeBtn=g.querySelector('.remove-cidr');
-        if(removeBtn) removeBtn.style.display=groups.length>1?'inline-block':'none';
+        const addBtn=g.querySelector('.add-cidr');
+        if(removeBtn) removeBtn.style.display = groups.length>1 ? 'inline-block':'none';
+        if(addBtn) addBtn.style.display = (i === groups.length -1) ? 'inline-block':'none';
       });
     }
     function addCredential(){
@@ -297,7 +388,18 @@
     function removeCredential(group){ group.remove(); updateCredentialButtons(); }
     function updateCredentialButtons(){
       const groups=document.querySelectorAll('.credential-select-group');
-      groups.forEach(g=>{ const btn=g.querySelector('.remove-credential'); if(btn) btn.style.display=groups.length>1?'inline-block':'none';});
+      groups.forEach((g,i)=>{
+        const removeBtn=g.querySelector('.remove-credential');
+        const addBtn=g.querySelector('.add-credential');
+        if(removeBtn) removeBtn.style.display = groups.length>1 ? 'inline-block':'none';
+        if(addBtn){
+          if(groups.length >= credentialsData.length){
+            addBtn.style.display='none';
+          } else {
+            addBtn.style.display = (i === groups.length -1) ? 'inline-block':'none';
+          }
+        }
+      });
     }
 
     async function startScan(e){
@@ -340,831 +442,6 @@
   </script>
 </body>
 </html>
-                      <div class="row">
-                        <div class="col-md-12">
-                          <h3>Device Onboarding</h3>
-                          <p class="text-muted">Configure and onboard discovered devices.</p>
-
-                          <!-- Device Results Table -->
-                          <div class="table-responsive">
-                            <table id="devices-table" class="table table-striped table-bordered">
-                              <thead>
-                                <tr>
-                                  <th width="40"><input type="checkbox" id="select-all-devices"></th>
-                                  <th>IP Address</th>
-                                  <th>Hostname</th>
-                                  <th>Device Type</th>
-                                  <th>Platform</th>
-                                  <th>Credential</th>
-                                  <th width="120">Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody id="devices-tbody">
-                                <!-- Populated by JavaScript -->
-                              </tbody>
-                            </table>
-                          </div>
-
-                          <!-- Onboarding Actions -->
-                          <div class="form-actions">
-                            <button type="button" class="btn btn-success btn-lg" id="onboard-selected-btn" disabled>
-                              <i class="fa fa-upload"></i> Onboard Selected Devices
-                            </button>
-                            <button type="button" class="btn btn-default" id="back-to-scan-btn">
-                              <i class="fa fa-arrow-left"></i> Back to Scanning
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- /page content -->
-
-        <!-- footer content -->
-        <footer>
-          <div class="pull-right">
-            Cockpit Network Management Dashboard
-          </div>
-          <div class="clearfix"></div>
-        </footer>
-        <!-- /footer content -->
-                </div> <!-- /.x_content -->
-              </div> <!-- /.x_panel -->
-            </div> <!-- /.col-12 -->
-          </div> <!-- /.row -->
-        </div> <!-- /.right_col -->
-      </div> <!-- /.main_container -->
-    </div> <!-- /.container.body -->
-
-    <!-- Authentication check -->
-    <script>
-      if (!localStorage.getItem('auth_token')) {
-        window.location.href = 'login.html';
-      }
-    </script>
-
-<!-- Detached modal placed just before closing body for clean stacking context -->
-<div class="modal" id="device-metadata-modal" tabindex="-1" aria-labelledby="device-metadata-modal-label" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="device-metadata-modal-label">Device Configuration</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="device-metadata-form">
-          <input type="hidden" id="device-ip">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label>IP Address</label>
-                <input type="text" class="form-control" id="device-ip-display" readonly>
-              </div>
-              <div class="form-group">
-                <label>Hostname</label>
-                <input type="text" class="form-control" id="device-hostname" placeholder="Auto-detected or custom">
-              </div>
-              <div class="form-group">
-                <label>Platform</label>
-                <input type="text" class="form-control" id="device-platform" placeholder="cisco_ios, cisco_nxos, linux">
-              </div>
-              <div class="form-group">
-                <label>Device Type</label>
-                <select class="form-control" id="device-type" readonly>
-                  <option value="cisco">Cisco Device</option>
-                  <option value="linux">Linux Server</option>
-                  <option value="unknown">Unknown Device</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6" id="cisco-fields">
-              <div class="form-group">
-                <label>Role</label>
-                <input type="text" class="form-control" id="device-role" placeholder="Core, Edge, Access...">
-              </div>
-              <div class="form-group">
-                <label>Location</label>
-                <input type="text" class="form-control" id="device-location" placeholder="Data Center 1">
-              </div>
-              <div class="form-group">
-                <label>Namespace</label>
-                <input type="text" class="form-control" id="device-namespace" value="Global">
-              </div>
-              <div class="form-group">
-                <label>Status</label>
-                <select class="form-control" id="device-status">
-                  <option>Active</option>
-                  <option>Planned</option>
-                  <option>Staging</option>
-                  <option>Retired</option>
-                  <option>Failed</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Interface Status</label>
-                <select class="form-control" id="device-interface-status">
-                  <option>Active</option>
-                  <option>Provisioning</option>
-                  <option>Error</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>IP Status</label>
-                <select class="form-control" id="device-ip-status">
-                  <option>Active</option>
-                  <option>Provisioning</option>
-                  <option>Error</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6" id="linux-fields" style="display:none;">
-              <div class="form-group">
-                <label>Role</label>
-                <input type="text" class="form-control" id="linux-role" value="server">
-              </div>
-              <div class="form-group">
-                <label>Location</label>
-                <input type="text" class="form-control" id="linux-location" placeholder="Data Center 1">
-              </div>
-              <div class="form-group">
-                <label>Status</label>
-                <select class="form-control" id="linux-status">
-                  <option>Active</option>
-                  <option>Planned</option>
-                  <option>Staging</option>
-                  <option>Retired</option>
-                  <option>Failed</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="form-group" style="margin-top:15px;">
-            <button type="button" class="btn btn-primary" id="save-device-metadata">Save</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-  /* Defensive styles to prevent transient gray flash */
-  #device-metadata-modal .modal-content { background:#fff !important; }
-  #device-metadata-modal .modal-body { background:#fff; }
-  #device-metadata-modal .modal-header { background:#f7f7f7; }
-</style>
-
-    <!-- Auth Manager -->
-    <script src="js/auth.js"></script>
-    <style>
-      .step-indicator {
-        margin-bottom: 30px;
-      }
-      
-      .step-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px 0;
-      }
-      
-      .step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        min-width: 120px;
-      }
-      
-      .step-number {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: #e9ecef;
-        color: #6c757d;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin-bottom: 8px;
-        border: 2px solid #e9ecef;
-      }
-      
-      .step.active .step-number {
-        background-color: #337ab7;
-        color: white;
-        border-color: #337ab7;
-      }
-      
-      .step-title {
-        font-size: 14px;
-        color: #6c757d;
-        font-weight: 500;
-      }
-      
-      .step.active .step-title {
-        color: #337ab7;
-        font-weight: bold;
-      }
-      
-      .step-divider {
-        width: 100px;
-        height: 2px;
-        background-color: #e9ecef;
-        margin: 0 20px;
-      }
-      
-      .cidr-input-group, .credential-select-group {
-        margin-bottom: 10px;
-      }
-      
-      .progress-stats .stat-item {
-        margin-bottom: 10px;
-      }
-      
-      .scan-metrics {
-        margin-top: 20px;
-      }
-      
-      .device-config-btn {
-        margin-right: 5px;
-      }
-      
-      #cisco-fields, #linux-fields {
-        border-left: 3px solid #337ab7;
-        padding-left: 15px;
-      }
-      
-      /* Minimal optional modal tweaks (keep Bootstrap defaults) */
-      .modal .modal-header {
-        background:#f7f7f7;
-        border-bottom:1px solid #e5e5e5;
-      }
-      .modal .modal-footer {
-        background:#f7f7f7;
-        border-top:1px solid #e5e5e5;
-      }
-    </style>
-
-    <script>
-      // Authentication Manager Integration
-      let authManager;
-      let credentialsData = [];
-      let scanJob = null;
-      let discoveredDevices = [];
-      let deviceMetadata = {};
-  // (Removed previous paint stabilization listeners; using rAF in show instead)
-
-      // Initialize when auth manager is ready
-      window.addEventListener('load', async () => {
-        if (window.authManager) {
-          authManager = window.authManager;
-          await initializePage();
-        } else {
-          setTimeout(async () => {
-            authManager = window.authManager;
-            await initializePage();
-          }, 100);
-        }
-      });
-
-      async function initializePage() {
-        // Set username in navigation (like other pages)
-        const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
-        const username = userInfo.username || 'User';
-                  <!-- Step 2: Device Onboarding -->
-                  <div id="step2-content" class="step-content" style="display:none;">
-        });
-      }
-
-      function addCredentialSelect() {
-        const container = document.getElementById('credentials-container');
-        const groups = container.querySelectorAll('.credential-select-group');
-        
-        if (groups.length >= credentialsData.length) {
-          showAlert('All available credentials already selected.', 'warning');
-          return;
-        }
-
-        const newGroup = document.createElement('div');
-        newGroup.className = 'credential-select-group';
-        newGroup.innerHTML = `
-          <div class="input-group">
-            <select class="form-control credential-select" required>
-              <option value="">Select credentials...</option>
-            </select>
-            <span class="input-group-btn">
-              <button class="btn btn-danger remove-credential" type="button">
-                <i class="fa fa-minus"></i>
-              </button>
-              <button class="btn btn-primary add-credential" type="button">
-                <i class="fa fa-plus"></i>
-              </button>
-            </span>
-          </div>
-        `;
-        
-        container.appendChild(newGroup);
-        
-        // Populate only the new credential select dropdown
-        const newSelect = newGroup.querySelector('.credential-select');
-        populateCredentialSelect(newSelect);
-        
-        updateCredentialRemoveButtons();
-      }
-
-      function removeCredentialSelect(button) {
-        const group = button.closest('.credential-select-group');
-        group.remove();
-        updateCredentialRemoveButtons();
-      }
-
-      function updateCredentialRemoveButtons() {
-        const groups = document.querySelectorAll('.credential-select-group');
-        groups.forEach((group, index) => {
-          const removeBtn = group.querySelector('.remove-credential');
-          const addBtn = group.querySelector('.add-credential');
-          
-          // Show remove button only if more than one group
-          removeBtn.style.display = groups.length > 1 ? 'inline-block' : 'none';
-          
-          // Show add button only on the last group
-          addBtn.style.display = index === groups.length - 1 ? 'inline-block' : 'none';
-        });
-      }
-
-      async function startScan(e) {
-        e.preventDefault();
-        
-        // Collect and validate CIDR inputs
-        const cidrInputs = document.querySelectorAll('.cidr-input');
-        const cidrs = Array.from(cidrInputs)
-          .map(input => input.value.trim())
-          .filter(cidr => cidr);
-        
-        if (cidrs.length === 0) {
-          showAlert('Please enter at least one network range.', 'warning');
-          return;
-        }
-
-        // Validate CIDR format
-        for (const cidr of cidrs) {
-          if (!isValidCIDR(cidr)) {
-            showAlert(`Invalid CIDR format: ${cidr}`, 'danger');
-            return;
-          }
-        }
-
-        // Collect and validate credentials
-        const credentialSelects = document.querySelectorAll('.credential-select');
-        const credentialIds = Array.from(credentialSelects)
-          .map(select => parseInt(select.value))
-          .filter(id => !isNaN(id));
-        
-        if (credentialIds.length === 0) {
-          showAlert('Please select at least one credential.', 'warning');
-          return;
-        }
-
-        // Check for duplicate credentials
-        const uniqueCredentials = [...new Set(credentialIds)];
-        if (uniqueCredentials.length !== credentialIds.length) {
-          showAlert('Duplicate credentials selected. Please choose unique credentials.', 'warning');
-          return;
-        }
-
-        // Get discovery mode
-        const discoveryMode = document.getElementById('discovery-mode').value;
-        if (!discoveryMode) {
-          showAlert('Please select a discovery mode.', 'warning');
-          return;
-        }
-
-        try {
-          // Disable form and show progress
-          document.getElementById('start-scan-btn').disabled = true;
-          document.getElementById('scan-progress').style.display = 'block';
-
-          // Start scan
-          const response = await authManager.apiRequest('/api/scan/start', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              cidrs: cidrs,
-              credential_ids: uniqueCredentials,
-              discovery_mode: discoveryMode
-            })
-          });
-
-          scanJob = response;
-          document.getElementById('job-id').textContent = response.job_id;
-          document.getElementById('scan-status').textContent = response.state;
-
-          // Start polling for progress
-          pollScanProgress();
-
-        } catch (error) {
-          console.error('Failed to start scan:', error);
-          showAlert('Failed to start network scan. Please try again.', 'danger');
-          document.getElementById('start-scan-btn').disabled = false;
-          document.getElementById('scan-progress').style.display = 'none';
-        }
-      }
-
-      async function pollScanProgress() {
-        if (!scanJob) return;
-
-        try {
-          const response = await authManager.apiRequest(`/api/scan/${scanJob.job_id}/status`);
-          
-          // Update progress display
-          updateProgressDisplay(response);
-          
-          // Check if scan completed
-          if (response.state === 'finished') {
-            discoveredDevices = response.results;
-            showAlert('Network scan completed!', 'success');
-            populateDevicesTable();
-            showStep(2);
-          } else if (response.state === 'failed') {
-            showAlert('Network scan failed. Please try again.', 'danger');
-            resetScanForm();
-          } else {
-            // Continue polling
-            setTimeout(pollScanProgress, 2000);
-          }
-
-        } catch (error) {
-          console.error('Failed to get scan status:', error);
-          showAlert('Lost connection to scan job. Please refresh the page.', 'danger');
-          resetScanForm();
-        }
-      }
-
-      function updateProgressDisplay(status) {
-        const progress = status.progress;
-        
-        // Update progress bar
-        const percentage = progress.total > 0 ? (progress.scanned / progress.total * 100) : 0;
-        document.getElementById('scan-progress-bar').style.width = `${percentage}%`;
-        document.getElementById('scan-progress-text').textContent = `${progress.scanned} / ${progress.total}`;
-        
-        // Update metrics
-        document.getElementById('metric-alive').textContent = progress.alive;
-        document.getElementById('metric-authenticated').textContent = progress.authenticated;
-        document.getElementById('metric-unreachable').textContent = progress.unreachable;
-        document.getElementById('metric-auth-failed').textContent = progress.auth_failed;
-        document.getElementById('metric-driver-na').textContent = progress.driver_not_supported;
-        
-        // Update status
-        document.getElementById('scan-status').textContent = status.state;
-      }
-
-      function populateDevicesTable() {
-        const tbody = document.getElementById('devices-tbody');
-        tbody.innerHTML = '';
-
-        discoveredDevices.forEach((device, index) => {
-          const credential = credentialsData.find(c => c.id === device.credential_id);
-          const credentialName = credential ? credential.name : 'Unknown';
-
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td><input type="checkbox" class="device-checkbox" data-ip="${device.ip}"></td>
-            <td>${device.ip}</td>
-            <td>${device.hostname || 'Unknown'}</td>
-            <td>${device.device_type}</td>
-            <td>${device.platform || 'Unknown'}</td>
-            <td>${credentialName}</td>
-            <td>
-              <button class="btn btn-sm btn-info device-config-btn" onclick="editDeviceMetadata('${device.ip}')">
-                <i class="fa fa-edit"></i> Configure
-              </button>
-            </td>
-          `;
-          tbody.appendChild(row);
-
-          // Initialize device metadata with scan results
-          deviceMetadata[device.ip] = {
-            ...device,
-            namespace: 'Global',
-            role: device.device_type === 'cisco' ? 'access-switch' : device.device_type === 'linux' ? 'server' : 'unknown',
-            status: 'Active',
-            interface_status: 'Active',
-            ip_status: 'Active'
-          };
-        });
-
-        // Update onboard button state
-        updateOnboardButton();
-        
-        // Setup device checkbox listeners
-        document.querySelectorAll('.device-checkbox').forEach(checkbox => {
-          checkbox.addEventListener('change', updateOnboardButton);
-        });
-      }
-
-      function showStep(stepNumber) {
-        // Update step indicators
-        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
-        document.getElementById(`step${stepNumber}-indicator`).classList.add('active');
-
-        // Show/hide step content
-        document.querySelectorAll('.step-content').forEach(content => {
-          content.style.display = 'none';
-        });
-        document.getElementById(`step${stepNumber}-content`).style.display = 'block';
-
-        if (stepNumber === 1) {
-          resetScanForm();
-        }
-      }
-
-      function resetScanForm() {
-        document.getElementById('start-scan-btn').disabled = false;
-        document.getElementById('scan-progress').style.display = 'none';
-        scanJob = null;
-        discoveredDevices = [];
-        deviceMetadata = {};
-      }
-
-      function toggleAllDevices() {
-        const selectAll = document.getElementById('select-all-devices');
-        const checkboxes = document.querySelectorAll('.device-checkbox');
-        
-        checkboxes.forEach(checkbox => {
-          checkbox.checked = selectAll.checked;
-        });
-        
-        updateOnboardButton();
-      }
-
-      function updateOnboardButton() {
-        const checkedBoxes = document.querySelectorAll('.device-checkbox:checked');
-        const onboardBtn = document.getElementById('onboard-selected-btn');
-        onboardBtn.disabled = checkedBoxes.length === 0;
-      }
-
-  let deviceModalInstance = null; // cache Bootstrap 5 modal instance
-
-  function editDeviceMetadata(ip) {
-        console.log('editDeviceMetadata called for IP:', ip);
-        const device = deviceMetadata[ip];
-        if (!device) {
-          console.error('No device metadata found for IP:', ip);
-          return;
-        }
-
-        console.log('Device data:', device);
-
-        // Populate modal with device data
-        document.getElementById('device-ip').value = ip;
-        document.getElementById('device-ip-display').value = ip;
-        document.getElementById('device-hostname').value = device.hostname || '';
-        document.getElementById('device-platform').value = device.platform || '';
-        document.getElementById('device-type').value = device.device_type;
-
-        // Show appropriate fields
-        toggleDeviceFields();
-
-        if (device.device_type === 'cisco') {
-          document.getElementById('device-location').value = device.location || '';
-          document.getElementById('device-namespace').value = device.namespace || 'Global';
-          document.getElementById('device-role').value = device.role || '';
-          document.getElementById('device-status').value = device.status || 'Active';
-          document.getElementById('device-interface-status').value = device.interface_status || 'Active';
-          document.getElementById('device-ip-status').value = device.ip_status || 'Active';
-        } else if (device.device_type === 'linux') {
-          document.getElementById('linux-role').value = device.role || 'server';
-          document.getElementById('linux-location').value = device.location || '';
-          document.getElementById('linux-status').value = device.status || 'Active';
-        } else if (device.device_type === 'unknown') {
-          // For unknown devices, no specific fields to initialize
-          // They only have the common hostname and platform fields
-        }
-
-        // Standard Bootstrap 5 modal usage
-        const modal = document.getElementById('device-metadata-modal');
-        if (!deviceModalInstance) {
-          deviceModalInstance = new bootstrap.Modal(modal, {
-            backdrop: true,
-            keyboard: true,
-            focus: true
-          });
-        }
-        // Performance + paint mitigation
-        const modalContent = modal.querySelector('.modal-content');
-        if (modalContent) {
-          // Ensure solid background before any Bootstrap classes manipulate opacity
-            modalContent.style.background = '#ffffff';
-            modalContent.style.opacity = '0.001';
-            modalContent.style.willChange = 'opacity';
-            // Force layout so background & initial opacity are committed
-            // eslint-disable-next-line no-unused-expressions
-            modalContent.getBoundingClientRect();
-        }
-        const startTs = performance.now();
-        const onceHandler = () => {
-          const dur = performance.now() - startTs;
-          window.modalPerf = window.modalPerf || [];
-          window.modalPerf.push(dur);
-          console.log(`[ModalPerf] Device metadata modal fully shown in ${dur.toFixed(1)} ms`);
-          if (modalContent) {
-            // Fade in quickly (short manual transition) to avoid perceptible flash
-            modalContent.style.transition = 'opacity 90ms linear';
-            requestAnimationFrame(() => {
-              modalContent.style.opacity = '1';
-              // Clean up willChange after animation
-              setTimeout(() => { modalContent.style.willChange = 'auto'; }, 120);
-            });
-          }
-          modal.removeEventListener('shown.bs.modal', onceHandler);
-        };
-        modal.addEventListener('shown.bs.modal', onceHandler);
-        // Defer show to next frame for smoother first paint
-        requestAnimationFrame(() => deviceModalInstance.show());
-      }
-
-      function toggleDeviceFields() {
-        const deviceType = document.getElementById('device-type').value;
-        const ciscoFields = document.getElementById('cisco-fields');
-        const linuxFields = document.getElementById('linux-fields');
-
-        if (deviceType === 'cisco') {
-          ciscoFields.style.display = 'block';
-          linuxFields.style.display = 'none';
-        } else if (deviceType === 'linux') {
-          ciscoFields.style.display = 'none';
-          linuxFields.style.display = 'block';
-        } else if (deviceType === 'unknown') {
-          // For unknown devices, hide both device-specific fields
-          ciscoFields.style.display = 'none';
-          linuxFields.style.display = 'none';
-        }
-      }
-
-      function saveDeviceMetadata() {
-        const ip = document.getElementById('device-ip').value;
-        const deviceType = document.getElementById('device-type').value;
-
-        if (!deviceMetadata[ip]) return;
-
-        // Update common fields
-        deviceMetadata[ip].hostname = document.getElementById('device-hostname').value;
-        deviceMetadata[ip].platform = document.getElementById('device-platform').value;
-
-        // Update type-specific fields
-        if (deviceType === 'cisco') {
-          deviceMetadata[ip].location = document.getElementById('device-location').value;
-          deviceMetadata[ip].namespace = document.getElementById('device-namespace').value;
-          deviceMetadata[ip].role = document.getElementById('device-role').value;
-          deviceMetadata[ip].status = document.getElementById('device-status').value;
-          deviceMetadata[ip].interface_status = document.getElementById('device-interface-status').value;
-          deviceMetadata[ip].ip_status = document.getElementById('device-ip-status').value;
-        } else if (deviceType === 'linux') {
-          deviceMetadata[ip].role = document.getElementById('linux-role').value;
-          deviceMetadata[ip].location = document.getElementById('linux-location').value;
-          deviceMetadata[ip].status = document.getElementById('linux-status').value;
-        } else if (deviceType === 'unknown') {
-          // For unknown devices, set minimal metadata
-          deviceMetadata[ip].role = 'unknown';
-          deviceMetadata[ip].status = 'Active';
-        }
-
-        if (deviceModalInstance) {
-          deviceModalInstance.hide();
-        }
-        
-        showAlert('Device configuration saved.', 'success');
-      }
-
-      // Diagnostic helper to view recent modal performance timings in console
-      window.dumpModalPerf = function() {
-        if (!window.modalPerf || !window.modalPerf.length) {
-          console.log('No modal performance data collected yet.');
-          return;
-        }
-        const arr = window.modalPerf.slice(-20);
-        const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
-        const max = Math.max(...arr); const min = Math.min(...arr);
-        console.table({
-          samples: arr.length,
-          last: arr[arr.length-1].toFixed(1)+' ms',
-          avg: avg.toFixed(1)+' ms',
-          min: min.toFixed(1)+' ms',
-          max: max.toFixed(1)+' ms'
-        });
-      };
-
-      async function onboardSelectedDevices() {
-        const checkedBoxes = document.querySelectorAll('.device-checkbox:checked');
-        const selectedIPs = Array.from(checkedBoxes).map(cb => cb.dataset.ip);
-
-        if (selectedIPs.length === 0) {
-          showAlert('Please select devices to onboard.', 'warning');
-          return;
-        }
-
-        // Prepare device list with metadata
-        const devices = selectedIPs.map(ip => {
-          const metadata = deviceMetadata[ip];
-          return {
-            ip: metadata.ip,
-            credential_id: metadata.credential_id,
-            device_type: metadata.device_type,
-            hostname: metadata.hostname,
-            platform: metadata.platform,
-            location: metadata.location,
-            namespace: metadata.namespace,
-            role: metadata.role,
-            status: metadata.status,
-            interface_status: metadata.interface_status,
-            ip_status: metadata.ip_status
-          };
-        });
-
-        try {
-          document.getElementById('onboard-selected-btn').disabled = true;
-          document.getElementById('onboard-selected-btn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Onboarding...';
-
-          const response = await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ devices })
-          });
-
-          let message = `Onboarding completed: ${response.accepted} devices processed.`;
-          if (response.cisco_queued > 0) {
-            message += ` ${response.cisco_queued} Cisco devices queued for Nautobot.`;
-          }
-          if (response.linux_added > 0) {
-            message += ` ${response.linux_added} Linux servers added to inventory.`;
-          }
-          if (response.inventory_path) {
-            message += ` Inventory file: ${response.inventory_path}`;
-          }
-
-          showAlert(message, 'success');
-
-        } catch (error) {
-          console.error('Onboarding failed:', error);
-          showAlert('Device onboarding failed. Please try again.', 'danger');
-        } finally {
-          document.getElementById('onboard-selected-btn').disabled = false;
-          document.getElementById('onboard-selected-btn').innerHTML = '<i class="fa fa-upload"></i> Onboard Selected Devices';
-        }
-      }
-
-      function isValidCIDR(cidr) {
-        const cidrPattern = /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/;
-        if (!cidrPattern.test(cidr)) return false;
-
-        const [ip, prefix] = cidr.split('/');
-        const prefixNum = parseInt(prefix);
-        
-        // Check prefix range and minimum /22
-        if (prefixNum < 22 || prefixNum > 32) return false;
-
-        // Validate IP octets
-        const octets = ip.split('.');
-        return octets.every(octet => {
-          const num = parseInt(octet);
-          return num >= 0 && num <= 255;
-        });
-      }
-
-      function showAlert(message, type = 'info') {
-        // Create and show Bootstrap alert
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible`;
-        alertDiv.innerHTML = `
-          <button type="button" class="close" data-dismiss="alert">&times;</button>
-          ${message}
-        `;
-        
-        // Insert at top of page content
-        const content = document.querySelector('.x_content');
-        content.insertBefore(alertDiv, content.firstChild);
-        
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-          if (window.$ && window.$.fn.fadeOut) {
-            $(alertDiv).fadeOut(() => alertDiv.remove());
-          } else {
-            // Fallback: simple fade
-            alertDiv.style.transition = 'opacity 0.5s';
-            alertDiv.style.opacity = '0';
-            setTimeout(() => alertDiv.remove(), 500);
-          }
-        }, 5000);
       }
 
       function logout() {
