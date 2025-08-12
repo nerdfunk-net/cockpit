@@ -185,6 +185,25 @@ class NautobotService:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(self.executor, self._sync_test_connection, url, token, timeout, verify_ssl)
 
+    async def onboard_device(self, device_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Onboard a device via Nautobot onboarding API."""
+        try:
+            # Call Nautobot onboarding endpoint
+            response = await self.rest_request(
+                "api/extras/jobs/nautobot_golden_config.jobs.OnboardingJob/run/",
+                method="POST",
+                data={
+                    "class_path": "nautobot_golden_config.jobs.OnboardingJob",
+                    "data": device_data
+                }
+            )
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Device onboarding failed: {e}")
+            raise Exception(f"Failed to onboard device: {str(e)}")
+
 
 # Global instance
 nautobot_service = NautobotService()
