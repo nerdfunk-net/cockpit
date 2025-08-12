@@ -334,7 +334,7 @@
                     </div>
 
                     <!-- Device Metadata Modal -->
-                    <div class="modal fade" id="device-metadata-modal" tabindex="-1" role="dialog" aria-labelledby="device-metadata-modal-label" aria-hidden="true">
+                    <div class="modal" id="device-metadata-modal" tabindex="-1" role="dialog" aria-labelledby="device-metadata-modal-label" aria-hidden="true">
                       <div class="modal-dialog modal-lg" role="document">
                         <div class="modal-content">
                           <div class="modal-header">
@@ -601,12 +601,27 @@
         margin: 30px auto;
       }
       
-      /* Fix modal content visibility */
+      /* Fix modal content visibility and force hardware acceleration */
       .modal-content {
         background-color: #fff;
         border: 1px solid rgba(0,0,0,.2);
         border-radius: 6px;
         box-shadow: 0 3px 9px rgba(0,0,0,.5);
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        will-change: opacity, transform;
+      }
+      
+      /* Disable modal fade transition to prevent gray screen */
+      .modal.fade .modal-dialog {
+        transition: none !important;
+        transform: none !important;
+      }
+      
+      /* Force immediate visibility */
+      .modal.show .modal-content {
+        opacity: 1 !important;
+        visibility: visible !important;
       }
     </style>
 
@@ -1087,69 +1102,35 @@
           // They only have the common hostname and platform fields
         }
 
-        // Show modal with multiple fallback methods
+        // Show modal using Bootstrap 5
         const modal = document.getElementById('device-metadata-modal');
         console.log('Modal element:', modal);
         
         try {
-          // Try Bootstrap 5 first
-          if (window.bootstrap && window.bootstrap.Modal) {
-            console.log('Using Bootstrap 5 Modal');
-            const modalInstance = new window.bootstrap.Modal(modal, {
-              backdrop: true,
-              keyboard: true,
-              focus: true
-            });
-            modalInstance.show();
-          }
-          // Try Bootstrap 4/3 with jQuery
-          else if (window.$ && window.$.fn.modal) {
-            console.log('Using jQuery Modal');
-            $(modal).modal({
-              backdrop: true,
-              keyboard: true,
-              show: true
-            });
-          }
-          // Manual fallback
-          else {
-            console.log('Using manual modal display');
-            // Create backdrop
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.id = 'manual-modal-backdrop';
-            document.body.appendChild(backdrop);
-            
-            // Show modal
-            modal.style.display = 'block';
-            modal.classList.add('show');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('modal-open');
-            
-            // Add click handler for backdrop
-            backdrop.addEventListener('click', () => {
-              closeModal();
-            });
-          }
+          // Force layout recalculation before showing modal
+          modal.offsetHeight;
+          
+          const modalInstance = new bootstrap.Modal(modal, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+          });
+          
+          // Show modal and force immediate rendering
+          modalInstance.show();
+          
+          // Force repaint to avoid gray screen issue
+          setTimeout(() => {
+            modal.style.transform = 'translateZ(0)';
+            modal.querySelector('.modal-content').style.opacity = '1';
+            modal.querySelector('.modal-content').style.transform = 'translateZ(0)';
+          }, 10);
+          
+          console.log('Bootstrap 5 Modal shown successfully');
         } catch (error) {
           console.error('Error showing modal:', error);
           showAlert('Error opening device configuration dialog.', 'danger');
         }
-      }
-
-      // Helper function to close modal manually
-      function closeModal() {
-        const modal = document.getElementById('device-metadata-modal');
-        const backdrop = document.getElementById('manual-modal-backdrop');
-        
-        if (backdrop) {
-          backdrop.remove();
-        }
-        
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('modal-open');
       }
 
       function toggleDeviceFields() {
@@ -1198,28 +1179,21 @@
           deviceMetadata[ip].status = 'Active';
         }
 
-        // Close modal with improved error handling
+        // Close modal using Bootstrap 5
         try {
           const modal = document.getElementById('device-metadata-modal');
-          if (window.bootstrap && window.bootstrap.Modal) {
-            const modalInstance = window.bootstrap.Modal.getInstance(modal);
-            if (modalInstance) {
-              modalInstance.hide();
-            } else {
-              // If no instance, try to create and hide
-              const newModalInstance = new window.bootstrap.Modal(modal);
-              newModalInstance.hide();
-            }
-          } else if (window.$ && window.$.fn.modal) {
-            $(modal).modal('hide');
+          const modalInstance = bootstrap.Modal.getInstance(modal);
+          if (modalInstance) {
+            modalInstance.hide();
           } else {
-            // Use the manual close function
-            closeModal();
+            // If no instance exists, create one and hide it
+            const newModalInstance = new bootstrap.Modal(modal);
+            newModalInstance.hide();
           }
+          console.log('Bootstrap 5 Modal hidden successfully');
         } catch (error) {
           console.error('Error closing modal:', error);
-          // Force close manually
-          closeModal();
+          showAlert('Error closing device configuration dialog.', 'warning');
         }
         
         showAlert('Device configuration saved.', 'success');
