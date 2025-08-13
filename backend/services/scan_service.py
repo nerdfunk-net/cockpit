@@ -11,6 +11,7 @@ Implementation per specification:
 - In-memory job store with 24h TTL
 """
 import asyncio
+import io
 import ipaddress
 import time
 import platform
@@ -23,6 +24,11 @@ from napalm import get_network_driver  # type: ignore
 import paramiko  # type: ignore
 
 from credentials_manager import get_decrypted_password, list_credentials
+from template_manager import template_manager
+try:
+    import textfsm  # type: ignore
+except Exception:
+    textfsm = None  # Will guard usage
 
 logger = logging.getLogger(__name__)
 
@@ -80,12 +86,12 @@ class ScanService:
     def _next_job_id(self) -> str:
         return f"scan_{int(time.time()*1000)}_{len(self._jobs)+1}"
 
-    async def start_job(self, cidrs: List[str], credential_ids: List[int], discovery_mode: str = "napalm") -> ScanJob:
+    async def start_job(self, cidrs: List[str], credential_ids: List[int], discovery_mode: str = "napalm", parser_template_ids: Optional[List[int]] = None) -> ScanJob:
         """Start a new network scan job."""
         # Expand and deduplicate IP addresses from CIDRs
         targets: List[str] = []
         seen: Set[str] = set()
-        
+
         for cidr in cidrs:
             try:
                 network = ipaddress.ip_network(cidr, strict=False)
@@ -93,7 +99,7 @@ class ScanService:
                 if network.prefixlen < 22:
                     logger.warning(f"Skipping oversized network: {cidr}")
                     continue
-                    
+
                 for ip in network.hosts():
                     ip_str = str(ip)
                     if ip_str not in seen:
@@ -111,12 +117,12 @@ class ScanService:
             discovery_mode=discovery_mode,
             total_targets=len(targets),
         )
-        
+
         self._jobs[job.job_id] = job
         logger.info(f"Started scan job {job.job_id} with {len(targets)} targets")
-        
+
         # Start background scan task
-        asyncio.create_task(self._run_scan(job, targets))
+        asyncio.create_task(self._run_scan(job, targets, parser_template_ids or []))
         return job
 
     async def get_job(self, job_id: str) -> Optional[ScanJob]:
@@ -124,7 +130,7 @@ class ScanService:
         self._purge_expired()
         return self._jobs.get(job_id)
 
-    async def _run_scan(self, job: ScanJob, targets: List[str]) -> None:
+    async def _run_scan(self, job: ScanJob, targets: List[str], parser_template_ids: List[int]) -> None:
         """Execute the network scan with concurrency control."""
         semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
         
@@ -136,9 +142,22 @@ class ScanService:
             job.state = "finished"
             return
 
+        # Preload parser templates content
+        parser_templates: List[Tuple[int, str]] = []
+        if parser_template_ids and textfsm is not None:
+            for tid in parser_template_ids:
+                try:
+                    t = template_manager.get_template(tid)
+                    if t and t.get('category') == 'parser' and t.get('template_type') in ('textfsm', 'text'):
+                        content = template_manager.get_template_content(tid)
+                        if content:
+                            parser_templates.append((tid, content))
+                except Exception as e:
+                    logger.warning(f"Failed to preload parser template {tid}: {e}")
+
         async def worker(ip: str):
             async with semaphore:
-                await self._process_ip(job, ip, credentials)
+                await self._process_ip(job, ip, credentials, parser_templates)
 
         try:
             await asyncio.gather(*[worker(ip) for ip in targets])
@@ -149,7 +168,7 @@ class ScanService:
             job.state = "finished"
             logger.info(f"Scan job {job.job_id} completed: {job.authenticated} authenticated, {job.unreachable} unreachable, {job.auth_failed} auth failed")
 
-    async def _process_ip(self, job: ScanJob, ip: str, credentials: Dict[int, Dict[str, Any]]):
+    async def _process_ip(self, job: ScanJob, ip: str, credentials: Dict[int, Dict[str, Any]], parser_templates: List[Tuple[int, str]]):
         """Process a single IP address: ping test + credential trials."""
         # Step 1: Liveness check with retries
         alive = False
@@ -183,7 +202,7 @@ class ScanService:
                 continue
 
             # Try authentication based on discovery mode
-            result = await self._try_authentication(job.discovery_mode, ip, username, password)
+            result = await self._try_authentication(job.discovery_mode, ip, username, password, parser_templates)
             if result:
                 job.results.append(ScanResult(
                     ip=ip,
@@ -201,7 +220,7 @@ class ScanService:
         job.auth_failed += 1
         job.scanned += 1
 
-    async def _try_authentication(self, discovery_mode: str, ip: str, username: str, password: str) -> Optional[Dict[str, str]]:
+    async def _try_authentication(self, discovery_mode: str, ip: str, username: str, password: str, parser_templates: List[Tuple[int, str]]) -> Optional[Dict[str, str]]:
         """Try authentication based on discovery mode."""
         if discovery_mode == "napalm":
             # Full device detection using Napalm + Paramiko
@@ -225,7 +244,7 @@ class ScanService:
                 
         elif discovery_mode == "ssh-login":
             # Enhanced SSH authentication with basic device detection
-            ssh_result = await self._try_basic_ssh_login(ip, username, password)
+            ssh_result = await self._try_basic_ssh_login(ip, username, password, parser_templates)
             if ssh_result:
                 return {
                     "device_type": ssh_result.get("device_type", "unknown"),
@@ -235,7 +254,7 @@ class ScanService:
         
         return None
 
-    async def _try_basic_ssh_login(self, ip: str, username: str, password: str) -> Optional[Dict[str, str]]:
+    async def _try_basic_ssh_login(self, ip: str, username: str, password: str, parser_templates: List[Tuple[int, str]]) -> Optional[Dict[str, str]]:
         """Basic SSH login test with simple device detection."""
         try:
             client = paramiko.SSHClient()
@@ -263,29 +282,42 @@ class ScanService:
                 # If we get meaningful output and no errors, it's likely a Cisco device
                 if stdout_data and len(stdout_data) > 50 and not stderr_data:
                     logger.info(f"'show version' succeeded on {ip}, detected as Cisco device")
-                    
-                    # Try to extract hostname from show version output
+                    # Parse with TextFSM templates if available
                     hostname = None
-                    for line in stdout_data.split('\n'):
-                        # Look for common Cisco hostname patterns
-                        if 'uptime is' in line.lower():
-                            # Format: "RouterName uptime is ..."
-                            parts = line.strip().split()
-                            if parts:
-                                hostname = parts[0]
-                                break
-                        elif line.strip() and not line.startswith(' ') and 'version' not in line.lower():
-                            # First non-indented line that's not about version
-                            hostname = line.strip()
-                            break
-                    
-                    # Try to extract platform info
                     platform = "cisco-unknown"
-                    for line in stdout_data.split('\n'):
-                        line_lower = line.lower()
-                        if 'cisco' in line_lower and ('ios' in line_lower or 'nx-os' in line_lower or 'iosxr' in line_lower):
-                            platform = line.strip()
-                            break
+                    if parser_templates and textfsm is not None:
+                        for tid, tmpl in parser_templates:
+                            try:
+                                fsm = textfsm.TextFSM(io.StringIO(tmpl))
+                                rows = fsm.ParseText(stdout_data)
+                                # Build dicts from headers
+                                for row in rows:
+                                    record = {h.lower(): row[i] for i, h in enumerate(fsm.header)}
+                                    # Prefer hostname if present and non-empty
+                                    hn = record.get('hostname') or record.get('host') or record.get('device')
+                                    if hn and len(hn.strip()) > 0:
+                                        hostname = hn.strip()
+                                    # Grab platform-like fields if exposed
+                                    plat = record.get('platform') or record.get('version') or record.get('os')
+                                    if plat and len(plat.strip()) > 0:
+                                        platform = plat.strip()
+                                    if hostname:
+                                        break
+                                if hostname:
+                                    break
+                            except Exception as e:
+                                logger.debug(f"TextFSM parse failed for template {tid} on {ip}: {e}")
+                    # Fallback heuristic if no hostname yet
+                    if not hostname:
+                        for line in stdout_data.split('\n'):
+                            if 'uptime is' in line.lower():
+                                parts = line.strip().split()
+                                if parts:
+                                    hostname = parts[0]
+                                    break
+                            elif line.strip() and not line.startswith(' ') and 'version' not in line.lower():
+                                hostname = line.strip()
+                                break
                     
                     client.close()
                     return {

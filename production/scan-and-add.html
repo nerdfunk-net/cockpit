@@ -231,6 +231,28 @@
   </div>
 
   <!-- Modal -->
+  <div class="modal" id="parser-select-modal" tabindex="-1" aria-labelledby="parser-select-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="parser-select-label">Select Parser Templates</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead><tr><th width="40">Use</th><th>Name</th><th>Description</th></tr></thead>
+              <tbody id="parser-templates-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="confirm-start-scan">Start Network Scan</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="modal" id="device-metadata-modal" tabindex="-1" aria-labelledby="device-metadata-modal-label" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
       <div class="modal-content">
@@ -402,7 +424,9 @@
       });
     }
 
-    async function startScan(e){
+  let pendingScanPayload = null;
+
+  async function startScan(e){
       e.preventDefault();
       const cidrs=[...document.querySelectorAll('.cidr-input')].map(i=>i.value.trim()).filter(v=>v);
       if(cidrs.length===0){ showAlert('Please enter at least one network range','warning'); return; }
@@ -412,10 +436,53 @@
       const uniqueCredentials=[...new Set(credentialIds)]; if(uniqueCredentials.length!==credentialIds.length){ showAlert('Duplicate credentials selected','warning'); return; }
       const discoveryMode=document.getElementById('discovery-mode').value; if(!discoveryMode){ showAlert('Select discovery mode','warning'); return; }
       try {
+        // If ssh-login, prompt for parser templates first
+        if(discoveryMode==='ssh-login'){
+          pendingScanPayload = { cidrs, credential_ids: uniqueCredentials, discovery_mode: discoveryMode };
+          await openParserTemplateModal();
+          return; // wait for confirm
+        }
         document.getElementById('start-scan-btn').disabled=true; document.getElementById('scan-progress').style.display='block';
         const response=await authManager.apiRequest('/api/scan/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cidrs,credential_ids:uniqueCredentials,discovery_mode:discoveryMode})});
         scanJob=response; document.getElementById('job-id').textContent=response.job_id; document.getElementById('scan-status').textContent=response.state; pollScanProgress();
       } catch(err){ console.error('Scan start failed',err); showAlert('Failed to start scan','danger'); document.getElementById('start-scan-btn').disabled=false; document.getElementById('scan-progress').style.display='none'; }
+    }
+
+    async function openParserTemplateModal(){
+      // Fetch templates with category=parser
+      let templates=[];
+      try{
+        const resp = await authManager.apiRequest('/api/templates?category=parser');
+        templates = resp.templates || [];
+      }catch(e){ console.error('Failed to load parser templates', e); showAlert('Failed to load parser templates','danger'); }
+      const tbody=document.getElementById('parser-templates-tbody');
+      tbody.innerHTML='';
+      if(!templates.length){
+        tbody.innerHTML = '<tr><td colspan="3"><em>No parser templates available. You can still continue without selecting any.</em></td></tr>';
+      } else {
+        for(const t of templates){
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td><input type="checkbox" class="parser-template-checkbox" value="${t.id}" checked></td><td>${t.name}</td><td>${t.description||''}</td>`;
+          tbody.appendChild(tr);
+        }
+      }
+      const modalEl=document.getElementById('parser-select-modal');
+      if(!window.parserModal){ window.parserModal = new bootstrap.Modal(modalEl,{backdrop:true}); }
+      // Bind confirm
+      document.getElementById('confirm-start-scan').onclick = confirmStartScanWithParsers;
+      window.parserModal.show();
+    }
+
+    async function confirmStartScanWithParsers(){
+      const selected=[...document.querySelectorAll('.parser-template-checkbox:checked')].map(cb=>parseInt(cb.value,10));
+      const payload = { ...pendingScanPayload, parser_template_ids: selected };
+      window.parserModal.hide();
+      try{
+        document.getElementById('start-scan-btn').disabled=true; document.getElementById('scan-progress').style.display='block';
+        const response=await authManager.apiRequest('/api/scan/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        scanJob=response; document.getElementById('job-id').textContent=response.job_id; document.getElementById('scan-status').textContent=response.state; pollScanProgress();
+      }catch(err){ console.error('Scan start failed',err); showAlert('Failed to start scan','danger'); document.getElementById('start-scan-btn').disabled=false; document.getElementById('scan-progress').style.display='none'; }
+      finally{ pendingScanPayload=null; }
     }
 
     async function pollScanProgress(){ if(!scanJob) return; try { const status=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/status`); updateProgressDisplay(status); if(status.state==='finished'){ discoveredDevices=status.results; showAlert('Network scan completed','success'); populateDevicesTable(); showStep(2);} else if(status.state==='failed'){ showAlert('Scan failed','danger'); resetScanForm(); } else { setTimeout(pollScanProgress,2000);} } catch(err){ console.error('Status poll failed',err); showAlert('Lost connection to scan job','danger'); resetScanForm(); }}

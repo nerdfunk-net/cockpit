@@ -26,6 +26,7 @@ class ScanStartRequest(BaseModel):
     cidrs: List[str] = Field(..., max_items=10, description="List of CIDR networks to scan")
     credential_ids: List[int] = Field(..., description="List of credential IDs to try")
     discovery_mode: str = Field(default="napalm", description="Discovery mode: napalm or ssh-login")
+    parser_template_ids: Optional[List[int]] = Field(default=None, description="Template IDs to use for parsing 'show version' output (textfsm)")
 
     @validator("discovery_mode")
     def validate_discovery_mode(cls, v: str):
@@ -121,7 +122,12 @@ class OnboardResponse(BaseModel):
 async def start_scan(request: ScanStartRequest):
     """Start a new network scan job."""
     try:
-        job = await scan_service.start_job(request.cidrs, request.credential_ids, request.discovery_mode)
+        job = await scan_service.start_job(
+            request.cidrs,
+            request.credential_ids,
+            request.discovery_mode,
+            parser_template_ids=request.parser_template_ids,
+        )
         
         return ScanStartResponse(
             job_id=job.job_id,

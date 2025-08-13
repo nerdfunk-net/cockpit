@@ -21,6 +21,7 @@ class TemplateType(str, Enum):
     TEXT = "text"
     YAML = "yaml"
     JSON = "json"
+    TEXTFSM = "textfsm"
 
 
 class TemplateRequest(BaseModel):

@@ -50,7 +50,7 @@ class TemplateManager:
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL,
                         source TEXT NOT NULL CHECK(source IN ('git', 'file', 'webeditor')),
-                        template_type TEXT NOT NULL DEFAULT 'jinja2' CHECK(template_type IN ('jinja2', 'text', 'yaml', 'json')),
+                        template_type TEXT NOT NULL DEFAULT 'jinja2' CHECK(template_type IN ('jinja2', 'text', 'yaml', 'json', 'textfsm')),
                         category TEXT,
                         description TEXT,
                         
@@ -109,11 +109,96 @@ class TemplateManager:
                 
                 conn.commit()
                 logger.info(f"Templates database initialized at {self.db_path}")
+                # Ensure schema upgrades (e.g., allow 'textfsm' in template_type)
+                self._ensure_schema_upgrades(conn)
                 return True
                 
         except sqlite3.Error as e:
             logger.error(f"Template database initialization failed: {e}")
             return False
+
+    def _ensure_schema_upgrades(self, conn: sqlite3.Connection) -> None:
+        """Apply in-place schema upgrades if existing DB is missing new constraints."""
+        try:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='templates'")
+            row = cur.fetchone()
+            if not row or not row['sql']:
+                return
+            create_sql = row['sql']
+            if "'textfsm'" in create_sql:
+                return  # already upgraded
+            # Migrate templates table to include 'textfsm' in CHECK constraint
+            logger.info("Upgrading 'templates' table to allow template_type 'textfsm'")
+            cur.execute("PRAGMA foreign_keys=OFF;")
+            cur.execute("BEGIN TRANSACTION;")
+            # Create new table with updated CHECK
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS templates_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    source TEXT NOT NULL CHECK(source IN ('git', 'file', 'webeditor')),
+                    template_type TEXT NOT NULL DEFAULT 'jinja2' CHECK(template_type IN ('jinja2', 'text', 'yaml', 'json', 'textfsm')),
+                    category TEXT,
+                    description TEXT,
+                    git_repo_url TEXT,
+                    git_branch TEXT DEFAULT 'main',
+                    git_username TEXT,
+                    git_token TEXT,
+                    git_path TEXT,
+                    git_verify_ssl BOOLEAN DEFAULT 1,
+                    content TEXT,
+                    filename TEXT,
+                    content_hash TEXT,
+                    variables TEXT DEFAULT '{}',
+                    tags TEXT DEFAULT '[]',
+                    is_active BOOLEAN DEFAULT 1,
+                    last_sync TIMESTAMP,
+                    sync_status TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            # Copy data
+            cur.execute('''
+                INSERT INTO templates_new (
+                    id, name, source, template_type, category, description,
+                    git_repo_url, git_branch, git_username, git_token, git_path, git_verify_ssl,
+                    content, filename, content_hash,
+                    variables, tags, is_active, last_sync, sync_status, created_at, updated_at
+                )
+                SELECT 
+                    id, name, source, template_type, category, description,
+                    git_repo_url, git_branch, git_username, git_token, git_path, git_verify_ssl,
+                    content, filename, content_hash,
+                    variables, tags, is_active, last_sync, sync_status, created_at, updated_at
+                FROM templates
+            ''')
+            # Drop old indexes
+            cur.execute("DROP INDEX IF EXISTS idx_templates_name")
+            cur.execute("DROP INDEX IF EXISTS idx_templates_source")
+            cur.execute("DROP INDEX IF EXISTS idx_templates_category")
+            cur.execute("DROP INDEX IF EXISTS idx_templates_active")
+            cur.execute("DROP INDEX IF EXISTS idx_templates_active_name")
+            # Drop old table and rename
+            cur.execute("DROP TABLE templates")
+            cur.execute("ALTER TABLE templates_new RENAME TO templates")
+            # Recreate indexes
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_templates_name ON templates(name)')
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_templates_source ON templates(source)')
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_templates_category ON templates(category)')
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_templates_active ON templates(is_active)')
+            cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_templates_active_name ON templates(name) WHERE is_active = 1")
+            cur.execute("COMMIT;")
+            cur.execute("PRAGMA foreign_keys=ON;")
+            logger.info("Templates table upgrade complete")
+        except Exception as e:
+            logger.error(f"Schema upgrade failed: {e}")
+            try:
+                cur.execute("ROLLBACK;")
+            except Exception:
+                pass
     
     def create_template(self, template_data: Dict[str, Any]) -> Optional[int]:
         """Create a new template"""
@@ -176,7 +261,7 @@ class TemplateManager:
                 
                 # Save content to file if it's a file or webeditor template
                 if template_data['source'] in ['file', 'webeditor'] and content:
-                    self._save_template_to_file(template_id, template_data['name'], content)
+                    self._save_template_to_file(template_id, template_data['name'], content, template_data.get('filename'))
                 
                 # Create initial version
                 if content:
@@ -317,7 +402,7 @@ class TemplateManager:
                 
                 # Save content to file if needed
                 if current['source'] in ['file', 'webeditor'] and content:
-                    self._save_template_to_file(template_id, template_data.get('name', current['name']), content)
+                    self._save_template_to_file(template_id, template_data.get('name', current['name']), content, template_data.get('filename', current.get('filename')))
                 
                 # Create new version if content changed
                 if content_changed and content:
@@ -373,7 +458,7 @@ class TemplateManager:
             # For file/webeditor templates, try database first, then file
             content = template.get('content')
             if not content and template['source'] in ['file', 'webeditor']:
-                content = self._load_template_from_file(template_id, template['name'])
+                content = self._load_template_from_file(template_id, template['name'], template.get('filename'))
             
             return content
             
@@ -458,46 +543,63 @@ class TemplateManager:
         
         return result
     
-    def _save_template_to_file(self, template_id: int, name: str, content: str) -> None:
-        """Save template content to file system"""
+    def _save_template_to_file(self, template_id: int, name: str, content: str, filename: str = None) -> None:
+        """Save template content to file system, preserving extension if possible"""
         try:
-            filename = f"{template_id}_{name.replace(' ', '_').replace('/', '_')}.txt"
-            filepath = os.path.join(self.storage_path, filename)
-            
+            # Use original extension if provided, else default to .txt
+            ext = '.txt'
+            if filename:
+                ext = os.path.splitext(filename)[1] or '.txt'
+            else:
+                # Try to extract extension from name
+                if '.' in name:
+                    ext = os.path.splitext(name)[1] or '.txt'
+            safe_name = name.replace(' ', '_').replace('/', '_')
+            file_out = f"{template_id}_{safe_name}{ext}"
+            filepath = os.path.join(self.storage_path, file_out)
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
-                
             logger.debug(f"Template content saved to {filepath}")
-            
         except Exception as e:
             logger.error(f"Error saving template to file: {e}")
     
-    def _load_template_from_file(self, template_id: int, name: str) -> Optional[str]:
-        """Load template content from file system"""
+    def _load_template_from_file(self, template_id: int, name: str, filename: str = None) -> Optional[str]:
+        """Load template content from file system, trying multiple extensions"""
         try:
-            filename = f"{template_id}_{name.replace(' ', '_').replace('/', '_')}.txt"
-            filepath = os.path.join(self.storage_path, filename)
-            
-            if os.path.exists(filepath):
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    return f.read()
-            
+            safe_name = name.replace(' ', '_').replace('/', '_')
+            exts = ['.txt', '.j2', '.textfsm']
+            if filename:
+                exts.insert(0, os.path.splitext(filename)[1])
+            else:
+                if '.' in name:
+                    exts.insert(0, os.path.splitext(name)[1])
+            for ext in exts:
+                file_in = f"{template_id}_{safe_name}{ext}"
+                filepath = os.path.join(self.storage_path, file_in)
+                if os.path.exists(filepath):
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        return f.read()
             return None
-            
         except Exception as e:
             logger.error(f"Error loading template from file: {e}")
             return None
     
-    def _remove_template_file(self, template_id: int, name: str) -> None:
-        """Remove template file from file system"""
+    def _remove_template_file(self, template_id: int, name: str, filename: str = None) -> None:
+        """Remove template file from file system, trying multiple extensions"""
         try:
-            filename = f"{template_id}_{name.replace(' ', '_').replace('/', '_')}.txt"
-            filepath = os.path.join(self.storage_path, filename)
-            
-            if os.path.exists(filepath):
-                os.remove(filepath)
-                logger.debug(f"Template file removed: {filepath}")
-                
+            safe_name = name.replace(' ', '_').replace('/', '_')
+            exts = ['.txt', '.j2', '.textfsm']
+            if filename:
+                exts.insert(0, os.path.splitext(filename)[1])
+            else:
+                if '.' in name:
+                    exts.insert(0, os.path.splitext(name)[1])
+            for ext in exts:
+                file_rm = f"{template_id}_{safe_name}{ext}"
+                filepath = os.path.join(self.storage_path, file_rm)
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                    logger.debug(f"Template file removed: {filepath}")
         except Exception as e:
             logger.error(f"Error removing template file: {e}")
     

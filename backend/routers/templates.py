@@ -7,6 +7,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import JSONResponse
+import os
 
 from core.auth import verify_token
 from models.templates import (
@@ -355,12 +356,20 @@ async def upload_template_file(
         content = await file.read()
         content_str = content.decode('utf-8')
         
+        # Determine type/category based on filename
+        ext = os.path.splitext(file.filename)[1].lower()
+        inferred_type = template_type
+        inferred_category = category
+        if ext == '.textfsm':
+            inferred_type = 'textfsm'
+            inferred_category = category or 'parser'
+        
         # Create template data
         template_data = {
             'name': name,
             'source': 'file',
-            'template_type': template_type,
-            'category': category,
+            'template_type': inferred_type,
+            'category': inferred_category,
             'description': description,
             'content': content_str,
             'filename': file.filename
@@ -479,34 +488,43 @@ async def import_templates(
             message = f"Imported {len(imported_templates)} templates from Git repository"
         elif import_request.source_type == "file_bulk":
             # Import from uploaded files
+            # Accept .textfsm, .j2, .txt, etc.
             if import_request.file_contents:
                 for file_data in import_request.file_contents:
                     try:
+                        # Only allow certain extensions
+                        ext = os.path.splitext(file_data['filename'])[1].lower()
+                        if ext not in ['.txt', '.j2', '.textfsm']:
+                            skipped_templates.append(file_data['filename'])
+                            continue
+                        # Use original filename for name and infer type/category
+                        inferred_type = import_request.default_template_type
+                        inferred_category = import_request.default_category
+                        if ext == '.textfsm':
+                            inferred_type = 'textfsm'
+                            if not inferred_category:
+                                inferred_category = 'parser'
                         template_data = {
-                            'name': file_data['filename'].replace('.', '_'),
+                            'name': os.path.splitext(file_data['filename'])[0],
                             'source': 'file',
-                            'template_type': import_request.default_template_type,
-                            'category': import_request.default_category,
+                            'template_type': inferred_type,
+                            'category': inferred_category,
                             'content': file_data['content'],
                             'filename': file_data['filename']
                         }
-                        
                         if not import_request.overwrite_existing:
                             existing = template_manager.get_template_by_name(template_data['name'])
                             if existing:
                                 skipped_templates.append(template_data['name'])
                                 continue
-                        
                         template_id = template_manager.create_template(template_data)
                         if template_id:
                             imported_templates.append(template_data['name'])
                         else:
                             failed_templates.append(template_data['name'])
-                            
                     except Exception as e:
                         failed_templates.append(file_data['filename'])
                         errors[file_data['filename']] = str(e)
-            
             message = f"Imported {len(imported_templates)} templates from uploaded files"
         else:
             raise ValueError(f"Unsupported import source type: {import_request.source_type}")
