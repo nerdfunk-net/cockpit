@@ -38,12 +38,7 @@
                     <li><a href="scan-and-add.html" class="current-page"><i class="fas fa-search-plus"></i> Scan & Add</a></li>
                   </ul>
                 </li>
-                <li><a><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span></a>
-                  <ul class="nav child_menu">
-                    <li><a href="backup.html">Backup</a></li>
-                    <li><a href="compare.html">Compare</a></li>
-                  </ul>
-                </li>
+                
                 <li><a><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span></a>
                   <ul class="nav child_menu">
                     <li><a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a></li>
@@ -211,6 +206,7 @@
                       <th>Hostname</th>
                       <th>Type</th>
                       <th>Platform</th>
+                      <th>Location</th>
                       <th>Credential</th>
                       <th>Actions</th>
                     </tr>
@@ -218,14 +214,53 @@
                   <tbody id="devices-tbody"></tbody>
                 </table>
               </div>
-              <div class="form-group" style="margin-top:15px;">
-                <button type="button" class="btn btn-success btn-lg" id="onboard-selected-btn" disabled><i class="fa fa-upload"></i> Onboard Selected Devices</button>
-                <button type="button" class="btn btn-default" id="back-to-scan-btn">Back to Scan</button>
+              <div class="form-group" style="margin-top:15px; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <button type="button" class="btn btn-success btn-lg" id="onboard-selected-btn" disabled><i class="fa fa-upload"></i> Onboard Selected Devices</button>
+                  <button type="button" class="btn btn-default" id="back-to-scan-btn">Back to Scan</button>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-warning" id="assign-to-all-btn"><i class="fa fa-check-square-o"></i> Assign to All</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
         <footer><div class="pull-right">Cockpit Network Management Dashboard</div><div class="clearfix"></div></footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign to All Modal -->
+  <div class="modal" id="assign-all-modal" tabindex="-1" aria-labelledby="assign-all-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="assign-all-modal-label">Assign Settings to Selected Devices</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="assign-all-form">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group"><label>Hostname</label><input type="text" class="form-control" id="all-hostname" placeholder="Leave empty to keep" /></div>
+                <div class="form-group"><label>Platform</label><input type="text" class="form-control" id="all-platform" placeholder="Leave empty to keep" /></div>
+                <div class="form-group"><label>Role</label><input type="text" class="form-control" id="all-role" placeholder="Leave empty to keep" /></div>
+                <div class="form-group"><label>Location</label><input type="text" class="form-control" id="all-location" placeholder="Leave empty to keep" /></div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group"><label>Namespace</label><input type="text" class="form-control" id="all-namespace" placeholder="Leave empty to keep" value="" /></div>
+                <div class="form-group"><label>Status</label><select class="form-control" id="all-status"><option value="">— leave unchanged —</option><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
+                <div class="form-group"><label>Interface Status</label><select class="form-control" id="all-interface-status"><option value="">— leave unchanged —</option><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
+                <div class="form-group"><label>IP Status</label><select class="form-control" id="all-ip-status"><option value="">— leave unchanged —</option><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="assign-all-confirm"><i class="fa fa-check"></i> Assign to All</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -360,6 +395,7 @@
       const backBtn=document.getElementById('back-to-scan-btn'); if(backBtn){ backBtn.addEventListener('click',()=>showStep(1)); }
       const selectAll=document.getElementById('select-all-devices'); if(selectAll){ selectAll.addEventListener('change', toggleAllDevices);}  
       const onboardBtn=document.getElementById('onboard-selected-btn'); if(onboardBtn){ onboardBtn.addEventListener('click', onboardSelectedDevices);} 
+      const assignAllBtn=document.getElementById('assign-to-all-btn'); if(assignAllBtn){ assignAllBtn.addEventListener('click', openAssignAllModal);} 
       const saveBtn=document.getElementById('save-device-metadata'); if(saveBtn){ saveBtn.addEventListener('click', saveDeviceMetadata);} 
       document.getElementById('devices-tbody').addEventListener('click', e=>{
         if(e.target.closest('.device-config-btn')){
@@ -490,7 +526,42 @@
     function updateProgressDisplay(status){
       const p=status.progress; const pct=p.total>0?(p.scanned/p.total*100):0; document.getElementById('scan-progress-bar').style.width=`${pct}%`; document.getElementById('scan-progress-text').textContent=`${p.scanned} / ${p.total}`; document.getElementById('metric-alive').textContent=p.alive; document.getElementById('metric-authenticated').textContent=p.authenticated; document.getElementById('metric-unreachable').textContent=p.unreachable; document.getElementById('metric-auth-failed').textContent=p.auth_failed; document.getElementById('metric-driver-na').textContent=p.driver_not_supported; document.getElementById('scan-status').textContent=status.state; }
 
-    function populateDevicesTable(){ const tbody=document.getElementById('devices-tbody'); tbody.innerHTML=''; discoveredDevices.forEach(d=>{ const cred=credentialsData.find(c=>c.id===d.credential_id); const credName=cred?cred.name:'Unknown'; deviceMetadata[d.ip]={...d,namespace:'Global',role:d.device_type==='cisco'?'access-switch':d.device_type==='linux'?'server':'unknown',status:'Active',interface_status:'Active',ip_status:'Active'}; const tr=document.createElement('tr'); tr.innerHTML=`<td><input type='checkbox' class='device-checkbox' data-ip='${d.ip}'></td><td>${d.ip}</td><td>${d.hostname||'Unknown'}</td><td>${d.device_type}</td><td>${d.platform||'Unknown'}</td><td>${credName}</td><td><button class='btn btn-sm btn-info device-config-btn' data-ip='${d.ip}'><i class='fa fa-edit'></i> Configure</button></td>`; tbody.appendChild(tr); }); document.querySelectorAll('.device-checkbox').forEach(cb=>cb.addEventListener('change', updateOnboardButton)); updateOnboardButton(); }
+  function populateDevicesTable(){
+      const tbody=document.getElementById('devices-tbody');
+      tbody.innerHTML='';
+      discoveredDevices.forEach(d=>{
+        const existing = deviceMetadata[d.ip] || {};
+        // establish defaults once, then keep overrides
+        const merged = {
+          ip: d.ip,
+          credential_id: d.credential_id,
+          device_type: existing.device_type || d.device_type,
+          hostname: (existing.hostname!==undefined? existing.hostname : d.hostname),
+          platform: (existing.platform!==undefined? existing.platform : d.platform),
+      location: (existing.location!==undefined ? existing.location : 'unknown'),
+          namespace: existing.namespace || 'Global',
+          role: existing.role || (d.device_type==='cisco'?'access-switch':d.device_type==='linux'?'server':'unknown'),
+          status: existing.status || 'Active',
+          interface_status: existing.interface_status || 'Active',
+          ip_status: existing.ip_status || 'Active'
+        };
+        deviceMetadata[d.ip] = merged; // persist
+        const cred=credentialsData.find(c=>c.id===merged.credential_id);
+        const credName=cred?cred.name:'Unknown';
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td><input type='checkbox' class='device-checkbox' data-ip='${merged.ip}'></td>
+                       <td>${merged.ip}</td>
+                       <td>${merged.hostname||'Unknown'}</td>
+                       <td>${merged.device_type}</td>
+                       <td>${merged.platform||'Unknown'}</td>
+             <td>${merged.location||'unknown'}</td>
+                       <td>${credName}</td>
+                       <td><button class='btn btn-sm btn-info device-config-btn' data-ip='${merged.ip}'><i class='fa fa-edit'></i> Configure</button></td>`;
+        tbody.appendChild(tr);
+      });
+      document.querySelectorAll('.device-checkbox').forEach(cb=>cb.addEventListener('change', updateOnboardButton));
+      updateOnboardButton();
+    }
 
     function showStep(n){ document.querySelectorAll('.step').forEach(s=>s.classList.remove('active')); document.getElementById(`step${n}-indicator`).classList.add('active'); document.querySelectorAll('.step-content').forEach(c=>c.style.display='none'); document.getElementById(`step${n}-content`).style.display='block'; if(n===1){ resetScanForm(); }}
     function resetScanForm(){ document.getElementById('start-scan-btn').disabled=false; document.getElementById('scan-progress').style.display='none'; scanJob=null; discoveredDevices=[]; deviceMetadata={}; }
@@ -501,6 +572,38 @@
       const modal=document.getElementById('device-metadata-modal'); if(!deviceModalInstance){ deviceModalInstance=new bootstrap.Modal(modal,{backdrop:true}); } deviceModalInstance.show(); }
     function toggleDeviceFields(){ const t=document.getElementById('device-type').value; document.getElementById('cisco-fields').style.display=t==='cisco'?'block':'none'; document.getElementById('linux-fields').style.display=t==='linux'?'block':'none'; }
     function saveDeviceMetadata(){ const ip=document.getElementById('device-ip').value; const type=document.getElementById('device-type').value; if(!deviceMetadata[ip]) return; deviceMetadata[ip].hostname=document.getElementById('device-hostname').value; deviceMetadata[ip].platform=document.getElementById('device-platform').value; if(type==='cisco'){ deviceMetadata[ip].location=document.getElementById('device-location').value; deviceMetadata[ip].namespace=document.getElementById('device-namespace').value; deviceMetadata[ip].role=document.getElementById('device-role').value; deviceMetadata[ip].status=document.getElementById('device-status').value; deviceMetadata[ip].interface_status=document.getElementById('device-interface-status').value; deviceMetadata[ip].ip_status=document.getElementById('device-ip-status').value; } else if(type==='linux'){ deviceMetadata[ip].role=document.getElementById('linux-role').value; deviceMetadata[ip].location=document.getElementById('linux-location').value; deviceMetadata[ip].status=document.getElementById('linux-status').value; } else { deviceMetadata[ip].role='unknown'; deviceMetadata[ip].status='Active'; } if(deviceModalInstance) deviceModalInstance.hide(); showAlert('Device configuration saved','success'); }
+
+    // Assign to All
+    let assignAllModalInstance=null;
+    function openAssignAllModal(){
+      const selected=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip);
+      if(selected.length===0){ showAlert('Select devices first','warning'); return; }
+      const modal=document.getElementById('assign-all-modal');
+      if(!assignAllModalInstance){ assignAllModalInstance=new bootstrap.Modal(modal,{backdrop:true}); }
+      // reset form
+      document.getElementById('assign-all-form').reset();
+      document.getElementById('assign-all-confirm').onclick = confirmAssignAll;
+      assignAllModalInstance.show();
+    }
+    function confirmAssignAll(){
+      const selected=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip);
+      if(selected.length===0){ showAlert('Select devices first','warning'); return; }
+      const updates={};
+      const getVal=(id)=>document.getElementById(id).value.trim();
+      const hn=getVal('all-hostname'); if(hn) updates.hostname=hn;
+      const pf=getVal('all-platform'); if(pf) updates.platform=pf;
+      const rl=getVal('all-role'); if(rl) updates.role=rl;
+      const lc=getVal('all-location'); if(lc) updates.location=lc;
+      const ns=getVal('all-namespace'); if(ns) updates.namespace=ns;
+      const st=document.getElementById('all-status').value; if(st) updates.status=st;
+      const ist=document.getElementById('all-interface-status').value; if(ist) updates.interface_status=ist;
+      const ipst=document.getElementById('all-ip-status').value; if(ipst) updates.ip_status=ipst;
+      if(Object.keys(updates).length===0){ showAlert('No values to assign','warning'); return; }
+      for(const ip of selected){ deviceMetadata[ip] = { ...(deviceMetadata[ip]||{}), ...updates }; }
+      if(assignAllModalInstance) assignAllModalInstance.hide();
+      populateDevicesTable();
+      showAlert('Values assigned to selected devices','success');
+    }
 
     async function onboardSelectedDevices(){ const ips=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip); if(ips.length===0){ showAlert('Select devices to onboard','warning'); return;} const devices=ips.map(ip=>{ const m=deviceMetadata[ip]; return { ip:m.ip, credential_id:m.credential_id, device_type:m.device_type, hostname:m.hostname, platform:m.platform, location:m.location, namespace:m.namespace, role:m.role, status:m.status, interface_status:m.interface_status, ip_status:m.ip_status }; }); try { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin"></i> Onboarding...'; const resp=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({devices})}); let msg=`Onboarding completed: ${resp.accepted} devices.`; if(resp.cisco_queued) msg+=` ${resp.cisco_queued} Cisco queued.`; if(resp.linux_added) msg+=` ${resp.linux_added} Linux added.`; if(resp.inventory_path) msg+=` Inventory: ${resp.inventory_path}`; showAlert(msg,'success'); } catch(err){ console.error('Onboard failed',err); showAlert('Onboarding failed','danger'); } finally { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=false; btn.innerHTML='<i class="fa fa-upload"></i> Onboard Selected Devices'; } }
 
