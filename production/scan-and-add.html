@@ -247,7 +247,13 @@
                 <div class="form-group"><label>Hostname</label><input type="text" class="form-control" id="all-hostname" placeholder="Leave empty to keep" /></div>
                 <div class="form-group"><label>Platform</label><input type="text" class="form-control" id="all-platform" placeholder="Leave empty to keep" /></div>
                 <div class="form-group"><label>Role</label><select class="form-control" id="all-role"><option value="">— leave unchanged —</option></select></div>
-                <div class="form-group"><label>Location</label><input type="text" class="form-control" id="all-location" placeholder="Leave empty to keep" /></div>
+                <div class="form-group"><label>Location</label>
+                  <div class="location-selector-wrapper">
+                    <input type="text" id="all-location-search" class="form-control" placeholder="Search locations... (leave empty to keep)" autocomplete="off">
+                    <input type="hidden" id="all-location-hidden">
+                    <div id="all-location-dropdown" class="location-dropdown" style="display:none;"><div class="dropdown-content"></div></div>
+                  </div>
+                </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group"><label>IP-Address Namespace</label><select class="form-control" id="all-namespace"><option value="">— leave unchanged —</option></select></div>
@@ -314,7 +320,13 @@
               </div>
               <div class="col-md-6" id="cisco-fields">
                 <div class="form-group"><label>Role</label><select class="form-control" id="device-role"></select></div>
-                <div class="form-group"><label>Location</label><input type="text" class="form-control" id="device-location" placeholder="Data Center 1"></div>
+                <div class="form-group"><label>Location</label>
+                  <div class="location-selector-wrapper">
+                    <input type="text" id="device-location-search" class="form-control" placeholder="Search locations..." autocomplete="off">
+                    <input type="hidden" id="device-location">
+                    <div id="device-location-dropdown" class="location-dropdown" style="display:none;"><div class="dropdown-content"></div></div>
+                  </div>
+                </div>
                 <div class="form-group"><label>IP-Address Namespace</label><select class="form-control" id="device-namespace"></select></div>
                 <div class="form-group"><label>Status</label><select class="form-control" id="device-status"><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
                 <div class="form-group"><label>Interface Status</label><select class="form-control" id="device-interface-status"><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
@@ -322,7 +334,13 @@
               </div>
               <div class="col-md-6" id="linux-fields" style="display:none;">
                 <div class="form-group"><label>Role</label><select class="form-control" id="linux-role"></select></div>
-                <div class="form-group"><label>Location</label><input type="text" class="form-control" id="linux-location" placeholder="Data Center 1"></div>
+                <div class="form-group"><label>Location</label>
+                  <div class="location-selector-wrapper">
+                    <input type="text" id="linux-location-search" class="form-control" placeholder="Search locations..." autocomplete="off">
+                    <input type="hidden" id="linux-location">
+                    <div id="linux-location-dropdown" class="location-dropdown" style="display:none;"><div class="dropdown-content"></div></div>
+                  </div>
+                </div>
                 <div class="form-group"><label>Status</label><select class="form-control" id="linux-status"><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
               </div>
             </div>
@@ -341,6 +359,16 @@
     .step.active .step-number{background:#337ab7;color:#fff;}
     .step-number{width:40px;height:40px;border-radius:50%;background:#e9ecef;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-bottom:8px;border:2px solid #e9ecef;}
     .step{display:flex;flex-direction:column;align-items:center;min-width:120px;}
+  /* Location selector styles (reused) */
+  .location-selector-wrapper{position:relative;}
+  .location-dropdown{position:absolute;top:100%;left:0;right:0;z-index:1050;background:#fff;border:1px solid #d1d3e2;border-top:none;border-radius:0 0 6px 6px;max-height:300px;overflow-y:auto;box-shadow:0 0.15rem 1.75rem 0 rgba(58,59,69,.15);}
+  .dropdown-content{padding:0;}
+  .location-dropdown-item{padding:10px 15px;cursor:pointer;border-bottom:1px solid #f3f3f4;transition:background-color .15s ease-in-out;line-height:1.4;word-wrap:break-word;}
+  .location-dropdown-item:hover{background-color:#f8f9fc;}
+  .location-dropdown-item:last-child{border-bottom:none;border-radius:0 0 6px 6px;}
+  .location-dropdown-item.no-results{color:#858796;font-style:italic;cursor:default;}
+  .location-dropdown-item.no-results:hover{background-color:transparent;}
+  .has-selection{background-color:#d1ecf1;border-color:#bee5eb;}
   </style>
 
   <script>
@@ -348,7 +376,7 @@
     if(!localStorage.getItem('auth_token')){window.location.href='login.html';}
 
     // State
-  let credentialsData=[]; let scanJob=null; let discoveredDevices=[]; let deviceMetadata={}; let deviceModalInstance=null; let namespacesList=[]; let rolesList=[];
+  let credentialsData=[]; let scanJob=null; let discoveredDevices=[]; let deviceMetadata={}; let deviceModalInstance=null; let namespacesList=[]; let rolesList=[]; let locationsData=[];
 
     document.addEventListener('DOMContentLoaded', () => {
       if(!window.authManager){ window.authManager = new AuthManager(); }
@@ -365,6 +393,7 @@
   await loadCredentials();
   await loadNamespaces();
   await loadRoles();
+  await loadLocations();
         setupEventListeners();
   // Normalize initial CIDR button states
   updateCIDRButtons();
@@ -388,6 +417,73 @@
         // Prefer name as display/value; also allow slug fallback
         rolesList = (resp || []).map(r=>({ name: r.name || r.slug || '', slug: r.slug || r.name || '' })).filter(r=>r.name);
       }catch(e){ console.warn('Failed to load roles', e); rolesList=[]; }
+    }
+
+    async function loadLocations(){
+      try{
+        const resp = await authManager.apiRequest('/api/nautobot/locations');
+        locationsData = Array.isArray(resp) ? resp : [];
+        // Build hierarchical paths similar to onboard-device
+        buildLocationHierarchy();
+        initLocationSelectors();
+      }catch(e){ console.warn('Failed to load locations', e); locationsData=[]; }
+    }
+    function buildLocationHierarchy(){
+      const map=new Map();
+      locationsData.forEach(l=>map.set(l.id,l));
+      function pathFor(loc){
+        const parts=[]; let cur=loc; const guard=new Set();
+        while(cur && !guard.has(cur.id)){
+          guard.add(cur.id); parts.unshift(cur.name);
+          cur = (cur.parent && cur.parent.id) ? map.get(cur.parent.id) : null;
+        }
+        return parts.length>1? parts.join(' → '):parts[0];
+      }
+      locationsData.forEach(l=>{ l.hierarchicalPath = pathFor(l); });
+      locationsData.sort((a,b)=> a.hierarchicalPath.localeCompare(b.hierarchicalPath));
+    }
+    function filterAndRenderLocations(inputId, dropdownId){
+      const input=document.getElementById(inputId); const dd=document.getElementById(dropdownId); if(!input||!dd) return;
+      const content=dd.querySelector('.dropdown-content'); if(!content) return;
+      const term=(input.value||'').toLowerCase();
+      const filtered = locationsData.filter(l=> (l.hierarchicalPath||'').toLowerCase().includes(term));
+      content.innerHTML='';
+      if(filtered.length===0){ const no=document.createElement('div'); no.className='location-dropdown-item no-results'; no.textContent='No locations found'; content.appendChild(no); }
+      else {
+        filtered.forEach(l=>{ const item=document.createElement('div'); item.className='location-dropdown-item'; item.textContent=l.hierarchicalPath; item.dataset.value=l.id; item.addEventListener('click',()=>{ selectLocationFor(inputId, l); }); content.appendChild(item); });
+      }
+      dd.style.display='block';
+    }
+    function selectLocationFor(inputId, loc){
+      const map={
+        'device-location-search':{hidden:'device-location'},
+        'linux-location-search':{hidden:'linux-location'},
+        'all-location-search':{hidden:'all-location-hidden'}
+      };
+      const cfg=map[inputId]; if(!cfg) return;
+      const searchEl=document.getElementById(inputId); const hiddenEl=document.getElementById(cfg.hidden);
+      if(searchEl) { searchEl.value = loc.hierarchicalPath; searchEl.classList.add('has-selection'); }
+      if(hiddenEl) hiddenEl.value = loc.id;
+      const dd = searchEl && searchEl.parentElement ? searchEl.parentElement.querySelector('.location-dropdown') : null;
+      if(dd) dd.style.display='none';
+    }
+    function initLocationSelectors(){
+      // Device modal
+      ['device','linux'].forEach(prefix=>{
+        const searchId=`${prefix}-location-search`; const ddId=`${prefix}-location-dropdown`;
+        const input=document.getElementById(searchId); const dd=document.getElementById(ddId);
+        if(!input||!dd) return;
+        input.addEventListener('input', ()=> filterAndRenderLocations(searchId, ddId));
+        input.addEventListener('focus', ()=> filterAndRenderLocations(searchId, ddId));
+        document.addEventListener('click', (e)=>{ if(!input.contains(e.target) && !dd.contains(e.target)) dd.style.display='none'; });
+      });
+      // Assign-all modal
+      const allInput=document.getElementById('all-location-search'); const allDd=document.getElementById('all-location-dropdown');
+      if(allInput && allDd){
+        allInput.addEventListener('input', ()=> filterAndRenderLocations('all-location-search','all-location-dropdown'));
+        allInput.addEventListener('focus', ()=> filterAndRenderLocations('all-location-search','all-location-dropdown'));
+        document.addEventListener('click', (e)=>{ if(!allInput.contains(e.target) && !allDd.contains(e.target)) allDd.style.display='none'; });
+      }
     }
 
     async function loadCredentials(){
@@ -544,6 +640,11 @@
     function updateProgressDisplay(status){
       const p=status.progress; const pct=p.total>0?(p.scanned/p.total*100):0; document.getElementById('scan-progress-bar').style.width=`${pct}%`; document.getElementById('scan-progress-text').textContent=`${p.scanned} / ${p.total}`; document.getElementById('metric-alive').textContent=p.alive; document.getElementById('metric-authenticated').textContent=p.authenticated; document.getElementById('metric-unreachable').textContent=p.unreachable; document.getElementById('metric-auth-failed').textContent=p.auth_failed; document.getElementById('metric-driver-na').textContent=p.driver_not_supported; document.getElementById('scan-status').textContent=status.state; }
 
+  function locationDisplay(val){
+      if(!val) return 'unknown';
+      const found = (locationsData||[]).find(l=>l.id===val || l.name===val);
+      return found ? (found.hierarchicalPath || found.name) : val;
+    }
   function populateDevicesTable(){
       const tbody=document.getElementById('devices-tbody');
       tbody.innerHTML='';
@@ -573,7 +674,7 @@
                        <td>${merged.device_type}</td>
                        <td>${merged.platform||'Unknown'}</td>
              <td>${merged.role||'unknown'}</td>
-             <td>${merged.location||'unknown'}</td>
+             <td>${locationDisplay(merged.location)}</td>
                        <td>${credName}</td>
                        <td><button class='btn btn-sm btn-info device-config-btn' data-ip='${merged.ip}'><i class='fa fa-edit'></i> Configure</button></td>`;
         tbody.appendChild(tr);
@@ -587,7 +688,13 @@
     function toggleAllDevices(){ const master=document.getElementById('select-all-devices'); document.querySelectorAll('.device-checkbox').forEach(cb=>cb.checked=master.checked); updateOnboardButton(); }
     function updateOnboardButton(){ const cnt=document.querySelectorAll('.device-checkbox:checked').length; const btn=document.getElementById('onboard-selected-btn'); if(btn) btn.disabled=cnt===0; }
 
-  function editDeviceMetadata(ip){ const d=deviceMetadata[ip]; if(!d) return; document.getElementById('device-ip').value=ip; document.getElementById('device-ip-display').value=ip; document.getElementById('device-hostname').value=d.hostname||''; document.getElementById('device-platform').value=d.platform||''; document.getElementById('device-type').value=d.device_type; toggleDeviceFields(); if(d.device_type==='cisco'){ document.getElementById('device-location').value=d.location||''; populateNamespaceSelect('device-namespace', d.namespace); document.getElementById('device-role').value=d.role||'network'; document.getElementById('device-status').value=d.status||'Active'; document.getElementById('device-interface-status').value=d.interface_status||'Active'; document.getElementById('device-ip-status').value=d.ip_status||'Active'; } else if(d.device_type==='linux'){ document.getElementById('linux-role').value=d.role||'server'; document.getElementById('linux-location').value=d.location||''; document.getElementById('linux-status').value=d.status||'Active'; }
+  function editDeviceMetadata(ip){ const d=deviceMetadata[ip]; if(!d) return; document.getElementById('device-ip').value=ip; document.getElementById('device-ip-display').value=ip; document.getElementById('device-hostname').value=d.hostname||''; document.getElementById('device-platform').value=d.platform||''; document.getElementById('device-type').value=d.device_type; toggleDeviceFields(); if(d.device_type==='cisco'){ const ds=document.getElementById('device-location-search'); const dh=document.getElementById('device-location'); if(ds){ ds.value=''; ds.classList.remove('has-selection'); } if(dh){ dh.value=''; } if(d.location){ // try to show display path if exists
+        const found=locationsData.find(l=>l.id===d.location || l.name===d.location);
+        if(found && ds){ ds.value=found.hierarchicalPath; ds.classList.add('has-selection'); } if(found && dh){ dh.value=found.id; }
+      }
+      populateNamespaceSelect('device-namespace', d.namespace);
+      document.getElementById('device-role').value=d.role||'network'; document.getElementById('device-status').value=d.status||'Active'; document.getElementById('device-interface-status').value=d.interface_status||'Active'; document.getElementById('device-ip-status').value=d.ip_status||'Active'; } else if(d.device_type==='linux'){ const ls=document.getElementById('linux-location-search'); const lh=document.getElementById('linux-location'); if(ls){ ls.value=''; ls.classList.remove('has-selection'); } if(lh){ lh.value=''; } if(d.location){ const found=locationsData.find(l=>l.id===d.location || l.name===d.location); if(found && ls){ ls.value=found.hierarchicalPath; ls.classList.add('has-selection'); } if(found && lh){ lh.value=found.id; } }
+      document.getElementById('linux-role').value=d.role||'server'; document.getElementById('linux-status').value=d.status||'Active'; }
       const modal=document.getElementById('device-metadata-modal'); if(!deviceModalInstance){ deviceModalInstance=new bootstrap.Modal(modal,{backdrop:true}); } deviceModalInstance.show(); }
     function populateRoleSelect(selectId, current, options={includeBlank:false}){
       const sel=document.getElementById(selectId);
@@ -627,7 +734,7 @@
       if(current && values.includes(current)) sel.value=current; else sel.value=values[0];
     }
     function toggleDeviceFields(){ const t=document.getElementById('device-type').value; document.getElementById('cisco-fields').style.display=t==='cisco'?'block':'none'; document.getElementById('linux-fields').style.display=t==='linux'?'block':'none'; }
-    function saveDeviceMetadata(){ const ip=document.getElementById('device-ip').value; const type=document.getElementById('device-type').value; if(!deviceMetadata[ip]) return; deviceMetadata[ip].hostname=document.getElementById('device-hostname').value; deviceMetadata[ip].platform=document.getElementById('device-platform').value; if(type==='cisco'){ deviceMetadata[ip].location=document.getElementById('device-location').value; deviceMetadata[ip].namespace=document.getElementById('device-namespace').value; deviceMetadata[ip].role=document.getElementById('device-role').value; deviceMetadata[ip].status=document.getElementById('device-status').value; deviceMetadata[ip].interface_status=document.getElementById('device-interface-status').value; deviceMetadata[ip].ip_status=document.getElementById('device-ip-status').value; } else if(type==='linux'){ deviceMetadata[ip].role=document.getElementById('linux-role').value; deviceMetadata[ip].location=document.getElementById('linux-location').value; deviceMetadata[ip].status=document.getElementById('linux-status').value; } else { deviceMetadata[ip].role='unknown'; deviceMetadata[ip].status='Active'; } if(deviceModalInstance) deviceModalInstance.hide(); showAlert('Device configuration saved','success'); }
+  function saveDeviceMetadata(){ const ip=document.getElementById('device-ip').value; const type=document.getElementById('device-type').value; if(!deviceMetadata[ip]) return; deviceMetadata[ip].hostname=document.getElementById('device-hostname').value; deviceMetadata[ip].platform=document.getElementById('device-platform').value; if(type==='cisco'){ deviceMetadata[ip].location=document.getElementById('device-location').value; deviceMetadata[ip].namespace=document.getElementById('device-namespace').value; deviceMetadata[ip].role=document.getElementById('device-role').value; deviceMetadata[ip].status=document.getElementById('device-status').value; deviceMetadata[ip].interface_status=document.getElementById('device-interface-status').value; deviceMetadata[ip].ip_status=document.getElementById('device-ip-status').value; } else if(type==='linux'){ deviceMetadata[ip].role=document.getElementById('linux-role').value; deviceMetadata[ip].location=document.getElementById('linux-location').value; deviceMetadata[ip].status=document.getElementById('linux-status').value; } else { deviceMetadata[ip].role='unknown'; deviceMetadata[ip].status='Active'; } if(deviceModalInstance) deviceModalInstance.hide(); showAlert('Device configuration saved','success'); }
 
     // Assign to All
     let assignAllModalInstance=null;
@@ -649,7 +756,7 @@
       const hn=getVal('all-hostname'); if(hn) updates.hostname=hn;
       const pf=getVal('all-platform'); if(pf) updates.platform=pf;
       const rl=getVal('all-role'); if(rl) updates.role=rl;
-      const lc=getVal('all-location'); if(lc) updates.location=lc;
+  const lcHidden=document.getElementById('all-location-hidden').value; if(lcHidden) updates.location=lcHidden;
       const ns=document.getElementById('all-namespace').value; if(ns) updates.namespace=ns;
       const st=document.getElementById('all-status').value; if(st) updates.status=st;
       const ist=document.getElementById('all-interface-status').value; if(ist) updates.interface_status=ist;
@@ -664,8 +771,10 @@
     // When opening Assign to All, populate namespace options
     const assignAllBtnHook = document.getElementById('assign-to-all-btn');
     if(assignAllBtnHook){ assignAllBtnHook.addEventListener('click', ()=>{
-      const selNs=document.getElementById('all-namespace'); if(selNs){ selNs.innerHTML='<option value="">— leave unchanged —</option>'; (namespacesList||[]).forEach(ns=>{ const o=document.createElement('option'); o.value=ns; o.textContent=ns; selNs.appendChild(o); }); }
+      const selNs=document.getElementById('all-namespace'); if(selNs){ selNs.innerHTML='<option value=\"\">— leave unchanged —</option>'; (namespacesList||[]).forEach(ns=>{ const o=document.createElement('option'); o.value=ns; o.textContent=ns; selNs.appendChild(o); }); }
       populateRoleSelect('all-role', null, {includeBlank:true});
+      // Reset bulk location selector display/hidden
+      const ai=document.getElementById('all-location-search'); const ah=document.getElementById('all-location-hidden'); const add=document.getElementById('all-location-dropdown'); if(ai){ ai.value=''; ai.classList.remove('has-selection'); } if(ah){ ah.value=''; } if(add){ const content=add.querySelector('.dropdown-content'); if(content) content.innerHTML=''; add.style.display='none'; }
     }); }
 
   async function onboardSelectedDevices(){ const ips=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip); if(ips.length===0){ showAlert('Select devices to onboard','warning'); return;} const devices=ips.map(ip=>{ const m=deviceMetadata[ip]; return { ip:m.ip, credential_id:m.credential_id, device_type:m.device_type, hostname:m.hostname, platform:m.platform, location:m.location, namespace:m.namespace, role:m.role, status:m.status, interface_status:m.interface_status, ip_status:m.ip_status }; }); try { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin"></i> Onboarding...'; const resp=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({devices})}); let msg=`Onboarding completed: ${resp.accepted} devices.`; if(resp.cisco_queued) msg+=` ${resp.cisco_queued} Cisco queued.`; if(resp.linux_added) msg+=` ${resp.linux_added} Linux added.`; if(resp.inventory_path) msg+=` Inventory: ${resp.inventory_path}`; showAlert(msg,'success'); } catch(err){ console.error('Onboard failed',err); showAlert('Onboarding failed','danger'); } finally { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=false; btn.innerHTML='<i class="fa fa-upload"></i> Onboard Selected Devices'; } }
