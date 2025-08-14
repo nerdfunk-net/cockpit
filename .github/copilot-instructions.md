@@ -259,6 +259,9 @@ This project follows modern Python best practices with emphasis on clean, mainta
 - Maximum line length of **88 characters** (Black formatter standard)
 - Use **double quotes** for strings unless single quotes avoid escaping
 - Import organization: standard library → third-party → local imports
+- Do not use wildcard imports (e.g., `from module import *`)
+- Avoid unnecessary complexity in code structure
+- Do not use spaces in empty lines. Empty lines should be completely blank.
 
 ## Type Hints & Documentation
 - **Always use type hints** for function parameters and return values
@@ -287,3 +290,25 @@ def calculate_area(radius: float) -> float:
 - The default username and password for the app are:
   - **Username:** admin
   - **Password:** admin
+
+## context_gathering
+Goal: Get enough context fast. Parallelize discovery and stop as soon as you can act.
+
+Method:
+- Start broad, then fan out to focused subqueries.
+- In parallel, launch varied queries; read top hits per query. Deduplicate paths and cache; don’t repeat queries.
+- Avoid over searching for context. If needed, run targeted searches in one parallel batch.
+
+Early stop criteria:
+- You can name exact content to change.
+- Top hits converge (~70%) on one area/path.
+
+Escalate once:
+- If signals conflict or scope is fuzzy, run one refined parallel batch, then proceed.
+
+Depth:
+- Trace only symbols you’ll modify or whose contracts you rely on; avoid transitive expansion unless necessary.
+
+Loop:
+- Batch search → minimal plan → complete task.
+- Search again only if validation fails or new unknowns appear. Prefer acting over more searching.
