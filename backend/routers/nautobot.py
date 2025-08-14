@@ -49,14 +49,14 @@ async def test_current_nautobot_connection(current_user: str = Depends(verify_to
                 'verify_ssl': True,
                 '_source': 'environment'
             }
-        
+
         success, message = await nautobot_service.test_connection(
             nautobot_config.get('url', ''),
             nautobot_config.get('token', ''),
             nautobot_config.get('timeout', 30),
             nautobot_config.get('verify_ssl', True)
         )
-        
+
         return {
             "success": success,
             "message": message,
@@ -80,7 +80,7 @@ async def get_devices(
     current_user: str = Depends(verify_token)
 ):
     """Get list of devices from Nautobot with optional filtering and pagination.
-    
+
     Args:
         limit: Number of devices per page (default: no limit for full data load)
         offset: Number of devices to skip (default: 0)
@@ -91,7 +91,7 @@ async def get_devices(
         # Build GraphQL query based on filters
         query_filters = ""
         variables = {}
-        
+
         if filter_type and filter_value:
             if filter_type == 'name':
                 # First, get the total count without pagination
@@ -110,7 +110,7 @@ async def get_devices(
                         detail=f"GraphQL errors in count query: {count_result['errors']}"
                     )
                 total_count = len(count_result["data"]["devices"])
-                
+
                 # Now get the paginated data
                 query = """
                 query devices_by_name(
@@ -141,25 +141,25 @@ async def get_devices(
                 }
                 """
                 variables = {"name_filter": [filter_value]}
-                
+
                 # Add pagination parameters if provided
                 if limit is not None:
                     variables["limit"] = limit
                 if offset is not None:
                     variables["offset"] = offset
-                
+
                 result = await nautobot_service.graphql_query(query, variables)
                 if "errors" in result:
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail=f"GraphQL errors: {result['errors']}"
                     )
-                
+
                 devices = result["data"]["devices"]
-                
+
                 # Calculate if there are more pages
                 has_more = (offset or 0) + len(devices) < total_count
-                
+
                 return {
                     "devices": devices,
                     "count": total_count,  # Return actual total count
@@ -170,7 +170,7 @@ async def get_devices(
                     "next": None if not has_more else f"/api/nautobot/devices?limit={limit}&offset={(offset or 0) + limit}&filter_type={filter_type}&filter_value={filter_value}",
                     "previous": None if (offset or 0) == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, (offset or 0) - limit)}&filter_type={filter_type}&filter_value={filter_value}"
                 }
-                
+
             elif filter_type == 'location':
                 query = """
                 query devices_by_location(
@@ -204,29 +204,29 @@ async def get_devices(
                 }
                 """
                 variables = {"location_filter": [filter_value]}
-                
+
                 # Add pagination parameters if provided
                 if limit is not None:
                     variables["limit"] = limit
                 if offset is not None:
                     variables["offset"] = offset
-                
+
                 result = await nautobot_service.graphql_query(query, variables)
                 if "errors" in result:
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail=f"GraphQL errors: {result['errors']}"
                     )
-                
+
                 # Extract devices from locations
                 devices = []
                 for location in result["data"]["locations"]:
                     for device in location["devices"]:
                         device["location"] = {"name": location["name"]}
                         devices.append(device)
-                
+
                 has_more = len(devices) == limit if limit else False
-                
+
                 return {
                     "devices": devices,
                     "count": len(devices),
@@ -237,7 +237,7 @@ async def get_devices(
                     "next": None if not has_more else f"/api/nautobot/devices?limit={limit}&offset={(offset or 0) + limit}&filter_type={filter_type}&filter_value={filter_value}",
                     "previous": None if (offset or 0) == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, (offset or 0) - limit)}&filter_type={filter_type}&filter_value={filter_value}"
                 }
-                
+
             elif filter_type == 'prefix':
                 # Use prefix filtering - correct Nautobot syntax
                 query = """
@@ -274,20 +274,20 @@ async def get_devices(
                 }
                 """
                 variables = {"prefix_filter": [filter_value]}
-                
+
                 # Add pagination parameters if provided
                 if limit is not None:
                     variables["limit"] = limit
                 if offset is not None:
                     variables["offset"] = offset
-                
+
                 result = await nautobot_service.graphql_query(query, variables)
                 if "errors" in result:
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail=f"GraphQL errors: {result['errors']}"
                     )
-                
+
                 # Extract unique devices from prefixes
                 devices_dict = {}
                 for prefix in result["data"]["prefixes"]:
@@ -295,10 +295,10 @@ async def get_devices(
                         if ip_addr["primary_ip4_for"]:
                             device = ip_addr["primary_ip4_for"]
                             devices_dict[device["id"]] = device
-                
+
                 devices = list(devices_dict.values())
                 has_more = len(devices) == limit if limit else False
-                
+
                 return {
                     "devices": devices,
                     "count": len(devices),
@@ -309,7 +309,7 @@ async def get_devices(
                     "next": None if not has_more else f"/api/nautobot/devices?limit={limit}&offset={(offset or 0) + limit}&filter_type={filter_type}&filter_value={filter_value}",
                     "previous": None if (offset or 0) == 0 else f"/api/nautobot/devices?limit={limit}&offset={max(0, (offset or 0) - limit)}&filter_type={filter_type}&filter_value={filter_value}"
                 }
-        
+
         # Standard device query when no filters are provided
         query = """
         query all_devices($limit: Int, $offset: Int) {
@@ -335,23 +335,23 @@ async def get_devices(
           }
         }
         """
-        
+
         variables = {}
         # Only add pagination parameters if they are provided
         if limit is not None:
             variables["limit"] = limit
         if offset is not None:
             variables["offset"] = offset
-        
+
         result = await nautobot_service.graphql_query(query, variables)
         if "errors" in result:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"GraphQL errors: {result['errors']}"
             )
-        
+
         devices = result["data"]["devices"]
-        
+
         # For unfiltered results
         if limit is not None:
             # First get total count without pagination
@@ -369,10 +369,10 @@ async def get_devices(
                     detail=f"GraphQL errors in count query: {count_result['errors']}"
                 )
             total_count = len(count_result["data"]["devices"])
-            
+
             # Calculate if there are more pages
             has_more = (offset or 0) + len(devices) < total_count
-            
+
             return {
                 "devices": devices,
                 "count": total_count,  # Return actual total count
@@ -395,7 +395,7 @@ async def get_devices(
                 "next": None,
                 "previous": None
             }
-        
+
     except Exception as e:
         logger.error(f"Error fetching devices: {str(e)}")
         raise HTTPException(
@@ -433,13 +433,13 @@ async def get_device(device_id: str, current_user: str = Depends(verify_token)):
         """
         variables = {"deviceId": device_id}
         result = await nautobot_service.graphql_query(query, variables)
-        
+
         if "errors" in result:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"GraphQL errors: {result['errors']}"
             )
-        
+
         return result["data"]["device"]
     except Exception as e:
         raise HTTPException(
@@ -462,10 +462,10 @@ async def search_devices(
             query_params.append(f"device_type={filters.device_type}")
         if filters.status:
             query_params.append(f"status={filters.status}")
-        
+
         query_string = "&".join(query_params)
         endpoint = f"dcim/devices/?{query_string}" if query_string else "dcim/devices/"
-        
+
         result = await nautobot_service.rest_request(endpoint)
         return result
     except Exception as e:
@@ -491,26 +491,26 @@ async def check_ip_address(request: CheckIPRequest, current_user: str = Depends(
         """
         variables = {"ip_address": [request.ip_address]}
         result = await nautobot_service.graphql_query(query, variables)
-        
+
         if "errors" in result:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"GraphQL errors: {result['errors']}"
             )
-        
+
         ip_addresses = result["data"]["ip_addresses"]
         exists = len(ip_addresses) > 0
         is_available = not exists
-        
+
         # Check if any IP address is assigned to a device
         assigned_devices = []
         for ip in ip_addresses:
             if ip.get("primary_ip4_for"):
                 for device in ip["primary_ip4_for"]:
                     assigned_devices.append({"name": device["name"]})
-        
+
         is_assigned_to_device = len(assigned_devices) > 0
-        
+
         return {
             "ip_address": request.ip_address,
             "is_available": is_available,
@@ -544,7 +544,7 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
             from config import settings
             nautobot_url = settings.nautobot_url.rstrip('/')
             nautobot_token = settings.nautobot_token
-        
+
         # Prepare the job data according to nautobot_access.md
         job_data = {
             "data": {
@@ -562,22 +562,22 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
                 "update_devices_without_primary_ip": False
             }
         }
-        
+
         # Call Nautobot job API
         job_url = f"{nautobot_url}/api/extras/jobs/Sync%20Devices%20From%20Network/run/"
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Token {nautobot_token}"
         }
-        
+
         import requests
         logger.info(f"Calling Nautobot job API: {job_url}")
         logger.info(f"Job data: {job_data}")
-        
+
         response = requests.post(job_url, json=job_data, headers=headers, timeout=30)
         logger.info(f"Nautobot API response status: {response.status_code}")
         logger.info(f"Nautobot API response body: {response.text}")
-        
+
         if response.status_code in [200, 201, 202]:
             result = response.json()
             job_id = result.get("job_result", {}).get("id") or result.get("id")
@@ -597,7 +597,7 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
                 error_detail = error_response.get("detail", error_response.get("message", str(error_response)))
             except:
                 error_detail = response.text or f"HTTP {response.status_code}"
-            
+
             logger.error(f"Nautobot job API failed: {error_detail}")
             return {
                 "success": False,
@@ -605,7 +605,7 @@ async def onboard_device(request: DeviceOnboardRequest, current_user: str = Depe
                 "status_code": response.status_code,
                 "response_body": response.text
             }
-            
+
     except Exception as e:
         logger.error(f"Exception in onboard_device: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -631,7 +631,7 @@ async def sync_network_data(request: SyncNetworkDataRequest, current_user: str =
             from config import settings
             nautobot_url = settings.nautobot_url.rstrip('/')
             nautobot_token = settings.nautobot_token
-        
+
         # Prepare the job data according to nautobot_access.md
         job_data = {
             "data": {
@@ -646,17 +646,17 @@ async def sync_network_data(request: SyncNetworkDataRequest, current_user: str =
                 "sync_vrfs": request.data.get("sync_vrfs", False)
             }
         }
-        
+
         # Call Nautobot job API
         job_url = f"{nautobot_url}/api/extras/jobs/Sync%20Network%20Data%20From%20Network/run/"
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Token {nautobot_token}"
         }
-        
+
         import requests
         response = requests.post(job_url, json=job_data, headers=headers, timeout=30)
-        
+
         if response.status_code in [200, 201, 202]:
             result = response.json()
             return {
@@ -673,13 +673,13 @@ async def sync_network_data(request: SyncNetworkDataRequest, current_user: str =
                 error_detail = error_response.get("detail", error_response.get("message", str(error_response)))
             except:
                 error_detail = response.text or f"HTTP {response.status_code}"
-            
+
             return {
                 "success": False,
                 "message": f"Failed to start sync job: {error_detail}",
                 "status_code": response.status_code
             }
-            
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -712,13 +712,13 @@ async def get_locations(current_user: str = Depends(verify_token)):
         }
         """
         result = await nautobot_service.graphql_query(query)
-        
+
         if "errors" in result:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"GraphQL errors: {result['errors']}"
             )
-        
+
         return result["data"]["locations"]
     except Exception as e:
         raise HTTPException(
@@ -741,13 +741,13 @@ async def get_namespaces(current_user: str = Depends(verify_token)):
         }
         """
         result = await nautobot_service.graphql_query(query)
-        
+
         if "errors" in result:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"GraphQL errors: {result['errors']}"
             )
-        
+
         return result["data"]["namespaces"]
     except Exception as e:
         raise HTTPException(
@@ -762,21 +762,21 @@ async def get_nautobot_stats(current_user: str = Depends(verify_token)):
     from datetime import datetime, timezone, timedelta
     import json
     import os
-    
+
     # Cache configuration
     cache_duration = timedelta(minutes=10)
     cache_dir = "data/cache"
     cache_file = os.path.join(cache_dir, "nautobot_stats.json")
-    
+
     # Ensure cache directory exists
     os.makedirs(cache_dir, exist_ok=True)
-    
+
     # Check if cache exists and is still valid
     if os.path.exists(cache_file):
         try:
             with open(cache_file, 'r') as f:
                 cache_data = json.load(f)
-            
+
             cache_timestamp = datetime.fromisoformat(cache_data.get('cache_timestamp', ''))
             if datetime.now(timezone.utc) - cache_timestamp < cache_duration:
                 logger.info("Returning cached Nautobot stats")
@@ -786,28 +786,28 @@ async def get_nautobot_stats(current_user: str = Depends(verify_token)):
                 return stats
         except (json.JSONDecodeError, ValueError, KeyError) as e:
             logger.warning(f"Invalid cache file, will refresh: {e}")
-    
+
     logger.info("Cache expired or missing, fetching fresh Nautobot stats")
-    
+
     try:
         # Get device counts by status
         devices_result = await nautobot_service.rest_request("dcim/devices/")
         locations_result = await nautobot_service.rest_request("dcim/locations/")
         device_types_result = await nautobot_service.rest_request("dcim/device-types/")
-        
+
         # Try to get IP addresses and prefixes (might not exist in all Nautobot versions)
         try:
             ip_addresses_result = await nautobot_service.rest_request("ipam/ip-addresses/")
             ip_addresses_count = ip_addresses_result.get("count", 0)
         except:
             ip_addresses_count = 0
-            
+
         try:
             prefixes_result = await nautobot_service.rest_request("ipam/prefixes/")
             prefixes_count = prefixes_result.get("count", 0)
         except:
             prefixes_count = 0
-        
+
         from datetime import datetime, timezone
         stats = {
             # Frontend expects these exact field names
@@ -822,18 +822,18 @@ async def get_nautobot_stats(current_user: str = Depends(verify_token)):
             "total_locations": locations_result.get("count", 0),
             "total_device_types": device_types_result.get("count", 0)
         }
-        
+
         # Save to cache with timestamp
         cache_data = stats.copy()
         cache_data['cache_timestamp'] = datetime.now(timezone.utc).isoformat()
-        
+
         try:
             with open(cache_file, 'w') as f:
                 json.dump(cache_data, f)
             logger.info("Nautobot stats cached successfully")
         except Exception as cache_error:
             logger.warning(f"Failed to cache stats: {cache_error}")
-        
+
         return stats
     except Exception as e:
         logger.error(f"Error fetching Nautobot stats: {str(e)}")
@@ -974,11 +974,11 @@ async def get_nautobot_secret_groups(current_user: str = Depends(verify_token)):
         }
         """
         result = await nautobot_service.graphql_query(query)
-        
+
         if "errors" in result:
             logger.warning(f"GraphQL errors fetching secret groups: {result['errors']}")
             return []
-        
+
         return result["data"]["secrets_groups"]
     except Exception as e:
         # Return empty list if secret groups don't exist

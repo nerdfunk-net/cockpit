@@ -62,11 +62,11 @@ def get_git_repo():
         try:
             # Try to open existing repository
             repo = Repo(repo_dir)
-            
+
             # Verify this is the correct repository by checking remote URL
             if repo.remotes:
                 current_remote = repo.remotes.origin.url
-                
+
                 # Compare URLs by normalizing them (remove authentication parts)
                 def normalize_git_url(url):
                     """Remove authentication from Git URL for comparison"""
@@ -78,46 +78,46 @@ def get_git_repo():
                     else:
                         netloc = parsed.netloc
                     return urlunparse((parsed.scheme, netloc, parsed.path, '', '', ''))
-                
+
                 expected_url = normalize_git_url(repository['url'])
                 current_url = normalize_git_url(current_remote)
-                
+
                 if current_url != expected_url:
                     logger.warning(f"Repository URL mismatch. Expected: {expected_url}, Found: {current_url}")
                     # Remove the directory and clone fresh
                     shutil.rmtree(repo_dir)
                     repo_dir.mkdir(parents=True, exist_ok=True)
                     raise InvalidGitRepositoryError("URL mismatch, need to re-clone")
-            
+
             return repo
-            
+
         except (InvalidGitRepositoryError, Exception):
             # Repository doesn't exist or is corrupted, clone it
             if repo_dir.exists():
                 shutil.rmtree(repo_dir)
             repo_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Clone the repository
             clone_url = repository['url']
-            
+
             # Add authentication if provided
             if repository.get('username') and repository.get('token'):
                 parsed_url = urlparse(repository['url'])
                 clone_url = f"{parsed_url.scheme}://{repository['username']}:{repository['token']}@{parsed_url.netloc}{parsed_url.path}"
-            
+
             try:
                 # Configure Git environment for SSL
                 env = os.environ.copy()
                 if not repository.get('verify_ssl', True):
                     env['GIT_SSL_NO_VERIFY'] = '1'
-                
+
                 repo = Repo.clone_from(
                     clone_url, 
                     repo_dir,
                     branch=repository.get('branch', 'main'),
                     env=env
                 )
-                
+
                 # Switch to the correct path within the repository if specified
                 if repository.get('path'):
                     config_path = repo_dir / repository['path']
@@ -126,17 +126,17 @@ def get_git_repo():
                         # Note: Git repos can't have subdirectories as separate repos,
                         # but we can work with the files in the subdirectory
                         pass
-                
+
                 logger.info(f"Successfully cloned repository {repository['name']} from {repository['url']}")
                 return repo
-                
+
             except Exception as e:
                 logger.error(f"Failed to clone repository {repository['name']}: {e}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail=f"Failed to clone Git repository: {str(e)}"
                 )
-                
+
     except HTTPException:
         raise
     except Exception as e:
@@ -152,11 +152,11 @@ async def git_status(current_user: str = Depends(verify_token)):
     """Get Git repository status."""
     try:
         repo = get_git_repo()
-        
+
         # Check if repository has any commits
         commits = []
         current_branch = None
-        
+
         try:
             # Try to get current branch
             current_branch = repo.active_branch.name
@@ -164,7 +164,7 @@ async def git_status(current_user: str = Depends(verify_token)):
             logger.warning(f"Could not get active branch (repository may be empty): {e}")
             # For empty repositories, use default branch name
             current_branch = "main"
-        
+
         # Get recent commits (needed by frontend)
         try:
             # Check if repository has any commits
@@ -182,14 +182,14 @@ async def git_status(current_user: str = Depends(verify_token)):
                 logger.info("Repository has no commits yet")
         except Exception as e:
             logger.warning(f"Could not fetch commits: {e}")
-        
+
         # Get status (handle cases where repository is empty)
         try:
             is_dirty = repo.is_dirty()
             untracked_files = repo.untracked_files
             modified_files = [item.a_path for item in repo.index.diff(None)]
             staged_files = []
-            
+
             # Only get staged files if repository has commits
             if repo.head.is_valid():
                 staged_files = [item.a_path for item in repo.index.diff("HEAD")]
@@ -199,7 +199,7 @@ async def git_status(current_user: str = Depends(verify_token)):
             untracked_files = []
             modified_files = []
             staged_files = []
-        
+
         status_info = {
             "current_branch": current_branch,  # Frontend expects this field name
             "branch": current_branch,  # Keep for backward compatibility
@@ -209,7 +209,7 @@ async def git_status(current_user: str = Depends(verify_token)):
             "staged_files": staged_files,
             "commits": commits  # Frontend needs this for Git Commits mode
         }
-        
+
         return status_info
     except (InvalidGitRepositoryError, GitCommandError) as e:
         raise HTTPException(
@@ -232,7 +232,7 @@ async def git_commit(
     """Commit changes to Git repository."""
     try:
         repo = get_git_repo()
-        
+
         # Add files
         if request.files:
             for file_path in request.files:
@@ -240,17 +240,17 @@ async def git_commit(
         else:
             # Add all changes
             repo.git.add(A=True)
-        
+
         # Commit changes
         commit = repo.index.commit(request.message)
-        
+
         return {
             "success": True,
             "commit_hash": commit.hexsha,
             "message": request.message,
             "files_committed": len(commit.stats.files)
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -263,7 +263,7 @@ async def git_branches(current_user: str = Depends(verify_token)):
     """Get list of Git branches."""
     try:
         repo = get_git_repo()
-        
+
         branches = [branch.name for branch in repo.branches]
         return branches
     except (InvalidGitRepositoryError, GitCommandError) as e:
@@ -286,7 +286,7 @@ async def git_branch(
     """Create or switch to a Git branch."""
     try:
         repo = get_git_repo()
-        
+
         if request.create:
             # Create new branch
             new_branch = repo.create_head(request.branch_name)
@@ -297,7 +297,7 @@ async def git_branch(
             # Switch to existing branch
             repo.git.checkout(request.branch_name)
             return {"message": f"Switched to branch '{request.branch_name}'"}
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -313,15 +313,15 @@ async def git_diff(
     """Get diff for a specific commit."""
     try:
         repo = get_git_repo()
-        
+
         commit = repo.commit(commit_hash)
-        
+
         # Get diff against parent (or empty tree if first commit)
         if commit.parents:
             diff = commit.parents[0].diff(commit, create_patch=True)
         else:
             diff = commit.diff(repo.git.hash_object('-t', 'tree', '/dev/null'), create_patch=True)
-        
+
         diffs = []
         for d in diff:
             diffs.append({
@@ -329,7 +329,7 @@ async def git_diff(
                 "change_type": d.change_type,
                 "diff": str(d) if d.create_patch else ""
             })
-        
+
         return {
             "commit": {
                 "hash": commit.hexsha[:8],
@@ -339,7 +339,7 @@ async def git_diff(
             },
             "diffs": diffs
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -413,10 +413,10 @@ async def git_files(
     """Get list of files in a specific commit or file content if file_path is provided."""
     try:
         repo = get_git_repo()
-        
+
         # Get the commit
         commit = repo.commit(commit_hash)
-        
+
         # If file_path is provided, return file content
         if file_path:
             try:
@@ -431,13 +431,13 @@ async def git_files(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"File '{file_path}' not found in commit {commit_hash[:8]}"
                 )
-        
+
         # Otherwise, return list of files
         files = []
         for item in commit.tree.traverse():
             if item.type == 'blob':  # Only files, not directories
                 files.append(item.path)
-        
+
         # Filter for configuration files based on allowed extensions
         from config import settings
         config_extensions = settings.allowed_file_extensions
@@ -463,53 +463,53 @@ async def git_diff_compare(
         commit1 = request.get("commit1")
         commit2 = request.get("commit2") 
         file_path = request.get("file_path")
-        
+
         if not all([commit1, commit2, file_path]):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Missing required parameters: commit1, commit2, file_path"
             )
-        
+
         repo = get_git_repo()
-        
+
         # Get the commits
         commit_obj1 = repo.commit(commit1)
         commit_obj2 = repo.commit(commit2)
-        
+
         # Get file content from both commits
         try:
             file_content1 = (commit_obj1.tree / file_path).data_stream.read().decode('utf-8')
         except KeyError:
             file_content1 = ""
-            
+
         try:
             file_content2 = (commit_obj2.tree / file_path).data_stream.read().decode('utf-8')
         except KeyError:
             file_content2 = ""
-        
+
         # Generate diff
         diff_lines = []
-        
+
         lines1 = file_content1.splitlines(keepends=True)
         lines2 = file_content2.splitlines(keepends=True)
-        
+
         for line in difflib.unified_diff(lines1, lines2, n=3):
             diff_lines.append(line.rstrip('\n'))
-        
+
         # Calculate stats
         additions = sum(1 for line in diff_lines if line.startswith('+') and not line.startswith('+++'))
         deletions = sum(1 for line in diff_lines if line.startswith('-') and not line.startswith('---'))
-        
+
         # Prepare full file content for comparison display
         file1_lines = []
         file2_lines = []
-        
+
         lines1_list = file_content1.splitlines()
         lines2_list = file_content2.splitlines()
-        
+
         # Use difflib.SequenceMatcher to get line-by-line comparison
         matcher = difflib.SequenceMatcher(None, lines1_list, lines2_list)
-        
+
         for tag, i1, i2, j1, j2 in matcher.get_opcodes():
             if tag == 'equal':
                 for i in range(i1, i2):
@@ -527,7 +527,7 @@ async def git_diff_compare(
                     file1_lines.append({"line_number": i + 1, "content": lines1_list[i], "type": "replace"})
                 for j in range(j1, j2):
                     file2_lines.append({"line_number": j + 1, "content": lines2_list[j], "type": "replace"})
-        
+
         return {
             "commit1": commit1[:8],
             "commit2": commit2[:8],
@@ -544,7 +544,7 @@ async def git_diff_compare(
                 "total_lines": len(diff_lines)
             }
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -562,25 +562,25 @@ async def get_file_last_change(
     """Get the last change information for a specific file."""
     try:
         repo = get_git_repo()
-        
+
         # Get the commit history for the specific file
         commits = list(repo.iter_commits(paths=file_path, max_count=1))
-        
+
         if not commits:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No commits found for file: {file_path}"
             )
-        
+
         last_commit = commits[0]
-        
+
         # Check if file exists in the last commit
         try:
             file_content = (last_commit.tree / file_path).data_stream.read().decode('utf-8')
             file_exists = True
         except:
             file_exists = False
-        
+
         return {
             "file_path": file_path,
             "file_exists": file_exists,
@@ -600,7 +600,7 @@ async def get_file_last_change(
                 "timestamp": int(last_commit.committed_datetime.timestamp())
             }
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -625,21 +625,21 @@ async def get_file_complete_history(file_path: str, from_commit: str = None, cur
             cached = cache_service.get(cache_key)
             if cached is not None:
                 return cached
-        
+
         # Start from the specified commit or HEAD
         start_commit = from_commit if from_commit else "HEAD"
-        
+
         # Get all commits that modified this file
         commits = list(repo.iter_commits(start_commit, paths=file_path))
-        
+
         if not commits:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No commits found for file: {file_path}"
             )
-        
+
         history_commits = []
-        
+
         # If we have a specific from_commit, check if it's included in the results
         selected_commit_found = False
         if from_commit:
@@ -649,7 +649,7 @@ async def get_file_complete_history(file_path: str, from_commit: str = None, cur
                     from_commit.startswith(commit.hexsha)):
                     selected_commit_found = True
                     break
-        
+
         # If the selected commit is not found in the file history,
         # it means the commit exists but didn't modify the file
         # Add it to the beginning of the results for context
@@ -677,12 +677,12 @@ async def get_file_complete_history(file_path: str, from_commit: str = None, cur
             except Exception:
                 # If we can't get the commit, just continue
                 pass
-        
+
         # Process the commits that actually modified the file
         for i, commit in enumerate(commits):
             # Determine change type
             change_type = "M"  # Modified (default)
-            
+
             if i == len(commits) - 1:
                 # This is the first commit where the file appeared
                 change_type = "A"  # Added
@@ -692,7 +692,7 @@ async def get_file_complete_history(file_path: str, from_commit: str = None, cur
                     commit.tree[file_path]
                 except KeyError:
                     change_type = "D"  # Deleted
-            
+
             history_commits.append({
                 "hash": commit.hexsha,
                 "short_hash": commit.hexsha[:8],
@@ -704,7 +704,7 @@ async def get_file_complete_history(file_path: str, from_commit: str = None, cur
                 "date": commit.committed_datetime.isoformat(),
                 "change_type": change_type
             })
-        
+
         result = {
             "file_path": file_path,
             "from_commit": start_commit,
@@ -714,7 +714,7 @@ async def get_file_complete_history(file_path: str, from_commit: str = None, cur
         if cache_cfg.get('enabled', True):
             cache_service.set(cache_key, result, int(cache_cfg.get('ttl_seconds', 600)))
         return result
-        
+
     except (InvalidGitRepositoryError, GitCommandError) as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -95,7 +95,7 @@ async def get_statistics():
     from routers.nautobot import get_nautobot_stats
     from core.auth import verify_token
     from fastapi import Depends
-    
+
     # This would need token verification in a real implementation
     # For now, just return basic stats
     return {
@@ -113,17 +113,17 @@ async def graphql_endpoint(query_data: dict, current_user: str = Depends(verify_
     """
     from services.nautobot import nautobot_service
     from fastapi import HTTPException, status
-    
+
     try:
         query = query_data.get("query")
         variables = query_data.get("variables", {})
-        
+
         if not query:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="GraphQL query is required"
             )
-        
+
         result = await nautobot_service.graphql_query(query, variables)
         return result
     except Exception as e:
@@ -137,22 +137,22 @@ async def graphql_endpoint(query_data: dict, current_user: str = Depends(verify_
 async def nautobot_graphql_endpoint(query_data: dict):
     """
     Execute GraphQL query against Nautobot - compatibility endpoint.
-    
+
     This endpoint maintains backward compatibility with existing frontend code.
     """
     from services.nautobot import nautobot_service
     from fastapi import HTTPException, status
-    
+
     try:
         query = query_data.get("query")
         variables = query_data.get("variables", {})
-        
+
         if not query:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="GraphQL query is required"
             )
-        
+
         result = await nautobot_service.graphql_query(query, variables)
         return result
     except Exception as e:
@@ -165,7 +165,7 @@ async def nautobot_graphql_endpoint(query_data: dict):
 if __name__ == "__main__":
     import uvicorn
     from config import settings
-    
+
     uvicorn.run(app, host="0.0.0.0", port=settings.port)
 
 # Startup prefetch for Git cache (commits, optionally refresh loop)

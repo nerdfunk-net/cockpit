@@ -11,15 +11,15 @@ try:
     print("Attempting to import main module...")
     import main
     print("Import successful!")
-    
+
     print(f"\nRegistered routes ({len(main.app.routes)}):")
     for i, route in enumerate(main.app.routes):
         if hasattr(route, 'path'):
             methods = getattr(route, 'methods', 'N/A')
             print(f"  {i+1:2d}. {route.path} - {methods}")
-            
+
     print(f"\nTotal routes: {len(main.app.routes)}")
-    
+
 except Exception as e:
     print(f"Import failed with error: {e}")
     print(f"Error type: {type(e).__name__}")

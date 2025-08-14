@@ -36,31 +36,31 @@ class Settings:
 	port: int = int(os.getenv('SERVER_PORT', '8000'))
 	debug: bool = get_env_bool('DEBUG', True)
 	log_level: str = os.getenv('LOG_LEVEL', 'INFO')
-    
+
 	# Nautobot Configuration
 	nautobot_url: str = os.getenv('NAUTOBOT_HOST', 'http://localhost:8080')
 	nautobot_token: str = os.getenv('NAUTOBOT_TOKEN', 'your-nautobot-token-here')
 	nautobot_timeout: int = int(os.getenv('NAUTOBOT_TIMEOUT', '30'))
-    
+
 	# Authentication Configuration
 	secret_key: str = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
 	algorithm: str = os.getenv('ALGORITHM', 'HS256')
 	access_token_expire_minutes: int = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', '30'))
-    
+
 	# Demo credentials
 	demo_username: str = os.getenv('DEMO_USERNAME', 'admin')
 	demo_password: str = os.getenv('DEMO_PASSWORD', 'admin')
-    
+
 	# SSL/TLS Configuration for Git operations
 	git_ssl_verify: bool = os.getenv('GIT_SSL_VERIFY', 'true').lower() == 'true'
 	git_ssl_cert: str = os.getenv('GIT_SSL_CERT', '')
 	git_ssl_ca_info: str = os.getenv('GIT_SSL_CA_INFO', '')
-    
+
 	# File storage configuration
 	config_files_directory: str = os.getenv('CONFIG_FILES_DIRECTORY', 'config_files')
 	allowed_file_extensions: list = get_env_list('ALLOWED_FILE_EXTENSIONS', ['.txt', '.conf', '.cfg', '.config', '.ini'])
 	max_file_size_mb: int = int(os.getenv('MAX_FILE_SIZE_MB', '10'))
-    
+
 	# Data directory configuration - use project-relative path for Docker compatibility
 	data_directory: str = os.getenv('DATA_DIRECTORY', os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data'))
 

@@ -45,12 +45,12 @@ class GitRepositoryResponse(BaseModel):
     verify_ssl: bool
     description: Optional[str]
     is_active: bool
-    
+
     # Timestamps
     created_at: str
     updated_at: str
     last_sync: Optional[str]
-    
+
     # Sync status
     sync_status: Optional[str]
 

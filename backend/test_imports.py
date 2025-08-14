@@ -18,13 +18,13 @@ def test_import(module_name, description):
 
 def main():
     print("=== Testing Individual Imports ===")
-    
+
     # Test basic imports
     test_import("logging", "logging")
     test_import("datetime", "datetime")
     test_import("fastapi", "FastAPI")
     test_import("fastapi.middleware.cors", "CORS middleware")
-    
+
     # Test router imports
     print("\n=== Testing Router Imports ===")
     test_import("routers.auth", "auth router")
@@ -32,19 +32,19 @@ def main():
     test_import("routers.git", "git router")
     test_import("routers.files", "files router")
     test_import("routers.settings", "settings router")
-    
+
     # Test config
     print("\n=== Testing Config ===")
     test_import("config", "config")
-    
+
     # Test services
     print("\n=== Testing Services ===")
     test_import("services.nautobot", "nautobot service")
-    
+
     # Test core
     print("\n=== Testing Core ===")
     test_import("core.auth", "core auth")
-    
+
     print("\n=== Testing Main Module ===")
     try:
         print("Importing main module...")

@@ -15,18 +15,18 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 async def login(user_data: UserLogin):
     """
     Authenticate user and return JWT token.
-    
+
     For demo purposes, using simple hardcoded auth.
     In production, this should validate against a proper user database.
     """
     from config import settings
-    
+
     if user_data.username == settings.demo_username and user_data.password == settings.demo_password:
         access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
         access_token = create_access_token(
             data={"sub": user_data.username}, expires_delta=access_token_expires
         )
-        
+
         return LoginResponse(
             access_token=access_token,
             token_type="bearer",
@@ -36,14 +36,14 @@ async def login(user_data: UserLogin):
                 "role": "admin" if user_data.username == settings.demo_username else "user"
             }
         )
-    
+
     # Try guest login
     elif user_data.username == "guest" and user_data.password == "guest":
         access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
         access_token = create_access_token(
             data={"sub": user_data.username}, expires_delta=access_token_expires
         )
-        
+
         return LoginResponse(
             access_token=access_token,
             token_type="bearer", 
@@ -53,7 +53,7 @@ async def login(user_data: UserLogin):
                 "role": "guest"
             }
         )
-    
+
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

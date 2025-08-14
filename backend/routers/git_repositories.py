@@ -39,7 +39,7 @@ async def get_repositories(
     """Get all git repositories."""
     try:
         repositories = git_repo_manager.get_repositories(category=category, active_only=active_only)
-        
+
         # Convert to response models (excluding sensitive data like tokens)
         repo_responses = []
         for repo in repositories:
@@ -47,7 +47,7 @@ async def get_repositories(
             # Remove token from response for security
             repo_dict.pop('token', None)
             repo_responses.append(GitRepositoryResponse(**repo_dict))
-        
+
         return GitRepositoryListResponse(
             repositories=repo_responses,
             total=len(repo_responses)
@@ -62,7 +62,7 @@ async def get_config_repositories(current_user: dict = Depends(verify_token)):
     """Get all Git repositories in the 'configs' category."""
     try:
         repositories = git_repo_manager.get_repositories(category='configs', active_only=True)
-        
+
         # Convert to response models (excluding sensitive data like tokens)
         repo_responses = []
         for repo in repositories:
@@ -70,7 +70,7 @@ async def get_config_repositories(current_user: dict = Depends(verify_token)):
             # Remove token from response for security
             repo_dict.pop('token', None)
             repo_responses.append(GitRepositoryResponse(**repo_dict))
-        
+
         return GitRepositoryListResponse(
             repositories=repo_responses,
             total=len(repo_responses)
@@ -85,22 +85,22 @@ async def get_selected_repository(current_user: dict = Depends(verify_token)):
     """Get the currently selected Git repository for configuration comparison."""
     try:
         from settings_manager import settings_manager
-        
+
         selected_id = settings_manager.get_selected_git_repository()
         if selected_id is None:
             return {"selected_repository": None}
-        
+
         # Get the repository details
         repository = git_repo_manager.get_repository(selected_id)
         if not repository:
             # Repository was deleted, clear the selection
             settings_manager.set_selected_git_repository(0)
             return {"selected_repository": None}
-        
+
         # Remove sensitive data
         repo_dict = dict(repository)
         repo_dict.pop('token', None)
-        
+
         return {
             "selected_repository": GitRepositoryResponse(**repo_dict),
             "selected_id": selected_id
@@ -118,23 +118,23 @@ async def set_selected_repository(
     """Set the selected Git repository for configuration comparison."""
     try:
         from settings_manager import settings_manager
-        
+
         # Verify repository exists and is in configs category
         repository = git_repo_manager.get_repository(repository_id)
         if not repository:
             raise HTTPException(status_code=404, detail="Repository not found")
-        
+
         if repository['category'] != 'configs':
             raise HTTPException(status_code=400, detail="Only repositories in 'configs' category can be selected")
-        
+
         if not repository['is_active']:
             raise HTTPException(status_code=400, detail="Repository must be active to be selected")
-        
+
         # Set the selected repository
         success = settings_manager.set_selected_git_repository(repository_id)
         if not success:
             raise HTTPException(status_code=500, detail="Failed to save selected repository")
-        
+
         return {"message": f"Repository '{repository['name']}' selected successfully", "repository_id": repository_id}
     except HTTPException:
         raise
@@ -153,11 +153,11 @@ async def get_repository(
         repository = git_repo_manager.get_repository(repo_id)
         if not repository:
             raise HTTPException(status_code=404, detail="Repository not found")
-        
+
         # Remove token from response for security
         repo_dict = dict(repository)
         repo_dict.pop('token', None)
-        
+
         return GitRepositoryResponse(**repo_dict)
     except HTTPException:
         raise
@@ -176,7 +176,7 @@ async def get_repository_for_edit(
         repository = git_repo_manager.get_repository(repo_id)
         if not repository:
             raise HTTPException(status_code=404, detail="Repository not found")
-        
+
         # Return all fields including token for editing purposes
         # Token field is needed to maintain existing credentials in edit form
         return repository
@@ -200,16 +200,16 @@ async def create_repository(
             repo_data['username'] = None
             repo_data['token'] = None
         repo_id = git_repo_manager.create_repository(repo_data)
-        
+
         # Get the created repository
         created_repo = git_repo_manager.get_repository(repo_id)
         if not created_repo:
             raise HTTPException(status_code=500, detail="Failed to retrieve created repository")
-        
+
         # Remove token from response for security
         repo_dict = dict(created_repo)
         repo_dict.pop('token', None)
-        
+
         return GitRepositoryResponse(**repo_dict)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -230,7 +230,7 @@ async def update_repository(
         existing_repo = git_repo_manager.get_repository(repo_id)
         if not existing_repo:
             raise HTTPException(status_code=404, detail="Repository not found")
-        
+
         # Update only provided fields
         repo_data = {k: v for k, v in repository.dict().items() if v is not None}
         # Prefer credential_name over legacy inline credentials
@@ -238,23 +238,23 @@ async def update_repository(
             repo_data['username'] = None
             # Only clear token if explicitly provided or credential selected
             repo_data['token'] = None
-        
+
         if not repo_data:
             raise HTTPException(status_code=400, detail="No fields to update")
-        
+
         success = git_repo_manager.update_repository(repo_id, repo_data)
         if not success:
             raise HTTPException(status_code=500, detail="Failed to update repository")
-        
+
         # Get the updated repository
         updated_repo = git_repo_manager.get_repository(repo_id)
         if not updated_repo:
             raise HTTPException(status_code=500, detail="Failed to retrieve updated repository")
-        
+
         # Remove token from response for security
         repo_dict = dict(updated_repo)
         repo_dict.pop('token', None)
-        
+
         return GitRepositoryResponse(**repo_dict)
     except HTTPException:
         raise
@@ -277,11 +277,11 @@ async def delete_repository(
         existing_repo = git_repo_manager.get_repository(repo_id)
         if not existing_repo:
             raise HTTPException(status_code=404, detail="Repository not found")
-        
+
         success = git_repo_manager.delete_repository(repo_id, hard_delete=hard_delete)
         if not success:
             raise HTTPException(status_code=500, detail="Failed to delete repository")
-        
+
         action = "deleted" if hard_delete else "deactivated"
         return {"message": f"Repository {action} successfully"}
     except HTTPException:
@@ -303,11 +303,11 @@ async def test_git_connection(
         import tempfile
         import os
         from pathlib import Path
-        
+
         # Create temporary directory for test
         with tempfile.TemporaryDirectory() as temp_dir:
             test_path = Path(temp_dir) / "test_repo"
-            
+
             # Build git clone command
             clone_url = test_request.url
             resolved_username = test_request.username
@@ -345,12 +345,12 @@ async def test_git_connection(
                 if "://" in clone_url:
                     protocol, rest = clone_url.split("://", 1)
                     clone_url = f"{protocol}://{resolved_username}:{resolved_token}@{rest}"
-            
+
             # Set up environment
             env = os.environ.copy()
             if not test_request.verify_ssl:
                 env["GIT_SSL_NO_VERIFY"] = "1"
-            
+
             # Try to clone (shallow clone for speed)
             cmd = [
                 "git", "clone", 
@@ -359,7 +359,7 @@ async def test_git_connection(
                 clone_url,
                 str(test_path)
             ]
-            
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -367,7 +367,7 @@ async def test_git_connection(
                 env=env,
                 timeout=30  # 30 second timeout
             )
-            
+
             if result.returncode == 0:
                 return GitConnectionTestResponse(
                     success=True,
@@ -386,7 +386,7 @@ async def test_git_connection(
                         "return_code": result.returncode
                     }
                 )
-                
+
     except subprocess.TimeoutExpired:
         return GitConnectionTestResponse(
             success=False,
@@ -409,13 +409,13 @@ async def get_repository_status(
 ):
     """Get the status of a specific repository (exists, sync status, commit info)."""
     import subprocess
-    
+
     try:
         # Get repository details
         repository = git_repo_manager.get_repository(repo_id)
         if not repository:
             raise HTTPException(status_code=404, detail="Repository not found")
-        
+
         # Get data directory from configuration
         from config import settings as config_settings
         repo_path = os.path.join(
@@ -423,7 +423,7 @@ async def get_repository_status(
             'git',
             (repository.get('path') or repository['name']).lstrip('/')
         )
-        
+
         status_info = {
             "repository_name": repository['name'],
             "repository_url": repository['url'],
@@ -442,7 +442,7 @@ async def get_repository_status(
             "commits": [],
             "config_files": []
         }
-        
+
         if status_info["exists"]:
             # Check if it's a valid Git repository
             try:
@@ -468,7 +468,7 @@ async def get_repository_status(
                             status_info["current_branch"] = (br.stdout or '').strip()
                     except Exception as e:
                         logger.warning(f"Could not get current branch: {e}")
-                    
+
                     # Get current commit info
                     try:
                         commit_result = subprocess.run(
@@ -527,7 +527,7 @@ async def get_repository_status(
                         status_info["commits"] = commits
                     except Exception as e:
                         logger.warning(f"Could not get recent commits: {e}")
-                    
+
                     # Check if repository is synced with remote
                     try:
                         # Fetch latest remote refs (timeout quickly)
@@ -537,7 +537,7 @@ async def get_repository_status(
                             capture_output=True, 
                             timeout=5
                         )
-                        
+
                         # Check how many commits behind/ahead
                         behind_result = subprocess.run(
                             ['git', 'rev-list', '--count', f'HEAD..origin/{repository["branch"]}'], 
@@ -548,7 +548,7 @@ async def get_repository_status(
                         )
                         if behind_result.returncode == 0:
                             status_info["behind_count"] = int(behind_result.stdout.strip() or 0)
-                        
+
                         ahead_result = subprocess.run(
                             ['git', 'rev-list', '--count', f'origin/{repository["branch"]}..HEAD'], 
                             cwd=repo_path, 
@@ -558,40 +558,40 @@ async def get_repository_status(
                         )
                         if ahead_result.returncode == 0:
                             status_info["ahead_count"] = int(ahead_result.stdout.strip() or 0)
-                            
+
                         status_info["is_synced"] = (status_info["behind_count"] == 0)
-                        
+
                     except Exception as e:
                         logger.warning(f"Could not check sync status: {e}")
                         # If we can't check sync status, assume it needs sync
                         status_info["is_synced"] = False
-                    
+
                     # Get list of configuration files
                     try:
                         for root, dirs, files in os.walk(repo_path):
                             # Skip .git directory
                             if '.git' in root:
                                 continue
-                            
+
                             for file in files:
                                 if not file.startswith('.'):
                                     rel_path = os.path.relpath(os.path.join(root, file), repo_path)
                                     status_info["config_files"].append(rel_path)
-                                    
+
                         # Sort files for consistency
                         status_info["config_files"].sort()
-                        
+
                     except Exception as e:
                         logger.warning(f"Could not scan config files: {e}")
-                        
+
             except Exception as e:
                 logger.warning(f"Error checking Git repository status: {e}")
-        
+
         return {
             "success": True,
             "data": status_info
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -792,16 +792,16 @@ async def sync_repositories(
         else:
             # Sync all active repositories
             repos = git_repo_manager.get_repositories(active_only=True)
-        
+
         synced = []
         failed = []
         errors = {}
-        
+
         for repo in repos:
             try:
                 repo_id = repo['id']
                 git_repo_manager.update_sync_status(repo_id, "syncing")
-                
+
                 # TODO: Implement actual sync logic here
                 # For now, just mark as synced
                 git_repo_manager.update_sync_status(repo_id, "synced")
@@ -811,11 +811,11 @@ async def sync_repositories(
                 failed.append(repo_id)
                 errors[str(repo_id)] = str(e)
                 git_repo_manager.update_sync_status(repo_id, f"error: {str(e)}")
-        
+
         message = f"Synced {len(synced)} repositories"
         if failed:
             message += f", {len(failed)} failed"
-        
+
         return GitSyncResponse(
             synced_repositories=synced,
             failed_repositories=failed,
@@ -838,13 +838,13 @@ async def search_repository_files(
 ):
     """Search for files in a specific Git repository with filtering and pagination."""
     import fnmatch
-    
+
     try:
         # Get repository details
         repository = git_repo_manager.get_repository(repo_id)
         if not repository:
             raise HTTPException(status_code=404, detail="Repository not found")
-        
+
         # Get data directory from configuration
         from config import settings as config_settings
         repo_path = os.path.join(
@@ -852,7 +852,7 @@ async def search_repository_files(
             'git',
             (repository.get('path') or repository['name']).lstrip('/')
         )
-        
+
         if not os.path.exists(repo_path):
             return {
                 "success": True,
@@ -864,23 +864,23 @@ async def search_repository_files(
                     "repository_name": repository['name']
                 }
             }
-        
+
         # Scan the repository directory for files
         structured_files = []
-        
+
         for root, dirs, files in os.walk(repo_path):
             # Skip .git directory
             if '.git' in root:
                 continue
-                
+
             rel_root = os.path.relpath(root, repo_path)
             if rel_root == '.':
                 rel_root = ''
-            
+
             for file in files:
                 if file.startswith('.'):
                     continue
-                    
+
                 full_path = os.path.join(rel_root, file) if rel_root else file
                 file_info = {
                     "name": file,
@@ -889,13 +889,13 @@ async def search_repository_files(
                     "size": os.path.getsize(os.path.join(root, file)) if os.path.exists(os.path.join(root, file)) else 0
                 }
                 structured_files.append(file_info)
-        
+
         # Filter files based on query
         filtered_files = structured_files
         if query:
             query_lower = query.lower()
             filtered_files = []
-            
+
             for file_info in structured_files:
                 # Search in filename, path, and directory
                 if (query_lower in file_info['name'].lower() or 
@@ -906,14 +906,14 @@ async def search_repository_files(
                 elif (fnmatch.fnmatch(file_info['name'].lower(), f'*{query_lower}*') or
                       fnmatch.fnmatch(file_info['path'].lower(), f'*{query_lower}*')):
                     filtered_files.append(file_info)
-        
+
         # Sort by relevance (exact matches first, then by path)
         if query:
             def sort_key(item):
                 name_lower = item['name'].lower()
                 path_lower = item['path'].lower()
                 query_lower = query.lower()
-                
+
                 # Exact filename match gets highest priority
                 if name_lower == query_lower:
                     return (0, item['path'])
@@ -926,15 +926,15 @@ async def search_repository_files(
                 # Path contains query
                 else:
                     return (3, item['path'])
-            
+
             filtered_files.sort(key=sort_key)
         else:
             # No query, sort alphabetically by path
             filtered_files.sort(key=lambda x: x['path'])
-        
+
         # Apply pagination
         paginated_files = filtered_files[:limit]
-        
+
         return {
             "success": True,
             "data": {
@@ -946,7 +946,7 @@ async def search_repository_files(
                 "has_more": len(filtered_files) > limit
             }
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:

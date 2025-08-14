@@ -27,7 +27,7 @@ async def get_all_settings(current_user: str = Depends(verify_token)):
     try:
         from settings_manager import settings_manager
         settings_data = settings_manager.get_all_settings()
-        
+
         # Check if database was recovered from corruption
         metadata = settings_data.get('metadata', {})
         if metadata.get('status') == 'recovered':
@@ -36,9 +36,9 @@ async def get_all_settings(current_user: str = Depends(verify_token)):
                 "warning": metadata.get('message', 'Database was recovered from corruption'),
                 "recovery_performed": True
             }
-        
+
         return {"settings": settings_data}
-    
+
     except Exception as e:
         logger.error(f"Error getting settings: {e}")
         raise HTTPException(
@@ -57,7 +57,7 @@ async def get_nautobot_settings(current_user: str = Depends(verify_token)):
             "success": True,
             "data": nautobot_settings
         }
-    
+
     except Exception as e:
         logger.error(f"Error getting Nautobot settings: {e}")
         return {
@@ -76,7 +76,7 @@ async def get_git_settings(current_user: str = Depends(verify_token)):
             "success": True,
             "data": git_settings
         }
-    
+
     except Exception as e:
         logger.error(f"Error getting Git settings: {e}")
         return {
@@ -177,9 +177,9 @@ async def update_all_settings(
         }
         if settings_request.cache is not None:
             settings_dict["cache"] = settings_request.cache.dict()
-        
+
         success = settings_manager.update_all_settings(settings_dict)
-        
+
         if success:
             return {
                 "message": "Settings updated successfully",
@@ -190,7 +190,7 @@ async def update_all_settings(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update settings"
             )
-    
+
     except Exception as e:
         logger.error(f"Error updating settings: {e}")
         raise HTTPException(
@@ -208,7 +208,7 @@ async def update_nautobot_settings(
     try:
         from settings_manager import settings_manager
         success = settings_manager.update_nautobot_settings(nautobot_request.dict())
-        
+
         if success:
             return {
                 "message": "Nautobot settings updated successfully",
@@ -219,7 +219,7 @@ async def update_nautobot_settings(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update Nautobot settings"
             )
-    
+
     except Exception as e:
         logger.error(f"Error updating Nautobot settings: {e}")
         raise HTTPException(
@@ -237,7 +237,7 @@ async def update_git_settings(
     try:
         from settings_manager import settings_manager
         success = settings_manager.update_git_settings(git_request.dict())
-        
+
         if success:
             return {
                 "message": "Git settings updated successfully",
@@ -248,7 +248,7 @@ async def update_git_settings(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update Git settings"
             )
-    
+
     except Exception as e:
         logger.error(f"Error updating Git settings: {e}")
         raise HTTPException(
@@ -267,7 +267,7 @@ async def create_nautobot_settings(
     try:
         from settings_manager import settings_manager
         success = settings_manager.update_nautobot_settings(nautobot_request.dict())
-        
+
         if success:
             return {
                 "success": True,
@@ -279,7 +279,7 @@ async def create_nautobot_settings(
                 "success": False,
                 "message": "Failed to update Nautobot settings"
             }
-    
+
     except Exception as e:
         logger.error(f"Error updating Nautobot settings: {e}")
         return {
@@ -297,7 +297,7 @@ async def create_git_settings(
     try:
         from settings_manager import settings_manager
         success = settings_manager.update_git_settings(git_request.dict())
-        
+
         if success:
             return {
                 "success": True,
@@ -309,7 +309,7 @@ async def create_git_settings(
                 "success": False,
                 "message": "Failed to update Git settings"
             }
-    
+
     except Exception as e:
         logger.error(f"Error updating Git settings: {e}")
         return {
@@ -327,14 +327,14 @@ async def test_nautobot_connection(
     try:
         from connection_tester import connection_tester
         success, message = await connection_tester.test_nautobot_connection(test_request.dict())
-        
+
         return {
             "success": success,
             "message": message,
             "tested_url": test_request.url,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
-    
+
     except Exception as e:
         logger.error(f"Error testing Nautobot connection: {e}")
         return {
@@ -354,7 +354,7 @@ async def test_git_connection(
     try:
         from connection_tester import connection_tester
         success, message = await connection_tester.test_git_connection(test_request.dict())
-        
+
         return {
             "success": success,
             "message": message,
@@ -362,7 +362,7 @@ async def test_git_connection(
             "tested_branch": test_request.branch,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
-    
+
     except Exception as e:
         logger.error(f"Error testing Git connection: {e}")
         return {
@@ -380,7 +380,7 @@ async def reset_settings_to_defaults(current_user: str = Depends(verify_token)):
     try:
         from settings_manager import settings_manager
         success = settings_manager.reset_to_defaults()
-        
+
         if success:
             return {
                 "message": "Settings reset to defaults successfully",
@@ -391,7 +391,7 @@ async def reset_settings_to_defaults(current_user: str = Depends(verify_token)):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to reset settings to defaults"
             )
-    
+
     except Exception as e:
         logger.error(f"Error resetting settings: {e}")
         raise HTTPException(
@@ -406,7 +406,7 @@ async def check_settings_health(current_user: str = Depends(verify_token)):
     try:
         from settings_manager import settings_manager
         health_info = settings_manager.health_check()
-        
+
         if health_info['status'] == 'healthy':
             return health_info
         else:
@@ -417,7 +417,7 @@ async def check_settings_health(current_user: str = Depends(verify_token)):
                 "recovery_attempted": True,
                 "recovery_result": recovery_result
             }
-    
+
     except Exception as e:
         logger.error(f"Settings health check failed: {e}")
         return {

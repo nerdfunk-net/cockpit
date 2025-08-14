@@ -31,7 +31,7 @@ class TemplateRequest(BaseModel):
     template_type: TemplateType = Field(default=TemplateType.JINJA2, description="Template content type")
     category: Optional[str] = Field(None, description="Template category for organization")
     description: Optional[str] = Field(None, description="Template description")
-    
+
     # Git-specific fields
     git_repo_url: Optional[str] = Field(None, description="Git repository URL")
     git_branch: Optional[str] = Field(default="main", description="Git branch")
@@ -39,11 +39,11 @@ class TemplateRequest(BaseModel):
     git_token: Optional[str] = Field(None, description="Git personal access token")
     git_path: Optional[str] = Field(None, description="Path to template file in repository")
     git_verify_ssl: Optional[bool] = Field(default=True, description="Verify SSL certificates")
-    
+
     # File/WebEditor-specific fields
     content: Optional[str] = Field(None, description="Template content")
     filename: Optional[str] = Field(None, description="Original filename for uploaded files")
-    
+
     # Metadata
     variables: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Template variables")
     tags: Optional[List[str]] = Field(default_factory=list, description="Template tags")
@@ -57,26 +57,26 @@ class TemplateResponse(BaseModel):
     template_type: TemplateType
     category: Optional[str]
     description: Optional[str]
-    
+
     # Git-specific fields
     git_repo_url: Optional[str]
     git_branch: Optional[str]
     git_username: Optional[str]
     git_path: Optional[str]
     git_verify_ssl: Optional[bool]
-    
+
     # File/WebEditor-specific fields
     content: Optional[str]
     filename: Optional[str]
-    
+
     # Metadata
     variables: Dict[str, Any]
     tags: List[str]
-    
+
     # Timestamps
     created_at: str
     updated_at: str
-    
+
     # Status
     is_active: bool
     last_sync: Optional[str]
@@ -129,7 +129,7 @@ class TemplateSyncResponse(BaseModel):
 class TemplateImportRequest(BaseModel):
     """Template import request model."""
     source_type: str = Field(..., description="Import source type: 'git_bulk', 'file_bulk'")
-    
+
     # Git bulk import
     git_repo_url: Optional[str] = None
     git_branch: Optional[str] = "main"
@@ -137,10 +137,10 @@ class TemplateImportRequest(BaseModel):
     git_token: Optional[str] = None
     git_templates_path: Optional[str] = "templates/"
     git_verify_ssl: Optional[bool] = True
-    
+
     # File bulk import
     file_contents: Optional[List[Dict[str, str]]] = None  # [{"filename": "...", "content": "..."}]
-    
+
     # Common settings
     default_category: Optional[str] = None
     default_template_type: TemplateType = TemplateType.JINJA2
@@ -164,7 +164,7 @@ class TemplateUpdateRequest(BaseModel):
     description: Optional[str] = Field(None, description="Template description")
     content: Optional[str] = Field(None, description="Template content")
     template_type: Optional[TemplateType] = Field(None, description="Template content type")
-    
+
     # Metadata
     variables: Optional[Dict[str, Any]] = Field(None, description="Template variables")
     tags: Optional[List[str]] = Field(None, description="Template tags")

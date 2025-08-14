@@ -38,25 +38,25 @@ class ScanStartRequest(BaseModel):
     def validate_cidrs(cls, v: List[str]):
         if not v:
             raise ValueError("At least one CIDR required")
-        
+
         cleaned = []
         seen = set()
-        
+
         for cidr in v:
             try:
                 network = ipaddress.ip_network(cidr, strict=False)
             except Exception:
                 raise ValueError(f"Invalid CIDR format: {cidr}")
-            
+
             # Enforce /22 minimum (max ~1024 hosts per spec)
             if network.prefixlen < 22:
                 raise ValueError(f"CIDR too large (minimum /22): {cidr}")
-            
+
             # Deduplicate
             if cidr not in seen:
                 seen.add(cidr)
                 cleaned.append(cidr)
-                
+
         return cleaned
 
     @validator("credential_ids")
@@ -95,7 +95,7 @@ class OnboardDevice(BaseModel):
     device_type: str  # 'cisco' | 'linux'
     hostname: Optional[str] = None
     platform: Optional[str] = None
-    
+
     # Cisco-specific fields
     location: Optional[str] = None
     namespace: Optional[str] = "Global"
@@ -128,7 +128,7 @@ async def start_scan(request: ScanStartRequest):
             request.discovery_mode,
             parser_template_ids=request.parser_template_ids,
         )
-        
+
         return ScanStartResponse(
             job_id=job.job_id,
             total_targets=job.total_targets,
@@ -146,13 +146,13 @@ async def start_scan(request: ScanStartRequest):
 async def get_scan_status(job_id: str):
     """Get status and results of a scan job."""
     job = await scan_service.get_job(job_id)
-    
+
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Scan job not found"
         )
-    
+
     return ScanStatusResponse(
         job_id=job.job_id,
         state=job.state,
@@ -188,26 +188,26 @@ async def onboard_devices(job_id: str, request: OnboardRequest):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Scan job not found"
         )
-    
+
     # Validate devices against scan results
     result_ips = {result.ip for result in job.results}
     valid_devices = [device for device in request.devices if device.ip in result_ips]
-    
+
     if not valid_devices:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No valid devices selected for onboarding"
         )
-    
+
     # Separate Cisco and Linux devices
     cisco_devices = [d for d in valid_devices if d.device_type == "cisco"]
     linux_devices = [d for d in valid_devices if d.device_type == "linux"]
-    
+
     cisco_queued = 0
     linux_added = 0
     inventory_path = None
     job_ids = []
-    
+
     # Handle Cisco device onboarding via Nautobot
     if cisco_devices:
         try:
@@ -216,7 +216,7 @@ async def onboard_devices(job_id: str, request: OnboardRequest):
         except Exception as e:
             logger.error(f"Cisco onboarding failed: {e}")
             # Continue with Linux devices even if Cisco fails
-    
+
     # Handle Linux device inventory creation
     if linux_devices:
         try:
@@ -227,7 +227,7 @@ async def onboard_devices(job_id: str, request: OnboardRequest):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to create Linux inventory: {str(e)}"
             )
-    
+
     return OnboardResponse(
         accepted=len(valid_devices),
         cisco_queued=cisco_queued,
@@ -241,7 +241,7 @@ async def _onboard_cisco_devices(cisco_devices: List[OnboardDevice]) -> tuple[in
     """Onboard Cisco devices via Nautobot API."""
     job_ids = []
     queued_count = 0
-    
+
     for device in cisco_devices:
         try:
             # Prepare device data for Nautobot onboarding
@@ -256,21 +256,21 @@ async def _onboard_cisco_devices(cisco_devices: List[OnboardDevice]) -> tuple[in
                 "interface_status": device.interface_status or "Active",
                 "ip_status": device.ip_status or "Active"
             }
-            
+
             # Call Nautobot onboarding API
             response = await nautobot_service.onboard_device(device_data)
-            
+
             if response.get("job_id"):
                 job_ids.append(response["job_id"])
                 queued_count += 1
                 logger.info(f"Cisco device {device.ip} queued for onboarding with job {response['job_id']}")
             else:
                 logger.warning(f"Cisco device {device.ip} onboarding returned no job ID")
-                
+
         except Exception as e:
             logger.error(f"Failed to onboard Cisco device {device.ip}: {e}")
             # Continue with other devices
-    
+
     return queued_count, job_ids
 
 
@@ -279,10 +279,10 @@ async def _create_linux_inventory(linux_devices: List[OnboardDevice], job_id: st
     # Create inventory directory if it doesn't exist
     inventory_dir = os.path.join("data", "inventory")
     os.makedirs(inventory_dir, exist_ok=True)
-    
+
     # Create inventory file with job ID per spec
     inventory_path = os.path.join(inventory_dir, f"inventory_{job_id}.yaml")
-    
+
     # Build all_devices dictionary for template rendering
     all_devices = {}
     for device in linux_devices:
@@ -294,14 +294,14 @@ async def _create_linux_inventory(linux_devices: List[OnboardDevice], job_id: st
             "role": device.role or "server",
             "status": device.status or "Active"
         }
-    
+
     # Try to get template from Settings Templates App
     rendered_content = ""
     try:
         template_name = template_manager.get_selected_template_name()
         if template_name:
             template_content = template_manager.get_template_content(template_name)
-            
+
             # Render template with all_devices context
             env = Environment(loader=FileSystemLoader("."))
             template = env.from_string(template_content)
@@ -309,17 +309,17 @@ async def _create_linux_inventory(linux_devices: List[OnboardDevice], job_id: st
         else:
             # Fallback to JSON if no template selected
             rendered_content = json.dumps({"all_devices": all_devices}, indent=2)
-            
+
     except Exception as e:
         logger.warning(f"Template rendering failed, using JSON fallback: {e}")
         rendered_content = json.dumps({"all_devices": all_devices}, indent=2)
-    
+
     # Write inventory file
     with open(inventory_path, 'w', encoding='utf-8') as f:
         f.write(rendered_content)
-    
+
     logger.info(f"Created Linux inventory file: {inventory_path} with {len(linux_devices)} devices")
-    
+
     return len(linux_devices), inventory_path
 
 
@@ -327,16 +327,16 @@ async def _create_linux_inventory(linux_devices: List[OnboardDevice], job_id: st
 async def delete_scan_job(job_id: str):
     """Delete a scan job (cleanup endpoint)."""
     job = await scan_service.get_job(job_id)
-    
+
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Scan job not found"
         )
-    
+
     # Remove job from service
     scan_service._jobs.pop(job_id, None)
-    
+
     return {"message": f"Scan job {job_id} deleted successfully"}
 
 
@@ -344,7 +344,7 @@ async def delete_scan_job(job_id: str):
 async def list_scan_jobs():
     """List all active scan jobs."""
     scan_service._purge_expired()
-    
+
     jobs = []
     for job in scan_service._jobs.values():
         jobs.append({
@@ -354,5 +354,5 @@ async def list_scan_jobs():
             "total_targets": job.total_targets,
             "authenticated": job.authenticated
         })
-    
+
     return {"jobs": jobs}

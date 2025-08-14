@@ -39,22 +39,22 @@ async def list_templates(
     """List all templates with optional filtering."""
     try:
         from template_manager import template_manager
-        
+
         if search:
             templates = template_manager.search_templates(search, search_content=True)
         else:
             templates = template_manager.list_templates(category=category, source=source, active_only=active_only)
-        
+
         # Convert to response models
         template_responses = []
         for template in templates:
             template_responses.append(TemplateResponse(**template))
-        
+
         return TemplateListResponse(
             templates=template_responses,
             total=len(template_responses)
         )
-        
+
     except Exception as e:
         logger.error(f"Error listing templates: {e}")
         raise HTTPException(
@@ -69,7 +69,7 @@ async def get_template_categories(current_user: str = Depends(verify_token)) -> 
     try:
         from template_manager import template_manager
         return template_manager.get_categories()
-        
+
     except Exception as e:
         logger.error(f"Error getting template categories: {e}")
         raise HTTPException(
@@ -86,10 +86,10 @@ async def create_template(
     """Create a new template."""
     try:
         from template_manager import template_manager
-        
+
         template_data = template_request.dict(exclude_unset=True)
         template_id = template_manager.create_template(template_data)
-        
+
         if template_id:
             template = template_manager.get_template(template_id)
             return TemplateResponse(**template)
@@ -98,7 +98,7 @@ async def create_template(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to create template"
             )
-        
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -120,16 +120,16 @@ async def get_template(
     """Get a specific template by ID."""
     try:
         from template_manager import template_manager
-        
+
         template = template_manager.get_template(template_id)
         if not template:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Template with ID {template_id} not found"
             )
-        
+
         return TemplateResponse(**template)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -148,16 +148,16 @@ async def get_template_by_name(
     """Get a template by name."""
     try:
         from template_manager import template_manager
-        
+
         template = template_manager.get_template_by_name(template_name)
         if not template:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Template with name '{template_name}' not found"
             )
-        
+
         return TemplateResponse(**template)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -177,10 +177,10 @@ async def update_template(
     """Update an existing template."""
     try:
         from template_manager import template_manager
-        
+
         template_data = template_request.dict(exclude_unset=True, exclude_none=True)
         success = template_manager.update_template(template_id, template_data)
-        
+
         if success:
             template = template_manager.get_template(template_id)
             return TemplateResponse(**template)
@@ -189,7 +189,7 @@ async def update_template(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update template"
             )
-        
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -212,9 +212,9 @@ async def delete_template(
     """Delete a template."""
     try:
         from template_manager import template_manager
-        
+
         success = template_manager.delete_template(template_id, hard_delete=hard_delete)
-        
+
         if success:
             return {
                 "message": f"Template {template_id} {'deleted' if hard_delete else 'deactivated'} successfully"
@@ -224,7 +224,7 @@ async def delete_template(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete template"
             )
-        
+
     except Exception as e:
         logger.error(f"Error deleting template {template_id}: {e}")
         raise HTTPException(
@@ -241,16 +241,16 @@ async def get_template_content(
     """Get template content."""
     try:
         from template_manager import template_manager
-        
+
         content = template_manager.get_template_content(template_id)
         if content is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Template content for ID {template_id} not found"
             )
-        
+
         return {"content": content}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -270,45 +270,45 @@ async def render_template(
     """Render a template with provided variables."""
     try:
         from template_manager import template_manager
-        
+
         template = template_manager.get_template(template_id)
         if not template:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Template with ID {template_id} not found"
             )
-        
+
         content = template_manager.get_template_content(template_id)
         if not content:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Template content for ID {template_id} not found"
             )
-        
+
         # TODO: Implement template rendering with Jinja2
         # For now, return basic variable substitution
         variables = render_request.variables or {}
         rendered_content = content
         variables_used = []
-        
+
         # Simple variable substitution for demonstration
         import re
         variable_pattern = r'{{\\s*([^}]+)\\s*}}'
         matches = re.findall(variable_pattern, content)
-        
+
         for match in matches:
             var_name = match.strip()
             if var_name in variables:
                 rendered_content = rendered_content.replace(f"{{{{ {var_name} }}}}", str(variables[var_name]))
                 variables_used.append(var_name)
-        
+
         return TemplateContentResponse(
             template_id=template_id,
             template_name=template['name'],
             rendered_content=rendered_content,
             variables_used=variables_used
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -327,10 +327,10 @@ async def get_template_versions(
     """Get version history for a template."""
     try:
         from template_manager import template_manager
-        
+
         versions = template_manager.get_template_versions(template_id)
         return versions
-        
+
     except Exception as e:
         logger.error(f"Error getting template versions for {template_id}: {e}")
         raise HTTPException(
@@ -351,11 +351,11 @@ async def upload_template_file(
     """Upload a template file."""
     try:
         from template_manager import template_manager
-        
+
         # Read file content
         content = await file.read()
         content_str = content.decode('utf-8')
-        
+
         # Determine type/category based on filename
         ext = os.path.splitext(file.filename)[1].lower()
         inferred_type = template_type
@@ -363,7 +363,7 @@ async def upload_template_file(
         if ext == '.textfsm':
             inferred_type = 'textfsm'
             inferred_category = category or 'parser'
-        
+
         # Create template data
         template_data = {
             'name': name,
@@ -374,9 +374,9 @@ async def upload_template_file(
             'content': content_str,
             'filename': file.filename
         }
-        
+
         template_id = template_manager.create_template(template_data)
-        
+
         if template_id:
             template = template_manager.get_template(template_id)
             return TemplateResponse(**template)
@@ -385,7 +385,7 @@ async def upload_template_file(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to create template from uploaded file"
             )
-        
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -414,7 +414,7 @@ async def test_git_connection(
             "repository_accessible": True,
             "files_found": ["template1.j2", "template2.txt"]
         }
-        
+
     except Exception as e:
         logger.error(f"Error testing Git connection: {e}")
         return {
@@ -432,10 +432,10 @@ async def sync_templates(
     """Sync templates from Git repositories."""
     try:
         from template_manager import template_manager
-        
+
         # TODO: Implement Git template synchronization
         # For now, return a mock response
-        
+
         if sync_request.template_id:
             # Sync specific template
             synced_templates = [sync_request.template_id]
@@ -449,14 +449,14 @@ async def sync_templates(
             failed_templates = []
             errors = {}
             message = f"Synced {len(synced_templates)} Git templates"
-        
+
         return TemplateSyncResponse(
             synced_templates=synced_templates,
             failed_templates=failed_templates,
             errors=errors,
             message=message
         )
-        
+
     except Exception as e:
         logger.error(f"Error syncing templates: {e}")
         raise HTTPException(
@@ -473,15 +473,15 @@ async def import_templates(
     """Import multiple templates from various sources."""
     try:
         from template_manager import template_manager
-        
+
         imported_templates = []
         skipped_templates = []
         failed_templates = []
         errors = {}
-        
+
         # TODO: Implement template import functionality
         # For now, return a mock response
-        
+
         if import_request.source_type == "git_bulk":
             # Import from Git repository
             imported_templates = ["template1", "template2", "template3"]
@@ -528,7 +528,7 @@ async def import_templates(
             message = f"Imported {len(imported_templates)} templates from uploaded files"
         else:
             raise ValueError(f"Unsupported import source type: {import_request.source_type}")
-        
+
         return TemplateImportResponse(
             imported_templates=imported_templates,
             skipped_templates=skipped_templates,
@@ -537,7 +537,7 @@ async def import_templates(
             total_processed=len(imported_templates) + len(skipped_templates) + len(failed_templates),
             message=message
         )
-        
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -557,7 +557,7 @@ async def template_health_check(current_user: str = Depends(verify_token)) -> Di
     try:
         from template_manager import template_manager
         return template_manager.health_check()
-        
+
     except Exception as e:
         logger.error(f"Template health check failed: {e}")
         return {

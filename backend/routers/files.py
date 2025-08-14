@@ -24,7 +24,7 @@ async def list_files(current_user: str = Depends(verify_token)):
     try:
         # Use the selected Git repository from the new system
         from routers.git import get_git_repo
-        
+
         try:
             repo = get_git_repo()
             config_dir = Path(repo.working_dir)
@@ -32,24 +32,24 @@ async def list_files(current_user: str = Depends(verify_token)):
             # If no repository is selected or available, return empty list
             logger.warning(f"Could not get Git repository for file listing: {e}")
             return {"files": []}
-        
+
         # Check if directory exists
         if not config_dir.exists():
             return {"files": []}
-        
+
         files = []
         # Use common config file extensions
         allowed_extensions = ['.txt', '.conf', '.cfg', '.config', '.ini', '.yml', '.yaml', '.json']
-        
+
         for file_path in config_dir.rglob('*'):
             if file_path.is_file() and any(file_path.name.endswith(ext) for ext in allowed_extensions):
                 # Skip .git directory
                 if '.git' in file_path.parts:
                     continue
-                
+
                 # Get relative path from config directory
                 relative_path = file_path.relative_to(config_dir)
-                
+
                 files.append({
                     "name": file_path.name,
                     "path": str(relative_path),
@@ -57,12 +57,12 @@ async def list_files(current_user: str = Depends(verify_token)):
                     "modified": file_path.stat().st_mtime,
                     "type": "file"
                 })
-        
+
         # Sort files by name
         files.sort(key=lambda x: x["name"].lower())
-        
+
         return {"files": files}
-        
+
     except Exception as e:
         logger.error(f"Error listing files: {str(e)}")
         raise HTTPException(
@@ -79,17 +79,17 @@ async def compare_files(
     """Compare two files from Git commits."""
     try:
         from routers.git import get_git_repo
-        
+
         # Get the Git repository
         try:
             repo = get_git_repo()
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Git repository not found: {e}")
-        
+
         # Initialize result with proper structure for frontend
         file1_content = ""
         file2_content = ""
-        
+
         # Get file content from left file
         try:
             file1_path = Path(repo.working_dir) / file_comparison.left_file
@@ -97,7 +97,7 @@ async def compare_files(
                 file1_content = file1_path.read_text()
         except Exception as e:
             logger.error(f"Error reading left file: {e}")
-            
+
         # Get file content from right file
         try:
             file2_path = Path(repo.working_dir) / file_comparison.right_file
@@ -105,21 +105,21 @@ async def compare_files(
                 file2_content = file2_path.read_text()
         except Exception as e:
             logger.error(f"Error reading right file: {e}")
-            
+
         # Create a proper side-by-side diff with line-by-line comparison
         left_lines = []
         right_lines = []
-        
+
         # Split content into lines
         file1_lines = file1_content.splitlines() if file1_content else []
         file2_lines = file2_content.splitlines() if file2_content else []
-        
+
         # Use difflib to get the differences
         matcher = difflib.SequenceMatcher(None, file1_lines, file2_lines)
-        
+
         left_line_num = 1
         right_line_num = 1
-        
+
         for tag, i1, i2, j1, j2 in matcher.get_opcodes():
             if tag == 'equal':
                 # Lines are the same
@@ -136,7 +136,7 @@ async def compare_files(
                     })
                     left_line_num += 1
                     right_line_num += 1
-                    
+
             elif tag == 'delete':
                 # Lines only in left file (deleted)
                 for i in range(i1, i2):
@@ -151,7 +151,7 @@ async def compare_files(
                         "type": "empty"
                     })
                     left_line_num += 1
-                    
+
             elif tag == 'insert':
                 # Lines only in right file (added)
                 for j in range(j1, j2):
@@ -166,7 +166,7 @@ async def compare_files(
                         "type": "insert"
                     })
                     right_line_num += 1
-                    
+
             elif tag == 'replace':
                 # Lines are different
                 max_lines = max(i2 - i1, j2 - j1)
@@ -184,7 +184,7 @@ async def compare_files(
                             "content": "",
                             "type": "empty"
                         })
-                        
+
                     if k < (j2 - j1):
                         right_lines.append({
                             "line_number": right_line_num,
@@ -198,7 +198,7 @@ async def compare_files(
                             "content": "",
                             "type": "empty"
                         })
-        
+
         # Generate diff
         diff_content = ""
         if file1_content and file2_content:
@@ -209,7 +209,7 @@ async def compare_files(
                 tofile=file_comparison.right_file
             )
             diff_content = "".join(diff)
-            
+
         result = {
             "success": True,
             "left_lines": left_lines,
@@ -218,9 +218,9 @@ async def compare_files(
             "left_file": file_comparison.left_file,
             "right_file": file_comparison.right_file
         }
-            
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Error comparing files: {str(e)}")
         raise HTTPException(
@@ -237,31 +237,31 @@ async def export_diff(
     """Export comparison diff to a file."""
     try:
         from routers.git import get_git_repo
-        
+
         # Get the Git repository
         try:
             repo = get_git_repo()
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Git repository not found: {e}")
-        
+
         # Get file contents for both files
         file1_content = ""
         file2_content = ""
-        
+
         try:
             file1_path = Path(repo.working_dir) / file_comparison.left_file
             if file1_path.exists():
                 file1_content = file1_path.read_text()
         except Exception as e:
             logger.error(f"Error reading left file: {e}")
-            
+
         try:
             file2_path = Path(repo.working_dir) / file_comparison.right_file
             if file2_path.exists():
                 file2_content = file2_path.read_text()
         except Exception as e:
             logger.error(f"Error reading right file: {e}")
-            
+
         # Generate diff based on format
         if file_comparison.format == "unified":
             diff_lines = difflib.unified_diff(
@@ -277,9 +277,9 @@ async def export_diff(
                 fromfile=file_comparison.left_file,
                 tofile=file_comparison.right_file
             )
-            
+
         diff_content = "".join(diff_lines)
-        
+
         # Return as downloadable file
         return Response(
             content=diff_content,
@@ -288,7 +288,7 @@ async def export_diff(
                 "Content-Disposition": f"attachment; filename=diff_{file_comparison.left_file}_{file_comparison.right_file}.txt"
             }
         )
-        
+
     except Exception as e:
         logger.error(f"Error exporting diff: {str(e)}")
         raise HTTPException(
@@ -303,7 +303,7 @@ async def get_file_config(current_user: str = Depends(verify_token)):
     try:
         # Use the selected Git repository from the new system
         from routers.git import get_git_repo
-        
+
         try:
             repo = get_git_repo()
             config_dir = Path(repo.working_dir)
@@ -317,7 +317,7 @@ async def get_file_config(current_user: str = Depends(verify_token)):
                 "max_file_size_mb": 10,
                 "directory_writable": False
             }
-        
+
         return {
             "directory": str(config_dir.absolute()),
             "directory_exists": config_dir.exists(),

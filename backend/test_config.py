@@ -12,13 +12,13 @@ from config import settings as env_settings
 
 def main():
     print("=== Cockpit Nautobot Configuration Test ===\n")
-    
+
     # Test environment settings
     print("Environment Settings:")
     print(f"  URL: {env_settings.nautobot_url}")
     print(f"  Token: {env_settings.nautobot_token[:20]}...")
     print(f"  Timeout: {env_settings.nautobot_timeout}")
-    
+
     # Test database settings
     print("\nDatabase Settings:")
     try:
@@ -32,7 +32,7 @@ def main():
             print("  No database settings found")
     except Exception as e:
         print(f"  Error reading database settings: {e}")
-    
+
     # Test health check
     print("\nDatabase Health Check:")
     health = settings_manager.health_check()
@@ -40,7 +40,7 @@ def main():
     if health['status'] == 'healthy':
         print(f"  Nautobot settings count: {health['nautobot_settings_count']}")
         print(f"  Database size: {health['database_size']} bytes")
-    
+
     print("\n=== Test Complete ===")
 
 if __name__ == "__main__":

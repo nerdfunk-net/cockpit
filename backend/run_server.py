@@ -28,7 +28,7 @@ from config import settings
 if __name__ == "__main__":
     print("Starting Cockpit API server...")
     print(f"Server will run on http://0.0.0.0:{settings.port}")
-    
+
     try:
         uvicorn.run(
             app, 

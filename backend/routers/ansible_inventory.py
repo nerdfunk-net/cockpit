@@ -33,7 +33,7 @@ async def preview_inventory(
     try:
         logger.info(f"Preview inventory request received from user: {current_user}")
         logger.info(f"Request operations: {request.operations}")
-        
+
         if not request.operations:
             logger.info("No operations provided, returning empty result")
             return InventoryPreviewResponse(
@@ -41,7 +41,7 @@ async def preview_inventory(
                 total_count=0,
                 operations_executed=0
             )
-        
+
         # Log each operation for debugging
         for i, operation in enumerate(request.operations):
             logger.info(f"Operation {i}: type={operation.operation_type}, "
@@ -50,17 +50,17 @@ async def preview_inventory(
             for j, condition in enumerate(operation.conditions):
                 logger.info(f"  Condition {j}: field={condition.field}, "
                            f"operator={condition.operator}, value='{condition.value}'")
-        
+
         devices, operations_count = await ansible_inventory_service.preview_inventory(request.operations)
-        
+
         logger.info(f"Preview completed: {len(devices)} devices found, {operations_count} operations executed")
-        
+
         return InventoryPreviewResponse(
             devices=devices,
             total_count=len(devices),
             operations_executed=operations_count
         )
-        
+
     except Exception as e:
         logger.error(f"Error previewing inventory: {e}")
         raise HTTPException(
@@ -83,25 +83,25 @@ async def generate_inventory(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No logical operations provided"
             )
-        
+
         if not request.template_name or not request.template_category:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Template name and category are required"
             )
-        
+
         inventory_content, device_count = await ansible_inventory_service.generate_inventory(
             request.operations,
             request.template_name,
             request.template_category
         )
-        
+
         return InventoryGenerateResponse(
             inventory_content=inventory_content,
             template_used=f"{request.template_category}/{request.template_name}",
             device_count=device_count
         )
-        
+
     except Exception as e:
         logger.error(f"Error generating inventory: {e}")
         raise HTTPException(
@@ -124,14 +124,14 @@ async def download_inventory(
             request.template_name,
             request.template_category
         )
-        
+
         # Return as downloadable file
         return Response(
             content=inventory_content,
             media_type="application/x-yaml",
             headers={"Content-Disposition": "attachment; filename=inventory.yaml"}
         )
-        
+
     except Exception as e:
         logger.error(f"Error downloading inventory: {e}")
         raise HTTPException(
@@ -167,7 +167,7 @@ async def get_field_options(current_user: str = Depends(verify_token)) -> dict:
                 {"value": "NOT", "label": "NOT"}
             ]
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting field options: {e}")
         raise HTTPException(
@@ -186,7 +186,7 @@ async def get_custom_fields(current_user: str = Depends(verify_token)) -> dict:
         return {
             "custom_fields": custom_fields
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting custom fields: {e}")
         raise HTTPException(
@@ -210,7 +210,7 @@ async def get_field_values(
             "values": field_values,
             "input_type": "select" if field_values else "text"
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting field values for '{field_name}': {e}")
         raise HTTPException(
