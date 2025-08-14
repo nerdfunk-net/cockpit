@@ -282,15 +282,18 @@
                                     <select id="new-template-type" class="form-control">
                                       <option value="jinja2">Jinja2</option>
                                       <option value="text">Plain Text</option>
-                                      <option value="yaml">YAML</option>
-                                      <option value="json">JSON</option>
+                                      <option value="textfsm">TextFSM</option>
                                     </select>
                                   </div>
                                 </div>
                                 <div class="col-md-4">
                                   <div class="form-group">
                                     <label for="new-template-category" class="control-label">Category</label>
-                                    <input type="text" id="new-template-category" class="form-control" placeholder="e.g., Network, Security">
+                                    <select id="new-template-category" class="form-control">
+                                      <option value="">Select category...</option>
+                                      <option value="inventory">Inventory</option>
+                                      <option value="parser">Parser</option>
+                                    </select>
                                   </div>
                                 </div>
                                 <div class="col-md-4">
@@ -344,7 +347,7 @@
                                 <h4><i class="fas fa-file-upload"></i> File Upload</h4>
                                 <div class="form-group">
                                   <label for="new-template-file" class="control-label">Template File</label>
-                                  <input type="file" id="new-template-file" class="form-control" accept=".txt,.conf,.cfg,.j2,.jinja2,.yaml,.yml,.json,.textfsm">
+                                  <input type="file" id="new-template-file" class="form-control" accept=".txt,.conf,.cfg,.j2,.jinja2,.textfsm">
                                 </div>
                               </div>
 
@@ -410,8 +413,12 @@
                                     </div>
                                     <div class="col-md-6">
                                       <div class="form-group">
-                                        <label for="import-default-category" class="control-label">Default Category</label>
-                                        <input type="text" id="import-default-category" class="form-control" placeholder="Imported">
+                                        <label for="import-category" class="control-label">Category</label>
+                                        <select id="import-category" class="form-control">
+                                          <option value="">Select category...</option>
+                                          <option value="inventory">Inventory</option>
+                                          <option value="parser">Parser</option>
+                                        </select>
                                       </div>
                                     </div>
                                   </div>
@@ -423,6 +430,14 @@
                                     <label for="import-template-files" class="control-label">Template Files</label>
                                     <input type="file" id="import-template-files" class="form-control" multiple accept=".txt,.conf,.cfg,.j2,.jinja2,.yaml,.yml,.json,.textfsm">
                                     <small class="form-text text-muted">Select multiple template files to import</small>
+                                  </div>
+                                  <div class="form-group">
+                                    <label for="import-category-files" class="control-label">Category</label>
+                                    <select id="import-category-files" class="form-control">
+                                      <option value="">Select category...</option>
+                                      <option value="inventory">Inventory</option>
+                                      <option value="parser">Parser</option>
+                                    </select>
                                   </div>
                                 </div>
 
@@ -480,7 +495,11 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="edit-template-category" class="control-label">Category</label>
-                    <input type="text" id="edit-template-category" class="form-control">
+                    <select id="edit-template-category" class="form-control">
+                      <option value="">Select category...</option>
+                      <option value="inventory">Inventory</option>
+                      <option value="parser">Parser</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -849,7 +868,7 @@
             importData.git_repo_url = document.getElementById('import-git-repo').value;
             importData.git_branch = document.getElementById('import-git-branch').value;
             importData.git_templates_path = document.getElementById('import-git-path').value;
-            importData.default_category = document.getElementById('import-default-category').value;
+            importData.default_category = document.getElementById('import-category').value;
           } else if (sourceType === 'file_bulk') {
             const fileInput = document.getElementById('import-template-files');
             if (fileInput.files.length === 0) {
@@ -865,7 +884,7 @@
                 content: content
               });
             }
-            importData.default_category = document.getElementById('import-default-category').value;
+            importData.default_category = document.getElementById('import-category-files').value;
           }
 
           try {

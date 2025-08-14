@@ -206,6 +206,7 @@
                       <th>Hostname</th>
                       <th>Type</th>
                       <th>Platform</th>
+                      <th>Role</th>
                       <th>Location</th>
                       <th>Credential</th>
                       <th>Actions</th>
@@ -245,11 +246,11 @@
               <div class="col-md-6">
                 <div class="form-group"><label>Hostname</label><input type="text" class="form-control" id="all-hostname" placeholder="Leave empty to keep" /></div>
                 <div class="form-group"><label>Platform</label><input type="text" class="form-control" id="all-platform" placeholder="Leave empty to keep" /></div>
-                <div class="form-group"><label>Role</label><input type="text" class="form-control" id="all-role" placeholder="Leave empty to keep" /></div>
+                <div class="form-group"><label>Role</label><select class="form-control" id="all-role"><option value="">— leave unchanged —</option></select></div>
                 <div class="form-group"><label>Location</label><input type="text" class="form-control" id="all-location" placeholder="Leave empty to keep" /></div>
               </div>
               <div class="col-md-6">
-                <div class="form-group"><label>Namespace</label><input type="text" class="form-control" id="all-namespace" placeholder="Leave empty to keep" value="" /></div>
+                <div class="form-group"><label>IP-Address Namespace</label><select class="form-control" id="all-namespace"><option value="">— leave unchanged —</option></select></div>
                 <div class="form-group"><label>Status</label><select class="form-control" id="all-status"><option value="">— leave unchanged —</option><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
                 <div class="form-group"><label>Interface Status</label><select class="form-control" id="all-interface-status"><option value="">— leave unchanged —</option><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
                 <div class="form-group"><label>IP Status</label><select class="form-control" id="all-ip-status"><option value="">— leave unchanged —</option><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
@@ -312,15 +313,15 @@
                 </div>
               </div>
               <div class="col-md-6" id="cisco-fields">
-                <div class="form-group"><label>Role</label><input type="text" class="form-control" id="device-role" placeholder="Core, Edge, Access..."></div>
+                <div class="form-group"><label>Role</label><select class="form-control" id="device-role"></select></div>
                 <div class="form-group"><label>Location</label><input type="text" class="form-control" id="device-location" placeholder="Data Center 1"></div>
-                <div class="form-group"><label>Namespace</label><input type="text" class="form-control" id="device-namespace" value="Global"></div>
+                <div class="form-group"><label>IP-Address Namespace</label><select class="form-control" id="device-namespace"></select></div>
                 <div class="form-group"><label>Status</label><select class="form-control" id="device-status"><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
                 <div class="form-group"><label>Interface Status</label><select class="form-control" id="device-interface-status"><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
                 <div class="form-group"><label>IP Status</label><select class="form-control" id="device-ip-status"><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
               </div>
               <div class="col-md-6" id="linux-fields" style="display:none;">
-                <div class="form-group"><label>Role</label><input type="text" class="form-control" id="linux-role" value="server"></div>
+                <div class="form-group"><label>Role</label><select class="form-control" id="linux-role"></select></div>
                 <div class="form-group"><label>Location</label><input type="text" class="form-control" id="linux-location" placeholder="Data Center 1"></div>
                 <div class="form-group"><label>Status</label><select class="form-control" id="linux-status"><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
               </div>
@@ -347,7 +348,7 @@
     if(!localStorage.getItem('auth_token')){window.location.href='login.html';}
 
     // State
-    let credentialsData=[]; let scanJob=null; let discoveredDevices=[]; let deviceMetadata={}; let deviceModalInstance=null;
+  let credentialsData=[]; let scanJob=null; let discoveredDevices=[]; let deviceMetadata={}; let deviceModalInstance=null; let namespacesList=[]; let rolesList=[];
 
     document.addEventListener('DOMContentLoaded', () => {
       if(!window.authManager){ window.authManager = new AuthManager(); }
@@ -361,7 +362,9 @@
         const uname = userInfo.username || 'User';
         const sb = document.getElementById('sidebar-username'); if(sb) sb.textContent = uname;
         const tb = document.getElementById('topbar-username'); if(tb) tb.textContent = uname;
-        await loadCredentials();
+  await loadCredentials();
+  await loadNamespaces();
+  await loadRoles();
         setupEventListeners();
   // Normalize initial CIDR button states
   updateCIDRButtons();
@@ -370,6 +373,21 @@
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) logoutBtn.addEventListener('click', e => { e.preventDefault(); if(window.authManager) window.authManager.logout(); });
       } catch(e){ console.error('Init failed', e); }
+    }
+
+    async function loadNamespaces(){
+      try{
+        const resp = await authManager.apiRequest('/api/nautobot/namespaces');
+        namespacesList = (resp || []).map(n=>n.name);
+      }catch(e){ console.warn('Failed to load namespaces', e); namespacesList=[]; }
+    }
+
+  async function loadRoles(){
+      try{
+    const resp = await authManager.apiRequest('/api/nautobot/roles/devices');
+        // Prefer name as display/value; also allow slug fallback
+        rolesList = (resp || []).map(r=>({ name: r.name || r.slug || '', slug: r.slug || r.name || '' })).filter(r=>r.name);
+      }catch(e){ console.warn('Failed to load roles', e); rolesList=[]; }
     }
 
     async function loadCredentials(){
@@ -539,8 +557,8 @@
           hostname: (existing.hostname!==undefined? existing.hostname : d.hostname),
           platform: (existing.platform!==undefined? existing.platform : d.platform),
       location: (existing.location!==undefined ? existing.location : 'unknown'),
-          namespace: existing.namespace || 'Global',
-          role: existing.role || (d.device_type==='cisco'?'access-switch':d.device_type==='linux'?'server':'unknown'),
+      namespace: existing.namespace || (namespacesList[0] || 'Global'),
+      role: existing.role || (d.device_type==='cisco'?'network':d.device_type==='linux'?'server':'unknown'),
           status: existing.status || 'Active',
           interface_status: existing.interface_status || 'Active',
           ip_status: existing.ip_status || 'Active'
@@ -554,6 +572,7 @@
                        <td>${merged.hostname||'Unknown'}</td>
                        <td>${merged.device_type}</td>
                        <td>${merged.platform||'Unknown'}</td>
+             <td>${merged.role||'unknown'}</td>
              <td>${merged.location||'unknown'}</td>
                        <td>${credName}</td>
                        <td><button class='btn btn-sm btn-info device-config-btn' data-ip='${merged.ip}'><i class='fa fa-edit'></i> Configure</button></td>`;
@@ -568,8 +587,45 @@
     function toggleAllDevices(){ const master=document.getElementById('select-all-devices'); document.querySelectorAll('.device-checkbox').forEach(cb=>cb.checked=master.checked); updateOnboardButton(); }
     function updateOnboardButton(){ const cnt=document.querySelectorAll('.device-checkbox:checked').length; const btn=document.getElementById('onboard-selected-btn'); if(btn) btn.disabled=cnt===0; }
 
-    function editDeviceMetadata(ip){ const d=deviceMetadata[ip]; if(!d) return; document.getElementById('device-ip').value=ip; document.getElementById('device-ip-display').value=ip; document.getElementById('device-hostname').value=d.hostname||''; document.getElementById('device-platform').value=d.platform||''; document.getElementById('device-type').value=d.device_type; toggleDeviceFields(); if(d.device_type==='cisco'){ document.getElementById('device-location').value=d.location||''; document.getElementById('device-namespace').value=d.namespace||'Global'; document.getElementById('device-role').value=d.role||''; document.getElementById('device-status').value=d.status||'Active'; document.getElementById('device-interface-status').value=d.interface_status||'Active'; document.getElementById('device-ip-status').value=d.ip_status||'Active'; } else if(d.device_type==='linux'){ document.getElementById('linux-role').value=d.role||'server'; document.getElementById('linux-location').value=d.location||''; document.getElementById('linux-status').value=d.status||'Active'; }
+  function editDeviceMetadata(ip){ const d=deviceMetadata[ip]; if(!d) return; document.getElementById('device-ip').value=ip; document.getElementById('device-ip-display').value=ip; document.getElementById('device-hostname').value=d.hostname||''; document.getElementById('device-platform').value=d.platform||''; document.getElementById('device-type').value=d.device_type; toggleDeviceFields(); if(d.device_type==='cisco'){ document.getElementById('device-location').value=d.location||''; populateNamespaceSelect('device-namespace', d.namespace); document.getElementById('device-role').value=d.role||'network'; document.getElementById('device-status').value=d.status||'Active'; document.getElementById('device-interface-status').value=d.interface_status||'Active'; document.getElementById('device-ip-status').value=d.ip_status||'Active'; } else if(d.device_type==='linux'){ document.getElementById('linux-role').value=d.role||'server'; document.getElementById('linux-location').value=d.location||''; document.getElementById('linux-status').value=d.status||'Active'; }
       const modal=document.getElementById('device-metadata-modal'); if(!deviceModalInstance){ deviceModalInstance=new bootstrap.Modal(modal,{backdrop:true}); } deviceModalInstance.show(); }
+    function populateRoleSelect(selectId, current, options={includeBlank:false}){
+      const sel=document.getElementById(selectId);
+      if(!sel) return;
+      sel.innerHTML='';
+      if(options.includeBlank){ const o=document.createElement('option'); o.value=''; o.textContent='— leave unchanged —'; sel.appendChild(o); }
+      for(const r of rolesList){ const o=document.createElement('option'); o.value=r.name; o.textContent=r.name; sel.appendChild(o); }
+      if(current && rolesList.some(r=>r.name===current)) sel.value=current;
+      else if(!options.includeBlank && rolesList.length){ sel.value=rolesList[0].name; }
+    }
+    function initRoleSelectsForModal(d){
+      // Cisco/Linux use different select IDs
+      if(d.device_type==='cisco'){
+        populateRoleSelect('device-role', d.role || (d.device_type==='linux'?'server':'network'));
+      } else if(d.device_type==='linux'){
+        populateRoleSelect('linux-role', d.role || 'server');
+      }
+    }
+    // Hook into edit to populate selects
+    const _origEditDeviceMetadata = editDeviceMetadata;
+    editDeviceMetadata = function(ip){
+      const d=deviceMetadata[ip];
+      if(!d) return;
+      _origEditDeviceMetadata.call(this, ip);
+      // After elements exist, populate selects
+      initRoleSelectsForModal(d);
+    }
+    function populateNamespaceSelect(selectId, current){
+      const sel = document.getElementById(selectId);
+      if(!sel) return;
+      sel.innerHTML = '';
+      // Optionally include a default if none
+      const values = namespacesList && namespacesList.length ? namespacesList : ['Global'];
+      for(const ns of values){
+        const opt=document.createElement('option'); opt.value=ns; opt.textContent=ns; sel.appendChild(opt);
+      }
+      if(current && values.includes(current)) sel.value=current; else sel.value=values[0];
+    }
     function toggleDeviceFields(){ const t=document.getElementById('device-type').value; document.getElementById('cisco-fields').style.display=t==='cisco'?'block':'none'; document.getElementById('linux-fields').style.display=t==='linux'?'block':'none'; }
     function saveDeviceMetadata(){ const ip=document.getElementById('device-ip').value; const type=document.getElementById('device-type').value; if(!deviceMetadata[ip]) return; deviceMetadata[ip].hostname=document.getElementById('device-hostname').value; deviceMetadata[ip].platform=document.getElementById('device-platform').value; if(type==='cisco'){ deviceMetadata[ip].location=document.getElementById('device-location').value; deviceMetadata[ip].namespace=document.getElementById('device-namespace').value; deviceMetadata[ip].role=document.getElementById('device-role').value; deviceMetadata[ip].status=document.getElementById('device-status').value; deviceMetadata[ip].interface_status=document.getElementById('device-interface-status').value; deviceMetadata[ip].ip_status=document.getElementById('device-ip-status').value; } else if(type==='linux'){ deviceMetadata[ip].role=document.getElementById('linux-role').value; deviceMetadata[ip].location=document.getElementById('linux-location').value; deviceMetadata[ip].status=document.getElementById('linux-status').value; } else { deviceMetadata[ip].role='unknown'; deviceMetadata[ip].status='Active'; } if(deviceModalInstance) deviceModalInstance.hide(); showAlert('Device configuration saved','success'); }
 
@@ -594,7 +650,7 @@
       const pf=getVal('all-platform'); if(pf) updates.platform=pf;
       const rl=getVal('all-role'); if(rl) updates.role=rl;
       const lc=getVal('all-location'); if(lc) updates.location=lc;
-      const ns=getVal('all-namespace'); if(ns) updates.namespace=ns;
+      const ns=document.getElementById('all-namespace').value; if(ns) updates.namespace=ns;
       const st=document.getElementById('all-status').value; if(st) updates.status=st;
       const ist=document.getElementById('all-interface-status').value; if(ist) updates.interface_status=ist;
       const ipst=document.getElementById('all-ip-status').value; if(ipst) updates.ip_status=ipst;
@@ -605,7 +661,14 @@
       showAlert('Values assigned to selected devices','success');
     }
 
-    async function onboardSelectedDevices(){ const ips=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip); if(ips.length===0){ showAlert('Select devices to onboard','warning'); return;} const devices=ips.map(ip=>{ const m=deviceMetadata[ip]; return { ip:m.ip, credential_id:m.credential_id, device_type:m.device_type, hostname:m.hostname, platform:m.platform, location:m.location, namespace:m.namespace, role:m.role, status:m.status, interface_status:m.interface_status, ip_status:m.ip_status }; }); try { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin"></i> Onboarding...'; const resp=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({devices})}); let msg=`Onboarding completed: ${resp.accepted} devices.`; if(resp.cisco_queued) msg+=` ${resp.cisco_queued} Cisco queued.`; if(resp.linux_added) msg+=` ${resp.linux_added} Linux added.`; if(resp.inventory_path) msg+=` Inventory: ${resp.inventory_path}`; showAlert(msg,'success'); } catch(err){ console.error('Onboard failed',err); showAlert('Onboarding failed','danger'); } finally { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=false; btn.innerHTML='<i class="fa fa-upload"></i> Onboard Selected Devices'; } }
+    // When opening Assign to All, populate namespace options
+    const assignAllBtnHook = document.getElementById('assign-to-all-btn');
+    if(assignAllBtnHook){ assignAllBtnHook.addEventListener('click', ()=>{
+      const selNs=document.getElementById('all-namespace'); if(selNs){ selNs.innerHTML='<option value="">— leave unchanged —</option>'; (namespacesList||[]).forEach(ns=>{ const o=document.createElement('option'); o.value=ns; o.textContent=ns; selNs.appendChild(o); }); }
+      populateRoleSelect('all-role', null, {includeBlank:true});
+    }); }
+
+  async function onboardSelectedDevices(){ const ips=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip); if(ips.length===0){ showAlert('Select devices to onboard','warning'); return;} const devices=ips.map(ip=>{ const m=deviceMetadata[ip]; return { ip:m.ip, credential_id:m.credential_id, device_type:m.device_type, hostname:m.hostname, platform:m.platform, location:m.location, namespace:m.namespace, role:m.role, status:m.status, interface_status:m.interface_status, ip_status:m.ip_status }; }); try { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin"></i> Onboarding...'; const resp=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({devices})}); let msg=`Onboarding completed: ${resp.accepted} devices.`; if(resp.cisco_queued) msg+=` ${resp.cisco_queued} Cisco queued.`; if(resp.linux_added) msg+=` ${resp.linux_added} Linux added.`; if(resp.inventory_path) msg+=` Inventory: ${resp.inventory_path}`; showAlert(msg,'success'); } catch(err){ console.error('Onboard failed',err); showAlert('Onboarding failed','danger'); } finally { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=false; btn.innerHTML='<i class="fa fa-upload"></i> Onboard Selected Devices'; } }
 
     function isValidCIDR(c){ const re=/(\d{1,3}\.){3}\d{1,3}\/\d{1,2}/; if(!re.test(c)) return false; const [ip,prefix]=c.split('/'); const pn=parseInt(prefix); if(pn<22||pn>32) return false; return ip.split('.').every(o=>{const n=parseInt(o); return n>=0&&n<=255;}); }
     function showAlert(msg,type='info'){ const div=document.createElement('div'); div.className=`alert alert-${type} alert-dismissible`; div.innerHTML=`<button type='button' class='close' data-dismiss='alert'>&times;</button>${msg}`; const content=document.querySelector('.x_content'); content.insertBefore(div, content.firstChild); setTimeout(()=>{ div.style.transition='opacity .5s'; div.style.opacity='0'; setTimeout(()=>div.remove(),500); },5000); }
