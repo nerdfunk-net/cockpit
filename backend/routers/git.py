@@ -50,10 +50,11 @@ def get_git_repo():
                 detail="Selected Git repository is inactive. Please activate it or select a different repository."
             )
 
-        # Use the repository name from the database for the directory path
+        # Use the configured repository 'path' (fallback to 'name') for the directory path
         from config import settings as config_settings
         from pathlib import Path
-        repo_dir = Path(config_settings.data_directory) / 'git' / repository['name']
+        sub_path = (repository.get('path') or repository['name']).lstrip('/')
+        repo_dir = Path(config_settings.data_directory) / 'git' / sub_path
 
         # Create the directory if it doesn't exist
         repo_dir.mkdir(parents=True, exist_ok=True)

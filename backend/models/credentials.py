@@ -4,7 +4,7 @@ from datetime import date
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 
-ALLOWED_TYPES = {"ssh", "tacacs", "generic"}
+ALLOWED_TYPES = {"ssh", "tacacs", "generic", "token"}
 
 class CredentialCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)

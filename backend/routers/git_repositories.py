@@ -20,6 +20,7 @@ from models.git_repositories import (
 )
 from git_repositories_manager import GitRepositoryManager
 from core.auth import verify_token
+import credentials_manager as cred_mgr
 
 logger = logging.getLogger(__name__)
 
@@ -194,6 +195,10 @@ async def create_repository(
     """Create a new git repository."""
     try:
         repo_data = repository.dict()
+        # Prefer credential_name over legacy inline credentials
+        if repo_data.get('credential_name'):
+            repo_data['username'] = None
+            repo_data['token'] = None
         repo_id = git_repo_manager.create_repository(repo_data)
         
         # Get the created repository
@@ -228,6 +233,11 @@ async def update_repository(
         
         # Update only provided fields
         repo_data = {k: v for k, v in repository.dict().items() if v is not None}
+        # Prefer credential_name over legacy inline credentials
+        if repo_data.get('credential_name'):
+            repo_data['username'] = None
+            # Only clear token if explicitly provided or credential selected
+            repo_data['token'] = None
         
         if not repo_data:
             raise HTTPException(status_code=400, detail="No fields to update")
@@ -300,11 +310,41 @@ async def test_git_connection(
             
             # Build git clone command
             clone_url = test_request.url
-            if test_request.username and test_request.token:
+            resolved_username = test_request.username
+            resolved_token = test_request.token
+
+            # Resolve from credential_name when provided
+            if test_request.credential_name:
+                try:
+                    creds = cred_mgr.list_credentials(include_expired=False)
+                    match = next((c for c in creds if c['name'] == test_request.credential_name and c['type'] == 'token'), None)
+                    if not match:
+                        return GitConnectionTestResponse(
+                            success=False,
+                            message=f"Credential '{test_request.credential_name}' not found or not a token type",
+                            details={}
+                        )
+                    resolved_username = match['username']
+                    try:
+                        resolved_token = cred_mgr.get_decrypted_password(match['id'])
+                    except Exception as de:
+                        return GitConnectionTestResponse(
+                            success=False,
+                            message=f"Failed to decrypt credential token",
+                            details={"error": str(de)}
+                        )
+                except Exception as ce:
+                    return GitConnectionTestResponse(
+                        success=False,
+                        message=f"Credential lookup error",
+                        details={"error": str(ce)}
+                    )
+
+            if resolved_username and resolved_token:
                 # Add authentication to URL
                 if "://" in clone_url:
                     protocol, rest = clone_url.split("://", 1)
-                    clone_url = f"{protocol}://{test_request.username}:{test_request.token}@{rest}"
+                    clone_url = f"{protocol}://{resolved_username}:{resolved_token}@{rest}"
             
             # Set up environment
             env = os.environ.copy()
@@ -378,7 +418,11 @@ async def get_repository_status(
         
         # Get data directory from configuration
         from config import settings as config_settings
-        repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
+        repo_path = os.path.join(
+            config_settings.data_directory,
+            'git',
+            (repository.get('path') or repository['name']).lstrip('/')
+        )
         
         status_info = {
             "repository_name": repository['name'],
@@ -391,8 +435,11 @@ async def get_repository_status(
             "behind_count": 0,
             "ahead_count": 0,
             "current_commit": None,
+            "current_branch": None,
             "last_commit_message": None,
             "last_commit_date": None,
+            "branches": [],
+            "commits": [],
             "config_files": []
         }
         
@@ -408,6 +455,19 @@ async def get_repository_status(
                 )
                 if result.returncode == 0:
                     status_info["is_git_repo"] = True
+                    # Get current branch name
+                    try:
+                        br = subprocess.run(
+                            ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                            cwd=repo_path,
+                            capture_output=True,
+                            text=True,
+                            timeout=5
+                        )
+                        if br.returncode == 0:
+                            status_info["current_branch"] = (br.stdout or '').strip()
+                    except Exception as e:
+                        logger.warning(f"Could not get current branch: {e}")
                     
                     # Get current commit info
                     try:
@@ -428,6 +488,45 @@ async def get_repository_status(
                                 status_info["last_commit_author_email"] = commit_info[4]  # Author email
                     except Exception as e:
                         logger.warning(f"Could not get commit info: {e}")
+
+                    # Get list of branches
+                    try:
+                        brs = subprocess.run(
+                            ['git', 'branch', '--format=%(refname:short)'],
+                            cwd=repo_path,
+                            capture_output=True,
+                            text=True,
+                            timeout=5
+                        )
+                        if brs.returncode == 0 and brs.stdout:
+                            status_info["branches"] = [b.strip().lstrip('* ').strip() for b in brs.stdout.splitlines() if b.strip()]
+                    except Exception as e:
+                        logger.warning(f"Could not list branches: {e}")
+
+                    # Get recent commits
+                    try:
+                        log = subprocess.run(
+                            ['git', 'log', '-n', '50', '--date=iso', '--format=%H|%s|%an|%ad'],
+                            cwd=repo_path,
+                            capture_output=True,
+                            text=True,
+                            timeout=10
+                        )
+                        commits = []
+                        if log.returncode == 0 and log.stdout:
+                            for line in log.stdout.splitlines():
+                                parts = line.split('|', 3)
+                                if len(parts) == 4:
+                                    commits.append({
+                                        'hash': parts[0],
+                                        'short_hash': parts[0][:8],
+                                        'message': parts[1],
+                                        'author': parts[2],
+                                        'date': parts[3]
+                                    })
+                        status_info["commits"] = commits
+                    except Exception as e:
+                        logger.warning(f"Could not get recent commits: {e}")
                     
                     # Check if repository is synced with remote
                     try:
@@ -512,152 +611,164 @@ async def sync_repository(
     import subprocess
     import shutil
     import time
-    from urllib.parse import urlparse
-    
+    import os
+    from urllib.parse import urlparse, quote as urlquote
+    from git import Repo, GitCommandError
+
     try:
-        # Check if repository exists
+        # 1) Load repository
         repository = git_repo_manager.get_repository(repo_id)
         if not repository:
             raise HTTPException(status_code=404, detail="Repository not found")
-        
-        # Update sync status to indicate sync started
+
         git_repo_manager.update_sync_status(repo_id, "syncing")
-        
-        # Get data directory from configuration (outside project to avoid file watching)
+
+        # 2) Compute repo path (uses configured 'path' or fallback to 'name')
         from config import settings as config_settings
-        repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
-        
+        repo_path = os.path.join(
+            config_settings.data_directory,
+            "git",
+            (repository.get("path") or repository["name"]).lstrip("/")
+        )
+
         logger.info(f"Syncing repository '{repository['name']}' to path: {repo_path}")
         logger.info(f"Repository URL: {repository['url']}")
         logger.info(f"Repository branch: {repository['branch']}")
-        
-        # Create the git directory if it doesn't exist
+
         os.makedirs(os.path.dirname(repo_path), exist_ok=True)
-        
-        # Check if repository directory already exists
-        needs_clone = True
-        if os.path.exists(repo_path):
-            # Check if it's a valid Git repository
+
+        # 3) Determine action: clone or pull
+        repo_dir_exists = os.path.exists(repo_path)
+        is_git_repo = os.path.isdir(os.path.join(repo_path, ".git"))
+        needs_clone = not is_git_repo
+
+        # 4) Resolve credentials (legacy or via credential_name)
+        resolved_username = repository.get("username")
+        resolved_token = repository.get("token")
+        if repository.get("credential_name"):
             try:
-                result = subprocess.run(
-                    ['git', 'status'], 
-                    cwd=repo_path, 
-                    capture_output=True, 
-                    text=True, 
-                    timeout=10
+                creds = cred_mgr.list_credentials(include_expired=False)
+                match = next(
+                    (c for c in creds if c["name"] == repository["credential_name"] and c["type"] == "token"),
+                    None,
                 )
-                if result.returncode == 0:
-                    # It's a valid Git repo, try to pull instead
-                    needs_clone = False
-                    logger.info(f"Repository exists, attempting to pull latest changes")
+                if match:
+                    resolved_username = match.get("username")
+                    try:
+                        resolved_token = cred_mgr.get_decrypted_password(match["id"])
+                    except Exception as de:
+                        logger.error(f"Failed to decrypt token for credential '{repository['credential_name']}': {de}")
                 else:
-                    logger.info(f"Directory exists but is not a valid Git repository, will re-clone")
-            except Exception as e:
-                logger.warning(f"Error checking Git status: {e}, will re-clone")
-        
+                    logger.error(f"Credential '{repository['credential_name']}' not found or not a token type")
+            except Exception as ce:
+                logger.error(f"Credential lookup error: {ce}")
+
+        # 5) Build clone URL (inject auth for http/https)
+        clone_url = repository["url"]
+        parsed = urlparse(repository["url"])
+        if parsed.scheme in ["http", "https"] and resolved_token:
+            if not resolved_username:
+                resolved_username = "git"
+            user_enc = urlquote(str(resolved_username), safe="")
+            token_enc = urlquote(str(resolved_token), safe="")
+            clone_url = f"{parsed.scheme}://{user_enc}:{token_enc}@{parsed.netloc}{parsed.path}"
+
         success = False
         message = ""
-        
+
         if needs_clone:
-            # Clone the repository
+            # Backup non-repo directory if present
+            if repo_dir_exists and not is_git_repo:
+                parent_dir = os.path.dirname(repo_path.rstrip(os.sep)) or os.path.dirname(repo_path)
+                base_name = os.path.basename(os.path.normpath(repo_path))
+                backup_path = os.path.join(parent_dir, f"{base_name}_backup_{int(time.time())}")
+                shutil.move(repo_path, backup_path)
+                logger.info(f"Backed up existing directory to {backup_path}")
+
+            # SSL env toggle
+            ssl_env_set = False
             try:
-                # If directory exists and is not a Git repo, backup it
-                if os.path.exists(repo_path):
-                    backup_path = f"{repo_path}_backup_{int(time.time())}"
-                    shutil.move(repo_path, backup_path)
-                    logger.info(f"Backed up existing directory to {backup_path}")
-                
-                # Prepare repository URL with authentication if provided
-                clone_url = repository['url']
-                if repository.get('username') and repository.get('token'):
-                    parsed = urlparse(repository['url'])
-                    if parsed.scheme in ['http', 'https']:
-                        clone_url = f"{parsed.scheme}://{repository['username']}:{repository['token']}@{parsed.netloc}{parsed.path}"
-                
-                # Configure environment for SSL settings
-                env = os.environ.copy()
-                if not repository.get('verify_ssl', True):
-                    env['GIT_SSL_NO_VERIFY'] = '1'
+                if not repository.get("verify_ssl", True):
+                    os.environ["GIT_SSL_NO_VERIFY"] = "1"
+                    ssl_env_set = True
                     logger.warning("Git SSL verification disabled - not recommended for production")
-                
-                # Clone the repository
-                cmd = ['git', 'clone', '--branch', repository['branch'], clone_url, repo_path]
-                logger.info(f"Executing: git clone --branch {repository['branch']} <url> {repo_path}")
-                
-                result = subprocess.run(
-                    cmd, 
-                    capture_output=True, 
-                    text=True, 
-                    timeout=120,  # 2 minutes timeout
-                    env=env
-                )
-                
-                if result.returncode == 0:
-                    success = True
-                    message = f"Repository '{repository['name']}' cloned successfully to {repo_path}"
-                    logger.info(message)
+
+                logger.info(f"Cloning branch {repository['branch']} into {repo_path}")
+                Repo.clone_from(clone_url, repo_path, branch=repository["branch"])
+
+                if not os.path.isdir(os.path.join(repo_path, ".git")):
+                    raise GitCommandError("clone", 1, b"", b".git not found after clone")
+
+                success = True
+                message = f"Repository '{repository['name']}' cloned successfully to {repo_path}"
+                logger.info(message)
+            except GitCommandError as gce:
+                err = str(gce)
+                logger.error(f"Git clone failed: {err}")
+                if "authentication" in err.lower():
+                    message = "Authentication failed. Please check your Git credentials."
+                elif "not found" in err.lower():
+                    message = f"Repository or branch not found. URL: {repository['url']} Branch: {repository['branch']}"
                 else:
-                    error_msg = result.stderr.strip()
-                    logger.error(f"Git clone failed: {error_msg}")
-                    
-                    # Provide user-friendly error messages
-                    if 'authentication failed' in error_msg.lower():
-                        message = "Authentication failed. Please check your Git username and token."
-                    elif 'not found' in error_msg.lower() or 'repository not found' in error_msg.lower():
-                        message = f"Repository not found: {repository['url']}. Please verify the URL."
-                    elif 'branch' in error_msg.lower() and 'not found' in error_msg.lower():
-                        message = f"Branch '{repository['branch']}' not found. Please check the branch name."
-                    else:
-                        message = f"Git clone failed: {error_msg}"
-                        
-            except subprocess.TimeoutExpired:
-                message = "Git clone operation timed out. Please check your network connection."
-            except FileNotFoundError:
-                message = "Git command not found. Please ensure Git is installed on the server."
+                    message = f"Git clone failed: {err}"
             except Exception as e:
                 logger.error(f"Unexpected error during Git clone: {e}")
                 message = f"Unexpected error: {str(e)}"
+            finally:
+                if ssl_env_set:
+                    try:
+                        del os.environ["GIT_SSL_NO_VERIFY"]
+                    except Exception:
+                        pass
+                # Cleanup empty directory after failed clone
+                try:
+                    if not success and os.path.isdir(repo_path) and not os.listdir(repo_path):
+                        shutil.rmtree(repo_path)
+                        logger.info(f"Removed empty directory after failed clone: {repo_path}")
+                except Exception as ce:
+                    logger.warning(f"Cleanup after failed clone skipped: {ce}")
         else:
-            # Pull latest changes
+            # Pull latest
             try:
-                # Configure environment for SSL settings
-                env = os.environ.copy()
-                if not repository.get('verify_ssl', True):
-                    env['GIT_SSL_NO_VERIFY'] = '1'
-                
-                # Pull latest changes
-                result = subprocess.run(
-                    ['git', 'pull', 'origin', repository['branch']], 
-                    cwd=repo_path, 
-                    capture_output=True, 
-                    text=True, 
-                    timeout=60,
-                    env=env
-                )
-                
-                if result.returncode == 0:
+                repo = Repo(repo_path)
+                origin = repo.remotes.origin
+                # Update remote URL with auth if needed
+                if parsed.scheme in ["http", "https"] and resolved_token:
+                    user_enc = urlquote(str(resolved_username or "git"), safe="")
+                    token_enc = urlquote(str(resolved_token), safe="")
+                    auth_url = f"{parsed.scheme}://{user_enc}:{token_enc}@{parsed.netloc}{parsed.path}"
+                    try:
+                        origin.set_url(auth_url)
+                    except Exception as e:
+                        logger.debug(f"Skipping remote URL update: {e}")
+
+                ssl_env_set = False
+                try:
+                    if not repository.get("verify_ssl", True):
+                        os.environ["GIT_SSL_NO_VERIFY"] = "1"
+                        ssl_env_set = True
+                    origin.pull(repository["branch"])
                     success = True
                     message = f"Repository '{repository['name']}' updated successfully"
                     logger.info(message)
-                else:
-                    error_msg = result.stderr.strip()
-                    logger.error(f"Git pull failed: {error_msg}")
-                    message = f"Git pull failed: {error_msg}"
-                    
-            except subprocess.TimeoutExpired:
-                message = "Git pull operation timed out. Please check your network connection."
+                finally:
+                    if ssl_env_set:
+                        try:
+                            del os.environ["GIT_SSL_NO_VERIFY"]
+                        except Exception:
+                            pass
             except Exception as e:
                 logger.error(f"Error during Git pull: {e}")
                 message = f"Pull failed: {str(e)}"
-        
-        # Update sync status based on result
+
+        # 6) Final status
         if success:
             git_repo_manager.update_sync_status(repo_id, "synced")
             return {"success": True, "message": message, "repository_path": repo_path}
         else:
             git_repo_manager.update_sync_status(repo_id, f"error: {message}")
             raise HTTPException(status_code=500, detail=message)
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -736,7 +847,11 @@ async def search_repository_files(
         
         # Get data directory from configuration
         from config import settings as config_settings
-        repo_path = os.path.join(config_settings.data_directory, 'git', repository['name'])
+        repo_path = os.path.join(
+            config_settings.data_directory,
+            'git',
+            (repository.get('path') or repository['name']).lstrip('/')
+        )
         
         if not os.path.exists(repo_path):
             return {

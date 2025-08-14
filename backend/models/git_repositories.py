@@ -13,6 +13,7 @@ class GitCategory(str, Enum):
     """Git repository categories."""
     CONFIGS = "configs"
     TEMPLATES = "templates"
+    ONBOARDING = "onboarding"
 
 
 class GitRepositoryRequest(BaseModel):
@@ -21,8 +22,9 @@ class GitRepositoryRequest(BaseModel):
     category: GitCategory = Field(..., description="Repository category")
     url: str = Field(..., description="Git repository URL")
     branch: str = Field(default="main", description="Default branch")
-    username: Optional[str] = Field(None, description="Git username")
-    token: Optional[str] = Field(None, description="Git personal access token")
+    username: Optional[str] = Field(None, description="Git username (legacy; prefer credential_name)")
+    token: Optional[str] = Field(None, description="Git personal access token (legacy; prefer credential_name)")
+    credential_name: Optional[str] = Field(None, description="Name of stored token credential to use")
     path: Optional[str] = Field(None, description="Path within repository")
     verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
     description: Optional[str] = Field(None, description="Repository description")
@@ -37,6 +39,7 @@ class GitRepositoryResponse(BaseModel):
     url: str
     branch: str
     username: Optional[str]
+    credential_name: Optional[str]
     # Note: token is not included in response for security
     path: Optional[str]
     verify_ssl: bool
@@ -64,8 +67,9 @@ class GitRepositoryUpdateRequest(BaseModel):
     category: Optional[GitCategory] = Field(None, description="Repository category")
     url: Optional[str] = Field(None, description="Repository URL")
     branch: Optional[str] = Field(None, description="Default branch")
-    username: Optional[str] = Field(None, description="Git username")
-    token: Optional[str] = Field(None, description="Git personal access token")
+    username: Optional[str] = Field(None, description="Git username (legacy; prefer credential_name)")
+    token: Optional[str] = Field(None, description="Git personal access token (legacy; prefer credential_name)")
+    credential_name: Optional[str] = Field(None, description="Name of stored token credential to use")
     path: Optional[str] = Field(None, description="Path within repository")
     verify_ssl: Optional[bool] = Field(None, description="Verify SSL certificates")
     description: Optional[str] = Field(None, description="Repository description")
@@ -78,6 +82,7 @@ class GitConnectionTestRequest(BaseModel):
     branch: str = "main"
     username: Optional[str] = None
     token: Optional[str] = None
+    credential_name: Optional[str] = None
     verify_ssl: bool = True
 
 
