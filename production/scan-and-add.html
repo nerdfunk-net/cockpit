@@ -194,7 +194,8 @@
                           </table>
                         </div>
                       </div>
-                      <div class="form-group">
+                      <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                        <button type="button" class="btn btn-default text-muted font-weight-bold" id="back-to-networks-btn">Back to Networks</button>
                         <button type="submit" class="btn btn-primary btn-lg" id="start-scan-btn"><i class="fa fa-search"></i> Start Network Scan</button>
                       </div>
                   </form>
@@ -254,7 +255,7 @@
               <div class="form-group" style="margin-top:15px; display:flex; align-items:center; justify-content:space-between;">
                 <div>
                   <button type="button" class="btn btn-success btn-lg" id="onboard-selected-btn" disabled><i class="fa fa-upload"></i> Onboard Selected Devices</button>
-                  <button type="button" class="btn btn-default" id="back-to-scan-btn">Back to Scan</button>
+                  <button type="button" class="btn btn-default text-muted font-weight-bold" id="back-to-scan-btn">Back to Properties</button>
                 </div>
                 <div>
                   <button type="button" class="btn btn-warning" id="assign-to-all-btn"><i class="fa fa-check-square-o"></i> Assign to All</button>
@@ -604,10 +605,17 @@
 
     function setupEventListeners(){
   const scanForm=document.getElementById('scan-form'); if(scanForm){ scanForm.addEventListener('submit', startScan);}    
-      const backBtn=document.getElementById('back-to-scan-btn'); if(backBtn){ backBtn.addEventListener('click',()=>showStep(2)); }
-      const nextBtn=document.getElementById('go-to-properties-btn'); if(nextBtn){ nextBtn.addEventListener('click',()=>showStep(2)); }
+      const backBtn=document.getElementById('back-to-scan-btn'); if(backBtn){ backBtn.addEventListener('click',()=>{
+        // Restore Properties view to pre-scan state: hide progress, enable start, clear pending parser choice
+        try{ resetScanForm(); }catch(e){}
+        try{ const sec = document.getElementById('parser-templates-section'); if(sec) sec.style.display='none'; }catch(e){}
+        pendingScanPayload = null;
+        showStep(2);
+      }); }
+      const nextBtn=document.getElementById('go-to-properties-btn'); if(nextBtn){ nextBtn.addEventListener('click',()=>{ normalizeCIDRs(); showStep(2); }); }
+  const backToNetworks=document.getElementById('back-to-networks-btn'); if(backToNetworks){ backToNetworks.addEventListener('click',()=>{ showStep(1); }); }
   // Show/hide parser templates when discovery mode changes
-  const dm = document.getElementById('discovery-mode'); if(dm){ dm.addEventListener('change', ()=>{ const sec=document.getElementById('parser-templates-section'); if(!sec) return; if(dm.value==='ssh-login'){ /* will be shown when starting scan */ } else { sec.style.display='none'; } }); }
+  const dm = document.getElementById('discovery-mode'); if(dm){ dm.addEventListener('change', async ()=>{ const sec=document.getElementById('parser-templates-section'); if(!sec) return; if(dm.value==='ssh-login'){ try{ await openParserTemplateModal(); }catch(e){} } else { sec.style.display='none'; } }); }
       const selectAll=document.getElementById('select-all-devices'); if(selectAll){ selectAll.addEventListener('change', toggleAllDevices);}  
       const onboardBtn=document.getElementById('onboard-selected-btn'); if(onboardBtn){ onboardBtn.addEventListener('click', onboardSelectedDevices);} 
       const assignAllBtn=document.getElementById('assign-to-all-btn'); if(assignAllBtn){ assignAllBtn.addEventListener('click', openAssignAllModal);} 
@@ -649,6 +657,19 @@
         if(addBtn) addBtn.style.display = (i === groups.length -1) ? 'inline-block':'none';
       });
     }
+    // If user entered plain IPv4 addresses (no /prefix), treat them as /32
+    function normalizeCIDRs(){
+      const inputs = document.querySelectorAll('.cidr-input');
+      const ipOnlyRe = /^\s*(?:\d{1,3}\.){3}\d{1,3}\s*$/;
+      inputs.forEach(inp=>{
+        const v = (inp.value||'').trim();
+        if(!v) return;
+        if(ipOnlyRe.test(v)){
+          // append /32
+          inp.value = v.replace(/\s+/g,'') + '/32';
+        }
+      });
+    }
     function addCredential(){
       if(credentialsData.length===0){ showAlert('No credentials available','warning'); return; }
       const container=document.getElementById('credentials-container');
@@ -679,6 +700,8 @@
 
   async function startScan(e){
       e.preventDefault();
+  // normalize IP-only entries to /32 before validation
+  normalizeCIDRs();
       const cidrs=[...document.querySelectorAll('.cidr-input')].map(i=>i.value.trim()).filter(v=>v);
       if(cidrs.length===0){ showAlert('Please enter at least one network range','warning'); return; }
       if(!cidrs.every(isValidCIDR)){ showAlert('Invalid CIDR format or prefix (/22-/32 only)','danger'); return; }
@@ -687,24 +710,17 @@
       const uniqueCredentials=[...new Set(credentialIds)]; if(uniqueCredentials.length!==credentialIds.length){ showAlert('Duplicate credentials selected','warning'); return; }
       const discoveryMode=document.getElementById('discovery-mode').value; if(!discoveryMode){ showAlert('Select discovery mode','warning'); return; }
       try {
-        // If ssh-login and parser templates are not yet confirmed, show parser templates inline and wait for user to press Start again
-        if(discoveryMode==='ssh-login' && !pendingScanPayload){
-          pendingScanPayload = { cidrs, credential_ids: uniqueCredentials, discovery_mode: discoveryMode };
-          await openParserTemplateModal();
-          return; // wait for user to press Start again after selecting templates
-        }
-        // If ssh-login and pendingScanPayload exists, collect selected parser templates and include them
-        if(discoveryMode==='ssh-login' && pendingScanPayload){
-          const selected=[...document.querySelectorAll('.parser-template-checkbox:checked')].map(cb=>parseInt(cb.value,10));
-          pendingScanPayload.parser_template_ids = selected;
-          // start with pending payload below
+        // Collect selected parser templates immediately if ssh-login; do not pause the flow for a modal
+        let selectedParsers = [];
+        if(discoveryMode==='ssh-login'){
+          selectedParsers = Array.from(document.querySelectorAll('.parser-template-checkbox:checked')).map(cb=>parseInt(cb.value,10));
         }
         // Normal path: start scan immediately
         document.getElementById('start-scan-btn').disabled=true; document.getElementById('scan-progress').style.display='block';
-        const bodyPayload = pendingScanPayload ? pendingScanPayload : {cidrs,credential_ids:uniqueCredentials,discovery_mode:discoveryMode};
+        const bodyPayload = { cidrs, credential_ids: uniqueCredentials, discovery_mode: discoveryMode };
+        if(selectedParsers && selectedParsers.length>0) bodyPayload.parser_template_ids = selectedParsers;
         const response=await authManager.apiRequest('/api/scan/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bodyPayload)});
         scanJob=response; document.getElementById('job-id').textContent=response.job_id; document.getElementById('scan-status').textContent=response.state; pollScanProgress();
-        pendingScanPayload = null;
       } catch(err){ console.error('Scan start failed',err); showAlert('Failed to start scan','danger'); document.getElementById('start-scan-btn').disabled=false; document.getElementById('scan-progress').style.display='none'; }
     }
 
@@ -726,10 +742,8 @@
           tbody.appendChild(tr);
         }
       }
-      // Show inline section and bind confirm/cancel
-      const sec = document.getElementById('parser-templates-section'); if(sec) sec.style.display='block';
-      const confirmBtn = document.getElementById('confirm-start-scan'); if(confirmBtn) confirmBtn.onclick = confirmStartScanWithParsers;
-      const cancelBtn = document.getElementById('cancel-parser-selection'); if(cancelBtn) cancelBtn.onclick = ()=>{ if(sec) sec.style.display='none'; pendingScanPayload=null; };
+  // Show inline section (user will press Start to begin scan)
+  const sec = document.getElementById('parser-templates-section'); if(sec) sec.style.display='block';
     }
 
     async function confirmStartScanWithParsers(){
@@ -744,7 +758,7 @@
       finally{ pendingScanPayload=null; }
     }
 
-  async function pollScanProgress(){ if(!scanJob) return; try { const status=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/status`); updateProgressDisplay(status); if(status.state==='finished'){ discoveredDevices=status.results; showAlert('Network scan completed','success'); populateDevicesTable(); showStep(3);} else if(status.state==='failed'){ showAlert('Scan failed','danger'); resetScanForm(); } else { setTimeout(pollScanProgress,2000);} } catch(err){ console.error('Status poll failed',err); showAlert('Lost connection to scan job','danger'); resetScanForm(); }}
+  async function pollScanProgress(){ if(!scanJob) return; try { const status=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/status`); updateProgressDisplay(status); if(status.state==='finished'){ discoveredDevices=status.results; populateDevicesTable(); showStep(3);} else if(status.state==='failed'){ showAlert('Scan failed','danger'); resetScanForm(); } else { setTimeout(pollScanProgress,2000);} } catch(err){ console.error('Status poll failed',err); showAlert('Lost connection to scan job','danger'); resetScanForm(); }}
 
     function updateProgressDisplay(status){
       const p=status.progress; const pct=p.total>0?(p.scanned/p.total*100):0; document.getElementById('scan-progress-bar').style.width=`${pct}%`; document.getElementById('scan-progress-text').textContent=`${p.scanned} / ${p.total}`; document.getElementById('metric-alive').textContent=p.alive; document.getElementById('metric-authenticated').textContent=p.authenticated; document.getElementById('metric-unreachable').textContent=p.unreachable; document.getElementById('metric-auth-failed').textContent=p.auth_failed; document.getElementById('metric-driver-na').textContent=p.driver_not_supported; document.getElementById('scan-status').textContent=status.state; }
@@ -804,8 +818,26 @@
       const content = document.getElementById(`step${n}-content`);
       if(content) content.style.display='block';
       if(n===1){ resetScanForm(); }
+      // When showing the Properties step (2), evaluate discovery mode and
+      // show the parser templates section automatically for SSH-Login.
+      if(n===2){
+        try{
+          const dm = document.getElementById('discovery-mode');
+          const sec = document.getElementById('parser-templates-section');
+          if(dm && sec){
+            if(dm.value === 'ssh-login'){
+              // populate and show inline parser templates (async) without blocking UI
+              openParserTemplateModal().catch(e=>console.error('Failed to open parser templates', e));
+            } else {
+              sec.style.display = 'none';
+            }
+          }
+        }catch(e){ console.error('Error evaluating discovery mode on step change', e); }
+      }
     }
-    function resetScanForm(){ const btn=document.getElementById('start-scan-btn'); if(btn) btn.disabled=false; const sp=document.getElementById('scan-progress'); if(sp) sp.style.display='none'; scanJob=null; discoveredDevices=[]; deviceMetadata={}; }
+  function clearScanProgressUI(){ try{ const bar=document.getElementById('scan-progress-bar'); if(bar) bar.style.width='0%'; const txt=document.getElementById('scan-progress-text'); if(txt) txt.textContent='0 / 0'; const status=document.getElementById('scan-status'); if(status) status.textContent='-'; ['metric-alive','metric-authenticated','metric-unreachable','metric-auth-failed','metric-driver-na'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; }); }catch(e){}
+  }
+  function resetScanForm(){ const btn=document.getElementById('start-scan-btn'); if(btn) btn.disabled=false; const sp=document.getElementById('scan-progress'); if(sp) sp.style.display='none'; clearScanProgressUI(); scanJob=null; discoveredDevices=[]; deviceMetadata={}; }
     function toggleAllDevices(){ const master=document.getElementById('select-all-devices'); document.querySelectorAll('.device-checkbox').forEach(cb=>cb.checked=master.checked); updateOnboardButton(); }
     function updateOnboardButton(){ const cnt=document.querySelectorAll('.device-checkbox:checked').length; const btn=document.getElementById('onboard-selected-btn'); if(btn) btn.disabled=cnt===0; }
 
