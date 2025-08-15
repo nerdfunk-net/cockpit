@@ -212,8 +212,9 @@
                       <th>Hostname</th>
                       <th>Type</th>
                       <th>Platform</th>
-                      <th>Role</th>
+                      <th>Device Role</th>
                       <th>Location</th>
+                      <th>Secret Group</th>
                       <th>Credential</th>
                       <th>Actions</th>
                     </tr>
@@ -252,7 +253,7 @@
               <div class="col-md-6">
                 <div class="form-group"><label>Hostname</label><input type="text" class="form-control" id="all-hostname" placeholder="Leave empty to keep" /></div>
                 <div class="form-group"><label>Platform</label><input type="text" class="form-control" id="all-platform" placeholder="Leave empty to keep" /></div>
-                <div class="form-group"><label>Role</label><select class="form-control" id="all-role"><option value="">— leave unchanged —</option></select></div>
+                <div class="form-group"><label>Device Role</label><select class="form-control" id="all-role"><option value="">— leave unchanged —</option></select></div>
                 <div class="form-group"><label>Location</label>
                   <div class="location-selector-wrapper">
                     <input type="text" id="all-location-search" class="form-control" placeholder="Search locations... (leave empty to keep)" autocomplete="off">
@@ -263,7 +264,8 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group"><label>IP-Address Namespace</label><select class="form-control" id="all-namespace"><option value="">— leave unchanged —</option></select></div>
-                <div class="form-group"><label>Status</label><select class="form-control" id="all-status"><option value="">— leave unchanged —</option><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
+                <div class="form-group"><label>Secret Group</label><select class="form-control" id="all-secret-group"><option value="">— leave unchanged —</option></select></div>
+                <div class="form-group"><label>Device Status</label><select class="form-control" id="all-status"><option value="">— leave unchanged —</option><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
                 <div class="form-group"><label>Interface Status</label><select class="form-control" id="all-interface-status"><option value="">— leave unchanged —</option><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
                 <div class="form-group"><label>IP Status</label><select class="form-control" id="all-ip-status"><option value="">— leave unchanged —</option><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
               </div>
@@ -325,7 +327,7 @@
                 </div>
               </div>
               <div class="col-md-6" id="cisco-fields">
-                <div class="form-group"><label>Role</label><select class="form-control" id="device-role"></select></div>
+                <div class="form-group"><label>Device Role</label><select class="form-control" id="device-role"></select></div>
                 <div class="form-group"><label>Location</label>
                   <div class="location-selector-wrapper">
                     <input type="text" id="device-location-search" class="form-control" placeholder="Search locations..." autocomplete="off">
@@ -334,12 +336,13 @@
                   </div>
                 </div>
                 <div class="form-group"><label>IP-Address Namespace</label><select class="form-control" id="device-namespace"></select></div>
-                <div class="form-group"><label>Status</label><select class="form-control" id="device-status"><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
+                <div class="form-group"><label>Secret Group</label><select class="form-control" id="device-secret-group"></select></div>
+                <div class="form-group"><label>Device Status</label><select class="form-control" id="device-status"><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
                 <div class="form-group"><label>Interface Status</label><select class="form-control" id="device-interface-status"><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
                 <div class="form-group"><label>IP Status</label><select class="form-control" id="device-ip-status"><option>Active</option><option>Provisioning</option><option>Error</option></select></div>
               </div>
               <div class="col-md-6" id="linux-fields" style="display:none;">
-                <div class="form-group"><label>Role</label><select class="form-control" id="linux-role"></select></div>
+                <div class="form-group"><label>Device Role</label><select class="form-control" id="linux-role"></select></div>
                 <div class="form-group"><label>Location</label>
                   <div class="location-selector-wrapper">
                     <input type="text" id="linux-location-search" class="form-control" placeholder="Search locations..." autocomplete="off">
@@ -347,7 +350,7 @@
                     <div id="linux-location-dropdown" class="location-dropdown" style="display:none;"><div class="dropdown-content"></div></div>
                   </div>
                 </div>
-                <div class="form-group"><label>Status</label><select class="form-control" id="linux-status"><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
+                <div class="form-group"><label>Device Status</label><select class="form-control" id="linux-status"><option>Active</option><option>Planned</option><option>Staging</option><option>Retired</option><option>Failed</option></select></div>
               </div>
             </div>
             <div class="form-group" style="margin-top:15px;">
@@ -382,7 +385,7 @@
     if(!localStorage.getItem('auth_token')){window.location.href='login.html';}
 
     // State
-  let credentialsData=[]; let scanJob=null; let discoveredDevices=[]; let deviceMetadata={}; let deviceModalInstance=null; let namespacesList=[]; let rolesList=[]; let locationsData=[];
+  let credentialsData=[]; let scanJob=null; let discoveredDevices=[]; let deviceMetadata={}; let deviceModalInstance=null; let namespacesList=[]; let rolesList=[]; let locationsData=[]; let secretGroupsList=[];
 
     document.addEventListener('DOMContentLoaded', () => {
       if(!window.authManager){ window.authManager = new AuthManager(); }
@@ -400,6 +403,7 @@
   await loadNamespaces();
   await loadRoles();
   await loadLocations();
+  await loadSecretGroups();
         setupEventListeners();
   // Normalize initial CIDR button states
   updateCIDRButtons();
@@ -433,6 +437,29 @@
         buildLocationHierarchy();
         initLocationSelectors();
       }catch(e){ console.warn('Failed to load locations', e); locationsData=[]; }
+    }
+    
+    async function loadSecretGroups(){
+      try{
+        const resp = await authManager.apiRequest('/api/nautobot/secret-groups');
+        // Expecting list of {id, name}
+        secretGroupsList = Array.isArray(resp) ? resp : [];
+      }catch(e){ console.warn('Failed to load secret groups', e); secretGroupsList = []; }
+    }
+
+    function populateSecretGroupSelect(selectId, current){
+      const sel = document.getElementById(selectId);
+      if(!sel) return;
+      sel.innerHTML = '';
+      const noneOpt = document.createElement('option'); noneOpt.value=''; noneOpt.textContent='— none —'; sel.appendChild(noneOpt);
+      for(const s of (secretGroupsList||[])){
+        const o = document.createElement('option'); o.value = s.id; o.textContent = s.name; sel.appendChild(o);
+      }
+      if(current){
+        // Try to match by id or name
+        const found = [...sel.options].some(o=>o.value==current || o.textContent==current);
+        if(found) sel.value = current;
+      }
     }
     function buildLocationHierarchy(){
       const map=new Map();
@@ -665,7 +692,8 @@
           platform: (existing.platform!==undefined? existing.platform : d.platform),
       location: (existing.location!==undefined ? existing.location : 'unknown'),
       namespace: existing.namespace || (namespacesList[0] || 'Global'),
-      role: existing.role || (d.device_type==='cisco'?'network':d.device_type==='linux'?'server':'unknown'),
+  role: existing.role || (d.device_type==='cisco'?'network':d.device_type==='linux'?'server':'unknown'),
+  secret_group_id: existing.secret_group_id || existing.secret_group || '',
           status: existing.status || 'Active',
           interface_status: existing.interface_status || 'Active',
           ip_status: existing.ip_status || 'Active'
@@ -674,15 +702,18 @@
         const cred=credentialsData.find(c=>c.id===merged.credential_id);
         const credName=cred?cred.name:'Unknown';
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td><input type='checkbox' class='device-checkbox' data-ip='${merged.ip}'></td>
-                       <td>${merged.ip}</td>
-                       <td>${merged.hostname||'Unknown'}</td>
-                       <td>${merged.device_type}</td>
-                       <td>${merged.platform||'Unknown'}</td>
-             <td>${merged.role||'unknown'}</td>
-             <td>${locationDisplay(merged.location)}</td>
-                       <td>${credName}</td>
-                       <td><button class='btn btn-sm btn-info device-config-btn' data-ip='${merged.ip}'><i class='fa fa-edit'></i> Configure</button></td>`;
+  const sgObj = (secretGroupsList||[]).find(s=>String(s.id)===String(merged.secret_group_id));
+  const sgName = sgObj ? sgObj.name : '';
+  tr.innerHTML=`<td><input type='checkbox' class='device-checkbox' data-ip='${merged.ip}'></td>
+           <td>${merged.ip}</td>
+           <td>${merged.hostname||'Unknown'}</td>
+           <td>${merged.device_type}</td>
+           <td>${merged.platform||'Unknown'}</td>
+       <td>${merged.role||'unknown'}</td>
+       <td>${locationDisplay(merged.location)}</td>
+       <td>${sgName}</td>
+           <td>${credName}</td>
+           <td><button class='btn btn-sm btn-info device-config-btn' data-ip='${merged.ip}'><i class='fa fa-edit'></i> Configure</button></td>`;
         tbody.appendChild(tr);
       });
       document.querySelectorAll('.device-checkbox').forEach(cb=>cb.addEventListener('change', updateOnboardButton));
@@ -727,6 +758,8 @@
       _origEditDeviceMetadata.call(this, ip);
       // After elements exist, populate selects
       initRoleSelectsForModal(d);
+      // Populate secret group select for Cisco devices
+      try{ populateSecretGroupSelect('device-secret-group', d.secret_group || d.secret_group_id || ''); }catch(e){}
     }
     function populateNamespaceSelect(selectId, current){
       const sel = document.getElementById(selectId);
@@ -740,7 +773,29 @@
       if(current && values.includes(current)) sel.value=current; else sel.value=values[0];
     }
     function toggleDeviceFields(){ const t=document.getElementById('device-type').value; document.getElementById('cisco-fields').style.display=t==='cisco'?'block':'none'; document.getElementById('linux-fields').style.display=t==='linux'?'block':'none'; }
-  function saveDeviceMetadata(){ const ip=document.getElementById('device-ip').value; const type=document.getElementById('device-type').value; if(!deviceMetadata[ip]) return; deviceMetadata[ip].hostname=document.getElementById('device-hostname').value; deviceMetadata[ip].platform=document.getElementById('device-platform').value; if(type==='cisco'){ deviceMetadata[ip].location=document.getElementById('device-location').value; deviceMetadata[ip].namespace=document.getElementById('device-namespace').value; deviceMetadata[ip].role=document.getElementById('device-role').value; deviceMetadata[ip].status=document.getElementById('device-status').value; deviceMetadata[ip].interface_status=document.getElementById('device-interface-status').value; deviceMetadata[ip].ip_status=document.getElementById('device-ip-status').value; } else if(type==='linux'){ deviceMetadata[ip].role=document.getElementById('linux-role').value; deviceMetadata[ip].location=document.getElementById('linux-location').value; deviceMetadata[ip].status=document.getElementById('linux-status').value; } else { deviceMetadata[ip].role='unknown'; deviceMetadata[ip].status='Active'; } if(deviceModalInstance) deviceModalInstance.hide(); showAlert('Device configuration saved','success'); }
+  function saveDeviceMetadata(){
+      const ip=document.getElementById('device-ip').value; const type=document.getElementById('device-type').value; if(!deviceMetadata[ip]) return;
+      deviceMetadata[ip].hostname=document.getElementById('device-hostname').value;
+      deviceMetadata[ip].platform=document.getElementById('device-platform').value;
+      if(type==='cisco'){
+        deviceMetadata[ip].location=document.getElementById('device-location').value;
+        deviceMetadata[ip].namespace=document.getElementById('device-namespace').value;
+        deviceMetadata[ip].role=document.getElementById('device-role').value;
+        deviceMetadata[ip].status=document.getElementById('device-status').value;
+        deviceMetadata[ip].interface_status=document.getElementById('device-interface-status').value;
+        deviceMetadata[ip].ip_status=document.getElementById('device-ip-status').value;
+        // store secret group id (empty string if none)
+        const sg = document.getElementById('device-secret-group'); if(sg) deviceMetadata[ip].secret_group_id = sg.value || '';
+      } else if(type==='linux'){
+        deviceMetadata[ip].role=document.getElementById('linux-role').value;
+        deviceMetadata[ip].location=document.getElementById('linux-location').value;
+        deviceMetadata[ip].status=document.getElementById('linux-status').value;
+      } else {
+        deviceMetadata[ip].role='unknown'; deviceMetadata[ip].status='Active';
+      }
+      if(deviceModalInstance) deviceModalInstance.hide();
+      showAlert('Device configuration saved','success');
+    }
 
     // Assign to All
     let assignAllModalInstance=null;
@@ -764,6 +819,7 @@
       const rl=getVal('all-role'); if(rl) updates.role=rl;
   const lcHidden=document.getElementById('all-location-hidden').value; if(lcHidden) updates.location=lcHidden;
       const ns=document.getElementById('all-namespace').value; if(ns) updates.namespace=ns;
+  const sg=document.getElementById('all-secret-group').value; if(sg) updates.secret_group_id=sg;
       const st=document.getElementById('all-status').value; if(st) updates.status=st;
       const ist=document.getElementById('all-interface-status').value; if(ist) updates.interface_status=ist;
       const ipst=document.getElementById('all-ip-status').value; if(ipst) updates.ip_status=ipst;
@@ -779,11 +835,13 @@
     if(assignAllBtnHook){ assignAllBtnHook.addEventListener('click', ()=>{
       const selNs=document.getElementById('all-namespace'); if(selNs){ selNs.innerHTML='<option value=\"\">— leave unchanged —</option>'; (namespacesList||[]).forEach(ns=>{ const o=document.createElement('option'); o.value=ns; o.textContent=ns; selNs.appendChild(o); }); }
       populateRoleSelect('all-role', null, {includeBlank:true});
+  // Populate secret group select for bulk assign
+  const allSg = document.getElementById('all-secret-group'); if(allSg){ allSg.innerHTML = '<option value="">— leave unchanged —</option>'; (secretGroupsList||[]).forEach(s=>{ const o=document.createElement('option'); o.value = s.id; o.textContent = s.name; allSg.appendChild(o); }); }
       // Reset bulk location selector display/hidden
       const ai=document.getElementById('all-location-search'); const ah=document.getElementById('all-location-hidden'); const add=document.getElementById('all-location-dropdown'); if(ai){ ai.value=''; ai.classList.remove('has-selection'); } if(ah){ ah.value=''; } if(add){ const content=add.querySelector('.dropdown-content'); if(content) content.innerHTML=''; add.style.display='none'; }
     }); }
 
-  async function onboardSelectedDevices(){ const ips=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip); if(ips.length===0){ showAlert('Select devices to onboard','warning'); return;} const devices=ips.map(ip=>{ const m=deviceMetadata[ip]; return { ip:m.ip, credential_id:m.credential_id, device_type:m.device_type, hostname:m.hostname, platform:m.platform, location:m.location, namespace:m.namespace, role:m.role, status:m.status, interface_status:m.interface_status, ip_status:m.ip_status }; }); try { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin"></i> Onboarding...'; const resp=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({devices})}); let msg=`Onboarding completed: ${resp.accepted} devices.`; if(resp.cisco_queued) msg+=` ${resp.cisco_queued} Cisco queued.`; if(resp.linux_added) msg+=` ${resp.linux_added} Linux added.`; if(resp.inventory_path) msg+=` Inventory: ${resp.inventory_path}`; showAlert(msg,'success'); } catch(err){ console.error('Onboard failed',err); showAlert('Onboarding failed','danger'); } finally { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=false; btn.innerHTML='<i class="fa fa-upload"></i> Onboard Selected Devices'; } }
+  async function onboardSelectedDevices(){ const ips=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip); if(ips.length===0){ showAlert('Select devices to onboard','warning'); return;} const devices=ips.map(ip=>{ const m=deviceMetadata[ip]; return { ip:m.ip, credential_id:m.credential_id, device_type:m.device_type, hostname:m.hostname, platform:m.platform, location:m.location, namespace:m.namespace, role:m.role, status:m.status, interface_status:m.interface_status, ip_status:m.ip_status, secret_group_id: m.secret_group_id || '' }; }); try { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=true; btn.innerHTML='<i class="fa fa-spinner fa-spin"></i> Onboarding...'; const resp=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({devices})}); let msg=`Onboarding completed: ${resp.accepted} devices.`; if(resp.cisco_queued) msg+=` ${resp.cisco_queued} Cisco queued.`; if(resp.linux_added) msg+=` ${resp.linux_added} Linux added.`; if(resp.inventory_path) msg+=` Inventory: ${resp.inventory_path}`; showAlert(msg,'success'); } catch(err){ console.error('Onboard failed',err); showAlert('Onboarding failed','danger'); } finally { const btn=document.getElementById('onboard-selected-btn'); btn.disabled=false; btn.innerHTML='<i class="fa fa-upload"></i> Onboard Selected Devices'; } }
 
     function isValidCIDR(c){ const re=/(\d{1,3}\.){3}\d{1,3}\/\d{1,2}/; if(!re.test(c)) return false; const [ip,prefix]=c.split('/'); const pn=parseInt(prefix); if(pn<22||pn>32) return false; return ip.split('.').every(o=>{const n=parseInt(o); return n>=0&&n<=255;}); }
     function showAlert(msg,type='info'){ const div=document.createElement('div'); div.className=`alert alert-${type} alert-dismissible`; div.innerHTML=`<button type='button' class='close' data-dismiss='alert'>&times;</button>${msg}`; const content=document.querySelector('.x_content'); content.insertBefore(div, content.firstChild); setTimeout(()=>{ div.style.transition='opacity .5s'; div.style.opacity='0'; setTimeout(()=>div.remove(),500); },5000); }
