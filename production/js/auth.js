@@ -239,14 +239,54 @@ class AuthManager {
             }
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || `HTTP ${response.status}`);
+                // Try to parse JSON body; fall back to text
+                let errBody;
+                try {
+                    errBody = await response.json();
+                } catch (e) {
+                    try { errBody = await response.text(); } catch (e2) { errBody = null; }
+                }
+
+                let msg = `HTTP ${response.status}`;
+                if (errBody) {
+                    if (typeof errBody === 'string') msg = errBody;
+                    else if (errBody.detail) {
+                        // FastAPI commonly returns { detail: [...] } for 422
+                        if (Array.isArray(errBody.detail)) {
+                            try {
+                                msg = errBody.detail.map(d => {
+                                    if (typeof d === 'string') return d;
+                                    const loc = Array.isArray(d.loc) ? d.loc.join('.') : (d.loc || '');
+                                    const m = d.msg || d.message || d.detail || d.type || JSON.stringify(d);
+                                    return loc ? `${loc}: ${m}` : String(m);
+                                }).join('\n');
+                            } catch(_) {
+                                msg = JSON.stringify(errBody.detail);
+                            }
+                        } else {
+                            try { msg = typeof errBody.detail === 'object' ? JSON.stringify(errBody.detail) : String(errBody.detail); }
+                            catch(_) { msg = String(errBody.detail); }
+                        }
+                    }
+                    else {
+                        try { msg = JSON.stringify(errBody); } catch (e) { msg = String(errBody); }
+                    }
+                }
+
+                throw new Error(msg || `HTTP ${response.status}`);
             }
 
-            return await response.json();
+            // Parse and return JSON response; if parsing fails, return raw text
+            try {
+                return await response.json();
+            } catch (e) {
+                return await response.text();
+            }
         } catch (error) {
+            // Normalize error objects so callers get a readable message
             console.error('API request error:', error);
-            throw error;
+            if (error instanceof Error) throw error;
+            try { throw new Error(JSON.stringify(error)); } catch (e) { throw new Error(String(error)); }
         }
     }
 
