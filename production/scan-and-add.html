@@ -97,41 +97,60 @@
             <div class="steps-container" style="display:flex;align-items:center;margin-bottom:25px;">
               <div class="step active" id="step1-indicator">
                 <div class="step-number">1</div>
-                <div class="step-title">Network Scanning</div>
+                <div class="step-title">Networks</div>
               </div>
               <div class="step-divider" style="flex:1;height:2px;background:#e9ecef;margin:0 20px;"></div>
               <div class="step" id="step2-indicator">
                 <div class="step-number">2</div>
+                <div class="step-title">Properties</div>
+              </div>
+              <div class="step-divider" style="flex:1;height:2px;background:#e9ecef;margin:0 20px;"></div>
+              <div class="step" id="step3-indicator">
+                <div class="step-number">3</div>
                 <div class="step-title">Device Onboarding</div>
               </div>
             </div>
 
-            <!-- Step 1 -->
+            <!-- Step 1: Networks -->
             <div id="step1-content" class="step-content">
               <div class="row">
                 <div class="col-md-8 col-sm-12">
-                  <h3>Network Discovery Configuration</h3>
-                  <p class="text-muted">Scan network ranges to discover devices and test credentials.</p>
-                  <form id="scan-form">
-                    <div class="form-group">
-                      <label class="control-label">Network Ranges (CIDR)</label>
-                      <small class="help-block">Maximum /22 networks (up to ~1024 hosts). Up to 10 ranges.</small>
-                      <div id="cidrs-container">
-                        <div class="cidr-input-group">
-                          <div class="input-group">
-                            <input type="text" class="form-control cidr-input" placeholder="192.168.1.0/24" pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$">
-                            <span class="input-group-btn">
-                              <button class="btn btn-danger remove-cidr" type="button" style="display:none;">
-                                <i class="fa fa-minus"></i>
-                              </button>
-                              <button class="btn btn-primary add-cidr" type="button">
-                                <i class="fa fa-plus"></i>
-                              </button>
-                            </span>
-                          </div>
+                  <h3>Networks</h3>
+                  <p class="text-muted">Enter network ranges to scan. Continue to set properties.</p>
+                  <div class="form-group">
+                    <label class="control-label">Network Ranges (CIDR)</label>
+                    <small class="help-block">Maximum /22 networks (up to ~1024 hosts). Up to 10 ranges.</small>
+                    <div id="cidrs-container">
+                      <div class="cidr-input-group">
+                        <div class="input-group">
+                          <input type="text" class="form-control cidr-input" placeholder="192.168.1.0/24" pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$">
+                          <span class="input-group-btn">
+                            <button class="btn btn-danger remove-cidr" type="button" style="display:none;">
+                              <i class="fa fa-minus"></i>
+                            </button>
+                            <button class="btn btn-primary add-cidr" type="button">
+                              <i class="fa fa-plus"></i>
+                            </button>
+                          </span>
                         </div>
                       </div>
                     </div>
+                  </div>
+                  <div class="form-group">
+                    <button type="button" class="btn btn-primary btn-lg" id="go-to-properties-btn"><i class="fa fa-arrow-right"></i> Next</button>
+                  </div>
+                </div>
+                <div class="col-md-4 col-sm-12"></div>
+              </div>
+            </div>
+
+            <!-- Step 2: Properties -->
+            <div id="step2-content" class="step-content" style="display:none;">
+              <div class="row">
+                <div class="col-md-8 col-sm-12">
+                  <h3>Properties</h3>
+                  <p class="text-muted">Configure authentication and discovery settings for the scan.</p>
+                  <form id="scan-form">
                     <div class="form-group">
                       <label class="control-label">Authentication Credentials</label>
                       <small class="help-block">Select credentials to test against discovered devices.</small>
@@ -164,10 +183,20 @@
                         <strong>Napalm:</strong> Attempts Cisco (ios/nxos/iosxr) and Linux detection with full platform details.<br>
                         <strong>SSH Login:</strong> SSH connectivity with basic device detection using 'show version' (Cisco) and 'uname -a' (Linux).
                       </div>
-                    </div>
-                    <div class="form-group">
-                      <button type="submit" class="btn btn-primary btn-lg" id="start-scan-btn"><i class="fa fa-search"></i> Start Network Scan</button>
-                    </div>
+                      </div>
+                      <!-- Parser templates (moved from modal) -->
+                      <div id="parser-templates-section" style="display:none; margin-top:15px;">
+                        <h4>Select Parser Templates</h4>
+                        <div class="table-responsive">
+                          <table class="table table-striped">
+                            <thead><tr><th width="40">Use</th><th>Name</th><th>Description</th></tr></thead>
+                            <tbody id="parser-templates-tbody"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-lg" id="start-scan-btn"><i class="fa fa-search"></i> Start Network Scan</button>
+                      </div>
                   </form>
                 </div>
                 <div class="col-md-4 col-sm-12">
@@ -199,8 +228,8 @@
               </div>
             </div>
 
-            <!-- Step 2 -->
-            <div id="step2-content" class="step-content" style="display:none;">
+            <!-- Step 3: Device Onboarding -->
+            <div id="step3-content" class="step-content" style="display:none;">
               <h3>Device Onboarding</h3>
               <p class="text-muted">Configure and onboard discovered devices.</p>
               <div class="table-responsive">
@@ -410,7 +439,7 @@
   await loadDeviceStatuses();
   await loadInterfaceStatuses();
   await loadIpAddressStatuses();
-        setupEventListeners();
+  setupEventListeners();
   // Normalize initial CIDR button states
   updateCIDRButtons();
   // Normalize initial credential button states
@@ -574,8 +603,11 @@
     }
 
     function setupEventListeners(){
-      const scanForm=document.getElementById('scan-form'); if(scanForm){ scanForm.addEventListener('submit', startScan);}    
-      const backBtn=document.getElementById('back-to-scan-btn'); if(backBtn){ backBtn.addEventListener('click',()=>showStep(1)); }
+  const scanForm=document.getElementById('scan-form'); if(scanForm){ scanForm.addEventListener('submit', startScan);}    
+      const backBtn=document.getElementById('back-to-scan-btn'); if(backBtn){ backBtn.addEventListener('click',()=>showStep(2)); }
+      const nextBtn=document.getElementById('go-to-properties-btn'); if(nextBtn){ nextBtn.addEventListener('click',()=>showStep(2)); }
+  // Show/hide parser templates when discovery mode changes
+  const dm = document.getElementById('discovery-mode'); if(dm){ dm.addEventListener('change', ()=>{ const sec=document.getElementById('parser-templates-section'); if(!sec) return; if(dm.value==='ssh-login'){ /* will be shown when starting scan */ } else { sec.style.display='none'; } }); }
       const selectAll=document.getElementById('select-all-devices'); if(selectAll){ selectAll.addEventListener('change', toggleAllDevices);}  
       const onboardBtn=document.getElementById('onboard-selected-btn'); if(onboardBtn){ onboardBtn.addEventListener('click', onboardSelectedDevices);} 
       const assignAllBtn=document.getElementById('assign-to-all-btn'); if(assignAllBtn){ assignAllBtn.addEventListener('click', openAssignAllModal);} 
@@ -655,20 +687,29 @@
       const uniqueCredentials=[...new Set(credentialIds)]; if(uniqueCredentials.length!==credentialIds.length){ showAlert('Duplicate credentials selected','warning'); return; }
       const discoveryMode=document.getElementById('discovery-mode').value; if(!discoveryMode){ showAlert('Select discovery mode','warning'); return; }
       try {
-        // If ssh-login, prompt for parser templates first
-        if(discoveryMode==='ssh-login'){
+        // If ssh-login and parser templates are not yet confirmed, show parser templates inline and wait for user to press Start again
+        if(discoveryMode==='ssh-login' && !pendingScanPayload){
           pendingScanPayload = { cidrs, credential_ids: uniqueCredentials, discovery_mode: discoveryMode };
           await openParserTemplateModal();
-          return; // wait for confirm
+          return; // wait for user to press Start again after selecting templates
         }
+        // If ssh-login and pendingScanPayload exists, collect selected parser templates and include them
+        if(discoveryMode==='ssh-login' && pendingScanPayload){
+          const selected=[...document.querySelectorAll('.parser-template-checkbox:checked')].map(cb=>parseInt(cb.value,10));
+          pendingScanPayload.parser_template_ids = selected;
+          // start with pending payload below
+        }
+        // Normal path: start scan immediately
         document.getElementById('start-scan-btn').disabled=true; document.getElementById('scan-progress').style.display='block';
-        const response=await authManager.apiRequest('/api/scan/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cidrs,credential_ids:uniqueCredentials,discovery_mode:discoveryMode})});
+        const bodyPayload = pendingScanPayload ? pendingScanPayload : {cidrs,credential_ids:uniqueCredentials,discovery_mode:discoveryMode};
+        const response=await authManager.apiRequest('/api/scan/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bodyPayload)});
         scanJob=response; document.getElementById('job-id').textContent=response.job_id; document.getElementById('scan-status').textContent=response.state; pollScanProgress();
+        pendingScanPayload = null;
       } catch(err){ console.error('Scan start failed',err); showAlert('Failed to start scan','danger'); document.getElementById('start-scan-btn').disabled=false; document.getElementById('scan-progress').style.display='none'; }
     }
 
     async function openParserTemplateModal(){
-      // Fetch templates with category=parser
+      // Fetch templates with category=parser and display inline in properties page
       let templates=[];
       try{
         const resp = await authManager.apiRequest('/api/templates?category=parser');
@@ -685,17 +726,16 @@
           tbody.appendChild(tr);
         }
       }
-      const modalEl=document.getElementById('parser-select-modal');
-      if(!window.parserModal){ window.parserModal = new bootstrap.Modal(modalEl,{backdrop:true}); }
-      // Bind confirm
-      document.getElementById('confirm-start-scan').onclick = confirmStartScanWithParsers;
-      window.parserModal.show();
+      // Show inline section and bind confirm/cancel
+      const sec = document.getElementById('parser-templates-section'); if(sec) sec.style.display='block';
+      const confirmBtn = document.getElementById('confirm-start-scan'); if(confirmBtn) confirmBtn.onclick = confirmStartScanWithParsers;
+      const cancelBtn = document.getElementById('cancel-parser-selection'); if(cancelBtn) cancelBtn.onclick = ()=>{ if(sec) sec.style.display='none'; pendingScanPayload=null; };
     }
 
     async function confirmStartScanWithParsers(){
       const selected=[...document.querySelectorAll('.parser-template-checkbox:checked')].map(cb=>parseInt(cb.value,10));
       const payload = { ...pendingScanPayload, parser_template_ids: selected };
-      window.parserModal.hide();
+      const sec = document.getElementById('parser-templates-section'); if(sec) sec.style.display='none';
       try{
         document.getElementById('start-scan-btn').disabled=true; document.getElementById('scan-progress').style.display='block';
         const response=await authManager.apiRequest('/api/scan/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -704,7 +744,7 @@
       finally{ pendingScanPayload=null; }
     }
 
-    async function pollScanProgress(){ if(!scanJob) return; try { const status=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/status`); updateProgressDisplay(status); if(status.state==='finished'){ discoveredDevices=status.results; showAlert('Network scan completed','success'); populateDevicesTable(); showStep(2);} else if(status.state==='failed'){ showAlert('Scan failed','danger'); resetScanForm(); } else { setTimeout(pollScanProgress,2000);} } catch(err){ console.error('Status poll failed',err); showAlert('Lost connection to scan job','danger'); resetScanForm(); }}
+  async function pollScanProgress(){ if(!scanJob) return; try { const status=await authManager.apiRequest(`/api/scan/${scanJob.job_id}/status`); updateProgressDisplay(status); if(status.state==='finished'){ discoveredDevices=status.results; showAlert('Network scan completed','success'); populateDevicesTable(); showStep(3);} else if(status.state==='failed'){ showAlert('Scan failed','danger'); resetScanForm(); } else { setTimeout(pollScanProgress,2000);} } catch(err){ console.error('Status poll failed',err); showAlert('Lost connection to scan job','danger'); resetScanForm(); }}
 
     function updateProgressDisplay(status){
       const p=status.progress; const pct=p.total>0?(p.scanned/p.total*100):0; document.getElementById('scan-progress-bar').style.width=`${pct}%`; document.getElementById('scan-progress-text').textContent=`${p.scanned} / ${p.total}`; document.getElementById('metric-alive').textContent=p.alive; document.getElementById('metric-authenticated').textContent=p.authenticated; document.getElementById('metric-unreachable').textContent=p.unreachable; document.getElementById('metric-auth-failed').textContent=p.auth_failed; document.getElementById('metric-driver-na').textContent=p.driver_not_supported; document.getElementById('scan-status').textContent=status.state; }
@@ -756,8 +796,16 @@
       updateOnboardButton();
     }
 
-    function showStep(n){ document.querySelectorAll('.step').forEach(s=>s.classList.remove('active')); document.getElementById(`step${n}-indicator`).classList.add('active'); document.querySelectorAll('.step-content').forEach(c=>c.style.display='none'); document.getElementById(`step${n}-content`).style.display='block'; if(n===1){ resetScanForm(); }}
-    function resetScanForm(){ document.getElementById('start-scan-btn').disabled=false; document.getElementById('scan-progress').style.display='none'; scanJob=null; discoveredDevices=[]; deviceMetadata={}; }
+    function showStep(n){
+      document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+      const ind = document.getElementById(`step${n}-indicator`);
+      if(ind) ind.classList.add('active');
+      document.querySelectorAll('.step-content').forEach(c=>c.style.display='none');
+      const content = document.getElementById(`step${n}-content`);
+      if(content) content.style.display='block';
+      if(n===1){ resetScanForm(); }
+    }
+    function resetScanForm(){ const btn=document.getElementById('start-scan-btn'); if(btn) btn.disabled=false; const sp=document.getElementById('scan-progress'); if(sp) sp.style.display='none'; scanJob=null; discoveredDevices=[]; deviceMetadata={}; }
     function toggleAllDevices(){ const master=document.getElementById('select-all-devices'); document.querySelectorAll('.device-checkbox').forEach(cb=>cb.checked=master.checked); updateOnboardButton(); }
     function updateOnboardButton(){ const cnt=document.querySelectorAll('.device-checkbox:checked').length; const btn=document.getElementById('onboard-selected-btn'); if(btn) btn.disabled=cnt===0; }
 
