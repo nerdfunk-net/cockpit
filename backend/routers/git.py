@@ -16,6 +16,7 @@ from git import Repo, InvalidGitRepositoryError, GitCommandError
 from core.auth import verify_token
 from models.git import GitCommitRequest, GitBranchRequest
 from services.cache_service import cache_service
+from services.git_utils import open_or_clone, repo_path, normalize_git_url
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/git", tags=["git"])
@@ -50,92 +51,16 @@ def get_git_repo():
                 detail="Selected Git repository is inactive. Please activate it or select a different repository."
             )
 
-        # Use the configured repository 'path' (fallback to 'name') for the directory path
-        from config import settings as config_settings
-        from pathlib import Path
-        sub_path = (repository.get('path') or repository['name']).lstrip('/')
-        repo_dir = Path(config_settings.data_directory) / 'git' / sub_path
-
-        # Create the directory if it doesn't exist
-        repo_dir.mkdir(parents=True, exist_ok=True)
-
+        # Open the repository (or clone if needed) using shared utilities
         try:
-            # Try to open existing repository
-            repo = Repo(repo_dir)
-
-            # Verify this is the correct repository by checking remote URL
-            if repo.remotes:
-                current_remote = repo.remotes.origin.url
-
-                # Compare URLs by normalizing them (remove authentication parts)
-                def normalize_git_url(url):
-                    """Remove authentication from Git URL for comparison"""
-                    from urllib.parse import urlparse, urlunparse
-                    parsed = urlparse(url)
-                    # Remove userinfo (username:password@) from netloc
-                    if '@' in parsed.netloc:
-                        netloc = parsed.netloc.split('@')[-1]
-                    else:
-                        netloc = parsed.netloc
-                    return urlunparse((parsed.scheme, netloc, parsed.path, '', '', ''))
-
-                expected_url = normalize_git_url(repository['url'])
-                current_url = normalize_git_url(current_remote)
-
-                if current_url != expected_url:
-                    logger.warning(f"Repository URL mismatch. Expected: {expected_url}, Found: {current_url}")
-                    # Remove the directory and clone fresh
-                    shutil.rmtree(repo_dir)
-                    repo_dir.mkdir(parents=True, exist_ok=True)
-                    raise InvalidGitRepositoryError("URL mismatch, need to re-clone")
-
+            repo = open_or_clone(repository)
             return repo
-
-        except (InvalidGitRepositoryError, Exception):
-            # Repository doesn't exist or is corrupted, clone it
-            if repo_dir.exists():
-                shutil.rmtree(repo_dir)
-            repo_dir.mkdir(parents=True, exist_ok=True)
-
-            # Clone the repository
-            clone_url = repository['url']
-
-            # Add authentication if provided
-            if repository.get('username') and repository.get('token'):
-                parsed_url = urlparse(repository['url'])
-                clone_url = f"{parsed_url.scheme}://{repository['username']}:{repository['token']}@{parsed_url.netloc}{parsed_url.path}"
-
-            try:
-                # Configure Git environment for SSL
-                env = os.environ.copy()
-                if not repository.get('verify_ssl', True):
-                    env['GIT_SSL_NO_VERIFY'] = '1'
-
-                repo = Repo.clone_from(
-                    clone_url, 
-                    repo_dir,
-                    branch=repository.get('branch', 'main'),
-                    env=env
-                )
-
-                # Switch to the correct path within the repository if specified
-                if repository.get('path'):
-                    config_path = repo_dir / repository['path']
-                    if config_path.exists() and config_path.is_dir():
-                        # Return a repo object that points to the subdirectory
-                        # Note: Git repos can't have subdirectories as separate repos,
-                        # but we can work with the files in the subdirectory
-                        pass
-
-                logger.info(f"Successfully cloned repository {repository['name']} from {repository['url']}")
-                return repo
-
-            except Exception as e:
-                logger.error(f"Failed to clone repository {repository['name']}: {e}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Failed to clone Git repository: {str(e)}"
-                )
+        except Exception as e:
+            logger.error(f"Failed to prepare repository {repository['name']}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to open/clone Git repository: {str(e)}"
+            )
 
     except HTTPException:
         raise

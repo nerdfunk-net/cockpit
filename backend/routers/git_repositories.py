@@ -21,6 +21,7 @@ from models.git_repositories import (
 from git_repositories_manager import GitRepositoryManager
 from core.auth import verify_token
 import credentials_manager as cred_mgr
+from services.git_utils import repo_path as git_repo_path, add_auth_to_url, set_ssl_env
 
 logger = logging.getLogger(__name__)
 
@@ -416,13 +417,8 @@ async def get_repository_status(
         if not repository:
             raise HTTPException(status_code=404, detail="Repository not found")
 
-        # Get data directory from configuration
-        from config import settings as config_settings
-        repo_path = os.path.join(
-            config_settings.data_directory,
-            'git',
-            (repository.get('path') or repository['name']).lstrip('/')
-        )
+        # Resolve repository working directory
+        repo_path = str(git_repo_path(repository))
 
         status_info = {
             "repository_name": repository['name'],
@@ -624,12 +620,7 @@ async def sync_repository(
         git_repo_manager.update_sync_status(repo_id, "syncing")
 
         # 2) Compute repo path (uses configured 'path' or fallback to 'name')
-        from config import settings as config_settings
-        repo_path = os.path.join(
-            config_settings.data_directory,
-            "git",
-            (repository.get("path") or repository["name"]).lstrip("/")
-        )
+        repo_path = str(git_repo_path(repository))
 
         logger.info(f"Syncing repository '{repository['name']}' to path: {repo_path}")
         logger.info(f"Repository URL: {repository['url']}")
@@ -665,13 +656,9 @@ async def sync_repository(
 
         # 5) Build clone URL (inject auth for http/https)
         clone_url = repository["url"]
-        parsed = urlparse(repository["url"])
-        if parsed.scheme in ["http", "https"] and resolved_token:
-            if not resolved_username:
-                resolved_username = "git"
-            user_enc = urlquote(str(resolved_username), safe="")
-            token_enc = urlquote(str(resolved_token), safe="")
-            clone_url = f"{parsed.scheme}://{user_enc}:{token_enc}@{parsed.netloc}{parsed.path}"
+        parsed = urlparse(repository["url"]) if repository.get("url") else None
+        if parsed and parsed.scheme in ["http", "https"] and resolved_token:
+            clone_url = add_auth_to_url(repository["url"], resolved_username, resolved_token)
 
         success = False
         message = ""
@@ -689,12 +676,10 @@ async def sync_repository(
             ssl_env_set = False
             try:
                 if not repository.get("verify_ssl", True):
-                    os.environ["GIT_SSL_NO_VERIFY"] = "1"
-                    ssl_env_set = True
                     logger.warning("Git SSL verification disabled - not recommended for production")
-
-                logger.info(f"Cloning branch {repository['branch']} into {repo_path}")
-                Repo.clone_from(clone_url, repo_path, branch=repository["branch"])
+                with set_ssl_env(repository):
+                    logger.info(f"Cloning branch {repository['branch']} into {repo_path}")
+                    Repo.clone_from(clone_url, repo_path, branch=repository["branch"])
 
                 if not os.path.isdir(os.path.join(repo_path, ".git")):
                     raise GitCommandError("clone", 1, b"", b".git not found after clone")
@@ -715,11 +700,6 @@ async def sync_repository(
                 logger.error(f"Unexpected error during Git clone: {e}")
                 message = f"Unexpected error: {str(e)}"
             finally:
-                if ssl_env_set:
-                    try:
-                        del os.environ["GIT_SSL_NO_VERIFY"]
-                    except Exception:
-                        pass
                 # Cleanup empty directory after failed clone
                 try:
                     if not success and os.path.isdir(repo_path) and not os.listdir(repo_path):
@@ -733,30 +713,18 @@ async def sync_repository(
                 repo = Repo(repo_path)
                 origin = repo.remotes.origin
                 # Update remote URL with auth if needed
-                if parsed.scheme in ["http", "https"] and resolved_token:
-                    user_enc = urlquote(str(resolved_username or "git"), safe="")
-                    token_enc = urlquote(str(resolved_token), safe="")
-                    auth_url = f"{parsed.scheme}://{user_enc}:{token_enc}@{parsed.netloc}{parsed.path}"
+                if parsed and parsed.scheme in ["http", "https"] and resolved_token:
+                    auth_url = add_auth_to_url(repository["url"], resolved_username, resolved_token)
                     try:
                         origin.set_url(auth_url)
                     except Exception as e:
                         logger.debug(f"Skipping remote URL update: {e}")
 
-                ssl_env_set = False
-                try:
-                    if not repository.get("verify_ssl", True):
-                        os.environ["GIT_SSL_NO_VERIFY"] = "1"
-                        ssl_env_set = True
+                with set_ssl_env(repository):
                     origin.pull(repository["branch"])
                     success = True
                     message = f"Repository '{repository['name']}' updated successfully"
                     logger.info(message)
-                finally:
-                    if ssl_env_set:
-                        try:
-                            del os.environ["GIT_SSL_NO_VERIFY"]
-                        except Exception:
-                            pass
             except Exception as e:
                 logger.error(f"Error during Git pull: {e}")
                 message = f"Pull failed: {str(e)}"
@@ -845,13 +813,8 @@ async def search_repository_files(
         if not repository:
             raise HTTPException(status_code=404, detail="Repository not found")
 
-        # Get data directory from configuration
-        from config import settings as config_settings
-        repo_path = os.path.join(
-            config_settings.data_directory,
-            'git',
-            (repository.get('path') or repository['name']).lstrip('/')
-        )
+        # Resolve repository working directory
+        repo_path = str(git_repo_path(repository))
 
         if not os.path.exists(repo_path):
             return {
