@@ -173,36 +173,43 @@ if __name__ == "__main__":
 # Startup prefetch for Git cache (commits, optionally refresh loop)
 @app.on_event("startup")
 async def startup_prefetch_cache():
-    """Warm up in-memory cache for Git commits on startup, and optionally refresh."""
+    """Warm up in-memory cache for selected items on startup, and optionally refresh.
+
+    Items are controlled by cache settings 'prefetch_items' map, e.g.:
+    {"git": true, "locations": false}
+    """
     try:
+        logger.info("Startup cache: hook invoked")
         # Local imports to avoid circular dependencies at import time
         from settings_manager import settings_manager
         from routers.git import get_git_repo
         from services.cache_service import cache_service
 
         cache_cfg = settings_manager.get_cache_settings()
+        logger.info(f"Startup cache: settings loaded: {cache_cfg}")
         if not cache_cfg.get("enabled", True):
-            logger.info("Cache disabled; skipping startup prefetch")
+            logger.info("Startup cache: disabled; skipping startup prefetch")
             return
 
         async def prefetch_commits_once():
             try:
+                logger.info("Startup cache: prefetch_commits_once() starting")
                 repo = get_git_repo()
                 selected_id = settings_manager.get_selected_git_repository()
                 # Determine branch; handle empty repos safely
                 try:
                     branch_name = repo.active_branch.name
                 except Exception:
-                    logger.warning("No active branch detected; skipping commits prefetch")
+                    logger.warning("Startup cache: No active branch detected; skipping commits prefetch")
                     return
 
                 # Skip if repo has no valid HEAD
                 try:
                     if not repo.head.is_valid():
-                        logger.info("Repository has no commits yet; nothing to prefetch")
+                        logger.info("Startup cache: Repository has no commits yet; nothing to prefetch")
                         return
                 except Exception:
-                    logger.info("Unable to validate HEAD; skipping prefetch")
+                    logger.info("Startup cache: Unable to validate HEAD; skipping prefetch")
                     return
 
                 # Build commits payload similar to /api/git/commits
@@ -225,9 +232,23 @@ async def startup_prefetch_cache():
                 repo_scope = f"repo:{selected_id}" if selected_id else "repo:default"
                 cache_key = f"{repo_scope}:commits:{branch_name}"
                 cache_service.set(cache_key, commits, ttl)
-                logger.info(f"Prefetched {len(commits)} commits for branch '{branch_name}' (ttl={ttl}s)")
+                logger.info(f"Startup cache: Prefetched {len(commits)} commits for branch '{branch_name}' (ttl={ttl}s)")
             except Exception as e:
-                logger.warning(f"Startup prefetch failed: {e}")
+                logger.warning(f"Startup cache: commits prefetch failed: {e}")
+
+        async def prefetch_locations_once():
+            """Prefetch Nautobot locations list and store in cache."""
+            try:
+                logger.info("Startup cache: prefetch_locations_once() starting")
+                from services.nautobot import nautobot_service
+                # Reuse existing REST list from router pattern
+                result = await nautobot_service.rest_request("dcim/locations/")
+                locations = result.get("results") or result
+                ttl = int(cache_cfg.get("ttl_seconds", 600))
+                cache_service.set("nautobot:locations:list", locations, ttl)
+                logger.info(f"Startup cache: Prefetched locations ({len(locations) if isinstance(locations, list) else 'unknown'} items) (ttl={ttl}s)")
+            except Exception as e:
+                logger.warning(f"Startup cache: locations prefetch failed: {e}")
 
         async def refresh_loop():
             # Periodically refresh cache if configured
@@ -242,9 +263,29 @@ async def startup_prefetch_cache():
 
         # Kick off a one-time prefetch without blocking startup (if enabled)
         if cache_cfg.get("prefetch_on_startup", True):
-            asyncio.create_task(prefetch_commits_once())
-        # Start background refresh if requested
+            prefetch_items = cache_cfg.get("prefetch_items") or {"git": True, "locations": False}
+            # Map item keys to their prefetch coroutine
+            prefetch_map = {
+                "git": prefetch_commits_once,
+                "locations": prefetch_locations_once,
+            }
+            # Launch tasks for all enabled items that we know how to prefetch
+            for key, enabled in prefetch_items.items():
+                if enabled and key in prefetch_map:
+                    logger.info(f"Startup cache: prefetch enabled for '{key}' — scheduling task")
+                    asyncio.create_task(prefetch_map[key]())
+                elif not enabled:
+                    logger.info(f"Startup cache: prefetch disabled for '{key}'")
+                else:
+                    logger.info(f"Startup cache: no prefetch handler for '{key}'")
+        # Start background refresh if requested (applies to git commits only)
         if int(cache_cfg.get("refresh_interval_minutes", 0)) > 0:
-            asyncio.create_task(refresh_loop())
+            # Only refresh commits if git prefetch is enabled
+            p_items = cache_cfg.get("prefetch_items") or {"git": True, "locations": False}
+            if p_items.get("git", True):
+                logger.info("Startup cache: starting commits refresh loop task")
+                asyncio.create_task(refresh_loop())
+            else:
+                logger.info("Startup cache: refresh loop disabled because git prefetch is off")
     except Exception as e:
-        logger.warning(f"Failed to initialize cache prefetch: {e}")
+        logger.warning(f"Startup cache: Failed to initialize cache prefetch: {e}")

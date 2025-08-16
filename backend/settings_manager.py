@@ -45,6 +45,8 @@ class CacheSettings:
     prefetch_on_startup: bool = True
     refresh_interval_minutes: int = 15  # background refresh cadence
     max_commits: int = 500  # limit per branch
+    # Map of items to prefetch on startup, e.g., {"git": true, "locations": false}
+    prefetch_items: Dict[str, bool] = None
 
 class SettingsManager:
     """Manages application settings in SQLite database"""
@@ -120,7 +122,7 @@ class SettingsManager:
                     )
                 ''')
 
-                # Create cache_settings table
+        # Create cache_settings table
                 cursor.execute('''
                     CREATE TABLE IF NOT EXISTS cache_settings (
                         id INTEGER PRIMARY KEY,
@@ -129,6 +131,7 @@ class SettingsManager:
                         prefetch_on_startup BOOLEAN NOT NULL DEFAULT 1,
                         refresh_interval_minutes INTEGER NOT NULL DEFAULT 15,
                         max_commits INTEGER NOT NULL DEFAULT 500,
+            prefetch_items TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
@@ -191,10 +194,16 @@ class SettingsManager:
                         prefetch_on_startup BOOLEAN NOT NULL DEFAULT 1,
                         refresh_interval_minutes INTEGER NOT NULL DEFAULT 15,
                         max_commits INTEGER NOT NULL DEFAULT 500,
+                        prefetch_items TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
+            # Add prefetch_items column if missing
+            else:
+                if 'prefetch_items' not in cache_columns:
+                    logger.info("Adding prefetch_items column to cache_settings table")
+                    cursor.execute('ALTER TABLE cache_settings ADD COLUMN prefetch_items TEXT')
 
         except sqlite3.Error as e:
             logger.error(f"Migration failed: {e}")
@@ -229,14 +238,15 @@ class SettingsManager:
     def _insert_default_cache_settings(self, cursor):
         """Insert default Cache settings"""
         cursor.execute('''
-            INSERT INTO cache_settings (enabled, ttl_seconds, prefetch_on_startup, refresh_interval_minutes, max_commits)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO cache_settings (enabled, ttl_seconds, prefetch_on_startup, refresh_interval_minutes, max_commits, prefetch_items)
+            VALUES (?, ?, ?, ?, ?, ?)
         ''', (
             int(self.default_cache.enabled),
             self.default_cache.ttl_seconds,
             int(self.default_cache.prefetch_on_startup),
             self.default_cache.refresh_interval_minutes,
-            self.default_cache.max_commits
+            self.default_cache.max_commits,
+            json.dumps({"git": True, "locations": False})
         ))
 
     def get_nautobot_settings(self) -> Optional[Dict[str, Any]]:
@@ -319,7 +329,8 @@ class SettingsManager:
                         'ttl_seconds': int(row['ttl_seconds']),
                         'prefetch_on_startup': bool(row['prefetch_on_startup']),
                         'refresh_interval_minutes': int(row['refresh_interval_minutes']),
-                        'max_commits': int(row['max_commits'])
+                        'max_commits': int(row['max_commits']),
+                        'prefetch_items': json.loads(row['prefetch_items']) if row['prefetch_items'] else {"git": True, "locations": False}
                     }
                 return asdict(self.default_cache)
         except sqlite3.Error as e:
@@ -336,14 +347,15 @@ class SettingsManager:
                 count = cursor.fetchone()[0]
                 if count == 0:
                     cursor.execute('''
-                        INSERT INTO cache_settings (enabled, ttl_seconds, prefetch_on_startup, refresh_interval_minutes, max_commits)
-                        VALUES (?, ?, ?, ?, ?)
+                        INSERT INTO cache_settings (enabled, ttl_seconds, prefetch_on_startup, refresh_interval_minutes, max_commits, prefetch_items)
+                        VALUES (?, ?, ?, ?, ?, ?)
                     ''', (
                         int(settings.get('enabled', self.default_cache.enabled)),
                         int(settings.get('ttl_seconds', self.default_cache.ttl_seconds)),
                         int(settings.get('prefetch_on_startup', self.default_cache.prefetch_on_startup)),
                         int(settings.get('refresh_interval_minutes', self.default_cache.refresh_interval_minutes)),
-                        int(settings.get('max_commits', self.default_cache.max_commits))
+                        int(settings.get('max_commits', self.default_cache.max_commits)),
+                        json.dumps(settings.get('prefetch_items') or {"git": True, "locations": False})
                     ))
                 else:
                     cursor.execute('''
@@ -353,6 +365,7 @@ class SettingsManager:
                             prefetch_on_startup = ?,
                             refresh_interval_minutes = ?,
                             max_commits = ?,
+                            prefetch_items = ?,
                             updated_at = CURRENT_TIMESTAMP
                         WHERE id = (SELECT id FROM cache_settings ORDER BY id DESC LIMIT 1)
                     ''', (
@@ -360,7 +373,8 @@ class SettingsManager:
                         int(settings.get('ttl_seconds', self.default_cache.ttl_seconds)),
                         int(settings.get('prefetch_on_startup', self.default_cache.prefetch_on_startup)),
                         int(settings.get('refresh_interval_minutes', self.default_cache.refresh_interval_minutes)),
-                        int(settings.get('max_commits', self.default_cache.max_commits))
+                        int(settings.get('max_commits', self.default_cache.max_commits)),
+                        json.dumps(settings.get('prefetch_items') or {"git": True, "locations": False})
                     ))
                 conn.commit()
                 logger.info("Cache settings updated successfully")

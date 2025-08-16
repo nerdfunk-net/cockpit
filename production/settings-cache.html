@@ -234,7 +234,6 @@
                 <h3>Cache Settings</h3>
               </div>
             </div>
-
             <div class="clearfix"></div>
 
             <div class="row">
@@ -327,6 +326,24 @@
                           >
                         </div>
                       </div>
+
+                        <!-- Startup Prefetch Items (integrated) -->
+                        <div class="form-group row">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                            >Startup Prefetch Items</label
+                          >
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                            <div class="form-check form-switch" style="margin-bottom:6px">
+                              <input class="form-check-input" type="checkbox" id="prefetch-git" />
+                              <label class="form-check-label" for="prefetch-git">Git commits</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="prefetch-locations" />
+                              <label class="form-check-label" for="prefetch-locations">Locations</label>
+                            </div>
+                            <small class="text-muted">Select items to warm on backend startup.</small>
+                          </div>
+                        </div>
 
                       <div class="form-group row">
                         <label class="control-label col-md-3 col-sm-3 col-xs-12"
@@ -423,6 +440,8 @@
           // reload removed
           navbarUser: document.getElementById("navbar-username"),
           sidebarUser: document.getElementById("sidebar-username"),
+          prefetchGit: document.getElementById("prefetch-git"),
+          prefetchLocations: document.getElementById("prefetch-locations"),
         };
 
         // Populate usernames if available
@@ -468,6 +487,9 @@
               els.prefetch.checked = !!s.prefetch_on_startup;
               els.refresh.value = Number(s.refresh_interval_minutes ?? 0);
               els.maxCommits.value = Number(s.max_commits ?? 500);
+              const items = (s.prefetch_items) || { git: true, locations: false };
+              if (els.prefetchGit) els.prefetchGit.checked = !!items.git;
+              if (els.prefetchLocations) els.prefetchLocations.checked = !!items.locations;
 
               if (showMessage)
                 showStatus("Cache settings loaded successfully", "success");
@@ -539,6 +561,10 @@
             prefetch_on_startup: !!prefetchValue,
             refresh_interval_minutes: Number(els.refresh.value || 0),
             max_commits: Number(els.maxCommits.value || 500),
+            prefetch_items: {
+              git: !!(els.prefetchGit && els.prefetchGit.checked),
+              locations: !!(els.prefetchLocations && els.prefetchLocations.checked),
+            },
           };
 
           console.log("Saving cache settings:", payload);

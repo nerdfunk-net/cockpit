@@ -4,7 +4,7 @@ Settings-related Pydantic models.
 
 from __future__ import annotations
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 
 
 class NautobotSettingsRequest(BaseModel):
@@ -40,6 +40,8 @@ class CacheSettingsRequest(BaseModel):
     prefetch_on_startup: bool = True
     refresh_interval_minutes: int = 15
     max_commits: int = 500
+    # Optional map of prefetchable items toggles, e.g., {"git": true, "locations": false}
+    prefetch_items: Optional[Dict[str, bool]] = None
 
 
 class ConnectionTestRequest(BaseModel):
