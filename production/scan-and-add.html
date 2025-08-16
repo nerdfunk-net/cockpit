@@ -187,7 +187,6 @@
                           <strong>SSH Login:</strong> SSH connectivity with basic device detection using 'show version' (Cisco) and 'uname -a' (Linux).
                         </div>
                       </div>
-                    </div>
                       <!-- Parser templates (moved from modal) -->
                       <div id="parser-templates-section" style="display:none; margin-top:15px;">
                         <h4>Select Parser Templates</h4>
@@ -198,6 +197,7 @@
                           </table>
                         </div>
                       </div>
+                    </div>
                       <!-- Linux Onboarding panel -->
                       <div id="linux-onboarding-panel" style="display:block; margin-top:15px; border:1px solid #e9ecef; padding:12px; border-radius:6px;">
                         <h4>Linux Onboarding</h4>
@@ -218,7 +218,10 @@
                         </div>
                       </div>
                       <div class="form-group" style="display:flex;align-items:center;gap:10px;">
-                        <button type="button" class="btn btn-default text-muted font-weight-bold" id="back-to-networks-btn">Back to Networks</button>
+                        <button type="button" id="back-to-networks-btn" class="btn" style="background:#f5f5f5;border:1px solid #e9ecef;color:#333;padding:6px 10px;display:inline-flex;align-items:center;gap:8px;">
+                          <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                          <span>Back</span>
+                        </button>
                         <button type="submit" class="btn btn-primary btn-lg" id="start-scan-btn"><i class="fa fa-search"></i> Start Network Scan</button>
                       </div>
                   </form>
@@ -860,7 +863,7 @@
 
   function locationDisplay(val){
       if(!val) return 'unknown';
-      const found = (locationsData||[]).find(l=>l.id===val || l.name===val);
+  const found = (locationsData||[]).find(l=>String(l.id)===String(val) || l.name===val);
       return found ? (found.hierarchicalPath || found.name) : val;
     }
   function populateDevicesTable(){
@@ -936,14 +939,47 @@
     function toggleAllDevices(){ const master=document.getElementById('select-all-devices'); document.querySelectorAll('.device-checkbox').forEach(cb=>cb.checked=master.checked); updateOnboardButton(); }
     function updateOnboardButton(){ const cnt=document.querySelectorAll('.device-checkbox:checked').length; const btn=document.getElementById('onboard-selected-btn'); if(btn) btn.disabled=cnt===0; }
 
-  function editDeviceMetadata(ip){ const d=deviceMetadata[ip]; if(!d) return; document.getElementById('device-ip').value=ip; document.getElementById('device-ip-display').value=ip; document.getElementById('device-hostname').value=d.hostname||''; document.getElementById('device-platform').value=d.platform||''; document.getElementById('device-type').value=d.device_type; toggleDeviceFields(); if(d.device_type==='cisco'){ const ds=document.getElementById('device-location-search'); const dh=document.getElementById('device-location'); if(ds){ ds.value=''; ds.classList.remove('has-selection'); } if(dh){ dh.value=''; } if(d.location){ // try to show display path if exists
-        const found=locationsData.find(l=>l.id===d.location || l.name===d.location);
-        if(found && ds){ ds.value=found.hierarchicalPath; ds.classList.add('has-selection'); } if(found && dh){ dh.value=found.id; }
+  function editDeviceMetadata(ip){
+      const d = deviceMetadata[ip];
+      if(!d) return;
+      document.getElementById('device-ip').value = ip;
+      document.getElementById('device-ip-display').value = ip;
+      document.getElementById('device-hostname').value = d.hostname || '';
+      document.getElementById('device-platform').value = d.platform || '';
+      document.getElementById('device-type').value = d.device_type || '';
+      toggleDeviceFields();
+
+      if(d.device_type === 'cisco'){
+        const ds = document.getElementById('device-location-search');
+        const dh = document.getElementById('device-location');
+        if(ds){ ds.value = ''; ds.classList.remove('has-selection'); }
+        if(dh){ dh.value = ''; }
+        if(d.location){
+          const found = locationsData.find(l => String(l.id) === String(d.location) || l.name === d.location);
+          if(found){ if(ds){ ds.value = found.hierarchicalPath; ds.classList.add('has-selection'); } if(dh){ dh.value = found.id; } }
+        }
+        populateNamespaceSelect('device-namespace', d.namespace);
+        const roleEl = document.getElementById('device-role'); if(roleEl) roleEl.value = d.role || 'network';
+        const statusEl = document.getElementById('device-status'); if(statusEl) statusEl.value = d.status || 'Active';
+        const ifEl = document.getElementById('device-interface-status'); if(ifEl) ifEl.value = d.interface_status || 'Active';
+        const ipEl = document.getElementById('device-ip-status'); if(ipEl) ipEl.value = d.ip_status || 'Active';
+      } else if(d.device_type === 'linux'){
+        const ls = document.getElementById('linux-location-search');
+        const lh = document.getElementById('linux-location');
+        if(ls){ ls.value = ''; ls.classList.remove('has-selection'); }
+        if(lh){ lh.value = ''; }
+        if(d.location){
+          const found = locationsData.find(l => String(l.id) === String(d.location) || l.name === d.location);
+          if(found){ if(ls){ ls.value = found.hierarchicalPath; ls.classList.add('has-selection'); } if(lh){ lh.value = found.id; } }
+        }
+        const linuxRole = document.getElementById('linux-role'); if(linuxRole) linuxRole.value = d.role || 'server';
+        const linuxStatus = document.getElementById('linux-status'); if(linuxStatus) linuxStatus.value = d.status || 'Active';
       }
-      populateNamespaceSelect('device-namespace', d.namespace);
-      document.getElementById('device-role').value=d.role||'network'; document.getElementById('device-status').value=d.status||'Active'; document.getElementById('device-interface-status').value=d.interface_status||'Active'; document.getElementById('device-ip-status').value=d.ip_status||'Active'; } else if(d.device_type==='linux'){ const ls=document.getElementById('linux-location-search'); const lh=document.getElementById('linux-location'); if(ls){ ls.value=''; ls.classList.remove('has-selection'); } if(lh){ lh.value=''; } if(d.location){ const found=locationsData.find(l=>l.id===d.location || l.name===d.location); if(found && ls){ ls.value=found.hierarchicalPath; ls.classList.add('has-selection'); } if(found && lh){ lh.value=found.id; } }
-      document.getElementById('linux-role').value=d.role||'server'; document.getElementById('linux-status').value=d.status||'Active'; }
-      const modal=document.getElementById('device-metadata-modal'); if(!deviceModalInstance){ deviceModalInstance=new bootstrap.Modal(modal,{backdrop:true}); } deviceModalInstance.show(); }
+
+      const modal = document.getElementById('device-metadata-modal');
+      if(!deviceModalInstance){ deviceModalInstance = new bootstrap.Modal(modal, { backdrop:true }); }
+      deviceModalInstance.show();
+    }
     function populateRoleSelect(selectId, current, options={includeBlank:false}){
       const sel=document.getElementById(selectId);
       if(!sel) return;
@@ -1004,8 +1040,9 @@
       } else {
         deviceMetadata[ip].role='unknown'; deviceMetadata[ip].status='Active';
       }
-      if(deviceModalInstance) deviceModalInstance.hide();
-      showAlert('Device configuration saved','success');
+  if(deviceModalInstance) deviceModalInstance.hide();
+  // Refresh the devices table so changes (like location) are immediately visible
+  try{ populateDevicesTable(); }catch(e){ console.error('Failed to refresh devices table after saving metadata', e); }
     }
 
     // Assign to All
