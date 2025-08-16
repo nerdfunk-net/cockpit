@@ -221,6 +221,15 @@
                           <input type="text" class="form-control" id="onboarding-filename" placeholder="inventory.pending.{time}">
                           <small class="help-block">Filename to write for pending inventory (default: inventory.pending.{time})</small>
                         </div>
+                        <div class="form-group">
+                          <div class="checkbox">
+                            <label>
+                              <input type="checkbox" id="onboarding-commit-push" checked>
+                              Commit &amp; Push
+                            </label>
+                          </div>
+                          <small class="help-block">When enabled, the created file will be auto-committed and pushed. The commit message will be the filename.</small>
+                        </div>
                       </div>
                       <div class="form-group" style="display:flex;align-items:center;gap:10px;">
                         <button type="button" id="back-to-networks-btn" class="btn" style="background:#f5f5f5;border:1px solid #e9ecef;color:#333;padding:6px 10px;display:inline-flex;align-items:center;gap:8px;">
@@ -582,7 +591,7 @@
         // Build options with fallbacks for name fields
         let optionsHtml = filtered.map(r=>{
           const display = r.name || r.repo_name || r.display_name || r.path || r.url || (r.id?String(r.id):null) || JSON.stringify(r);
-          const value = r.name || r.repo_name || r.id || display;
+          const value = (r.id != null ? String(r.id) : (r.name || r.repo_name || display));
           return `<option value="${String(value)}">${display}</option>`;
         }).join('');
         // Fallback: if no filtered repos, show all repos with category annotations to aid diagnosis
@@ -591,7 +600,7 @@
           optionsHtml = repos.map(r=>{
             const display = r.name || r.repo_name || r.display_name || r.path || r.url || (r.id?String(r.id):null) || JSON.stringify(r);
             const cat = (r.category||r.repo_category||r.category_name||(r.metadata&&r.metadata.category)||'').toString();
-            const value = r.name || r.repo_name || r.id || display;
+            const value = (r.id != null ? String(r.id) : (r.name || r.repo_name || display));
             return `<option value="${String(value)}">${display} ${cat?` (${cat})`:''}</option>`;
           }).join('');
         }
@@ -1174,9 +1183,38 @@
 
       // Batch onboard non-Cisco devices via existing scan job endpoint
       if(otherIps.length>0){
-  const otherDevices = otherIps.map(ip=>{ const m=deviceMetadata[ip]; return { ip:m.ip, credential_id:m.credential_id, device_type:m.device_type, hostname:m.hostname, platform:'detect', location:m.location, namespace:m.namespace, role:m.role, status:m.status, interface_status:m.interface_status, ip_status:m.ip_status, secret_group_id: m.secret_group_id || '' }; });
+        const otherDevices = otherIps.map(ip=>{ const m=deviceMetadata[ip]; return { ip:m.ip, credential_id:m.credential_id, device_type:m.device_type, hostname:m.hostname, platform:'detect', location:m.location, namespace:m.namespace, role:m.role, status:m.status, interface_status:m.interface_status, ip_status:m.ip_status, secret_group_id: m.secret_group_id || '' }; });
+        // Collect Linux onboarding extras
+        const repoSel = document.getElementById('onboarding-git-repo-select');
+        const templateSel = document.getElementById('onboarding-inventory-template-select');
+  const filenameInput = document.getElementById('onboarding-filename');
+  const commitPushChk = document.getElementById('onboarding-commit-push');
+        const extras = {};
+        if(repoSel && repoSel.value){
+          // Prefer numeric id when possible
+          const rid = parseInt(repoSel.value, 10);
+          if(!isNaN(rid)) extras.git_repository_id = rid; else extras.git_repository_name = repoSel.value;
+        }
+        if(templateSel && templateSel.value){
+          const tid = parseInt(templateSel.value, 10);
+          if(!isNaN(tid)) extras.inventory_template_id = tid;
+        }
+        if(filenameInput && filenameInput.value){ extras.filename = filenameInput.value.trim(); }
+        if(commitPushChk){
+          const doCommitPush = !!commitPushChk.checked;
+          extras.auto_commit = doCommitPush;
+          extras.auto_push = doCommitPush;
+          // Commit name should be filename (basename)
+          if(filenameInput && filenameInput.value){
+            try{ extras.commit_message = filenameInput.value.trim().split('/').pop(); }catch(e){ extras.commit_message = filenameInput.value.trim(); }
+          }
+        }
         try{
-          const resp = await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({devices: otherDevices})});
+          const resp = await authManager.apiRequest(`/api/scan/${scanJob.job_id}/onboard`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({devices: otherDevices, ...extras})
+          });
           let msg=`Other onboarding completed: ${resp.accepted || 0} devices.`;
           if(resp.cisco_queued) msg+=` ${resp.cisco_queued} Cisco queued.`;
           if(resp.linux_added) msg+=` ${resp.linux_added} Linux added.`;

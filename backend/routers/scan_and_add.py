@@ -5,7 +5,7 @@ import asyncio
 import os
 import json
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, validator
@@ -15,7 +15,8 @@ from core.auth import verify_token
 from services.scan_service import scan_service
 from services.nautobot import nautobot_service
 from template_manager import template_manager
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, BaseLoader
+from git_repositories_manager import GitRepositoryManager
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/scan", tags=["scan"], dependencies=[Depends(verify_token)])
@@ -107,6 +108,15 @@ class OnboardDevice(BaseModel):
 
 class OnboardRequest(BaseModel):
     devices: List[OnboardDevice]
+    # Linux onboarding extras (optional; used when onboarding Linux/servers)
+    git_repository_id: Optional[int] = None
+    git_repository_name: Optional[str] = None
+    inventory_template_id: Optional[int] = None
+    filename: Optional[str] = None
+    # Optional Git actions
+    auto_commit: Optional[bool] = False
+    auto_push: Optional[bool] = False
+    commit_message: Optional[str] = None
 
 
 class OnboardResponse(BaseModel):
@@ -220,7 +230,17 @@ async def onboard_devices(job_id: str, request: OnboardRequest):
     # Handle Linux device inventory creation
     if linux_devices:
         try:
-            linux_added, inventory_path = await _create_linux_inventory(linux_devices, job_id)
+            linux_added, inventory_path = await _create_linux_inventory(
+                linux_devices,
+                job_id,
+                git_repository_id=request.git_repository_id,
+                git_repository_name=request.git_repository_name,
+                inventory_template_id=request.inventory_template_id,
+                filename=request.filename,
+                auto_commit=bool(request.auto_commit),
+                auto_push=bool(request.auto_push),
+                commit_message=request.commit_message,
+            )
         except Exception as e:
             logger.error(f"Linux inventory creation failed: {e}")
             raise HTTPException(
@@ -274,53 +294,236 @@ async def _onboard_cisco_devices(cisco_devices: List[OnboardDevice]) -> tuple[in
     return queued_count, job_ids
 
 
-async def _create_linux_inventory(linux_devices: List[OnboardDevice], job_id: str) -> tuple[int, str]:
-    """Create inventory file for Linux devices using template."""
-    # Create inventory directory if it doesn't exist
-    inventory_dir = os.path.join("data", "inventory")
-    os.makedirs(inventory_dir, exist_ok=True)
+async def _create_linux_inventory(
+    linux_devices: List[OnboardDevice],
+    job_id: str,
+    *,
+    git_repository_id: Optional[int] = None,
+    git_repository_name: Optional[str] = None,
+    inventory_template_id: Optional[int] = None,
+    filename: Optional[str] = None,
+    auto_commit: bool = False,
+    auto_push: bool = False,
+    commit_message: Optional[str] = None,
+) -> tuple[int, str]:
+    """Create inventory file for Linux devices using a selected template and save it into a Git repo if provided.
 
-    # Create inventory file with job ID per spec
-    inventory_path = os.path.join(inventory_dir, f"inventory_{job_id}.yaml")
-
-    # Build all_devices dictionary for template rendering
-    all_devices = {}
+    Returns: (linux_added_count, written_path)
+    """
+    # Build devices data for template rendering
+    devices_list = []  # This will also serve as all_devices (list of dicts)
     for device in linux_devices:
-        all_devices[device.ip] = {
+        # Normalize platform: avoid passing through 'detect'
+        platform_val = (device.platform or "linux")
+        if isinstance(platform_val, str) and platform_val.lower() in ("detect", "auto", "auto-detect"):
+            platform_val = "linux"
+
+        d = {
+            "primary_ip4": device.ip,
+            "name": device.hostname or device.ip,
             "credential_id": device.credential_id,
-            "hostname": device.hostname or device.ip,
-            "platform": device.platform or "linux",
+            "platform": platform_val,
             "location": device.location,
             "role": device.role or "server",
-            "status": device.status or "Active"
+            "status": device.status or "Active",
         }
+        devices_list.append(d)
 
-    # Try to get template from Settings Templates App
-    rendered_content = ""
+    # Debug: print all_devices structure to console for troubleshooting template rendering
     try:
-        template_name = template_manager.get_selected_template_name()
-        if template_name:
-            template_content = template_manager.get_template_content(template_name)
-
-            # Render template with all_devices context
-            env = Environment(loader=FileSystemLoader("."))
-            template = env.from_string(template_content)
-            rendered_content = template.render(all_devices=all_devices)
-        else:
-            # Fallback to JSON if no template selected
-            rendered_content = json.dumps({"all_devices": all_devices}, indent=2)
-
+        logger.info(
+            "[Scan&Add] all_devices list built (count=%d):\n%s",
+            len(devices_list),
+            json.dumps(devices_list, indent=2, sort_keys=True)
+        )
     except Exception as e:
-        logger.warning(f"Template rendering failed, using JSON fallback: {e}")
-        rendered_content = json.dumps({"all_devices": all_devices}, indent=2)
+        logger.warning(f"Failed to log all_devices map: {e}")
 
-    # Write inventory file
-    with open(inventory_path, 'w', encoding='utf-8') as f:
+    # Render template content
+    rendered_content: str
+    if inventory_template_id:
+        try:
+            content = template_manager.get_template_content(inventory_template_id)
+            if not content:
+                raise ValueError(f"Template content not found for ID {inventory_template_id}")
+            env = Environment(loader=BaseLoader())
+            template = env.from_string(content)
+            # all_devices must be a list of dicts; pass devices_list for both for compatibility
+            rendered_content = template.render(
+                all_devices=devices_list,
+                devices=devices_list,
+                total_devices=len(devices_list),
+            )
+        except Exception as e:
+            logger.warning(f"Template rendering failed, using JSON fallback: {e}")
+            rendered_content = json.dumps({"all_devices": devices_list, "devices": devices_list}, indent=2)
+    else:
+        # Fallback to JSON if no template selected
+        rendered_content = json.dumps({"all_devices": devices_list, "devices": devices_list}, indent=2)
+
+    # Determine output path
+    written_path: str
+    base_dir: str
+    repo_info: Optional[Dict[str, Any]] = None
+    if git_repository_id or git_repository_name:
+        # Resolve repository
+        git_mgr = GitRepositoryManager()
+        repo: Optional[Dict[str, Any]] = None
+        if git_repository_id:
+            try:
+                repo = git_mgr.get_repository(int(git_repository_id))
+            except Exception:
+                repo = None
+        if not repo and git_repository_name:
+            try:
+                # Find by name
+                repos = git_mgr.get_repositories()
+                for r in repos:
+                    if str(r.get("name", "")).lower() == str(git_repository_name).lower():
+                        repo = r
+                        break
+            except Exception:
+                repo = None
+        if not repo:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected Git repository not found")
+
+        # Compute repo directory under data/git/<path or name>
+        from config import settings as config_settings
+        sub_path = (repo.get('path') or repo.get('name') or '').lstrip('/') or f"repo_{repo.get('id')}"
+        base_dir = os.path.join(config_settings.data_directory, 'git', sub_path)
+        os.makedirs(base_dir, exist_ok=True)
+        repo_info = repo
+    else:
+        # Legacy fallback directory
+        base_dir = os.path.join("data", "inventory")
+        os.makedirs(base_dir, exist_ok=True)
+
+    # Decide filename
+    out_name = (filename or f"inventory_{job_id}.yaml").strip()
+    # Prevent path traversal
+    out_name = out_name.lstrip('/').replace('..', '__')
+    written_path = os.path.join(base_dir, out_name)
+    # Ensure parent directory exists if filename contains subdirs
+    os.makedirs(os.path.dirname(written_path), exist_ok=True)
+
+    # Write file
+    with open(written_path, 'w', encoding='utf-8') as f:
         f.write(rendered_content)
 
-    logger.info(f"Created Linux inventory file: {inventory_path} with {len(linux_devices)} devices")
+    logger.info(
+        f"Created Linux inventory file: {written_path} with {len(linux_devices)} devices"
+        + (f" in repo '{repo_info.get('name')}'" if repo_info else "")
+    )
 
-    return len(linux_devices), inventory_path
+    # Optionally commit and push to the selected Git repository
+    if repo_info and (auto_commit or auto_push):
+        try:
+            from git import Repo, GitCommandError
+        except Exception as e:
+            logger.warning(f"GitPython not available, skipping commit/push: {e}")
+            return len(linux_devices), written_path
+
+        repo_dir = base_dir
+        git_dir = os.path.join(repo_dir, ".git")
+        if not os.path.isdir(git_dir):
+            logger.warning("Selected repository directory is not a Git repo (.git missing); skipping commit/push")
+            return len(linux_devices), written_path
+
+        committed = False
+        pushed = False
+        commit_hash = None
+        try:
+            repo = Repo(repo_dir)
+            rel_file = os.path.relpath(written_path, repo_dir)
+            # stage file
+            repo.index.add([rel_file])
+            if auto_commit:
+                # If not provided, use the filename as commit message per requirement
+                default_msg = os.path.basename(written_path)
+                msg = (commit_message or default_msg)
+                commit = repo.index.commit(msg)
+                commit_hash = getattr(commit, "hexsha", None)
+                committed = True
+                logger.info(f"Committed inventory file to Git: {rel_file} ({commit_hash[:8] if commit_hash else 'no-hash'})")
+
+            if auto_push:
+                try:
+                    origin = repo.remotes.origin
+                except Exception:
+                    origin = None
+                if not origin:
+                    logger.warning("No 'origin' remote configured; skipping push")
+                else:
+                    # Resolve credentials similar to sync flow
+                    try:
+                        from urllib.parse import urlparse, quote as urlquote
+                        resolved_username = repo_info.get("username")
+                        resolved_token = repo_info.get("token")
+                        cred_name = repo_info.get("credential_name")
+                        if cred_name:
+                            try:
+                                import credentials_manager as cred_mgr  # lazy import
+                                creds = cred_mgr.list_credentials(include_expired=False)
+                                match = next((c for c in creds if c.get("name") == cred_name and c.get("type") == "token"), None)
+                                if match:
+                                    resolved_username = match.get("username") or resolved_username
+                                    try:
+                                        resolved_token = cred_mgr.get_decrypted_password(match["id"]) or resolved_token
+                                    except Exception as de:
+                                        logger.error(f"Failed to decrypt token for credential '{cred_name}': {de}")
+                            except Exception as ce:
+                                logger.error(f"Credential lookup error: {ce}")
+
+                        remote_url = repo_info.get("url") or ""
+                        parsed = urlparse(remote_url)
+                        auth_url = remote_url
+                        if parsed.scheme in ["http", "https"] and resolved_token:
+                            user_enc = urlquote(str(resolved_username or "git"), safe="")
+                            token_enc = urlquote(str(resolved_token), safe="")
+                            auth_url = f"{parsed.scheme}://{user_enc}:{token_enc}@{parsed.netloc}{parsed.path}"
+                    except Exception as prep_e:
+                        logger.error(f"Failed to prepare push authentication: {prep_e}")
+                        remote_url = repo_info.get("url") or ""
+                        auth_url = remote_url
+
+                    # Update remote URL with auth for push if needed (execute regardless of prep outcome)
+                    try:
+                        if auth_url != remote_url:
+                            origin.set_url(auth_url)
+                    except Exception as e:
+                        logger.debug(f"Skipping remote URL auth update: {e}")
+
+                    # SSL verify toggle
+                    ssl_env_set = False
+                    try:
+                        if not repo_info.get("verify_ssl", True):
+                            os.environ["GIT_SSL_NO_VERIFY"] = "1"
+                            ssl_env_set = True
+                        branch = repo_info.get("branch") or "main"
+                        origin.push(branch)
+                        pushed = True
+                        logger.info(f"Pushed commit to remote '{origin.name}' branch '{branch}'")
+                    except Exception as pe:
+                        logger.error(f"Git push failed: {pe}")
+                    finally:
+                        if ssl_env_set:
+                            try:
+                                del os.environ["GIT_SSL_NO_VERIFY"]
+                            except Exception:
+                                pass
+
+        except Exception as ge:
+            logger.error(f"Git commit/push step failed: {ge}")
+
+        # Summary log
+        logger.info(
+            "Git actions summary — committed: %s%s, pushed: %s",
+            str(committed),
+            f" ({commit_hash[:8]})" if commit_hash else "",
+            str(pushed),
+        )
+
+    return len(linux_devices), written_path
 
 
 @router.delete("/{job_id}")
