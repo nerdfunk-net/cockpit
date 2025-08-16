@@ -692,34 +692,46 @@ async def sync_network_data(request: SyncNetworkDataRequest, current_user: str =
 async def get_locations(current_user: str = Depends(verify_token)):
     """Get list of locations from Nautobot with parent and children relationships."""
     try:
-        query = """
-        query locations {
-          locations {
-            id
-            name
-            description
-            parent {
-              id
-              name
-              description
-            }
-            children {
-              id
-              name
-              description
-            }
-          }
-        }
-        """
-        result = await nautobot_service.graphql_query(query)
+                # Try in-memory cache first
+                from services.cache_service import cache_service
+                from settings_manager import settings_manager
+                cache_key = "nautobot:locations:list"
+                cached = cache_service.get(cache_key)
+                if cached is not None:
+                        return cached
 
-        if "errors" in result:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"GraphQL errors: {result['errors']}"
-            )
+                # Cache miss; fetch from Nautobot and populate cache
+                query = """
+                query locations {
+                    locations {
+                        id
+                        name
+                        description
+                        parent {
+                            id
+                            name
+                            description
+                        }
+                        children {
+                            id
+                            name
+                            description
+                        }
+                    }
+                }
+                """
+                result = await nautobot_service.graphql_query(query)
 
-        return result["data"]["locations"]
+                if "errors" in result:
+                        raise HTTPException(
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"GraphQL errors: {result['errors']}"
+                        )
+
+                locations = result["data"]["locations"]
+                ttl = int(settings_manager.get_cache_settings().get("ttl_seconds", 600))
+                cache_service.set(cache_key, locations, ttl)
+                return locations
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

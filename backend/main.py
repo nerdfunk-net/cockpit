@@ -237,16 +237,37 @@ async def startup_prefetch_cache():
                 logger.warning(f"Startup cache: commits prefetch failed: {e}")
 
         async def prefetch_locations_once():
-            """Prefetch Nautobot locations list and store in cache."""
+            """Prefetch Nautobot locations list (GraphQL) and store in cache with endpoint-compatible shape."""
             try:
                 logger.info("Startup cache: prefetch_locations_once() starting")
                 from services.nautobot import nautobot_service
-                # Reuse existing REST list from router pattern
-                result = await nautobot_service.rest_request("dcim/locations/")
-                locations = result.get("results") or result
+                # Use the same GraphQL query shape as /api/nautobot/locations endpoint
+                query = """
+                query locations {
+                  locations {
+                    id
+                    name
+                    description
+                    parent {
+                      id
+                      name
+                      description
+                    }
+                    children {
+                      id
+                      name
+                      description
+                    }
+                  }
+                }
+                """
+                result = await nautobot_service.graphql_query(query)
+                if "errors" in result:
+                    raise Exception(f"GraphQL errors: {result['errors']}")
+                locations = result["data"]["locations"]
                 ttl = int(cache_cfg.get("ttl_seconds", 600))
                 cache_service.set("nautobot:locations:list", locations, ttl)
-                logger.info(f"Startup cache: Prefetched locations ({len(locations) if isinstance(locations, list) else 'unknown'} items) (ttl={ttl}s)")
+                logger.info(f"Startup cache: Prefetched locations ({len(locations)} items) (ttl={ttl}s)")
             except Exception as e:
                 logger.warning(f"Startup cache: locations prefetch failed: {e}")
 
