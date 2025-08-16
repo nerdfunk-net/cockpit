@@ -151,39 +151,43 @@
                   <h3>Properties</h3>
                   <p class="text-muted">Configure authentication and discovery settings for the scan.</p>
                   <form id="scan-form">
-                    <div class="form-group">
-                      <label class="control-label">Authentication Credentials</label>
-                      <small class="help-block">Select credentials to test against discovered devices.</small>
-                      <div id="credentials-container">
-                        <div class="credential-select-group">
-                          <div class="input-group">
-                            <select class="form-control credential-select" required>
-                              <option value="">Select credentials...</option>
-                            </select>
-                            <span class="input-group-btn">
-                              <button class="btn btn-danger remove-credential" type="button" style="display:none;">
-                                <i class="fa fa-minus"></i>
-                              </button>
-                              <button class="btn btn-primary add-credential" type="button">
-                                <i class="fa fa-plus"></i>
-                              </button>
-                            </span>
+                    <div id="login-discovery-panel" style="display:block; margin-top:15px; border:1px solid #e9ecef; padding:12px; border-radius:6px;">
+                      <h4>Login &amp; Discovery</h4>
+                      <p class="text-muted" style="margin-bottom:8px;">Configure authentication credentials and discovery mode used for scanning.</p>
+                      <div class="form-group">
+                        <label class="control-label">Authentication Credentials</label>
+                        <small class="help-block">Select credentials to test against discovered devices.</small>
+                        <div id="credentials-container">
+                          <div class="credential-select-group">
+                            <div class="input-group">
+                              <select class="form-control credential-select" required>
+                                <option value="">Select credentials...</option>
+                              </select>
+                              <span class="input-group-btn">
+                                <button class="btn btn-danger remove-credential" type="button" style="display:none;">
+                                  <i class="fa fa-minus"></i>
+                                </button>
+                                <button class="btn btn-primary add-credential" type="button">
+                                  <i class="fa fa-plus"></i>
+                                </button>
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
+                      <div class="form-group">
+                        <label class="control-label">Network Discovery Mode</label>
+                        <small class="help-block">Choose the method for device authentication and detection.</small>
+                        <select class="form-control" id="discovery-mode" required>
+                          <option value="napalm">Napalm (Default - Full device detection with platform identification)</option>
+                          <option value="ssh-login">SSH Login (Command-based device detection)</option>
+                        </select>
+                        <div class="help-block" style="margin-top:8px;">
+                          <strong>Napalm:</strong> Attempts Cisco (ios/nxos/iosxr) and Linux detection with full platform details.<br>
+                          <strong>SSH Login:</strong> SSH connectivity with basic device detection using 'show version' (Cisco) and 'uname -a' (Linux).
+                        </div>
+                      </div>
                     </div>
-                    <div class="form-group">
-                      <label class="control-label">Network Discovery Mode</label>
-                      <small class="help-block">Choose the method for device authentication and detection.</small>
-                      <select class="form-control" id="discovery-mode" required>
-                        <option value="napalm">Napalm (Default - Full device detection with platform identification)</option>
-                        <option value="ssh-login">SSH Login (Command-based device detection)</option>
-                      </select>
-                      <div class="help-block" style="margin-top:8px;">
-                        <strong>Napalm:</strong> Attempts Cisco (ios/nxos/iosxr) and Linux detection with full platform details.<br>
-                        <strong>SSH Login:</strong> SSH connectivity with basic device detection using 'show version' (Cisco) and 'uname -a' (Linux).
-                      </div>
-                      </div>
                       <!-- Parser templates (moved from modal) -->
                       <div id="parser-templates-section" style="display:none; margin-top:15px;">
                         <h4>Select Parser Templates</h4>
@@ -192,6 +196,25 @@
                             <thead><tr><th width="40">Use</th><th>Name</th><th>Description</th></tr></thead>
                             <tbody id="parser-templates-tbody"></tbody>
                           </table>
+                        </div>
+                      </div>
+                      <!-- Linux Onboarding panel -->
+                      <div id="linux-onboarding-panel" style="display:block; margin-top:15px; border:1px solid #e9ecef; padding:12px; border-radius:6px;">
+                        <h4>Linux Onboarding</h4>
+                        <p class="text-muted" style="margin-bottom:8px;">Options for onboarding Linux devices using Git-backed inventory templates.</p>
+                        <div class="form-group">
+                          <label class="control-label">Git Repository (Onboarding)</label>
+                          <select class="form-control" id="onboarding-git-repo-select">
+                            <option value="">Loading...</option>
+                          </select>
+                          <small class="help-block">Select a repository (category: Onboarding)</small>
+                        </div>
+                        <div class="form-group">
+                          <label class="control-label">Inventory Template</label>
+                          <select class="form-control" id="onboarding-inventory-template-select">
+                            <option value="">Loading...</option>
+                          </select>
+                          <small class="help-block">Select an inventory template (category: Inventory) to apply for Linux onboarding.</small>
                         </div>
                       </div>
                       <div class="form-group" style="display:flex;align-items:center;gap:10px;">
@@ -440,6 +463,9 @@
   await loadDeviceStatuses();
   await loadInterfaceStatuses();
   await loadIpAddressStatuses();
+  // Load new onboarding-specific data
+  await loadOnboardingGitRepos();
+  await loadInventoryTemplates();
   setupEventListeners();
   // Normalize initial CIDR button states
   updateCIDRButtons();
@@ -511,6 +537,75 @@
         const resp = await authManager.apiRequest('/api/nautobot/statuses/ipaddress');
         ipAddressStatusesList = Array.isArray(resp) ? resp : [];
       }catch(e){ console.warn('Failed to load IP address statuses', e); ipAddressStatusesList = []; }
+    }
+
+    // Load Git repositories that are categorized as Onboarding for selection
+    async function loadOnboardingGitRepos(){
+      const sel = document.getElementById('onboarding-git-repo-select'); if(!sel) return;
+      sel.innerHTML = '<option value="">Loading...</option>';
+      try{
+  // Use the specified endpoint for onboarding repositories (category lower-case)
+        const resp = await authManager.apiRequest('/api/git-repositories?category=onboarding&active_only=false');
+        console.debug('loadOnboardingGitRepos: raw response', resp);
+        // Accept several response shapes
+        let repos = [];
+        if(Array.isArray(resp)) repos = resp;
+        else if(resp && Array.isArray(resp.results)) repos = resp.results;
+        else if(resp && Array.isArray(resp.repositories)) repos = resp.repositories;
+        else if(resp && Array.isArray(resp.data)) repos = resp.data;
+        // Defensive: ensure objects
+        repos = repos.filter(r=>r && typeof r === 'object');
+        // Normalize category check: accept a few possible field names and match 'onboarding'
+        const filtered = repos.filter(r=>{
+          const cat = (r.category || r.repo_category || r.category_name || (r.metadata && r.metadata.category) || '').toString().toLowerCase();
+          return cat === 'onboarding' || cat.indexOf('onboard') !== -1;
+        });
+        console.debug('loadOnboardingGitRepos: repos count', repos.length, 'filtered count', filtered.length, filtered);
+        // Build options with fallbacks for name fields
+        let optionsHtml = filtered.map(r=>{
+          const display = r.name || r.repo_name || r.display_name || r.path || r.url || (r.id?String(r.id):null) || JSON.stringify(r);
+          const value = r.name || r.repo_name || r.id || display;
+          return `<option value="${String(value)}">${display}</option>`;
+        }).join('');
+        // Fallback: if no filtered repos, show all repos with category annotations to aid diagnosis
+        if(!optionsHtml && repos.length){
+          console.warn('loadOnboardingGitRepos: no repos matched category=computed onboarding; falling back to show all repos');
+          optionsHtml = repos.map(r=>{
+            const display = r.name || r.repo_name || r.display_name || r.path || r.url || (r.id?String(r.id):null) || JSON.stringify(r);
+            const cat = (r.category||r.repo_category||r.category_name||(r.metadata&&r.metadata.category)||'').toString();
+            const value = r.name || r.repo_name || r.id || display;
+            return `<option value="${String(value)}">${display} ${cat?` (${cat})`:''}</option>`;
+          }).join('');
+        }
+        sel.innerHTML = '<option value="">— select repository —</option>' + (optionsHtml || '');
+      }catch(e){ console.error('Failed to load onboarding git repos', e); sel.innerHTML = '<option value="">(failed to load)</option>'; }
+    }
+
+    // Load templates with category Inventory for the inventory template select
+    async function loadInventoryTemplates(){
+      const sel = document.getElementById('onboarding-inventory-template-select'); if(!sel) return;
+      sel.innerHTML = '<option value="">Loading...</option>';
+      try{
+        const resp = await authManager.apiRequest('/api/templates?category=inventory&active_only=true');
+        console.debug('loadInventoryTemplates: raw response', resp);
+        let templates = [];
+        if(Array.isArray(resp)) templates = resp;
+        else if(resp && Array.isArray(resp.results)) templates = resp.results;
+        else if(resp && Array.isArray(resp.templates)) templates = resp.templates;
+        else if(resp && Array.isArray(resp.data)) templates = resp.data;
+        templates = templates.filter(t=>t && typeof t === 'object');
+        console.debug('loadInventoryTemplates: templates count', templates.length, templates);
+        let optionsHtml = templates.map(t=>{
+          const id = t.id || t.template_id || t.name || JSON.stringify(t);
+          const name = t.name || t.title || t.template_name || String(id);
+          return `<option value="${String(id)}">${name}</option>`;
+        }).join('');
+        if(!optionsHtml && templates.length){
+          console.warn('loadInventoryTemplates: templates present but mapping produced no options; showing raw list');
+          optionsHtml = templates.map(t=>{ const name = t.name || t.title || t.template_name || JSON.stringify(t); const id = t.id || t.template_id || JSON.stringify(t); return `<option value="${String(id)}">${name}</option>`; }).join('');
+        }
+        sel.innerHTML = '<option value="">— select template —</option>' + (optionsHtml || '');
+      }catch(e){ console.error('Failed to load inventory templates', e); sel.innerHTML = '<option value="">(failed to load)</option>'; }
     }
 
     function populateSecretGroupSelect(selectId, current){
