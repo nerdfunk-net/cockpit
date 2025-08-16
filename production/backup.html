@@ -10,88 +10,24 @@
 
     <title>Config Backup - Cockpit</title>
 
-    <!-- Vite Entry Point                        if (response && response.data && response.data.devices) {
-              allDevices = response.data.devices;
-              console.log(`Loaded ${allDevices.length} devices from Nautobot`);
-              renderDevicesTable(allDevices);
-              updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
-            } else if (response && response.errors) {
-              console.error('GraphQL errors:', response.errors);
-              showError('GraphQL errors: ' + response.errors.map(e => e.message).join(', '));
-            } else {
-              console.error('Failed to load devices - full response:', response);
-              showError('Failed to load devices from Nautobot: No data returned - ' + JSON.stringify(response));
-            }
-          } catch (error) {
-            console.error('Error loading devices:', error);
-            console.error('Error details:', {
-              message: error.message,
-              stack: error.stack,
-              name: error.name
-            });
-            showError('Error loading devices: ' + error.message);
-          }GraphQL response:', response);
-
-            if (response && response.data && response.data.devices) {
-              allDevices = response.data.devices;
-              console.log(`Loaded ${allDevices.length} devices from Nautobot`);
-              renderDevicesTable(allDevices);
-              updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
-            } else if (response && response.errors) {
-              console.error('GraphQL errors:', response.errors);
-              showError('GraphQL errors: ' + response.errors.map(e => e.message).join(', '));
-            } else {
-              console.error('Failed to load devices:', response);
-              showError('Failed to load devices from Nautobot: No data returned');
-            }dle all styles -->
+    <!-- Vite Entry Point -->
     <script type="module" src="/src/main-minimal.js"></script>
     <script>
       // Robust authentication check
       (function () {
-        console.log("Checking authentication...");
-
-        // Check if we have a valid token
-        const token = localStorage.getItem("auth_token");
-        console.log("Token found:", !!token);
-
-        if (!token) {
-          console.log("No token found, redirecting to login");
-          // Use correct path for Vite dev server on port 3000
-          window.location.href = "/production/login.html";
-          return;
+        try {
+          console.log("Checking authentication...");
+          const token = localStorage.getItem("auth_token");
+          if (!token) {
+            window.location.href = "/production/login.html";
+          }
+        } catch (e) {
+          console.error("Auth check failed:", e);
         }
-
-        console.log("Token found, user authenticated");
       })();
     </script>
+    <!-- Global Auth Manager (provides window.authManager and apiRequest) -->
     <script src="js/auth.js"></script>
-    <script>
-      // Initialize auth manager when DOM is ready
-      document.addEventListener("DOMContentLoaded", function () {
-        window.authManager = new AuthManager();
-        console.log("AuthManager initialized");
-
-        // Force update display after a short delay to ensure DOM is ready
-        setTimeout(function () {
-          if (window.authManager && window.authManager.user) {
-            window.authManager.updateUserDisplay();
-            console.log("Force updated user display");
-          }
-        }, 500);
-
-        // Listen for storage changes (when user logs in from another tab/window)
-        window.addEventListener("storage", function (e) {
-          if (e.key === "auth_token" || e.key === "user_info") {
-            console.log("Storage change detected, updating user display");
-            if (window.authManager) {
-              window.authManager.token = localStorage.getItem("auth_token");
-              window.authManager.user = JSON.parse(localStorage.getItem("user_info") || "null");
-              window.authManager.updateUserDisplay();
-            }
-          }
-        });
-      });
-    </script>
     <link rel="stylesheet" href="css/sync_devices.css" />
 
     <!-- Custom styles for header filters -->
@@ -416,56 +352,7 @@
                 <h3>Configuration Backup</h3>
               </div>
 
-              <div class="title_right">
-                <div class="col-md-12 col-sm-12">
-                  <!-- Filter Controls -->
-                  <div class="row g-2 align-items-end">
-                    <div class="col-lg-3 col-md-3 col-sm-6">
-                      <!-- Empty spacer column to push content right -->
-                    </div>
-                    <div class="col-lg-3 col-md-3 col-sm-6">
-                      <div class="form-group mb-0">
-                        <label for="backup-date-filter" class="form-label">Last Backup Date</label>
-                        <input
-                          type="date"
-                          class="form-control"
-                          id="backup-date-filter"
-                          style="min-width: 150px"
-                        />
-                      </div>
-                    </div>
-                    <div class="col-lg-3 col-md-3 col-sm-6">
-                      <div class="form-group mb-0">
-                        <label for="date-comparison" class="form-label">Date Comparison</label>
-                        <select class="form-control" id="date-comparison">
-                          <option value="">No Date Filter</option>
-                          <option value="lte">≤ (Less/Equal)</option>
-                          <option value="lt">< (Less Than)</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="col-lg-1 col-md-1 col-sm-6">
-                      <div class="form-group mb-0">
-                        <label class="form-label d-block" style="visibility: hidden">Clear</label>
-                        <button
-                          type="button"
-                          class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center"
-                          id="clear-filters-btn"
-                          style="
-                            border-radius: 8px;
-                            font-weight: 500;
-                            transition: all 0.3s ease;
-                            min-width: 42px;
-                          "
-                          title="Clear Filters"
-                        >
-                          <i class="fas fa-times-circle"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div class="title_right"></div>
             </div>
 
             <div class="clearfix"></div>
@@ -487,9 +374,9 @@
                       </div>
                     </div>
 
-                    <!-- Clear All Filters Button -->
-                    <div class="row mb-3">
-                      <div class="col-md-12">
+                    <!-- Filters Row: left = Clear All, right = Date filters + Clear -->
+                    <div class="row mb-3 align-items-end">
+                      <div class="col-md-6 col-sm-12 mb-2 mb-md-0">
                         <button
                           type="button"
                           class="btn btn-outline-secondary btn-sm clear-all-filters"
@@ -498,6 +385,42 @@
                         >
                           <i class="fas fa-eraser"></i> Clear All Filters
                         </button>
+                      </div>
+                      <div class="col-md-6 col-sm-12">
+                        <div class="d-flex justify-content-md-end flex-wrap gap-2">
+                          <div class="form-group mb-0 me-2">
+                            <label for="backup-date-filter" class="form-label"
+                              >Last Backup Date</label
+                            >
+                            <input
+                              type="date"
+                              class="form-control"
+                              id="backup-date-filter"
+                              style="min-width: 150px"
+                            />
+                          </div>
+                          <div class="form-group mb-0 me-2">
+                            <label for="date-comparison" class="form-label">Date Comparison</label>
+                            <select class="form-control" id="date-comparison">
+                              <option value="">No Date Filter</option>
+                              <option value="lte">≤ (Less/Equal)</option>
+                              <option value="lt">&lt; (Less Than)</option>
+                            </select>
+                          </div>
+                          <div class="form-group mb-0" style="min-width: 42px">
+                            <label class="form-label d-block" style="visibility: hidden"
+                              >Clear</label
+                            >
+                            <button
+                              type="button"
+                              class="btn btn-outline-danger d-flex align-items-center justify-content-center"
+                              id="clear-filters-btn"
+                              title="Clear Filters"
+                            >
+                              <i class="fas fa-times-circle"></i>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -782,8 +705,11 @@
             });
 
             if (!window.authManager) {
-              console.error("AuthManager not available");
-              showError("Authentication manager not ready. Please refresh the page.");
+              console.warn("AuthManager not available, retrying in 500ms...");
+              setTimeout(
+                () => loadDevices(deviceNameFilter, useBackendPagination, limit, offset),
+                500
+              );
               return;
             }
 
