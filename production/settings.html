@@ -1,26 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <!-- Meta, title, CSS, favicons, etc. -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="images/favicon.ico" type="image/ico" />
 
     <title>Settings - Cockpit</title>
 
     <!-- Vite Entry Point - will bundle all styles -->
     <script type="module" src="/src/main-minimal.js"></script>
-    
+
     <!-- Configuration -->
     <script src="js/config.js"></script>
     <!-- Container configuration (if in container mode) -->
     <script>
       // Load container config if in container environment
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        const script = document.createElement('script');
-        script.src = 'js/config-container.js';
+      if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+        const script = document.createElement("script");
+        script.src = "js/config-container.js";
         document.head.appendChild(script);
       }
     </script>
@@ -28,29 +28,29 @@
     <script src="js/api-manager.js"></script>
     <script>
       // Robust authentication check
-      (function() {
-        console.log('Checking authentication...');
-        
+      (function () {
+        console.log("Checking authentication...");
+
         // Check if we have a valid token
-        const token = localStorage.getItem('auth_token');
-        console.log('Token found:', !!token);
-        
+        const token = localStorage.getItem("auth_token");
+        console.log("Token found:", !!token);
+
         if (!token) {
-          console.log('No token found, redirecting to login');
+          console.log("No token found, redirecting to login");
           // Use absolute path to ensure proper redirect
-          window.location.href = '/login.html';
+          window.location.href = "/login.html";
           return;
         }
-        
-        console.log('Token found, user authenticated');
+
+        console.log("Token found, user authenticated");
       })();
     </script>
     <script src="js/auth.js"></script>
     <script>
       // Initialize auth manager when DOM is ready
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         window.authManager = new AuthManager();
-        console.log('AuthManager initialized');
+        console.log("AuthManager initialized");
       });
     </script>
   </head>
@@ -60,16 +60,17 @@
       <div class="main_container">
         <div class="col-md-3 left_col">
           <div class="left_col scroll-view">
-            <div class="navbar nav_title" style="border: 0;">
-              <a href="index.html" class="site_title"><i class="fas fa-paw"></i> <span>Cockpit!</span></a>
+            <div class="navbar nav_title" style="border: 0">
+              <a href="index.html" class="site_title"
+                ><i class="fas fa-paw"></i> <span>Cockpit!</span></a
+              >
             </div>
 
             <div class="clearfix"></div>
 
             <!-- menu profile quick info -->
             <div class="profile clearfix">
-              <div class="profile_pic">
-              </div>
+              <div class="profile_pic"></div>
               <div class="profile_info">
                 <span id="welcome-message">Welcome,</span>
                 <h2 id="sidebar-username">Loading...</h2>
@@ -84,32 +85,80 @@
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
-                  <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
-                  <li><a><i class="fas fa-rocket"></i> Onboarding <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+                  </li>
+                  <li>
+                    <a
+                      ><i class="fas fa-rocket"></i> Onboarding
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                      <li><a href="onboard-device.html"><i class="fas fa-plus-circle"></i> Onboard Device</a></li>
-                      <li><a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a></li>
-                      <li><a href="scan-and-add.html"><i class="fas fa-search-plus"></i> Scan & Add</a></li>
+                      <li>
+                        <a href="onboard-device.html"
+                          ><i class="fas fa-plus-circle"></i> Onboard Device</a
+                        >
+                      </li>
+                      <li>
+                        <a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a>
+                      </li>
+                      <li>
+                        <a href="scan-and-add.html"
+                          ><i class="fas fa-search-plus"></i> Scan & Add</a
+                        >
+                      </li>
                     </ul>
                   </li>
-                  <li><a><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a
+                      ><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                      <li><a href="backup.html"><i class="fas fa-save"></i> Backup</a></li>
-                      <li><a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a></li>
+                      <li>
+                        <a href="backup.html"><i class="fas fa-save"></i> Backup</a>
+                      </li>
+                      <li>
+                        <a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a>
+                      </li>
                     </ul>
                   </li>
-                  <li><a><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a
+                      ><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                      <li><a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a></li>
+                      <li>
+                        <a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a>
+                      </li>
                     </ul>
                   </li>
-                  <li><a><i class="fas fa-wrench"></i> Settings <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a
+                      ><i class="fas fa-wrench"></i> Settings
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                      <li><a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a></li>
-                      <li><a href="settings-templates.html"><i class="fas fa-file-code"></i> Templates</a></li>
-                      <li><a href="settings-git.html"><i class="fab fa-git-alt"></i> Git Management</a></li>
-                      <li><a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a></li>
-                      <li><a href="settings-credentials.html"><i class="fas fa-key"></i> Credentials</a></li>
+                      <li>
+                        <a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a>
+                      </li>
+                      <li>
+                        <a href="settings-templates.html"
+                          ><i class="fas fa-file-code"></i> Templates</a
+                        >
+                      </li>
+                      <li>
+                        <a href="settings-git.html"
+                          ><i class="fab fa-git-alt"></i> Git Management</a
+                        >
+                      </li>
+                      <li>
+                        <a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a>
+                      </li>
+                      <li>
+                        <a href="settings-credentials.html"
+                          ><i class="fas fa-key"></i> Credentials</a
+                        >
+                      </li>
                     </ul>
                   </li>
                 </ul>
@@ -119,7 +168,12 @@
 
             <!-- /menu footer buttons -->
             <div class="sidebar-footer hidden-small">
-              <a href="settings-nautobot.html" data-bs-toggle="tooltip" data-bs-placement="top" title="Settings">
+              <a
+                href="settings-nautobot.html"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Settings"
+              >
                 <span class="fas fa-cog" aria-hidden="true"></span>
               </a>
               <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
@@ -144,35 +198,47 @@
             </div>
             <nav class="nav navbar-nav">
               <ul class="navbar-right">
-                <li class="nav-item dropdown open" style="padding-left: 15px;">
-                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <li class="nav-item dropdown open" style="padding-left: 15px">
+                  <a
+                    href="javascript:;"
+                    class="user-profile dropdown-toggle"
+                    aria-haspopup="true"
+                    id="navbarDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
                     <span id="navbar-username">Loading...</span>
                   </a>
                   <script>
                     // Immediate username update if user info is available
-                    (function() {
-                      const userInfo = localStorage.getItem('user_info');
+                    (function () {
+                      const userInfo = localStorage.getItem("user_info");
                       if (userInfo) {
                         try {
                           const user = JSON.parse(userInfo);
-                          const element = document.getElementById('navbar-username');
+                          const element = document.getElementById("navbar-username");
                           if (element && user) {
-                            element.textContent = user.full_name || user.username || 'User';
+                            element.textContent = user.full_name || user.username || "User";
                           }
                         } catch (e) {
-                          console.log('Error parsing user info:', e);
+                          console.log("Error parsing user info:", e);
                         }
                       }
                     })();
                   </script>
-                  <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
+                  <div
+                    class="dropdown-menu dropdown-usermenu float-end"
+                    aria-labelledby="navbarDropdown"
+                  >
                     <a class="dropdown-item" href="javascript:;"> Profile</a>
                     <a class="dropdown-item" href="settings-nautobot.html">
                       <span class="badge bg-red float-end">50%</span>
                       <span>Settings</span>
                     </a>
                     <a class="dropdown-item" href="javascript:;">Help</a>
-                    <a class="dropdown-item" href="login.html"><i class="fas fa-sign-out-alt float-end"></i> Log Out</a>
+                    <a class="dropdown-item" href="login.html"
+                      ><i class="fas fa-sign-out-alt float-end"></i> Log Out</a
+                    >
                   </div>
                 </li>
               </ul>
@@ -197,15 +263,18 @@
               <div class="col-md-12 col-sm-12">
                 <div class="x_panel">
                   <div class="x_title">
-                    <h2>Configuration Settings <small>Choose a settings category to configure</small></h2>
+                    <h2>
+                      Configuration Settings <small>Choose a settings category to configure</small>
+                    </h2>
                     <ul class="nav navbar-right panel_toolbox">
-                      <li><a class="collapse-link"><i class="fas fa-chevron-up"></i></a></li>
+                      <li>
+                        <a class="collapse-link"><i class="fas fa-chevron-up"></i></a>
+                      </li>
                     </ul>
                     <div class="clearfix"></div>
                   </div>
-                  
+
                   <div class="x_content">
-                    
                     <!-- Settings Categories -->
                     <div class="row">
                       <div class="col-md-4">
@@ -217,7 +286,10 @@
                                   <i class="fas fa-server fa-3x text-primary"></i>
                                 </div>
                                 <h4 class="card-title">Nautobot Settings</h4>
-                                <p class="card-text">Configure your Nautobot server connection, API tokens, and authentication settings.</p>
+                                <p class="card-text">
+                                  Configure your Nautobot server connection, API tokens, and
+                                  authentication settings.
+                                </p>
                                 <div class="btn btn-primary">
                                   <i class="fas fa-cog"></i> Configure Nautobot
                                 </div>
@@ -226,7 +298,7 @@
                           </a>
                         </div>
                       </div>
-                      
+
                       <div class="col-md-4">
                         <div class="settings-card">
                           <a href="settings-git.html" class="settings-link">
@@ -236,7 +308,10 @@
                                   <i class="fas fa-code-branch fa-3x text-success"></i>
                                 </div>
                                 <h4 class="card-title">Git Repository Settings</h4>
-                                <p class="card-text">Configure Git repository settings for storing and managing device configurations.</p>
+                                <p class="card-text">
+                                  Configure Git repository settings for storing and managing device
+                                  configurations.
+                                </p>
                                 <div class="btn btn-success">
                                   <i class="fas fa-code-branch"></i> Configure Git
                                 </div>
@@ -245,7 +320,7 @@
                           </a>
                         </div>
                       </div>
-                      
+
                       <div class="col-md-4">
                         <div class="settings-card">
                           <a href="settings-templates.html" class="settings-link">
@@ -255,7 +330,10 @@
                                   <i class="fas fa-file-code fa-3x text-info"></i>
                                 </div>
                                 <h4 class="card-title">Template Configuration</h4>
-                                <p class="card-text">Manage configuration templates from Git, file uploads, or web editor.</p>
+                                <p class="card-text">
+                                  Manage configuration templates from Git, file uploads, or web
+                                  editor.
+                                </p>
                                 <div class="btn btn-info">
                                   <i class="fas fa-file-code"></i> Configure Templates
                                 </div>
@@ -267,12 +345,12 @@
                     </div>
 
                     <!-- Quick Status Overview -->
-                    <div class="row" style="margin-top: 40px;">
+                    <div class="row" style="margin-top: 40px">
                       <div class="col-md-12">
                         <h3 class="section-heading">
                           <i class="fas fa-info-circle"></i> Configuration Status
                         </h3>
-                        <hr class="section-divider">
+                        <hr class="section-divider" />
                       </div>
                     </div>
 
@@ -291,34 +369,56 @@
                             <tbody>
                               <tr>
                                 <td><i class="fas fa-server"></i> Nautobot Connection</td>
-                                <td><span class="badge badge-secondary" id="nautobot-status">Not Configured</span></td>
+                                <td>
+                                  <span class="badge badge-secondary" id="nautobot-status"
+                                    >Not Configured</span
+                                  >
+                                </td>
                                 <td id="nautobot-updated">-</td>
-                                <td><a href="settings-nautobot.html" class="btn btn-sm btn-primary">Configure</a></td>
+                                <td>
+                                  <a href="settings-nautobot.html" class="btn btn-sm btn-primary"
+                                    >Configure</a
+                                  >
+                                </td>
                               </tr>
                               <tr>
                                 <td><i class="fas fa-code-branch"></i> Git Repository</td>
-                                <td><span class="badge badge-secondary" id="git-status">Not Configured</span></td>
+                                <td>
+                                  <span class="badge badge-secondary" id="git-status"
+                                    >Not Configured</span
+                                  >
+                                </td>
                                 <td id="git-updated">-</td>
-                                <td><a href="settings-git.html" class="btn btn-sm btn-success">Configure</a></td>
+                                <td>
+                                  <a href="settings-git.html" class="btn btn-sm btn-success"
+                                    >Configure</a
+                                  >
+                                </td>
                               </tr>
                               <tr>
                                 <td><i class="fas fa-file-code"></i> Templates</td>
-                                <td><span class="badge badge-secondary" id="templates-status">Not Configured</span></td>
+                                <td>
+                                  <span class="badge badge-secondary" id="templates-status"
+                                    >Not Configured</span
+                                  >
+                                </td>
                                 <td id="templates-updated">-</td>
-                                <td><a href="settings-templates.html" class="btn btn-sm btn-info">Configure</a></td>
+                                <td>
+                                  <a href="settings-templates.html" class="btn btn-sm btn-info"
+                                    >Configure</a
+                                  >
+                                </td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
             </div>
             <!-- /Settings Content -->
-
           </div>
         </div>
         <!-- /page content -->
@@ -328,17 +428,17 @@
     <!-- Custom styles for current page indication and settings cards -->
     <style>
       .current-page {
-        background-color: #2A3F54 !important;
+        background-color: #2a3f54 !important;
         color: #fff !important;
         border-radius: 3px;
       }
-      
+
       .current-page:hover {
         background-color: #1e2b3a !important;
       }
 
       .section-heading {
-        color: #2A3F54;
+        color: #2a3f54;
         font-weight: 600;
         margin-bottom: 10px;
         display: flex;
@@ -374,7 +474,7 @@
 
       .settings-card .card:hover {
         border-color: #007bff;
-        box-shadow: 0 4px 8px rgba(0,123,255,0.1);
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.1);
         transform: translateY(-2px);
       }
 
@@ -383,7 +483,7 @@
       }
 
       .card-title {
-        color: #2A3F54;
+        color: #2a3f54;
         font-weight: 600;
         margin-bottom: 15px;
       }
@@ -398,7 +498,7 @@
         background-color: #f8f9fc;
         border-top: none;
         font-weight: 600;
-        color: #2A3F54;
+        color: #2a3f54;
       }
 
       .badge {
@@ -424,7 +524,7 @@
         }
 
         init() {
-          document.addEventListener('DOMContentLoaded', () => {
+          document.addEventListener("DOMContentLoaded", () => {
             this.loadConfigurationStatus();
             this.updateUsernameDisplay();
           });
@@ -438,30 +538,30 @@
 
           try {
             // Check Nautobot status
-            const nautobotResponse = await window.authManager.apiRequest('/api/settings');
+            const nautobotResponse = await window.authManager.apiRequest("/api/settings");
             if (nautobotResponse.success && nautobotResponse.data.nautobot_host) {
-              this.updateStatus('nautobot-status', 'Configured', 'success');
+              this.updateStatus("nautobot-status", "Configured", "success");
             } else {
-              this.updateStatus('nautobot-status', 'Not Configured', 'secondary');
+              this.updateStatus("nautobot-status", "Not Configured", "secondary");
             }
 
             // Check Git status
             if (nautobotResponse.success && nautobotResponse.data.git_repo_url) {
-              this.updateStatus('git-status', 'Configured', 'success');
+              this.updateStatus("git-status", "Configured", "success");
             } else {
-              this.updateStatus('git-status', 'Not Configured', 'secondary');
+              this.updateStatus("git-status", "Not Configured", "secondary");
             }
 
             // Check Templates status
-            const templatesResponse = await window.authManager.apiRequest('/api/settings/templates');
+            const templatesResponse =
+              await window.authManager.apiRequest("/api/settings/templates");
             if (templatesResponse.success && templatesResponse.data.template_source) {
-              this.updateStatus('templates-status', 'Configured', 'success');
+              this.updateStatus("templates-status", "Configured", "success");
             } else {
-              this.updateStatus('templates-status', 'Not Configured', 'secondary');
+              this.updateStatus("templates-status", "Not Configured", "secondary");
             }
-
           } catch (error) {
-            console.error('Error loading configuration status:', error);
+            console.error("Error loading configuration status:", error);
           }
         }
 
@@ -474,19 +574,19 @@
         }
 
         updateUsernameDisplay() {
-          const userInfo = localStorage.getItem('user_info');
+          const userInfo = localStorage.getItem("user_info");
           if (userInfo) {
             try {
               const user = JSON.parse(userInfo);
-              const sidebarElement = document.getElementById('sidebar-username');
-              const navbarElement = document.getElementById('navbar-username');
-              
-              const displayName = user.full_name || user.username || 'User';
-              
+              const sidebarElement = document.getElementById("sidebar-username");
+              const navbarElement = document.getElementById("navbar-username");
+
+              const displayName = user.full_name || user.username || "User";
+
               if (sidebarElement) sidebarElement.textContent = displayName;
               if (navbarElement) navbarElement.textContent = displayName;
             } catch (e) {
-              console.log('Error parsing user info:', e);
+              console.log("Error parsing user info:", e);
             }
           }
         }
@@ -496,686 +596,10 @@
       const settingsOverview = new SettingsOverview();
 
       function logout() {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_info');
-        window.location.href = '/login.html';
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user_info");
+        window.location.href = "/login.html";
       }
-    </script>
-  </body>
-</html>
-                    <div class="row">
-                      <div class="col-md-12">
-                        <h3 class="section-heading">
-                          <i class="fas fa-server"></i> Nautobot Settings
-                        </h3>
-                        <hr class="section-divider">
-                      </div>
-                    </div>
-
-                    <form id="nautobot-settings-form">
-                      <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="nautobot-url" class="control-label">Nautobot Server URL <span class="required">*</span></label>
-                            <input type="url" id="nautobot-url" class="form-control" placeholder="https://nautobot.example.com" required>
-                            <small class="form-text text-muted">The base URL of your Nautobot instance</small>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="nautobot-token" class="control-label">API Token <span class="required">*</span></label>
-                            <input type="password" id="nautobot-token" class="form-control" placeholder="Enter your Nautobot API token (e.g., aaabbbccc123456789)" required>
-                            <small class="form-text text-muted">Get your API token from Nautobot: Admin → Users → [Your User] → API Tokens. 
-                            <strong>Required permissions:</strong> At minimum 'read' access to dcim models (devices, sites, etc.)</small>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="nautobot-timeout" class="control-label">Connection Timeout (seconds)</label>
-                            <input type="number" id="nautobot-timeout" class="form-control" value="30" min="5" max="300">
-                            <small class="form-text text-muted">Request timeout in seconds (default: 30)</small>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="nautobot-verify-ssl" class="control-label">SSL Verification</label>
-                            <input type="checkbox" id="nautobot-verify-ssl" class="form-check-input">
-                            <label for="nautobot-verify-ssl" class="form-check-label">Verify SSL certificates</label>
-                            <small class="form-text text-muted">Uncheck only for development environments</small>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-md-12">
-                          <button type="button" id="test-nautobot-connection" class="btn btn-info btn-sm">
-                            <i class="fas fa-plug"></i> Test Connection
-                          </button>
-                          <span id="nautobot-connection-status" class="ml-3"></span>
-                        </div>
-                      </div>
-                    </form>
-
-                    <!-- Configs Settings Section -->
-                    <div class="row" style="margin-top: 40px;">
-                      <div class="col-md-12">
-                        <h3 class="section-heading">
-                          <i class="fas fa-code-branch"></i> Configs Settings
-                        </h3>
-                        <hr class="section-divider">
-                      </div>
-                    </div>
-
-                    <form id="configs-settings-form">
-                      <div class="row">
-                        <div class="col-md-8">
-                          <div class="form-group">
-                            <label for="git-repo-url" class="control-label">Git Repository URL <span class="required">*</span></label>
-                            <input type="url" id="git-repo-url" class="form-control" placeholder="https://github.com/username/config-repo.git" required>
-                            <small class="form-text text-muted">The Git repository containing your device configurations</small>
-                          </div>
-                        </div>
-                        <div class="col-md-4">
-                          <div class="form-group">
-                            <label for="git-branch" class="control-label">Default Branch</label>
-                            <input type="text" id="git-branch" class="form-control" value="main" placeholder="main">
-                            <small class="form-text text-muted">Default branch to use (e.g., main, master)</small>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="git-username" class="control-label">Git Username</label>
-                            <input type="text" id="git-username" class="form-control" placeholder="Enter Git username">
-                            <small class="form-text text-muted">Username for Git authentication (if required)</small>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="git-token" class="control-label">Git Personal Access Token</label>
-                            <input type="password" id="git-token" class="form-control" placeholder="Enter Git token">
-                            <small class="form-text text-muted">Personal access token for Git authentication</small>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="config-path" class="control-label">Config Files Path</label>
-                            <input type="text" id="config-path" class="form-control" value="configs/" placeholder="configs/">
-                            <small class="form-text text-muted">Path within the repository where config files are stored</small>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="sync-interval" class="control-label">Sync Interval (minutes)</label>
-                            <input type="number" id="sync-interval" class="form-control" value="15" min="5" max="1440">
-                            <small class="form-text text-muted">How often to sync with the Git repository</small>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group">
-                            <label for="git-verify-ssl" class="control-label">SSL Certificate Verification</label>
-                            <input type="checkbox" id="git-verify-ssl" class="form-check-input">
-                            <label for="git-verify-ssl" class="form-check-label">Verify SSL certificates</label>
-                            <small class="form-text text-muted">Verify SSL certificates when connecting to Git repository (disable for self-signed certificates)</small>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-md-12">
-                          <button type="button" id="test-git-connection" class="btn btn-info btn-sm">
-                            <i class="fas fa-code-branch"></i> Test Git Connection
-                          </button>
-                          <span id="git-connection-status" class="ml-3"></span>
-                        </div>
-                      </div>
-                    </form>
-
-                    <!-- Save Button -->
-                    <div class="row" style="margin-top: 40px;">
-                      <div class="col-md-12">
-                        <hr>
-                        <button type="button" id="save-settings" class="btn btn-success">
-                          <i class="fas fa-save"></i> Save All Settings
-                        </button>
-                        <button type="button" id="reset-settings" class="btn btn-warning ml-3">
-                          <i class="fas fa-undo"></i> Reset to Defaults
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- /Settings Content -->
-
-          </div>
-        </div>
-        <!-- /page content -->
-      </div>
-    </div>
-
-    <!-- Custom styles for current page indication -->
-    <style>
-      .current-page {
-        background-color: #2A3F54 !important;
-        color: #fff !important;
-        border-radius: 3px;
-      }
-      
-      .current-page:hover {
-        background-color: #1e2b3a !important;
-      }
-
-      /* Top status message styling */
-      #status-message {
-        margin-top: 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        font-weight: 500;
-      }
-
-      .section-heading {
-        color: #2A3F54;
-        font-weight: 600;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .section-divider {
-        border-top: 2px solid #e6e9ed;
-        margin-bottom: 25px;
-      }
-
-      .form-group {
-        margin-bottom: 20px;
-      }
-
-      .control-label {
-        font-weight: 600;
-        color: #555;
-        margin-bottom: 8px;
-      }
-
-      .required {
-        color: #e74c3c;
-      }
-
-      .form-control {
-        border-radius: 3px;
-        border: 1px solid #ccc;
-        padding: 8px 12px;
-        transition: border-color 0.3s ease;
-      }
-
-      .form-control:focus {
-        border-color: #5cb85c;
-        box-shadow: 0 0 0 0.2rem rgba(92, 184, 92, 0.25);
-      }
-
-      .connection-status {
-        padding: 5px 10px;
-        border-radius: 3px;
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .status-success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-      }
-
-      .status-error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-      }
-
-      .status-testing {
-        background-color: #d1ecf1;
-        color: #0c5460;
-        border: 1px solid #bee5eb;
-      }
-
-      .btn {
-        border-radius: 3px;
-        transition: all 0.3s ease;
-      }
-
-      .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      }
-    </style>
-
-    <!-- Settings JavaScript -->
-    <script>
-      class Settings {
-        constructor() {
-          this.init();
-        }
-
-        async init() {
-          // Wait for auth manager to be ready
-          if (!window.authManager) {
-            setTimeout(() => this.init(), 100);
-            return;
-          }
-
-          console.log('Settings page initializing...');
-          
-          // Update user info in sidebar
-          this.updateUserInfo();
-          
-          // Load existing settings from database
-          await this.loadSettings();
-          
-          // Bind event handlers
-          this.bindEvents();
-        }
-
-        bindEvents() {
-          // Test connection buttons
-          document.getElementById('test-nautobot-connection').addEventListener('click', () => {
-            this.testNautobotConnection();
-          });
-
-          document.getElementById('test-git-connection').addEventListener('click', () => {
-            this.testGitConnection();
-          });
-
-          // Save and reset buttons
-          document.getElementById('save-settings').addEventListener('click', () => {
-            this.saveSettings();
-          });
-
-          document.getElementById('reset-settings').addEventListener('click', () => {
-            this.resetSettings();
-          });
-        }
-
-        async loadSettings() {
-          // Show loading indicator
-          this.showStatus('🔄 Loading settings from database...', 'info');
-          
-          try {
-            // First try to load from backend
-            const nautobotResponse = await window.authManager.apiRequest('/api/settings/nautobot');
-            const gitResponse = await window.authManager.apiRequest('/api/settings/git');
-
-            let settings = {
-              nautobot: {},
-              git: {}
-            };
-
-            let loadedFromBackend = false;
-
-            // Use backend data if available
-            if (nautobotResponse.success) {
-              settings.nautobot = nautobotResponse.data;
-              loadedFromBackend = true;
-              console.log('Loaded Nautobot settings from database:', settings.nautobot);
-            }
-            if (gitResponse.success) {
-              settings.git = gitResponse.data;
-              loadedFromBackend = true;
-              console.log('Loaded Git settings from database:', settings.git);
-            }
-
-            // Fallback to localStorage if backend fails
-            if (!nautobotResponse.success && !gitResponse.success) {
-              const stored = this.getStoredSettings();
-              settings = stored;
-              console.log('Backend unavailable, using localStorage settings');
-            }
-
-            // Apply default values if not set
-            settings.nautobot = {
-              url: settings.nautobot.url || '',
-              token: settings.nautobot.token || '',
-              timeout: settings.nautobot.timeout || 30,
-              verify_ssl: settings.nautobot.verify_ssl !== undefined ? settings.nautobot.verify_ssl : true
-            };
-
-            settings.git = {
-              repo_url: settings.git.repo_url || '',
-              branch: settings.git.branch || 'main',
-              username: settings.git.username || '',
-              token: settings.git.token || '',
-              config_path: settings.git.config_path || 'configs/',
-              sync_interval: settings.git.sync_interval || 15,
-              verify_ssl: settings.git.verify_ssl !== undefined ? settings.git.verify_ssl : true
-            };
-
-            // Populate form fields - Nautobot settings
-            // Populate Nautobot settings
-            document.getElementById('nautobot-url').value = settings.nautobot.url;
-            document.getElementById('nautobot-token').value = settings.nautobot.token;
-            document.getElementById('nautobot-timeout').value = settings.nautobot.timeout;
-            document.getElementById('nautobot-verify-ssl').checked = (settings.nautobot.verify_ssl === true);
-
-            // Populate Git settings
-            document.getElementById('git-repo-url').value = settings.git.repo_url;
-            document.getElementById('git-branch').value = settings.git.branch;
-            document.getElementById('git-username').value = settings.git.username;
-            document.getElementById('git-token').value = settings.git.token;
-            document.getElementById('config-path').value = settings.git.config_path;
-            document.getElementById('sync-interval').value = settings.git.sync_interval;
-            document.getElementById('git-verify-ssl').checked = (settings.git.verify_ssl === true);
-
-            // Show success message
-            if (loadedFromBackend) {
-              // Check if essential configuration is missing
-              if (!settings.nautobot.token) {
-                this.showStatus('⚠️ Settings loaded from database - Please configure your Nautobot API token below', 'warning');
-              } else {
-                this.showStatus('✅ Settings successfully loaded from database', 'success');
-              }
-            } else {
-              this.showStatus('⚠️ Settings loaded from local storage (database unavailable)', 'warning');
-            }
-            
-            console.log('Settings loaded and applied to form');
-            
-            // Clear status after 3 seconds
-            setTimeout(() => {
-              this.clearStatus();
-            }, 3000);
-
-          } catch (error) {
-            console.error('Error loading settings from backend:', error);
-            
-            // If backend fails, use localStorage defaults
-            const settings = this.getStoredSettings();
-            
-            // Nautobot settings
-            // Fallback: Populate Nautobot settings with defaults
-            document.getElementById('nautobot-url').value = settings.nautobot.url || '';
-            document.getElementById('nautobot-token').value = settings.nautobot.token || '';
-            document.getElementById('nautobot-timeout').value = settings.nautobot.timeout || 30;
-            document.getElementById('nautobot-verify-ssl').checked = (settings.nautobot.verify_ssl === true);
-
-            // Fallback: Populate Git settings with defaults
-            document.getElementById('git-repo-url').value = settings.git.repoUrl || '';
-            document.getElementById('git-branch').value = settings.git.branch || 'main';
-            document.getElementById('git-username').value = settings.git.username || '';
-            document.getElementById('git-token').value = settings.git.token || '';
-            document.getElementById('config-path').value = settings.git.configPath || 'configs/';
-            document.getElementById('sync-interval').value = settings.git.syncInterval || 15;
-            document.getElementById('git-verify-ssl').checked = (settings.git.verify_ssl === true);
-            
-            // Show error message
-            this.showStatus('❌ Failed to load settings from database, using defaults: ' + error.message, 'danger');
-          }
-        }
-
-        getStoredSettings() {
-          const defaultSettings = {
-            nautobot: {
-              url: '',
-              token: '',
-              timeout: 30,
-              verifySSL: true
-            },
-            git: {
-              repoUrl: '',
-              branch: 'main',
-              username: '',
-              token: '',
-              configPath: 'configs/',
-              syncInterval: 15,
-              verifySSL: true
-            }
-          };
-
-          try {
-            const stored = localStorage.getItem('cockpit_settings');
-            return stored ? { ...defaultSettings, ...JSON.parse(stored) } : defaultSettings;
-          } catch (e) {
-            console.error('Error loading settings:', e);
-            return defaultSettings;
-          }
-        }
-
-        async testNautobotConnection() {
-          const statusElement = document.getElementById('nautobot-connection-status');
-          const button = document.getElementById('test-nautobot-connection');
-          
-          // Get form values
-          const url = document.getElementById('nautobot-url').value.trim();
-          const token = document.getElementById('nautobot-token').value.trim();
-          
-          if (!url || !token) {
-            this.showConnectionStatus(statusElement, 'error', 'Please fill in URL and Token');
-            return;
-          }
-
-          // Show testing status
-          button.disabled = true;
-          this.showConnectionStatus(statusElement, 'testing', 'Testing connection...');
-
-          try {
-            const response = await window.authManager.apiRequest('/api/settings/test/nautobot', {
-              method: 'POST',
-              body: JSON.stringify({
-                url: url,
-                token: token,
-                timeout: parseInt(document.getElementById('nautobot-timeout').value),
-                verify_ssl: document.getElementById('nautobot-verify-ssl').checked
-              })
-            });
-
-            if (response.success) {
-              this.showConnectionStatus(statusElement, 'success', response.message);
-            } else {
-              this.showConnectionStatus(statusElement, 'error', response.message);
-            }
-          } catch (error) {
-            console.error('Nautobot connection test failed:', error);
-            this.showConnectionStatus(statusElement, 'error', 'Connection test failed: ' + error.message);
-          } finally {
-            button.disabled = false;
-          }
-        }
-
-        async testGitConnection() {
-          const statusElement = document.getElementById('git-connection-status');
-          const button = document.getElementById('test-git-connection');
-          
-          // Get form values
-          const repoUrl = document.getElementById('git-repo-url').value.trim();
-          
-          if (!repoUrl) {
-            this.showConnectionStatus(statusElement, 'error', 'Please enter a Git repository URL');
-            return;
-          }
-
-          // Show testing status
-          button.disabled = true;
-          this.showConnectionStatus(statusElement, 'testing', 'Testing Git connection...');
-
-          try {
-            const response = await window.authManager.apiRequest('/api/settings/test/git', {
-              method: 'POST',
-              body: JSON.stringify({
-                repo_url: repoUrl,
-                branch: document.getElementById('git-branch').value,
-                username: document.getElementById('git-username').value,
-                token: document.getElementById('git-token').value,
-                verify_ssl: document.getElementById('git-verify-ssl').checked
-              })
-            });
-
-            if (response.success) {
-              this.showConnectionStatus(statusElement, 'success', response.message);
-            } else {
-              this.showConnectionStatus(statusElement, 'error', response.message);
-            }
-          } catch (error) {
-            console.error('Git connection test failed:', error);
-            this.showConnectionStatus(statusElement, 'error', 'Connection test failed: ' + error.message);
-          } finally {
-            button.disabled = false;
-          }
-        }
-
-        showConnectionStatus(element, type, message) {
-          element.className = `connection-status status-${type}`;
-          element.textContent = message;
-          element.style.display = 'inline-block';
-        }
-
-        async saveSettings() {
-          try {
-            // Get all form values for Nautobot settings
-            const nautobotSettings = {
-              url: document.getElementById('nautobot-url').value.trim(),
-              token: document.getElementById('nautobot-token').value.trim(),
-              timeout: parseInt(document.getElementById('nautobot-timeout').value),
-              verify_ssl: document.getElementById('nautobot-verify-ssl').checked
-            };
-
-            // Get all form values for Git settings
-            const gitSettings = {
-              repo_url: document.getElementById('git-repo-url').value.trim(),
-              branch: document.getElementById('git-branch').value.trim(),
-              username: document.getElementById('git-username').value.trim(),
-              token: document.getElementById('git-token').value.trim(),
-              config_path: document.getElementById('config-path').value.trim(),
-              sync_interval: parseInt(document.getElementById('sync-interval').value),
-              verify_ssl: document.getElementById('git-verify-ssl').checked
-            };
-
-            // Validate required fields
-            if (!nautobotSettings.url || !nautobotSettings.token) {
-              this.showStatus('Please fill in all required Nautobot settings (URL and Token)', 'danger');
-              return;
-            }
-
-            if (!gitSettings.repo_url) {
-              this.showStatus('Please fill in the Git repository URL', 'danger');
-              return;
-            }
-
-            // Save Nautobot settings to backend
-            const nautobotResponse = await window.authManager.apiRequest('/api/settings/nautobot', {
-              method: 'POST',
-              body: JSON.stringify(nautobotSettings)
-            });
-
-            if (!nautobotResponse.success) {
-              throw new Error('Failed to save Nautobot settings: ' + nautobotResponse.message);
-            }
-
-            // Save Git settings to backend
-            const gitResponse = await window.authManager.apiRequest('/api/settings/git', {
-              method: 'POST',
-              body: JSON.stringify(gitSettings)
-            });
-
-            if (!gitResponse.success) {
-              throw new Error('Failed to save Git settings: ' + gitResponse.message);
-            }
-
-            // Also save to localStorage for immediate use
-            const allSettings = {
-              nautobot: nautobotSettings,
-              git: gitSettings
-            };
-            localStorage.setItem('cockpit_settings', JSON.stringify(allSettings));
-            
-            // Show success message
-            this.showStatus('Settings saved successfully!', 'success');
-            
-            console.log('Settings saved to backend and localStorage');
-          } catch (error) {
-            console.error('Error saving settings:', error);
-            this.showStatus('Error saving settings: ' + error.message, 'danger');
-          }
-        }
-
-        resetSettings() {
-          if (confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')) {
-            // Clear stored settings
-            localStorage.removeItem('cockpit_settings');
-            
-            // Reload default settings
-            this.loadSettings();
-            
-            // Clear status indicators
-            document.getElementById('nautobot-connection-status').style.display = 'none';
-            document.getElementById('git-connection-status').style.display = 'none';
-            
-            this.showStatus('Settings reset to defaults', 'info');
-          }
-        }
-
-        updateUserInfo() {
-          // Update sidebar username
-          const sidebarUsername = document.getElementById('sidebar-username');
-          const navbarUsername = document.getElementById('navbar-username');
-          
-          const userInfo = localStorage.getItem('user_info');
-          if (userInfo) {
-            try {
-              const user = JSON.parse(userInfo);
-              const displayName = user.full_name || user.username || 'User';
-              
-              if (sidebarUsername) {
-                sidebarUsername.textContent = displayName;
-              }
-              if (navbarUsername) {
-                navbarUsername.textContent = displayName;
-              }
-            } catch (e) {
-              console.log('Error parsing user info:', e);
-            }
-          }
-        }
-
-        showStatus(message, type = 'info') {
-          const statusDiv = document.getElementById('status-message');
-          statusDiv.className = `alert alert-${type}`;
-          statusDiv.textContent = message;
-          statusDiv.style.display = 'block';
-          
-          // Auto-hide after 5 seconds
-          setTimeout(() => {
-            this.hideStatus();
-          }, 5000);
-        }
-
-        hideStatus() {
-          const statusDiv = document.getElementById('status-message');
-          statusDiv.style.display = 'none';
-        }
-
-        clearStatus() {
-          this.hideStatus();
-        }
-      }
-
-      // Initialize settings when DOM is ready
-      document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM ready, initializing settings...');
-        window.settings = new Settings();
-      });
     </script>
   </body>
 </html>
