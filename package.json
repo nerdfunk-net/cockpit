@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-  "preview": "vite preview",
-  "format:scan": "prettier --write production/scan-and-add.html",
-  "format": "prettier --write '**/*.{html,js,jsx,ts,tsx,css,scss,json,md,yml,yaml}'",
-  "format:check": "prettier --check '**/*.{html,js,jsx,ts,tsx,css,scss,json,md,yml,yaml}'"
+    "preview": "vite preview",
+    "format:scan": "prettier --write production/scan-and-add.html",
+    "format": "prettier --write '**/*.{html,js,jsx,ts,tsx,css,scss,json,md,yml,yaml}'",
+    "format:check": "prettier --check '**/*.{html,js,jsx,ts,tsx,css,scss,json,md,yml,yaml}'"
   },
   "repository": {
     "type": "git",
@@ -38,7 +38,7 @@
   },
   "homepage": "https://github.com/nerdfunk-net/",
   "devDependencies": {
-  "prettier": "^3.3.3",
+    "prettier": "^3.3.3",
     "glob": "^11.0.2",
     "sass": "^1.89.2",
     "vite": "^6.3.5"

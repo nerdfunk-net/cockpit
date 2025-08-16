@@ -1,60 +1,59 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Debug Frontend API</title>
     <script src="js/auth.js"></script>
     <script type="module">
-        import { API_CONFIG } from '/src/config.js';
-        
-        console.log('[DEBUG] API_CONFIG:', API_CONFIG);
-        
-        // Wait for authManager to be available
-        let attempts = 0;
-        const checkAuth = () => {
-            attempts++;
-            if (window.authManager) {
-                console.log('[DEBUG] AuthManager found');
-                testAPI();
-            } else if (attempts < 20) {
-                console.log(`[DEBUG] Waiting for authManager... attempt ${attempts}`);
-                setTimeout(checkAuth, 100);
-            } else {
-                console.error('[ERROR] AuthManager not found after 2 seconds');
-            }
-        };
-        
-        async function testAPI() {
-            try {
-                console.log('[DEBUG] Testing device search...');
-                
-                // Test the devices endpoint
-                const url = '/api/nautobot/devices?filter_type=name&filter_value=LAB';
-                console.log('[DEBUG] Making request to:', url);
-                
-                const response = await window.authManager.apiRequest(url);
-                console.log('[DEBUG] API Response:', response);
-                
-                if (response && response.devices) {
-                    console.log(`[SUCCESS] Found ${response.devices.length} devices`);
-                    response.devices.forEach(device => {
-                        console.log(`  - ${device.display_name || device.name}`);
-                    });
-                } else {
-                    console.log('[WARNING] No devices in response');
-                }
-                
-            } catch (error) {
-                console.error('[ERROR] API test failed:', error);
-            }
+      import { API_CONFIG } from "/src/config.js";
+
+      console.log("[DEBUG] API_CONFIG:", API_CONFIG);
+
+      // Wait for authManager to be available
+      let attempts = 0;
+      const checkAuth = () => {
+        attempts++;
+        if (window.authManager) {
+          console.log("[DEBUG] AuthManager found");
+          testAPI();
+        } else if (attempts < 20) {
+          console.log(`[DEBUG] Waiting for authManager... attempt ${attempts}`);
+          setTimeout(checkAuth, 100);
+        } else {
+          console.error("[ERROR] AuthManager not found after 2 seconds");
         }
-        
-        // Start the check
-        checkAuth();
+      };
+
+      async function testAPI() {
+        try {
+          console.log("[DEBUG] Testing device search...");
+
+          // Test the devices endpoint
+          const url = "/api/nautobot/devices?filter_type=name&filter_value=LAB";
+          console.log("[DEBUG] Making request to:", url);
+
+          const response = await window.authManager.apiRequest(url);
+          console.log("[DEBUG] API Response:", response);
+
+          if (response && response.devices) {
+            console.log(`[SUCCESS] Found ${response.devices.length} devices`);
+            response.devices.forEach((device) => {
+              console.log(`  - ${device.display_name || device.name}`);
+            });
+          } else {
+            console.log("[WARNING] No devices in response");
+          }
+        } catch (error) {
+          console.error("[ERROR] API test failed:", error);
+        }
+      }
+
+      // Start the check
+      checkAuth();
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Frontend API Debug Test</h1>
     <p>Check the browser console for debug output.</p>
     <div id="results"></div>
-</body>
+  </body>
 </html>

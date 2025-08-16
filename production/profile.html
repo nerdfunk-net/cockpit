@@ -1,40 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <!-- Meta, title, CSS, favicons, etc. -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>User Profile | Gentelella Admin</title>
     <!-- Compiled CSS (includes Bootstrap, Font Awesome, and all vendor styles) -->
     <script type="module" src="/src/main-minimal.js"></script>
-    
+
     <style>
       /* Minimal custom styles - mostly using Bootstrap 5 classes */
       .profile-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 15px;
       }
-      
+
       .profile-avatar {
         width: 150px;
         height: 150px;
         border: 5px solid white;
         transition: transform 0.3s ease;
       }
-      
+
       .profile-avatar:hover {
         transform: scale(1.05);
       }
-      
+
       .skill-progress .progress {
         height: 8px;
       }
-      
+
       .activity-timeline::before {
-        content: '';
+        content: "";
         position: absolute;
         left: 1rem;
         top: 0;
@@ -42,9 +42,9 @@
         width: 2px;
         background: #e9ecef;
       }
-      
+
       .timeline-item::before {
-        content: '';
+        content: "";
         position: absolute;
         left: -0.5rem;
         top: 1.5rem;
@@ -56,12 +56,12 @@
         box-shadow: 0 0 0 3px #e9ecef;
       }
     </style>
-      <script src="js/auth.js"></script>
+    <script src="js/auth.js"></script>
     <script>
       // Initialize auth manager when DOM is ready
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         window.authManager = new AuthManager();
-        console.log('AuthManager initialized');
+        console.log("AuthManager initialized");
       });
     </script>
   </head>
@@ -71,16 +71,17 @@
       <div class="main_container">
         <div class="col-md-3 left_col">
           <div class="left_col scroll-view">
-            <div class="navbar nav_title" style="border: 0;">
-              <a href="index.html" class="site_title"><i class="fas fa-paw"></i> <span>Gentelella Admin</span></a>
+            <div class="navbar nav_title" style="border: 0">
+              <a href="index.html" class="site_title"
+                ><i class="fas fa-paw"></i> <span>Gentelella Admin</span></a
+              >
             </div>
 
             <div class="clearfix"></div>
 
             <!-- menu profile quick info -->
             <div class="profile clearfix">
-              <div class="profile_pic">
-              </div>
+              <div class="profile_pic"></div>
               <div class="profile_info">
                 <span>Welcome,</span>
                 <h2>John Doe</h2>
@@ -95,14 +96,22 @@
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
-                  <li><a><i class="fas fa-home"></i> Home <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a
+                      ><i class="fas fa-home"></i> Home <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
                       <li><a href="index.html">Dashboard 1</a></li>
                       <li><a href="index2.html">Dashboard 2</a></li>
                       <li><a href="index3.html">Dashboard 3</a></li>
-                                          <li><a href="index4.html">Dashboard 4</a></li>
-                  </ul>
-                  <li><a><i class="fas fa-edit"></i> Forms <span class="fas fa-chevron-down"></span></a>
+                      <li><a href="index4.html">Dashboard 4</a></li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <a
+                      ><i class="fas fa-edit"></i> Forms <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
                       <li><a href="form.html">General Form</a></li>
                       <li><a href="form_advanced.html">Advanced Components</a></li>
@@ -111,7 +120,13 @@
                       <li><a href="form_upload.html">Form Upload</a></li>
                       <li><a href="form_buttons.html">Form Buttons</a></li>
                     </ul>
-                  <li><a><i class="fas fa-desktop"></i> UI Elements <span class="fas fa-chevron-down"></span></a>
+                  </li>
+
+                  <li>
+                    <a
+                      ><i class="fas fa-desktop"></i> UI Elements
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
                       <li><a href="general_elements.html">General Elements</a></li>
                       <li><a href="media_gallery.html">Media Gallery</a></li>
@@ -122,12 +137,23 @@
                       <li><a href="inbox.html">Inbox</a></li>
                       <li><a href="calendar.html">Calendar</a></li>
                     </ul>
-                  <li><a><i class="fas fa-table"></i> Tables <span class="fas fa-chevron-down"></span></a>
+                  </li>
+
+                  <li>
+                    <a
+                      ><i class="fas fa-table"></i> Tables <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
                       <li><a href="tables.html">Tables</a></li>
                       <li><a href="tables_dynamic.html">Table Dynamic</a></li>
                     </ul>
-                  <li><a><i class="fas fa-chart-column"></i> Data Presentation <span class="fas fa-chevron-down"></span></a>
+                  </li>
+
+                  <li>
+                    <a
+                      ><i class="fas fa-chart-column"></i> Data Presentation
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
                       <li><a href="chartjs.html">Chart JS</a></li>
                       <li><a href="chartjs2.html">Chart JS2</a></li>
@@ -135,17 +161,27 @@
                       <li><a href="echarts.html">ECharts</a></li>
                       <li><a href="other_charts.html">Other Charts</a></li>
                     </ul>
-                  <li><a><i class="fas fa-clone"></i>Layouts <span class="fas fa-chevron-down"></span></a>
+                  </li>
+
+                  <li>
+                    <a
+                      ><i class="fas fa-clone"></i>Layouts <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
                       <li><a href="fixed_sidebar.html">Fixed Sidebar</a></li>
                       <li><a href="fixed_footer.html">Fixed Footer</a></li>
                     </ul>
+                  </li>
                 </ul>
               </div>
               <div class="menu_section">
                 <h3>Live On</h3>
                 <ul class="nav side-menu">
-                  <li><a><i class="fas fa-bug"></i> Additional Pages <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a
+                      ><i class="fas fa-bug"></i> Additional Pages
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
                       <li><a href="e_commerce.html">E-commerce</a></li>
                       <li><a href="projects.html">Projects</a></li>
@@ -153,7 +189,13 @@
                       <li><a href="contacts.html">Contacts</a></li>
                       <li><a href="profile.html">Profile</a></li>
                     </ul>
-                  <li><a><i class="fas fa-window-restore"></i> Extras <span class="fas fa-chevron-down"></span></a>
+                  </li>
+
+                  <li>
+                    <a
+                      ><i class="fas fa-window-restore"></i> Extras
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
                       <li><a href="page_403.html">403 Error</a></li>
                       <li><a href="page_404.html">404 Error</a></li>
@@ -162,21 +204,33 @@
                       <li><a href="login.html">Login Page</a></li>
                       <li><a href="pricing_tables.html">Pricing Tables</a></li>
                     </ul>
-                  <li><a><i class="fas fa-sitemap"></i> Multilevel Menu <span class="fas fa-chevron-down"></span></a>
+                  </li>
+
+                  <li>
+                    <a
+                      ><i class="fas fa-sitemap"></i> Multilevel Menu
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                        <li><a href="#level1_1">Level One</a></li>
-                        <li><a>Level One<span class="fas fa-chevron-down"></span></a>
-                          <ul class="nav child_menu">
-                            <li class="sub_menu"><a href="level2.html">Level Two</a>
-                            <li><a href="#level2_1">Level Two</a>
-                            <li><a href="#level2_2">Level Two</a>
-                          </ul>
-                        <li><a href="#level1_2">Level One</a></li>
+                      <li><a href="#level1_1">Level One</a></li>
+                      <li>
+                        <a>Level One<span class="fas fa-chevron-down"></span></a>
+                        <ul class="nav child_menu">
+                          <li class="sub_menu"><a href="level2.html">Level Two</a></li>
+                          <li><a href="#level2_1">Level Two</a></li>
+                          <li><a href="#level2_2">Level Two</a></li>
+                        </ul>
+                      </li>
+
+                      <li><a href="#level1_2">Level One</a></li>
                     </ul>
-                  <li><a href="landing.html"><i class="fas fa-laptop"></i> Landing Page</a></li>
+                  </li>
+
+                  <li>
+                    <a href="landing.html"><i class="fas fa-laptop"></i> Landing Page</a>
+                  </li>
                 </ul>
               </div>
-
             </div>
             <!-- /sidebar menu -->
 
@@ -201,75 +255,106 @@
 
         <!-- top navigation -->
         <div class="top_nav">
-            <div class="nav_menu">
-                <div class="nav toggle">
-                  <a id="menu_toggle"><i class="fas fa-bars"></i></a>
-                </div>
-                <nav class="nav navbar-nav">
-                <ul class="navbar-right">
-                  <li class="nav-item dropdown open" style="padding-left: 15px;">
-                    <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span id="navbar-username">Loading...</span>
-                  
-                    </a>
-                    <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
-                      <a class="dropdown-item" href="javascript:;"> Profile</a>
-                        <a class="dropdown-item" href="javascript:;">
-                          <span class="badge bg-danger float-end">50%</span>
-                          <span>Settings</span>
-                        </a>
-                    <a class="dropdown-item" href="javascript:;">Help</a>
-                      <a class="dropdown-item" href="login.html"><i class="fas fa-sign-out-alt float-end"></i> Log Out</a>
-                    </div>
-  
-                  <li role="presentation" class="nav-item dropdown open">
-                    <a href="javascript:;" class="dropdown-toggle info-number" id="navbarDropdown1" data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="fas fa-envelope"></i>
-                      <span class="badge bg-success">3</span>
-                    </a>
-                    <ul class="dropdown-menu list-unstyled msg_list" role="menu" aria-labelledby="navbarDropdown1">
-                      <li class="nav-item">
-                        <a class="dropdown-item">
-                          <span>
-                            <span>Sarah Johnson</span>
-                            <span class="time">2 mins ago</span>
-                          </span>
-                          <span class="message">
-                            Great work on the latest project! The client is very satisfied with the results...
-                          </span>
-                        </a>
-                      <li class="nav-item">
-                        <a class="dropdown-item">
-                          <span>
-                            <span>Michael Chen</span>
-                            <span class="time">15 mins ago</span>
-                          </span>
-                          <span class="message">
-                            The design review meeting has been scheduled for tomorrow at 2 PM...
-                          </span>
-                        </a>
-                      <li class="nav-item">
-                        <a class="dropdown-item">
-                          <span>
-                            <span>Emily Rodriguez</span>
-                            <span class="time">1 hour ago</span>
-                          </span>
-                          <span class="message">
-                            Please review the updated requirements document when you have a chance...
-                          </span>
-                        </a>
-                      <li class="nav-item">
-                        <div class="text-center">
-                          <a class="dropdown-item">
-                            <strong>See All Messages</strong>
-                            <i class="fas fa-angle-right"></i>
-                          </a>
-                        </div>
-                    </ul>
-                </ul>
-              </nav>
+          <div class="nav_menu">
+            <div class="nav toggle">
+              <a id="menu_toggle"><i class="fas fa-bars"></i></a>
             </div>
+            <nav class="nav navbar-nav">
+              <ul class="navbar-right">
+                <li class="nav-item dropdown open" style="padding-left: 15px">
+                  <a
+                    href="javascript:;"
+                    class="user-profile dropdown-toggle"
+                    aria-haspopup="true"
+                    id="navbarDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <span id="navbar-username">Loading...</span>
+                  </a>
+                  <div
+                    class="dropdown-menu dropdown-usermenu float-end"
+                    aria-labelledby="navbarDropdown"
+                  >
+                    <a class="dropdown-item" href="javascript:;"> Profile</a>
+                    <a class="dropdown-item" href="javascript:;">
+                      <span class="badge bg-danger float-end">50%</span>
+                      <span>Settings</span>
+                    </a>
+                    <a class="dropdown-item" href="javascript:;">Help</a>
+                    <a class="dropdown-item" href="login.html"
+                      ><i class="fas fa-sign-out-alt float-end"></i> Log Out</a
+                    >
+                  </div>
+                </li>
+
+                <li role="presentation" class="nav-item dropdown open">
+                  <a
+                    href="javascript:;"
+                    class="dropdown-toggle info-number"
+                    id="navbarDropdown1"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <i class="fas fa-envelope"></i>
+                    <span class="badge bg-success">3</span>
+                  </a>
+                  <ul
+                    class="dropdown-menu list-unstyled msg_list"
+                    role="menu"
+                    aria-labelledby="navbarDropdown1"
+                  >
+                    <li class="nav-item">
+                      <a class="dropdown-item">
+                        <span>
+                          <span>Sarah Johnson</span>
+                          <span class="time">2 mins ago</span>
+                        </span>
+                        <span class="message">
+                          Great work on the latest project! The client is very satisfied with the
+                          results...
+                        </span>
+                      </a>
+                    </li>
+
+                    <li class="nav-item">
+                      <a class="dropdown-item">
+                        <span>
+                          <span>Michael Chen</span>
+                          <span class="time">15 mins ago</span>
+                        </span>
+                        <span class="message">
+                          The design review meeting has been scheduled for tomorrow at 2 PM...
+                        </span>
+                      </a>
+                    </li>
+
+                    <li class="nav-item">
+                      <a class="dropdown-item">
+                        <span>
+                          <span>Emily Rodriguez</span>
+                          <span class="time">1 hour ago</span>
+                        </span>
+                        <span class="message">
+                          Please review the updated requirements document when you have a chance...
+                        </span>
+                      </a>
+                    </li>
+
+                    <li class="nav-item">
+                      <div class="text-center">
+                        <a class="dropdown-item">
+                          <strong>See All Messages</strong>
+                          <i class="fas fa-angle-right"></i>
+                        </a>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </nav>
           </div>
+        </div>
         <!-- /top navigation -->
 
         <!-- page content -->
@@ -283,7 +368,7 @@
               <div class="title_right">
                 <div class="col-md-5 col-sm-5 mb-3 float-end top_search">
                   <div class="input-group search-bar-fix">
-                    <input type="text" class="form-control" placeholder="Search profile...">
+                    <input type="text" class="form-control" placeholder="Search profile..." />
                     <button class="btn btn-outline-secondary" type="button">
                       <i class="fas fa-search"></i>
                     </button>
@@ -291,7 +376,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="clearfix"></div>
 
             <!-- Profile Header -->
@@ -299,14 +384,24 @@
               <div class="container-fluid">
                 <div class="row align-items-center">
                   <div class="col-md-3 text-center">
-                    <img src="images/picture.jpg" alt="Profile Picture" class="profile-avatar rounded-circle">
+                    <img
+                      src="images/picture.jpg"
+                      alt="Profile Picture"
+                      class="profile-avatar rounded-circle"
+                    />
                   </div>
                   <div class="col-md-6">
                     <h2 class="mb-1">Alex Thompson</h2>
                     <p class="lead mb-3">Senior Full Stack Developer</p>
-                    <span class="badge bg-warning text-dark px-3 py-2 me-2 mb-2 fs-6 rounded-pill">5+ Years Experience</span>
-                    <span class="badge bg-info text-white px-3 py-2 me-2 mb-2 fs-6 rounded-pill">Team Lead</span>
-                    <span class="badge bg-success text-white px-3 py-2 me-2 mb-2 fs-6 rounded-pill">AWS Certified</span>
+                    <span class="badge bg-warning text-dark px-3 py-2 me-2 mb-2 fs-6 rounded-pill"
+                      >5+ Years Experience</span
+                    >
+                    <span class="badge bg-info text-white px-3 py-2 me-2 mb-2 fs-6 rounded-pill"
+                      >Team Lead</span
+                    >
+                    <span class="badge bg-success text-white px-3 py-2 me-2 mb-2 fs-6 rounded-pill"
+                      >AWS Certified</span
+                    >
                   </div>
                   <div class="col-md-3 text-center">
                     <button class="btn btn-light btn-lg me-2 mb-2" onclick="editProfile()">
@@ -411,7 +506,11 @@
                         <span>95%</span>
                       </div>
                       <div class="progress">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: 95%"></div>
+                        <div
+                          class="progress-bar bg-primary"
+                          role="progressbar"
+                          style="width: 95%"
+                        ></div>
                       </div>
                     </div>
                     <div class="skill-progress mb-3">
@@ -420,7 +519,11 @@
                         <span>90%</span>
                       </div>
                       <div class="progress">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: 90%"></div>
+                        <div
+                          class="progress-bar bg-success"
+                          role="progressbar"
+                          style="width: 90%"
+                        ></div>
                       </div>
                     </div>
                     <div class="skill-progress mb-3">
@@ -429,7 +532,11 @@
                         <span>88%</span>
                       </div>
                       <div class="progress">
-                        <div class="progress-bar bg-info" role="progressbar" style="width: 88%"></div>
+                        <div
+                          class="progress-bar bg-info"
+                          role="progressbar"
+                          style="width: 88%"
+                        ></div>
                       </div>
                     </div>
                     <div class="skill-progress mb-3">
@@ -438,7 +545,11 @@
                         <span>85%</span>
                       </div>
                       <div class="progress">
-                        <div class="progress-bar bg-warning" role="progressbar" style="width: 85%"></div>
+                        <div
+                          class="progress-bar bg-warning"
+                          role="progressbar"
+                          style="width: 85%"
+                        ></div>
                       </div>
                     </div>
                     <div class="skill-progress">
@@ -447,7 +558,11 @@
                         <span>80%</span>
                       </div>
                       <div class="progress">
-                        <div class="progress-bar bg-danger" role="progressbar" style="width: 80%"></div>
+                        <div
+                          class="progress-bar bg-danger"
+                          role="progressbar"
+                          style="width: 80%"
+                        ></div>
                       </div>
                     </div>
                   </div>
@@ -465,21 +580,28 @@
                           <strong>Completed E-commerce Project</strong>
                           <small class="text-muted">2 hours ago</small>
                         </div>
-                        <p class="mb-0 text-muted">Successfully deployed the new e-commerce platform with payment integration.</p>
+                        <p class="mb-0 text-muted">
+                          Successfully deployed the new e-commerce platform with payment
+                          integration.
+                        </p>
                       </div>
                       <div class="timeline-item position-relative bg-light p-3 rounded mb-3">
                         <div class="d-flex justify-content-between mb-1">
                           <strong>Code Review Session</strong>
                           <small class="text-muted">1 day ago</small>
                         </div>
-                        <p class="mb-0 text-muted">Conducted code review for the mobile app authentication module.</p>
+                        <p class="mb-0 text-muted">
+                          Conducted code review for the mobile app authentication module.
+                        </p>
                       </div>
                       <div class="timeline-item position-relative bg-light p-3 rounded">
                         <div class="d-flex justify-content-between mb-1">
                           <strong>Team Meeting</strong>
                           <small class="text-muted">3 days ago</small>
                         </div>
-                        <p class="mb-0 text-muted">Attended sprint planning meeting for the upcoming product release.</p>
+                        <p class="mb-0 text-muted">
+                          Attended sprint planning meeting for the upcoming product release.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -492,37 +614,98 @@
                     <div class="d-flex justify-content-between align-items-center">
                       <h5 class="mb-0">Performance Dashboard</h5>
                       <div class="btn-group" role="group">
-                        <input type="radio" class="btn-check" name="timeRange" id="week" autocomplete="off" checked>
+                        <input
+                          type="radio"
+                          class="btn-check"
+                          name="timeRange"
+                          id="week"
+                          autocomplete="off"
+                          checked
+                        />
                         <label class="btn btn-outline-primary" for="week">Week</label>
-                        
-                        <input type="radio" class="btn-check" name="timeRange" id="month" autocomplete="off">
+
+                        <input
+                          type="radio"
+                          class="btn-check"
+                          name="timeRange"
+                          id="month"
+                          autocomplete="off"
+                        />
                         <label class="btn btn-outline-primary" for="month">Month</label>
-                        
-                        <input type="radio" class="btn-check" name="timeRange" id="year" autocomplete="off">
+
+                        <input
+                          type="radio"
+                          class="btn-check"
+                          name="timeRange"
+                          id="year"
+                          autocomplete="off"
+                        />
                         <label class="btn btn-outline-primary" for="year">Year</label>
                       </div>
                     </div>
                   </div>
                   <div class="card-body">
                     <!-- Activity Chart Placeholder -->
-                    <div id="activityChart" class="bg-light rounded d-flex align-items-center justify-content-center mb-4" style="height: 300px;">
+                    <div
+                      id="activityChart"
+                      class="bg-light rounded d-flex align-items-center justify-content-center mb-4"
+                      style="height: 300px"
+                    >
                       <div class="text-center">
                         <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
                         <p class="text-muted">Activity Chart</p>
-                        <small class="text-muted">Interactive chart showing daily activity and productivity metrics</small>
+                        <small class="text-muted"
+                          >Interactive chart showing daily activity and productivity metrics</small
+                        >
                       </div>
                     </div>
 
                     <!-- Tabs Section -->
-                    <ul class="nav nav-tabs justify-content-center mb-4" id="profileTabs" role="tablist">
+                    <ul
+                      class="nav nav-tabs justify-content-center mb-4"
+                      id="profileTabs"
+                      role="tablist"
+                    >
                       <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects" type="button" role="tab">Current Projects</button>
+                        <button
+                          class="nav-link active"
+                          id="projects-tab"
+                          data-bs-toggle="tab"
+                          data-bs-target="#projects"
+                          type="button"
+                          role="tab"
+                        >
+                          Current Projects
+                        </button>
+                      </li>
+
                       <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="achievements-tab" data-bs-toggle="tab" data-bs-target="#achievements" type="button" role="tab">Achievements</button>
+                        <button
+                          class="nav-link"
+                          id="achievements-tab"
+                          data-bs-toggle="tab"
+                          data-bs-target="#achievements"
+                          type="button"
+                          role="tab"
+                        >
+                          Achievements
+                        </button>
+                      </li>
+
                       <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button" role="tab">Activity Feed</button>
+                        <button
+                          class="nav-link"
+                          id="activity-tab"
+                          data-bs-toggle="tab"
+                          data-bs-target="#activity"
+                          type="button"
+                          role="tab"
+                        >
+                          Activity Feed
+                        </button>
+                      </li>
                     </ul>
-                    
+
                     <div class="tab-content" id="profileTabsContent">
                       <div class="tab-pane fade show active" id="projects" role="tabpanel">
                         <div class="row">
@@ -532,8 +715,10 @@
                                 <h6 class="mb-0">E-Commerce Platform</h6>
                                 <span class="badge bg-success">Completed</span>
                               </div>
-                              <p class="text-muted small mb-2">Full-stack e-commerce solution with React and Node.js</p>
-                              <div class="progress mb-2" style="height: 6px;">
+                              <p class="text-muted small mb-2">
+                                Full-stack e-commerce solution with React and Node.js
+                              </p>
+                              <div class="progress mb-2" style="height: 6px">
                                 <div class="progress-bar bg-success" style="width: 100%"></div>
                               </div>
                               <small class="text-muted">Client: TechCorp Industries</small>
@@ -545,8 +730,10 @@
                                 <h6 class="mb-0">Mobile Banking App</h6>
                                 <span class="badge bg-warning">In Progress</span>
                               </div>
-                              <p class="text-muted small mb-2">React Native app with biometric authentication</p>
-                              <div class="progress mb-2" style="height: 6px;">
+                              <p class="text-muted small mb-2">
+                                React Native app with biometric authentication
+                              </p>
+                              <div class="progress mb-2" style="height: 6px">
                                 <div class="progress-bar bg-warning" style="width: 75%"></div>
                               </div>
                               <small class="text-muted">Client: FinanceFirst Bank</small>
@@ -558,8 +745,10 @@
                                 <h6 class="mb-0">Data Analytics Dashboard</h6>
                                 <span class="badge bg-info">Planning</span>
                               </div>
-                              <p class="text-muted small mb-2">Real-time analytics with D3.js visualizations</p>
-                              <div class="progress mb-2" style="height: 6px;">
+                              <p class="text-muted small mb-2">
+                                Real-time analytics with D3.js visualizations
+                              </p>
+                              <div class="progress mb-2" style="height: 6px">
                                 <div class="progress-bar bg-info" style="width: 25%"></div>
                               </div>
                               <small class="text-muted">Client: DataFlow Corp</small>
@@ -571,8 +760,10 @@
                                 <h6 class="mb-0">CRM System Upgrade</h6>
                                 <span class="badge bg-primary">Active</span>
                               </div>
-                              <p class="text-muted small mb-2">Modernizing legacy CRM with microservices</p>
-                              <div class="progress mb-2" style="height: 6px;">
+                              <p class="text-muted small mb-2">
+                                Modernizing legacy CRM with microservices
+                              </p>
+                              <div class="progress mb-2" style="height: 6px">
                                 <div class="progress-bar bg-primary" style="width: 60%"></div>
                               </div>
                               <small class="text-muted">Client: Global Sales Inc</small>
@@ -580,14 +771,16 @@
                           </div>
                         </div>
                       </div>
-                      
+
                       <div class="tab-pane fade" id="achievements" role="tabpanel">
                         <div class="row">
                           <div class="col-md-6 mb-3">
                             <div class="text-center p-4 bg-light rounded">
                               <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
                               <h6>Employee of the Year 2024</h6>
-                              <p class="text-muted small">Recognized for outstanding performance and leadership</p>
+                              <p class="text-muted small">
+                                Recognized for outstanding performance and leadership
+                              </p>
                               <small class="text-muted">Awarded: December 2024</small>
                             </div>
                           </div>
@@ -595,7 +788,9 @@
                             <div class="text-center p-4 bg-light rounded">
                               <i class="fas fa-certificate fa-3x text-primary mb-3"></i>
                               <h6>AWS Solutions Architect</h6>
-                              <p class="text-muted small">Professional certification in cloud architecture</p>
+                              <p class="text-muted small">
+                                Professional certification in cloud architecture
+                              </p>
                               <small class="text-muted">Certified: June 2024</small>
                             </div>
                           </div>
@@ -603,7 +798,9 @@
                             <div class="text-center p-4 bg-light rounded">
                               <i class="fas fa-star fa-3x text-success mb-3"></i>
                               <h6>Innovation Award</h6>
-                              <p class="text-muted small">For developing automated deployment pipeline</p>
+                              <p class="text-muted small">
+                                For developing automated deployment pipeline
+                              </p>
                               <small class="text-muted">Awarded: March 2024</small>
                             </div>
                           </div>
@@ -611,61 +808,99 @@
                             <div class="text-center p-4 bg-light rounded">
                               <i class="fas fa-users fa-3x text-info mb-3"></i>
                               <h6>Team Leadership</h6>
-                              <p class="text-muted small">Successfully led 5 cross-functional teams</p>
+                              <p class="text-muted small">
+                                Successfully led 5 cross-functional teams
+                              </p>
                               <small class="text-muted">2023 - Present</small>
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div class="tab-pane fade" id="activity" role="tabpanel">
                         <div class="activity-timeline position-relative ps-4">
                           <div class="timeline-item position-relative bg-light p-3 rounded mb-3">
                             <div class="d-flex align-items-center mb-2">
-                              <img src="images/img.jpg" alt="Alex" class="rounded-circle me-3" width="40" height="40">
+                              <img
+                                src="images/img.jpg"
+                                alt="Alex"
+                                class="rounded-circle me-3"
+                                width="40"
+                                height="40"
+                              />
                               <div class="flex-grow-1">
                                 <strong>Alex Thompson</strong>
                                 <small class="text-muted ms-2">completed project milestone</small>
                               </div>
                               <small class="text-muted">2 hours ago</small>
                             </div>
-                            <p class="mb-0">Successfully deployed the e-commerce platform to production environment. All tests passed and client approval received.</p>
+                            <p class="mb-0">
+                              Successfully deployed the e-commerce platform to production
+                              environment. All tests passed and client approval received.
+                            </p>
                           </div>
-                          
+
                           <div class="timeline-item position-relative bg-light p-3 rounded mb-3">
                             <div class="d-flex align-items-center mb-2">
-                              <img src="images/img.jpg" alt="Alex" class="rounded-circle me-3" width="40" height="40">
+                              <img
+                                src="images/img.jpg"
+                                alt="Alex"
+                                class="rounded-circle me-3"
+                                width="40"
+                                height="40"
+                              />
                               <div class="flex-grow-1">
                                 <strong>Alex Thompson</strong>
                                 <small class="text-muted ms-2">reviewed code changes</small>
                               </div>
                               <small class="text-muted">1 day ago</small>
                             </div>
-                            <p class="mb-0">Reviewed and approved 12 pull requests from team members. Provided feedback on authentication module improvements.</p>
+                            <p class="mb-0">
+                              Reviewed and approved 12 pull requests from team members. Provided
+                              feedback on authentication module improvements.
+                            </p>
                           </div>
-                          
+
                           <div class="timeline-item position-relative bg-light p-3 rounded mb-3">
                             <div class="d-flex align-items-center mb-2">
-                              <img src="images/img.jpg" alt="Alex" class="rounded-circle me-3" width="40" height="40">
+                              <img
+                                src="images/img.jpg"
+                                alt="Alex"
+                                class="rounded-circle me-3"
+                                width="40"
+                                height="40"
+                              />
                               <div class="flex-grow-1">
                                 <strong>Alex Thompson</strong>
                                 <small class="text-muted ms-2">attended team meeting</small>
                               </div>
                               <small class="text-muted">3 days ago</small>
                             </div>
-                            <p class="mb-0">Participated in sprint planning meeting. Estimated 15 user stories and assigned tasks to development team.</p>
+                            <p class="mb-0">
+                              Participated in sprint planning meeting. Estimated 15 user stories and
+                              assigned tasks to development team.
+                            </p>
                           </div>
-                          
+
                           <div class="timeline-item position-relative bg-light p-3 rounded">
                             <div class="d-flex align-items-center mb-2">
-                              <img src="images/img.jpg" alt="Alex" class="rounded-circle me-3" width="40" height="40">
+                              <img
+                                src="images/img.jpg"
+                                alt="Alex"
+                                class="rounded-circle me-3"
+                                width="40"
+                                height="40"
+                              />
                               <div class="flex-grow-1">
                                 <strong>Alex Thompson</strong>
                                 <small class="text-muted ms-2">earned certification</small>
                               </div>
                               <small class="text-muted">1 week ago</small>
                             </div>
-                            <p class="mb-0">Completed AWS Solutions Architect Professional certification. Achieved score of 92% on the examination.</p>
+                            <p class="mb-0">
+                              Completed AWS Solutions Architect Professional certification. Achieved
+                              score of 92% on the examination.
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -680,9 +915,7 @@
 
         <!-- footer content -->
         <footer>
-          <div class="float-end">
-            Cockpit - Network Management Dashboard
-          </div>
+          <div class="float-end">Cockpit - Network Management Dashboard</div>
           <div class="clearfix"></div>
         </footer>
         <!-- /footer content -->
@@ -692,40 +925,40 @@
     <script>
       // Profile functionality
       function editProfile() {
-        alert('Edit Profile functionality would open a modal or redirect to edit page');
+        alert("Edit Profile functionality would open a modal or redirect to edit page");
       }
-      
+
       function shareProfile() {
         if (navigator.share) {
           navigator.share({
-            title: 'Alex Thompson - Profile',
-            text: 'Check out Alex Thompson\'s professional profile',
+            title: "Alex Thompson - Profile",
+            text: "Check out Alex Thompson's professional profile",
             url: window.location.href,
           });
         } else {
           // Fallback for browsers that don't support Web Share API
           navigator.clipboard.writeText(window.location.href).then(() => {
-            alert('Profile link copied to clipboard!');
+            alert("Profile link copied to clipboard!");
           });
         }
       }
-      
+
       // Animate progress bars on page load
-      document.addEventListener('DOMContentLoaded', function() {
-        const progressBars = document.querySelectorAll('.progress-bar');
-        progressBars.forEach(bar => {
+      document.addEventListener("DOMContentLoaded", function () {
+        const progressBars = document.querySelectorAll(".progress-bar");
+        progressBars.forEach((bar) => {
           const width = bar.style.width;
-          bar.style.width = '0%';
+          bar.style.width = "0%";
           setTimeout(() => {
             bar.style.width = width;
           }, 500);
         });
       });
-      
+
       // Time range filter functionality
-      document.querySelectorAll('input[name="timeRange"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-          console.log('Time range changed to:', this.id);
+      document.querySelectorAll('input[name="timeRange"]').forEach((radio) => {
+        radio.addEventListener("change", function () {
+          console.log("Time range changed to:", this.id);
           // Here you would update the chart data based on the selected time range
         });
       });

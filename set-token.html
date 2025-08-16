@@ -1,34 +1,36 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Set Auth Token</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Authentication Token Setter</h1>
     <button onclick="setToken()">Set Auth Token</button>
     <button onclick="testOnboard()">Go to Onboard Device</button>
     <div id="status"></div>
 
     <script>
-        function setToken() {
-            const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MzQ2MDkyN30.n58MeEeNzlrouNgCH3z34kPY73aBOkQ4z3GtMHdypRw";
-            const user = {
-                "username": "admin",
-                "full_name": "Administrator", 
-                "email": "admin@cockpit.local",
-                "role": "admin"
-            };
-            
-            localStorage.setItem('auth_token', token);
-            localStorage.setItem('user_info', JSON.stringify(user));
-            localStorage.setItem('token_expiry', Date.now() + (1800 * 1000));
-            
-            document.getElementById('status').innerHTML = '<p style="color: green;">Token set successfully!</p>';
-        }
+      function setToken() {
+        const token =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MzQ2MDkyN30.n58MeEeNzlrouNgCH3z34kPY73aBOkQ4z3GtMHdypRw";
+        const user = {
+          username: "admin",
+          full_name: "Administrator",
+          email: "admin@cockpit.local",
+          role: "admin",
+        };
 
-        function testOnboard() {
-            window.location.href = '/onboard-device.html';
-        }
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_info", JSON.stringify(user));
+        localStorage.setItem("token_expiry", Date.now() + 1800 * 1000);
+
+        document.getElementById("status").innerHTML =
+          '<p style="color: green;">Token set successfully!</p>';
+      }
+
+      function testOnboard() {
+        window.location.href = "/onboard-device.html";
+      }
     </script>
-</body>
+  </body>
 </html>

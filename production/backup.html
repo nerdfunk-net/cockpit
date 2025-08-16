@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <!-- Meta, title, CSS, favicons, etc. -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="images/favicon.ico" type="image/ico" />
 
     <title>Config Backup - Cockpit</title>
@@ -47,72 +47,72 @@
     <script type="module" src="/src/main-minimal.js"></script>
     <script>
       // Robust authentication check
-      (function() {
-        console.log('Checking authentication...');
-        
+      (function () {
+        console.log("Checking authentication...");
+
         // Check if we have a valid token
-        const token = localStorage.getItem('auth_token');
-        console.log('Token found:', !!token);
-        
+        const token = localStorage.getItem("auth_token");
+        console.log("Token found:", !!token);
+
         if (!token) {
-          console.log('No token found, redirecting to login');
+          console.log("No token found, redirecting to login");
           // Use correct path for Vite dev server on port 3000
-          window.location.href = '/production/login.html';
+          window.location.href = "/production/login.html";
           return;
         }
-        
-        console.log('Token found, user authenticated');
+
+        console.log("Token found, user authenticated");
       })();
     </script>
     <script src="js/auth.js"></script>
     <script>
       // Initialize auth manager when DOM is ready
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         window.authManager = new AuthManager();
-        console.log('AuthManager initialized');
-        
+        console.log("AuthManager initialized");
+
         // Force update display after a short delay to ensure DOM is ready
-        setTimeout(function() {
+        setTimeout(function () {
           if (window.authManager && window.authManager.user) {
             window.authManager.updateUserDisplay();
-            console.log('Force updated user display');
+            console.log("Force updated user display");
           }
         }, 500);
-        
+
         // Listen for storage changes (when user logs in from another tab/window)
-        window.addEventListener('storage', function(e) {
-          if (e.key === 'auth_token' || e.key === 'user_info') {
-            console.log('Storage change detected, updating user display');
+        window.addEventListener("storage", function (e) {
+          if (e.key === "auth_token" || e.key === "user_info") {
+            console.log("Storage change detected, updating user display");
             if (window.authManager) {
-              window.authManager.token = localStorage.getItem('auth_token');
-              window.authManager.user = JSON.parse(localStorage.getItem('user_info') || 'null');
+              window.authManager.token = localStorage.getItem("auth_token");
+              window.authManager.user = JSON.parse(localStorage.getItem("user_info") || "null");
               window.authManager.updateUserDisplay();
             }
           }
         });
       });
     </script>
-    <link rel="stylesheet" href="css/sync_devices.css">
-    
+    <link rel="stylesheet" href="css/sync_devices.css" />
+
     <!-- Custom styles for header filters -->
     <style>
       /* Add bottom spacing to prevent scrollbar overlap with pagination */
       .right_col {
         padding-bottom: 60px !important; /* Extra space at bottom of main content */
       }
-      
+
       .pagination-container {
         margin-bottom: 40px; /* Extra margin below pagination */
       }
-      
+
       .table-responsive {
         margin-bottom: 20px; /* Space between table and pagination */
       }
-      
+
       .header-filter {
         margin-top: 5px;
       }
-      
+
       .header-filter select {
         font-size: 12px;
         height: 28px;
@@ -122,7 +122,7 @@
         background-color: #fff;
         min-width: 100px;
       }
-      
+
       .header-filter input {
         font-size: 12px;
         height: 28px;
@@ -132,23 +132,23 @@
         background-color: #fff;
         min-width: 120px;
       }
-      
+
       .header-filter select:focus,
       .header-filter input:focus {
         border-color: #4e73df;
         box-shadow: 0 0 0 0.1rem rgba(78, 115, 223, 0.25);
       }
-      
+
       .column-title {
         vertical-align: top;
         padding: 8px 12px;
       }
-      
+
       .table thead th {
         border-bottom: 2px solid #dee2e6;
         background-color: #f8f9fc;
       }
-      
+
       /* Clear filters button styling */
       .clear-all-filters {
         margin-top: 10px;
@@ -156,43 +156,43 @@
         font-size: 11px;
         border-radius: 4px;
       }
-      
+
       /* Active filter indicator */
       .header-filter select.active-filter,
       .header-filter input.active-filter {
         border-color: #4e73df;
         background-color: #e3f2fd;
       }
-      
+
       /* Sortable column styles */
       .sortable {
         cursor: pointer;
         user-select: none;
         position: relative;
       }
-      
+
       .sortable:hover {
         background-color: #e9ecef;
       }
-      
+
       .sort-icon {
         margin-left: 5px;
         font-size: 11px;
         color: #6c757d;
       }
-      
+
       .sortable[data-order="asc"] .sort-icon i {
         color: #4e73df;
       }
-      
+
       .sortable[data-order="desc"] .sort-icon i {
         color: #4e73df;
       }
-      
+
       .sortable[data-order="asc"] .sort-icon i:before {
         content: "\f0de"; /* fa-sort-up */
       }
-      
+
       .sortable[data-order="desc"] .sort-icon i:before {
         content: "\f0dd"; /* fa-sort-down */
       }
@@ -204,16 +204,17 @@
       <div class="main_container">
         <div class="col-md-3 left_col menu_fixed">
           <div class="left_col scroll-view">
-            <div class="navbar nav_title" style="border: 0;">
-              <a href="index.html" class="site_title"><i class="fas fa-paw"></i> <span>Cockpit!</span></a>
+            <div class="navbar nav_title" style="border: 0">
+              <a href="index.html" class="site_title"
+                ><i class="fas fa-paw"></i> <span>Cockpit!</span></a
+              >
             </div>
 
             <div class="clearfix"></div>
 
             <!-- menu profile quick info -->
             <div class="profile clearfix">
-              <div class="profile_pic">
-              </div>
+              <div class="profile_pic"></div>
               <div class="profile_info">
                 <span id="welcome-message">Welcome,</span>
                 <h2 id="sidebar-username">Loading...</h2>
@@ -221,27 +222,27 @@
             </div>
             <script>
               // Enhanced user display management
-              (function() {
+              (function () {
                 function updateSidebar() {
                   try {
-                    const userInfo = JSON.parse(localStorage.getItem('user_info') || 'null');
-                    console.log('Updating sidebar with user info:', userInfo);
-                    
-                    const usernameElement = document.getElementById('sidebar-username');
+                    const userInfo = JSON.parse(localStorage.getItem("user_info") || "null");
+                    console.log("Updating sidebar with user info:", userInfo);
+
+                    const usernameElement = document.getElementById("sidebar-username");
                     if (usernameElement && userInfo && userInfo.username) {
                       usernameElement.textContent = userInfo.username;
-                      console.log('Updated sidebar username:', userInfo.username);
+                      console.log("Updated sidebar username:", userInfo.username);
                     } else {
-                      console.log('Could not update sidebar - missing element or user info');
+                      console.log("Could not update sidebar - missing element or user info");
                     }
                   } catch (error) {
-                    console.error('Error updating sidebar:', error);
+                    console.error("Error updating sidebar:", error);
                   }
                 }
-                
+
                 // Update immediately
                 updateSidebar();
-                
+
                 // Update again after short delays to catch login updates
                 setTimeout(updateSidebar, 1000);
                 setTimeout(updateSidebar, 2000);
@@ -257,32 +258,82 @@
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
-                  <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
-                  <li><a><i class="fas fa-rocket"></i> Onboarding <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+                  </li>
+                  <li>
+                    <a
+                      ><i class="fas fa-rocket"></i> Onboarding
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                      <li><a href="onboard-device.html"><i class="fas fa-plus-circle"></i> Onboard Device</a></li>
-                      <li><a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a></li>
-                      <li><a href="scan-and-add.html"><i class="fas fa-search-plus"></i> Scan & Add</a></li>
+                      <li>
+                        <a href="onboard-device.html"
+                          ><i class="fas fa-plus-circle"></i> Onboard Device</a
+                        >
+                      </li>
+                      <li>
+                        <a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a>
+                      </li>
+                      <li>
+                        <a href="scan-and-add.html"
+                          ><i class="fas fa-search-plus"></i> Scan & Add</a
+                        >
+                      </li>
                     </ul>
                   </li>
-                  <li><a><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a
+                      ><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                      <li><a href="backup.html" class="current-page"><i class="fas fa-save"></i> Backup</a></li>
-                      <li><a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a></li>
+                      <li>
+                        <a href="backup.html" class="current-page"
+                          ><i class="fas fa-save"></i> Backup</a
+                        >
+                      </li>
+                      <li>
+                        <a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a>
+                      </li>
                     </ul>
                   </li>
-                  <li><a><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a
+                      ><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                      <li><a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a></li>
+                      <li>
+                        <a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a>
+                      </li>
                     </ul>
                   </li>
-                  <li><a><i class="fas fa-wrench"></i> Settings <span class="fas fa-chevron-down"></span></a>
+                  <li>
+                    <a
+                      ><i class="fas fa-wrench"></i> Settings
+                      <span class="fas fa-chevron-down"></span
+                    ></a>
                     <ul class="nav child_menu">
-                      <li><a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a></li>
-                      <li><a href="settings-templates.html"><i class="fas fa-file-code"></i> Templates</a></li>
-                      <li><a href="settings-git.html"><i class="fab fa-git-alt"></i> Git Management</a></li>
-                      <li><a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a></li>
-                      <li><a href="settings-credentials.html"><i class="fas fa-key"></i> Credentials</a></li>
+                      <li>
+                        <a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a>
+                      </li>
+                      <li>
+                        <a href="settings-templates.html"
+                          ><i class="fas fa-file-code"></i> Templates</a
+                        >
+                      </li>
+                      <li>
+                        <a href="settings-git.html"
+                          ><i class="fab fa-git-alt"></i> Git Management</a
+                        >
+                      </li>
+                      <li>
+                        <a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a>
+                      </li>
+                      <li>
+                        <a href="settings-credentials.html"
+                          ><i class="fas fa-key"></i> Credentials</a
+                        >
+                      </li>
                     </ul>
                   </li>
                 </ul>
@@ -290,13 +341,17 @@
               <div class="menu_section">
                 <!-- Live On section removed as requested -->
               </div>
-
             </div>
             <!-- /sidebar menu -->
 
             <!-- /menu footer buttons -->
             <div class="sidebar-footer hidden-small">
-              <a href="settings-nautobot.html" data-bs-toggle="tooltip" data-bs-placement="top" title="Settings">
+              <a
+                href="settings-nautobot.html"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Settings"
+              >
                 <span class="fas fa-cog" aria-hidden="true"></span>
               </a>
               <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
@@ -320,25 +375,35 @@
               <a id="menu_toggle"><i class="fas fa-bars"></i></a>
             </div>
             <nav class="nav navbar-nav">
-            <ul class="navbar-right">
-              <li class="nav-item dropdown open" style="padding-left: 15px;">
-                <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <span id="navbar-username">Loading...</span>
-              
-                </a>
-                <div class="dropdown-menu dropdown-usermenu float-end" aria-labelledby="navbarDropdown">
-                  <a class="dropdown-item"  href="javascript:;"> Profile</a>
-                    <a class="dropdown-item"  href="javascript:;">
+              <ul class="navbar-right">
+                <li class="nav-item dropdown open" style="padding-left: 15px">
+                  <a
+                    href="javascript:;"
+                    class="user-profile dropdown-toggle"
+                    aria-haspopup="true"
+                    id="navbarDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <span id="navbar-username">Loading...</span>
+                  </a>
+                  <div
+                    class="dropdown-menu dropdown-usermenu float-end"
+                    aria-labelledby="navbarDropdown"
+                  >
+                    <a class="dropdown-item" href="javascript:;"> Profile</a>
+                    <a class="dropdown-item" href="javascript:;">
                       <span class="badge bg-red float-end">50%</span>
                       <span>Settings</span>
                     </a>
-                <a class="dropdown-item"  href="javascript:;">Help</a>
-                  <a class="dropdown-item"  href="login.html"><i class="fas fa-sign-out-alt float-end"></i> Log Out</a>
-                </div>
-              </li>
-
-            </ul>
-          </nav>
+                    <a class="dropdown-item" href="javascript:;">Help</a>
+                    <a class="dropdown-item" href="login.html"
+                      ><i class="fas fa-sign-out-alt float-end"></i> Log Out</a
+                    >
+                  </div>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
         <!-- /top navigation -->
@@ -361,7 +426,12 @@
                     <div class="col-lg-3 col-md-3 col-sm-6">
                       <div class="form-group mb-0">
                         <label for="backup-date-filter" class="form-label">Last Backup Date</label>
-                        <input type="date" class="form-control" id="backup-date-filter" style="min-width: 150px;">
+                        <input
+                          type="date"
+                          class="form-control"
+                          id="backup-date-filter"
+                          style="min-width: 150px"
+                        />
                       </div>
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6">
@@ -376,8 +446,19 @@
                     </div>
                     <div class="col-lg-1 col-md-1 col-sm-6">
                       <div class="form-group mb-0">
-                        <label class="form-label d-block" style="visibility: hidden;">Clear</label>
-                        <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center" id="clear-filters-btn" style="border-radius: 8px; font-weight: 500; transition: all 0.3s ease; min-width: 42px;" title="Clear Filters">
+                        <label class="form-label d-block" style="visibility: hidden">Clear</label>
+                        <button
+                          type="button"
+                          class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center"
+                          id="clear-filters-btn"
+                          style="
+                            border-radius: 8px;
+                            font-weight: 500;
+                            transition: all 0.3s ease;
+                            min-width: 42px;
+                          "
+                          title="Clear Filters"
+                        >
                           <i class="fas fa-times-circle"></i>
                         </button>
                       </div>
@@ -390,7 +471,7 @@
             <div class="clearfix"></div>
 
             <div class="row">
-              <div class="col-md-12 col-sm-12  ">
+              <div class="col-md-12 col-sm-12">
                 <div class="x_panel">
                   <div class="x_title">
                     <h2>Device Configuration Backup Management</h2>
@@ -409,7 +490,12 @@
                     <!-- Clear All Filters Button -->
                     <div class="row mb-3">
                       <div class="col-md-12">
-                        <button type="button" class="btn btn-outline-secondary btn-sm clear-all-filters" id="clear-all-filters-btn" title="Clear All Filters">
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary btn-sm clear-all-filters"
+                          id="clear-all-filters-btn"
+                          title="Clear All Filters"
+                        >
                           <i class="fas fa-eraser"></i> Clear All Filters
                         </button>
                       </div>
@@ -423,7 +509,12 @@
                             <th class="column-title">
                               Device Name
                               <div class="header-filter mt-1">
-                                <input type="text" class="form-control form-control-sm" id="device-name-filter" placeholder="Type 3+ chars for backend search...">
+                                <input
+                                  type="text"
+                                  class="form-control form-control-sm"
+                                  id="device-name-filter"
+                                  placeholder="Type 3+ chars for backend search..."
+                                />
                               </div>
                             </th>
                             <th class="column-title">IP Address</th>
@@ -446,7 +537,10 @@
                             <th class="column-title">
                               Device Type
                               <div class="header-filter mt-1">
-                                <select class="form-control form-control-sm" id="device-type-filter">
+                                <select
+                                  class="form-control form-control-sm"
+                                  id="device-type-filter"
+                                >
                                   <option value="">All Types</option>
                                 </select>
                               </div>
@@ -459,13 +553,19 @@
                                 </select>
                               </div>
                             </th>
-                            <th class="column-title sortable" data-column="last_backup" data-order="none">
+                            <th
+                              class="column-title sortable"
+                              data-column="last_backup"
+                              data-order="none"
+                            >
                               Last Backup
                               <span class="sort-icon">
                                 <i class="fas fa-sort"></i>
                               </span>
                             </th>
-                            <th class="column-title no-link last"><span class="nobr">Action</span></th>
+                            <th class="column-title no-link last">
+                              <span class="nobr">Action</span>
+                            </th>
                           </tr>
                         </thead>
 
@@ -473,12 +573,13 @@
                           <!-- Loading state -->
                           <tr>
                             <td colspan="8" class="text-center">
-                              <i class="fas fa-spinner fa-spin"></i> Loading devices from Nautobot...
+                              <i class="fas fa-spinner fa-spin"></i> Loading devices from
+                              Nautobot...
                             </td>
                           </tr>
                         </tbody>
                       </table>
-                      
+
                       <!-- Pagination Container -->
                       <div id="backup-pagination" class="pagination-container"></div>
                     </div>
@@ -491,12 +592,24 @@
         <!-- /page content -->
 
         <!-- Modal for Backup History -->
-        <div class="modal fade" id="backupHistoryModal" tabindex="-1" role="dialog" aria-labelledby="backupHistoryModalLabel" aria-hidden="true">
+        <div
+          class="modal fade"
+          id="backupHistoryModal"
+          tabindex="-1"
+          role="dialog"
+          aria-labelledby="backupHistoryModalLabel"
+          aria-hidden="true"
+        >
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="backupHistoryModalLabel">Backup History</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
               </div>
               <div class="modal-body">
                 <div class="table-responsive">
@@ -516,25 +629,45 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  Close
+                </button>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Modal for Schedule Backup -->
-        <div class="modal fade" id="scheduleBackupModal" tabindex="-1" role="dialog" aria-labelledby="scheduleBackupModalLabel" aria-hidden="true">
+        <div
+          class="modal fade"
+          id="scheduleBackupModal"
+          tabindex="-1"
+          role="dialog"
+          aria-labelledby="scheduleBackupModalLabel"
+          aria-hidden="true"
+        >
           <div class="modal-dialog" role="document">
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="scheduleBackupModalLabel">Schedule Backup</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
               </div>
               <div class="modal-body">
                 <form id="schedule-backup-form">
                   <div class="form-group mb-3">
                     <label for="backup-name">Backup Name</label>
-                    <input type="text" class="form-control" id="backup-name" placeholder="Enter backup name" required>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="backup-name"
+                      placeholder="Enter backup name"
+                      required
+                    />
                   </div>
                   <div class="form-group mb-3">
                     <label for="backup-schedule">Schedule</label>
@@ -546,43 +679,57 @@
                       <option value="custom">Custom</option>
                     </select>
                   </div>
-                  <div class="form-group mb-3" id="custom-schedule-group" style="display: none;">
+                  <div class="form-group mb-3" id="custom-schedule-group" style="display: none">
                     <label for="custom-schedule">Custom Schedule (Cron Expression)</label>
-                    <input type="text" class="form-control" id="custom-schedule" placeholder="0 2 * * *">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="custom-schedule"
+                      placeholder="0 2 * * *"
+                    />
                     <small class="form-text text-muted">Enter a valid cron expression</small>
                   </div>
                   <div class="form-group mb-3">
                     <label for="retention-days">Retention (Days)</label>
-                    <input type="number" class="form-control" id="retention-days" value="30" min="1" max="365">
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="retention-days"
+                      value="30"
+                      min="1"
+                      max="365"
+                    />
                   </div>
                 </form>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save-schedule-btn">Save Schedule</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="save-schedule-btn">
+                  Save Schedule
+                </button>
               </div>
             </div>
           </div>
         </div>
-
-        
       </div>
     </div>
 
     <!-- Additional Scripts for Backup functionality -->
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         // Device management functions
         let allDevices = [];
         let filteredDevices = [];
         let currentPage = 0;
         let pageSize = 50; // Default page size for backend pagination
         let totalPages = 0;
-        let currentSearchTerm = '';
-        let currentDateFilter = '';
-        let currentDateComparison = '';
+        let currentSearchTerm = "";
+        let currentDateFilter = "";
+        let currentDateComparison = "";
         let isLoading = false;
-        
+
         // Pagination state for backend API
         let paginationState = {
           isBackendPaginated: false,
@@ -591,73 +738,78 @@
           currentLimit: null,
           currentOffset: 0,
           filterType: null,
-          filterValue: null
+          filterValue: null,
         };
-        
+
         // Header filter variables
-        let currentRoleFilter = '';
-        let currentLocationFilter = '';
-        let currentDeviceTypeFilter = '';
-        let currentStatusFilter = '';
-        let currentDeviceNameFilter = '';
-        
+        let currentRoleFilter = "";
+        let currentLocationFilter = "";
+        let currentDeviceTypeFilter = "";
+        let currentStatusFilter = "";
+        let currentDeviceNameFilter = "";
+
         // Sorting variables
-        let currentSortColumn = '';
-        let currentSortOrder = 'none'; // 'asc', 'desc', 'none'
-        
+        let currentSortColumn = "";
+        let currentSortOrder = "none"; // 'asc', 'desc', 'none'
+
         // Filter options storage
         let filterOptions = {
           roles: new Set(),
           locations: new Set(),
           deviceTypes: new Set(),
-          statuses: new Set()
+          statuses: new Set(),
         };
-        
+
         // Load devices from Nautobot using REST API with pagination
-        async function loadDevices(deviceNameFilter = '', useBackendPagination = false, limit = null, offset = 0) {
+        async function loadDevices(
+          deviceNameFilter = "",
+          useBackendPagination = false,
+          limit = null,
+          offset = 0
+        ) {
           try {
             if (isLoading) {
-              console.log('Already loading devices, skipping...');
+              console.log("Already loading devices, skipping...");
               return;
             }
-            
+
             isLoading = true;
             console.log(`Loading devices from Nautobot...`, {
               deviceNameFilter,
               useBackendPagination,
               limit,
-              offset
+              offset,
             });
-            
+
             if (!window.authManager) {
-              console.error('AuthManager not available');
-              showError('Authentication manager not ready. Please refresh the page.');
+              console.error("AuthManager not available");
+              showError("Authentication manager not ready. Please refresh the page.");
               return;
             }
 
             // Build API URL with parameters
-            let apiUrl = '/api/nautobot/devices';
+            let apiUrl = "/api/nautobot/devices";
             const params = new URLSearchParams();
-            
+
             if (useBackendPagination && limit) {
-              params.append('limit', limit);
-              params.append('offset', offset);
-            }
-            
-            if (deviceNameFilter) {
-              params.append('filter_type', 'name');
-              params.append('filter_value', deviceNameFilter);
-            }
-            
-            if (params.toString()) {
-              apiUrl += '?' + params.toString();
+              params.append("limit", limit);
+              params.append("offset", offset);
             }
 
-            console.log('API URL:', apiUrl);
-            updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Loading devices...`, 'info');
+            if (deviceNameFilter) {
+              params.append("filter_type", "name");
+              params.append("filter_value", deviceNameFilter);
+            }
+
+            if (params.toString()) {
+              apiUrl += "?" + params.toString();
+            }
+
+            console.log("API URL:", apiUrl);
+            updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Loading devices...`, "info");
 
             const response = await window.authManager.apiRequest(apiUrl);
-            console.log('API response:', response);
+            console.log("API response:", response);
 
             if (response && response.devices) {
               // Update pagination state
@@ -667,43 +819,51 @@
                 totalCount: response.count || 0,
                 currentLimit: response.current_limit,
                 currentOffset: response.current_offset || 0,
-                filterType: deviceNameFilter ? 'name' : null,
-                filterValue: deviceNameFilter || null
+                filterType: deviceNameFilter ? "name" : null,
+                filterValue: deviceNameFilter || null,
               };
-              
+
               if (useBackendPagination) {
                 // Backend pagination mode - display current page of devices
                 allDevices = response.devices;
-                console.log(`Loaded ${allDevices.length} devices (page ${Math.floor(offset / limit) + 1})`);
-                
+                console.log(
+                  `Loaded ${allDevices.length} devices (page ${Math.floor(offset / limit) + 1})`
+                );
+
                 // For backend pagination, we work with the current page data
                 filteredDevices = allDevices;
                 currentPage = 0; // Reset client-side page since we're using backend pagination
-                
+
                 renderDevicesTable(filteredDevices);
                 renderBackendPagination();
-                
-                updateStatusPanel(`<i class="fas fa-check-circle"></i> Loaded ${allDevices.length} devices (${paginationState.totalCount} total).`, 'success');
+
+                updateStatusPanel(
+                  `<i class="fas fa-check-circle"></i> Loaded ${allDevices.length} devices (${paginationState.totalCount} total).`,
+                  "success"
+                );
               } else {
                 // Full data load mode - load all devices for client-side filtering
                 allDevices = response.devices;
                 console.log(`Loaded ${allDevices.length} devices from Nautobot`);
-                
+
                 // Extract filter options from loaded devices
                 extractFilterOptions(allDevices);
                 populateHeaderFilters();
-                
+
                 currentPage = 0; // Reset to first page
                 renderDevicesTable(allDevices);
-                updateStatusPanel(`<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`, 'success');
+                updateStatusPanel(
+                  `<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`,
+                  "success"
+                );
               }
             } else {
-              console.error('Failed to load devices - invalid response:', response);
-              showError('Failed to load devices from Nautobot: Invalid response format');
+              console.error("Failed to load devices - invalid response:", response);
+              showError("Failed to load devices from Nautobot: Invalid response format");
             }
           } catch (error) {
-            console.error('Error loading devices:', error);
-            showError('Error loading devices: ' + error.message);
+            console.error("Error loading devices:", error);
+            showError("Error loading devices: " + error.message);
           } finally {
             isLoading = false;
           }
@@ -711,112 +871,120 @@
 
         // Extract unique filter options from loaded devices
         function extractFilterOptions(devices) {
-          console.log('Extracting filter options from devices...');
-          
+          console.log("Extracting filter options from devices...");
+
           // Clear existing options
           filterOptions.roles.clear();
           filterOptions.locations.clear();
           filterOptions.deviceTypes.clear();
           filterOptions.statuses.clear();
-          
-          devices.forEach(device => {
+
+          devices.forEach((device) => {
             if (device.role?.name) filterOptions.roles.add(device.role.name);
             if (device.location?.name) filterOptions.locations.add(device.location.name);
             if (device.device_type?.model) filterOptions.deviceTypes.add(device.device_type.model);
             if (device.status?.name) filterOptions.statuses.add(device.status.name);
           });
-          
-          console.log('Filter options extracted:', {
+
+          console.log("Filter options extracted:", {
             roles: filterOptions.roles.size,
             locations: filterOptions.locations.size,
             deviceTypes: filterOptions.deviceTypes.size,
-            statuses: filterOptions.statuses.size
+            statuses: filterOptions.statuses.size,
           });
         }
 
         // Populate header filter dropdowns
         function populateHeaderFilters() {
-          console.log('Populating header filter dropdowns...');
-          
+          console.log("Populating header filter dropdowns...");
+
           // Populate role filter
-          const roleFilter = document.getElementById('role-filter');
+          const roleFilter = document.getElementById("role-filter");
           if (roleFilter) {
             roleFilter.innerHTML = '<option value="">All Roles</option>';
-            Array.from(filterOptions.roles).sort().forEach(role => {
-              const option = document.createElement('option');
-              option.value = role;
-              option.textContent = role;
-              roleFilter.appendChild(option);
-            });
+            Array.from(filterOptions.roles)
+              .sort()
+              .forEach((role) => {
+                const option = document.createElement("option");
+                option.value = role;
+                option.textContent = role;
+                roleFilter.appendChild(option);
+              });
           }
-          
+
           // Populate location filter
-          const locationFilter = document.getElementById('location-filter');
+          const locationFilter = document.getElementById("location-filter");
           if (locationFilter) {
             locationFilter.innerHTML = '<option value="">All Locations</option>';
-            Array.from(filterOptions.locations).sort().forEach(location => {
-              const option = document.createElement('option');
-              option.value = location;
-              option.textContent = location;
-              locationFilter.appendChild(option);
-            });
+            Array.from(filterOptions.locations)
+              .sort()
+              .forEach((location) => {
+                const option = document.createElement("option");
+                option.value = location;
+                option.textContent = location;
+                locationFilter.appendChild(option);
+              });
           }
-          
+
           // Populate device type filter
-          const deviceTypeFilter = document.getElementById('device-type-filter');
+          const deviceTypeFilter = document.getElementById("device-type-filter");
           if (deviceTypeFilter) {
             deviceTypeFilter.innerHTML = '<option value="">All Types</option>';
-            Array.from(filterOptions.deviceTypes).sort().forEach(deviceType => {
-              const option = document.createElement('option');
-              option.value = deviceType;
-              option.textContent = deviceType;
-              deviceTypeFilter.appendChild(option);
-            });
+            Array.from(filterOptions.deviceTypes)
+              .sort()
+              .forEach((deviceType) => {
+                const option = document.createElement("option");
+                option.value = deviceType;
+                option.textContent = deviceType;
+                deviceTypeFilter.appendChild(option);
+              });
           }
-          
+
           // Populate status filter
-          const statusFilter = document.getElementById('status-filter');
+          const statusFilter = document.getElementById("status-filter");
           if (statusFilter) {
             statusFilter.innerHTML = '<option value="">All Statuses</option>';
-            Array.from(filterOptions.statuses).sort().forEach(status => {
-              const option = document.createElement('option');
-              option.value = status;
-              option.textContent = status;
-              statusFilter.appendChild(option);
-            });
+            Array.from(filterOptions.statuses)
+              .sort()
+              .forEach((status) => {
+                const option = document.createElement("option");
+                option.value = status;
+                option.textContent = status;
+                statusFilter.appendChild(option);
+              });
           }
-          
+
           // Add event listeners to header filters
           initializeHeaderFilterListeners();
-          
-          console.log('Header filter dropdowns populated');
+
+          console.log("Header filter dropdowns populated");
         }
 
         // Initialize header filter event listeners
         function initializeHeaderFilterListeners() {
-          const deviceNameFilter = document.getElementById('device-name-filter');
-          const roleFilter = document.getElementById('role-filter');
-          const locationFilter = document.getElementById('location-filter');
-          const deviceTypeFilter = document.getElementById('device-type-filter');
-          const statusFilter = document.getElementById('status-filter');
-          
+          const deviceNameFilter = document.getElementById("device-name-filter");
+          const roleFilter = document.getElementById("role-filter");
+          const locationFilter = document.getElementById("location-filter");
+          const deviceTypeFilter = document.getElementById("device-type-filter");
+          const statusFilter = document.getElementById("status-filter");
+
           // Device name filter with debouncing and backend search
           if (deviceNameFilter) {
             let searchTimeout;
-            deviceNameFilter.addEventListener('input', () => {
+            deviceNameFilter.addEventListener("input", () => {
               clearTimeout(searchTimeout);
               searchTimeout = setTimeout(() => {
                 const deviceName = deviceNameFilter.value.trim();
                 currentDeviceNameFilter = deviceName;
-                
+
                 if (deviceName.length >= 3) {
                   // Use backend pagination for device name search (3+ characters)
-                  console.log('Triggering backend search for:', deviceName);
+                  console.log("Triggering backend search for:", deviceName);
                   loadDevices(deviceName, true, pageSize, 0);
                 } else if (deviceName.length === 0) {
                   // Clear filter - load all devices in full mode
-                  console.log('Clearing device name filter, loading all devices');
-                  loadDevices('', false);
+                  console.log("Clearing device name filter, loading all devices");
+                  loadDevices("", false);
                 } else {
                   // Less than 3 characters - apply client-side filtering only
                   applyAllFilters();
@@ -825,73 +993,73 @@
               }, 500); // Wait 500ms after user stops typing for backend search
             });
           }
-          
+
           if (roleFilter) {
-            roleFilter.addEventListener('change', () => {
+            roleFilter.addEventListener("change", () => {
               currentRoleFilter = roleFilter.value;
               applyAllFilters();
               updateFilterIndicators();
             });
           }
-          
+
           if (locationFilter) {
-            locationFilter.addEventListener('change', () => {
+            locationFilter.addEventListener("change", () => {
               currentLocationFilter = locationFilter.value;
               applyAllFilters();
               updateFilterIndicators();
             });
           }
-          
+
           if (deviceTypeFilter) {
-            deviceTypeFilter.addEventListener('change', () => {
+            deviceTypeFilter.addEventListener("change", () => {
               currentDeviceTypeFilter = deviceTypeFilter.value;
               applyAllFilters();
               updateFilterIndicators();
             });
           }
-          
+
           if (statusFilter) {
-            statusFilter.addEventListener('change', () => {
+            statusFilter.addEventListener("change", () => {
               currentStatusFilter = statusFilter.value;
               applyAllFilters();
               updateFilterIndicators();
             });
           }
-          
+
           // Initialize sorting functionality
           initializeSorting();
         }
 
         // Initialize sorting functionality
         function initializeSorting() {
-          const sortableHeaders = document.querySelectorAll('.sortable');
-          
-          sortableHeaders.forEach(header => {
-            header.addEventListener('click', () => {
-              const column = header.getAttribute('data-column');
-              const currentOrder = header.getAttribute('data-order');
-              
+          const sortableHeaders = document.querySelectorAll(".sortable");
+
+          sortableHeaders.forEach((header) => {
+            header.addEventListener("click", () => {
+              const column = header.getAttribute("data-column");
+              const currentOrder = header.getAttribute("data-order");
+
               // Reset all other headers
-              sortableHeaders.forEach(h => {
+              sortableHeaders.forEach((h) => {
                 if (h !== header) {
-                  h.setAttribute('data-order', 'none');
+                  h.setAttribute("data-order", "none");
                 }
               });
-              
+
               // Cycle through sort orders: none -> asc -> desc -> none
               let newOrder;
-              if (currentOrder === 'none') {
-                newOrder = 'asc';
-              } else if (currentOrder === 'asc') {
-                newOrder = 'desc';
+              if (currentOrder === "none") {
+                newOrder = "asc";
+              } else if (currentOrder === "asc") {
+                newOrder = "desc";
               } else {
-                newOrder = 'none';
+                newOrder = "none";
               }
-              
-              header.setAttribute('data-order', newOrder);
-              currentSortColumn = newOrder === 'none' ? '' : column;
+
+              header.setAttribute("data-order", newOrder);
+              currentSortColumn = newOrder === "none" ? "" : column;
               currentSortOrder = newOrder;
-              
+
               console.log(`Sorting by ${column}: ${newOrder}`);
               applyAllFilters(); // This will also apply sorting
             });
@@ -900,7 +1068,7 @@
 
         // Apply all filters together (search + header filters + date filters) and sorting
         function applyAllFilters() {
-          console.log('Applying all filters:', {
+          console.log("Applying all filters:", {
             deviceName: currentDeviceNameFilter,
             role: currentRoleFilter,
             location: currentLocationFilter,
@@ -909,74 +1077,76 @@
             date: currentDateFilter,
             dateComparison: currentDateComparison,
             sort: currentSortColumn,
-            sortOrder: currentSortOrder
+            sortOrder: currentSortOrder,
           });
-          
-          let filtered = allDevices.filter(device => {
+
+          let filtered = allDevices.filter((device) => {
             // Device name filter
             if (currentDeviceNameFilter) {
-              const deviceName = (device.name || '').toLowerCase();
+              const deviceName = (device.name || "").toLowerCase();
               if (!deviceName.includes(currentDeviceNameFilter.toLowerCase())) {
                 return false;
               }
             }
-            
+
             // Header filters
             if (currentRoleFilter && device.role?.name !== currentRoleFilter) return false;
-            if (currentLocationFilter && device.location?.name !== currentLocationFilter) return false;
-            if (currentDeviceTypeFilter && device.device_type?.model !== currentDeviceTypeFilter) return false;
+            if (currentLocationFilter && device.location?.name !== currentLocationFilter)
+              return false;
+            if (currentDeviceTypeFilter && device.device_type?.model !== currentDeviceTypeFilter)
+              return false;
             if (currentStatusFilter && device.status?.name !== currentStatusFilter) return false;
-            
+
             // Date filter
             if (currentDateFilter && currentDateComparison) {
               const deviceBackupDate = device.cf_last_backup;
-              if (deviceBackupDate && deviceBackupDate !== 'Never') {
+              if (deviceBackupDate && deviceBackupDate !== "Never") {
                 const backupDate = new Date(deviceBackupDate);
                 const filterDate = new Date(currentDateFilter);
-                
-                if (currentDateComparison === 'lte' && backupDate > filterDate) return false;
-                if (currentDateComparison === 'lt' && backupDate >= filterDate) return false;
-              } else if (deviceBackupDate === 'Never' || !deviceBackupDate) {
+
+                if (currentDateComparison === "lte" && backupDate > filterDate) return false;
+                if (currentDateComparison === "lt" && backupDate >= filterDate) return false;
+              } else if (deviceBackupDate === "Never" || !deviceBackupDate) {
                 // Handle devices with no backup date based on filter logic
-                if (currentDateComparison === 'lte' || currentDateComparison === 'lt') {
+                if (currentDateComparison === "lte" || currentDateComparison === "lt") {
                   return false; // Exclude devices with no backup when filtering by date
                 }
               }
             }
-            
+
             return true;
           });
-          
+
           // Apply sorting if a column is selected
-          if (currentSortColumn && currentSortOrder !== 'none') {
+          if (currentSortColumn && currentSortOrder !== "none") {
             filtered = sortDevices(filtered, currentSortColumn, currentSortOrder);
           }
-          
+
           currentPage = 0; // Reset to first page
           renderDevicesTable(filtered);
-          
+
           const activeFiltersCount = [
             currentDeviceNameFilter,
             currentRoleFilter,
-            currentLocationFilter, 
+            currentLocationFilter,
             currentDeviceTypeFilter,
             currentStatusFilter,
-            currentDateFilter
-          ].filter(f => f).length;
-          
+            currentDateFilter,
+          ].filter((f) => f).length;
+
           if (activeFiltersCount > 0 || currentSortColumn) {
             let statusMessage = `<i class="fas fa-filter"></i> Showing ${filtered.length} of ${allDevices.length} devices`;
             if (activeFiltersCount > 0) {
-              statusMessage += ` (${activeFiltersCount} filter${activeFiltersCount > 1 ? 's' : ''} active)`;
+              statusMessage += ` (${activeFiltersCount} filter${activeFiltersCount > 1 ? "s" : ""} active)`;
             }
             if (currentSortColumn) {
-              statusMessage += ` - Sorted by ${currentSortColumn.replace('_', ' ')} (${currentSortOrder})`;
+              statusMessage += ` - Sorted by ${currentSortColumn.replace("_", " ")} (${currentSortOrder})`;
             }
-            updateStatusPanel(statusMessage, 'info');
+            updateStatusPanel(statusMessage, "info");
           } else {
             updateStatusPanel(
               `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices`,
-              'success'
+              "success"
             );
           }
         }
@@ -985,16 +1155,16 @@
         function sortDevices(devices, column, order) {
           return devices.slice().sort((a, b) => {
             let aVal, bVal;
-            
+
             switch (column) {
-              case 'last_backup':
+              case "last_backup":
                 aVal = a.cf_last_backup;
                 bVal = b.cf_last_backup;
-                
+
                 // Handle 'Never' and null values - treat them as very old dates
-                if (aVal === 'Never' || !aVal) aVal = '1970-01-01';
-                if (bVal === 'Never' || !bVal) bVal = '1970-01-01';
-                
+                if (aVal === "Never" || !aVal) aVal = "1970-01-01";
+                if (bVal === "Never" || !bVal) bVal = "1970-01-01";
+
                 // Convert to dates for comparison
                 aVal = new Date(aVal);
                 bVal = new Date(bVal);
@@ -1002,10 +1172,10 @@
               default:
                 return 0; // No sorting for unknown columns
             }
-            
+
             // Perform comparison
-            if (aVal < bVal) return order === 'asc' ? -1 : 1;
-            if (aVal > bVal) return order === 'asc' ? 1 : -1;
+            if (aVal < bVal) return order === "asc" ? -1 : 1;
+            if (aVal > bVal) return order === "asc" ? 1 : -1;
             return 0;
           });
         }
@@ -1013,19 +1183,25 @@
         // Update visual indicators for active filters
         function updateFilterIndicators() {
           const filters = [
-            { element: document.getElementById('device-name-filter'), value: currentDeviceNameFilter },
-            { element: document.getElementById('role-filter'), value: currentRoleFilter },
-            { element: document.getElementById('location-filter'), value: currentLocationFilter },
-            { element: document.getElementById('device-type-filter'), value: currentDeviceTypeFilter },
-            { element: document.getElementById('status-filter'), value: currentStatusFilter }
+            {
+              element: document.getElementById("device-name-filter"),
+              value: currentDeviceNameFilter,
+            },
+            { element: document.getElementById("role-filter"), value: currentRoleFilter },
+            { element: document.getElementById("location-filter"), value: currentLocationFilter },
+            {
+              element: document.getElementById("device-type-filter"),
+              value: currentDeviceTypeFilter,
+            },
+            { element: document.getElementById("status-filter"), value: currentStatusFilter },
           ];
-          
-          filters.forEach(filter => {
+
+          filters.forEach((filter) => {
             if (filter.element) {
               if (filter.value) {
-                filter.element.classList.add('active-filter');
+                filter.element.classList.add("active-filter");
               } else {
-                filter.element.classList.remove('active-filter');
+                filter.element.classList.remove("active-filter");
               }
             }
           });
@@ -1033,105 +1209,118 @@
 
         // Reset all filters
         function resetAllFilters() {
-          currentSearchTerm = '';
-          currentDeviceNameFilter = '';
-          currentRoleFilter = '';
-          currentLocationFilter = '';
-          currentDeviceTypeFilter = '';
-          currentStatusFilter = '';
-          currentDateFilter = '';
-          currentDateComparison = '';
-          currentSortColumn = '';
-          currentSortOrder = 'none';
+          currentSearchTerm = "";
+          currentDeviceNameFilter = "";
+          currentRoleFilter = "";
+          currentLocationFilter = "";
+          currentDeviceTypeFilter = "";
+          currentStatusFilter = "";
+          currentDateFilter = "";
+          currentDateComparison = "";
+          currentSortColumn = "";
+          currentSortOrder = "none";
           currentPage = 0;
-          
+
           // Reset form inputs
-          const deviceNameFilter = document.getElementById('device-name-filter');
-          const dateInput = document.getElementById('backup-date-filter');
-          const comparisonSelect = document.getElementById('date-comparison');
-          const roleFilter = document.getElementById('role-filter');
-          const locationFilter = document.getElementById('location-filter');
-          const deviceTypeFilter = document.getElementById('device-type-filter');
-          const statusFilter = document.getElementById('status-filter');
-          
-          if (deviceNameFilter) deviceNameFilter.value = '';
-          if (dateInput) dateInput.value = '';
-          if (comparisonSelect) comparisonSelect.value = '';
-          if (roleFilter) roleFilter.value = '';
-          if (locationFilter) locationFilter.value = '';
-          if (deviceTypeFilter) deviceTypeFilter.value = '';
-          if (statusFilter) statusFilter.value = '';
-          
+          const deviceNameFilter = document.getElementById("device-name-filter");
+          const dateInput = document.getElementById("backup-date-filter");
+          const comparisonSelect = document.getElementById("date-comparison");
+          const roleFilter = document.getElementById("role-filter");
+          const locationFilter = document.getElementById("location-filter");
+          const deviceTypeFilter = document.getElementById("device-type-filter");
+          const statusFilter = document.getElementById("status-filter");
+
+          if (deviceNameFilter) deviceNameFilter.value = "";
+          if (dateInput) dateInput.value = "";
+          if (comparisonSelect) comparisonSelect.value = "";
+          if (roleFilter) roleFilter.value = "";
+          if (locationFilter) locationFilter.value = "";
+          if (deviceTypeFilter) deviceTypeFilter.value = "";
+          if (statusFilter) statusFilter.value = "";
+
           // Reset sorting indicators
-          const sortableHeaders = document.querySelectorAll('.sortable');
-          sortableHeaders.forEach(header => {
-            header.setAttribute('data-order', 'none');
+          const sortableHeaders = document.querySelectorAll(".sortable");
+          sortableHeaders.forEach((header) => {
+            header.setAttribute("data-order", "none");
           });
-          
+
           // Reset page size selectors to default value (50)
           pageSize = 50;
-          const pageSizeSelector = document.getElementById('page-size-selector');
-          const backendPageSizeSelector = document.getElementById('backend-page-size-selector');
-          if (pageSizeSelector) pageSizeSelector.value = '50';
-          if (backendPageSizeSelector) backendPageSizeSelector.value = '50';
-          
+          const pageSizeSelector = document.getElementById("page-size-selector");
+          const backendPageSizeSelector = document.getElementById("backend-page-size-selector");
+          if (pageSizeSelector) pageSizeSelector.value = "50";
+          if (backendPageSizeSelector) backendPageSizeSelector.value = "50";
+
           updateFilterIndicators();
           renderDevicesTable(allDevices);
-          updateStatusPanel(`<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`, 'success');
+          updateStatusPanel(
+            `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`,
+            "success"
+          );
         }
 
         // Search devices with filter (client-side filtering)
         function searchDevices(searchTerm) {
           console.log(`Searching devices with term: "${searchTerm}"`);
-          
+
           if (!searchTerm.trim()) {
             // If no search term, show all devices
             currentPage = 0;
             renderDevicesTable(allDevices);
-            updateStatusPanel(`<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`, 'success');
+            updateStatusPanel(
+              `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`,
+              "success"
+            );
             return;
           }
-          
+
           // Filter devices client-side
-          const filtered = allDevices.filter(device => {
-            const deviceName = (device.name || '').toLowerCase();
-            const role = (device.role?.name || '').toLowerCase();
-            const location = (device.location?.name || '').toLowerCase();
-            const deviceType = (device.device_type?.model || '').toLowerCase();
-            const status = (device.status?.name || '').toLowerCase();
+          const filtered = allDevices.filter((device) => {
+            const deviceName = (device.name || "").toLowerCase();
+            const role = (device.role?.name || "").toLowerCase();
+            const location = (device.location?.name || "").toLowerCase();
+            const deviceType = (device.device_type?.model || "").toLowerCase();
+            const status = (device.status?.name || "").toLowerCase();
             const searchLower = searchTerm.toLowerCase();
-            
-            return deviceName.includes(searchLower) ||
-                   role.includes(searchLower) ||
-                   location.includes(searchLower) ||
-                   deviceType.includes(searchLower) ||
-                   status.includes(searchLower);
+
+            return (
+              deviceName.includes(searchLower) ||
+              role.includes(searchLower) ||
+              location.includes(searchLower) ||
+              deviceType.includes(searchLower) ||
+              status.includes(searchLower)
+            );
           });
-          
+
           console.log(`Found ${filtered.length} devices matching "${searchTerm}"`);
           currentPage = 0;
           currentSearchTerm = searchTerm;
           renderDevicesTable(filtered);
-          updateStatusPanel(`<i class="fas fa-search"></i> Found ${filtered.length} devices matching "${searchTerm}".`, 'info');
+          updateStatusPanel(
+            `<i class="fas fa-search"></i> Found ${filtered.length} devices matching "${searchTerm}".`,
+            "info"
+          );
         }
 
         // Filter devices with combined filters (client-side filtering)
-        function filterDevices(searchTerm = '', dateFilter = '', dateComparison = '') {
-          console.log(`Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}"`);
-          
+        function filterDevices(searchTerm = "", dateFilter = "", dateComparison = "") {
+          console.log(
+            `Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}"`
+          );
+
           // Update global filter variables
           currentSearchTerm = searchTerm;
           currentDateFilter = dateFilter;
           currentDateComparison = dateComparison;
-          
+
           // Apply all filters
           applyAllFilters();
         }
 
         // Render devices table with pagination
         function renderDevicesTable(devices) {
-          const tableBody = document.getElementById('device-table-body');
-          
+          const tableBody = document.getElementById("device-table-body");
+
           if (!devices || devices.length === 0) {
             tableBody.innerHTML = `
               <tr>
@@ -1147,36 +1336,44 @@
           // Store filtered devices for pagination
           filteredDevices = devices;
           totalPages = Math.ceil(filteredDevices.length / pageSize);
-          
+
           // Calculate start and end indices for current page
           const startIndex = currentPage * pageSize;
           const endIndex = Math.min(startIndex + pageSize, filteredDevices.length);
           const currentPageDevices = filteredDevices.slice(startIndex, endIndex);
 
-          tableBody.innerHTML = currentPageDevices.map((device, index) => {
-            const globalIndex = startIndex + index;
-            const rowClass = globalIndex % 2 === 0 ? 'even' : 'odd';
-            const deviceName = device.name || 'Unknown';
-            const ipAddress = device.primary_ip4?.address || 'N/A';
-            const role = device.role?.name || 'Unknown';
-            const location = device.location?.name || 'Unknown';
-            const deviceType = device.device_type?.model || 'Unknown';
-            const status = device.status?.name || 'Unknown';
-            const lastBackup = device.cf_last_backup || 'Never';
-            
-            // Determine status badge color
-            let statusBadgeClass = 'bg-secondary';
-            if (status.toLowerCase().includes('active') || status.toLowerCase().includes('online')) {
-              statusBadgeClass = 'bg-success';
-            } else if (status.toLowerCase().includes('offline') || status.toLowerCase().includes('failed')) {
-              statusBadgeClass = 'bg-danger';
-            } else if (status.toLowerCase().includes('maintenance')) {
-              statusBadgeClass = 'bg-warning';
-            }
+          tableBody.innerHTML = currentPageDevices
+            .map((device, index) => {
+              const globalIndex = startIndex + index;
+              const rowClass = globalIndex % 2 === 0 ? "even" : "odd";
+              const deviceName = device.name || "Unknown";
+              const ipAddress = device.primary_ip4?.address || "N/A";
+              const role = device.role?.name || "Unknown";
+              const location = device.location?.name || "Unknown";
+              const deviceType = device.device_type?.model || "Unknown";
+              const status = device.status?.name || "Unknown";
+              const lastBackup = device.cf_last_backup || "Never";
 
-            const isOffline = status.toLowerCase().includes('offline') || status.toLowerCase().includes('failed');
+              // Determine status badge color
+              let statusBadgeClass = "bg-secondary";
+              if (
+                status.toLowerCase().includes("active") ||
+                status.toLowerCase().includes("online")
+              ) {
+                statusBadgeClass = "bg-success";
+              } else if (
+                status.toLowerCase().includes("offline") ||
+                status.toLowerCase().includes("failed")
+              ) {
+                statusBadgeClass = "bg-danger";
+              } else if (status.toLowerCase().includes("maintenance")) {
+                statusBadgeClass = "bg-warning";
+              }
 
-            return `
+              const isOffline =
+                status.toLowerCase().includes("offline") || status.toLowerCase().includes("failed");
+
+              return `
               <tr class="${rowClass}">
                 <td class="device-name-cell">${deviceName}</td>
                 <td>${ipAddress}</td>
@@ -1191,7 +1388,7 @@
                 </td>
                 <td class="last">
                   <div class="btn-group" role="group">
-                    <button class="btn btn-sm btn-primary backup-device-btn" data-device="${deviceName}" data-device-id="${device.id}" ${isOffline ? 'disabled' : ''} title="Backup Device">
+                    <button class="btn btn-sm btn-primary backup-device-btn" data-device="${deviceName}" data-device-id="${device.id}" ${isOffline ? "disabled" : ""} title="Backup Device">
                       <i class="fas fa-save"></i>
                     </button>
                     <button class="btn btn-sm btn-info view-backups-btn" data-device="${deviceName}" data-device-id="${device.id}" title="View Backup History">
@@ -1201,34 +1398,35 @@
                 </td>
               </tr>
             `;
-          }).join('');
+            })
+            .join("");
 
           // Render pagination controls
           renderBackupPagination(filteredDevices.length, totalPages);
-          
+
           // Re-attach event listeners for dynamically created elements
           attachDeviceEventListeners();
         }
 
         // Render pagination controls for backup page
         function renderBackupPagination(totalItems, totalPages) {
-          const paginationContainer = document.getElementById('backup-pagination');
-          
+          const paginationContainer = document.getElementById("backup-pagination");
+
           if (!paginationContainer) {
-            console.error('Pagination container not found');
+            console.error("Pagination container not found");
             return;
           }
-          
+
           // Always show pagination container with page size selector, even for single page
-          const startItem = totalItems > 0 ? (currentPage * pageSize) + 1 : 0;
+          const startItem = totalItems > 0 ? currentPage * pageSize + 1 : 0;
           const endItem = Math.min((currentPage + 1) * pageSize, totalItems);
           const showPaginationControls = totalItems > 0 && totalPages > 1;
-          
+
           let paginationHtml = `
             <div class="row mt-3">
               <div class="col-md-6">
                 <div class="dataTables_info">
-                  ${totalItems > 0 ? `Showing ${startItem} to ${endItem} of ${totalItems} entries` : 'No entries to display'}
+                  ${totalItems > 0 ? `Showing ${startItem} to ${endItem} of ${totalItems} entries` : "No entries to display"}
                 </div>
               </div>
               <div class="col-md-6">
@@ -1236,16 +1434,16 @@
                   <div class="me-3">
                     <label for="page-size-selector" class="form-label me-2 mb-0">Show:</label>
                     <select class="form-select form-select-sm d-inline-block" id="page-size-selector" style="width: auto;">
-                      <option value="10" ${pageSize === 10 ? 'selected' : ''}>10</option>
-                      <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
-                      <option value="100" ${pageSize === 100 ? 'selected' : ''}>100</option>
-                      <option value="200" ${pageSize === 200 ? 'selected' : ''}>200</option>
-                      <option value="500" ${pageSize === 500 ? 'selected' : ''}>500</option>
+                      <option value="10" ${pageSize === 10 ? "selected" : ""}>10</option>
+                      <option value="50" ${pageSize === 50 ? "selected" : ""}>50</option>
+                      <option value="100" ${pageSize === 100 ? "selected" : ""}>100</option>
+                      <option value="200" ${pageSize === 200 ? "selected" : ""}>200</option>
+                      <option value="500" ${pageSize === 500 ? "selected" : ""}>500</option>
                     </select>
                     <span class="ms-1">entries</span>
                   </div>
           `;
-          
+
           // Only show pagination controls if there are multiple pages
           if (showPaginationControls) {
             paginationHtml += `
@@ -1259,26 +1457,26 @@
                     <ul class="pagination mb-0">
             `;
           }
-          
+
           // First button
           paginationHtml += `
-            <li class="paginate_button page-item ${!showPaginationControls || currentPage === 0 ? 'disabled' : ''}" id="backup-first">
+            <li class="paginate_button page-item ${!showPaginationControls || currentPage === 0 ? "disabled" : ""}" id="backup-first">
               <a href="#" class="page-link">First</a>
             </li>
           `;
-          
-          // Previous button  
+
+          // Previous button
           paginationHtml += `
-            <li class="paginate_button page-item previous ${!showPaginationControls || currentPage === 0 ? 'disabled' : ''}" id="backup-previous">
+            <li class="paginate_button page-item previous ${!showPaginationControls || currentPage === 0 ? "disabled" : ""}" id="backup-previous">
               <a href="#" class="page-link">Previous</a>
             </li>
           `;
-          
+
           // Page numbers (show max 5 pages around current page)
           if (showPaginationControls) {
             let startPage = Math.max(0, currentPage - 2);
             let endPage = Math.min(totalPages - 1, currentPage + 2);
-            
+
             // Adjust range if we're near the beginning or end
             if (endPage - startPage < 4) {
               if (startPage === 0) {
@@ -1287,10 +1485,10 @@
                 startPage = Math.max(0, endPage - 4);
               }
             }
-            
+
             for (let i = startPage; i <= endPage; i++) {
               paginationHtml += `
-                <li class="paginate_button page-item ${i === currentPage ? 'active' : ''}" data-page="${i}">
+                <li class="paginate_button page-item ${i === currentPage ? "active" : ""}" data-page="${i}">
                   <a href="#" class="page-link">${i + 1}</a>
                 </li>
               `;
@@ -1303,21 +1501,21 @@
               </li>
             `;
           }
-          
+
           // Next button
           paginationHtml += `
-            <li class="paginate_button page-item next ${!showPaginationControls || currentPage >= totalPages - 1 ? 'disabled' : ''}" id="backup-next">
+            <li class="paginate_button page-item next ${!showPaginationControls || currentPage >= totalPages - 1 ? "disabled" : ""}" id="backup-next">
               <a href="#" class="page-link">Next</a>
             </li>
           `;
-          
+
           // Last button
           paginationHtml += `
-            <li class="paginate_button page-item ${!showPaginationControls || currentPage >= totalPages - 1 ? 'disabled' : ''}" id="backup-last">
+            <li class="paginate_button page-item ${!showPaginationControls || currentPage >= totalPages - 1 ? "disabled" : ""}" id="backup-last">
               <a href="#" class="page-link">Last</a>
             </li>
           `;
-          
+
           paginationHtml += `
                     </ul>
                   </div>
@@ -1325,53 +1523,57 @@
               </div>
             </div>
           `;
-          
+
           paginationContainer.innerHTML = paginationHtml;
-          
+
           // Remove any existing event listeners by cloning and replacing the container
           const newPaginationContainer = paginationContainer.cloneNode(true);
           paginationContainer.parentNode.replaceChild(newPaginationContainer, paginationContainer);
-          
+
           // Add event listeners for pagination controls to the new container
-          newPaginationContainer.addEventListener('click', function(e) {
+          newPaginationContainer.addEventListener("click", function (e) {
             e.preventDefault();
-            const target = e.target.closest('li');
-            if (!target || target.classList.contains('disabled') || target.classList.contains('active')) {
+            const target = e.target.closest("li");
+            if (
+              !target ||
+              target.classList.contains("disabled") ||
+              target.classList.contains("active")
+            ) {
               return;
             }
-            
-            if (target.id === 'backup-first') {
+
+            if (target.id === "backup-first") {
               currentPage = 0;
-            } else if (target.id === 'backup-previous') {
+            } else if (target.id === "backup-previous") {
               currentPage = Math.max(0, currentPage - 1);
-            } else if (target.id === 'backup-next') {
+            } else if (target.id === "backup-next") {
               currentPage = Math.min(totalPages - 1, currentPage + 1);
-            } else if (target.id === 'backup-last') {
+            } else if (target.id === "backup-last") {
               currentPage = totalPages - 1;
-            } else if (target.hasAttribute('data-page')) {
-              currentPage = parseInt(target.getAttribute('data-page'));
+            } else if (target.hasAttribute("data-page")) {
+              currentPage = parseInt(target.getAttribute("data-page"));
             }
-            
+
             // Re-render table with new page
             renderDevicesTable(filteredDevices);
           });
-          
+
           // Add event listener for page size selector to the new container
-          const pageSizeSelector = newPaginationContainer.querySelector('#page-size-selector');
+          const pageSizeSelector = newPaginationContainer.querySelector("#page-size-selector");
           if (pageSizeSelector) {
-            pageSizeSelector.addEventListener('change', function() {
+            pageSizeSelector.addEventListener("change", function () {
               const newPageSize = parseInt(this.value);
               console.log(`Changing page size from ${pageSize} to ${newPageSize}`);
-              
+
               // Calculate the current first item index
               const currentFirstItem = currentPage * pageSize;
-              
+
               // Update page size
               pageSize = newPageSize;
-              
+
               // Recalculate current page to maintain approximate position
               currentPage = Math.floor(currentFirstItem / pageSize);
-              
+
               // Re-render table with new page size
               renderDevicesTable(filteredDevices);
             });
@@ -1380,32 +1582,38 @@
 
         // Render pagination controls for backend pagination
         function renderBackendPagination() {
-          const paginationContainer = document.getElementById('backup-pagination');
-          
+          const paginationContainer = document.getElementById("backup-pagination");
+
           if (!paginationContainer) {
-            console.error('Pagination container not found');
+            console.error("Pagination container not found");
             return;
           }
-          
+
           if (!paginationState.isBackendPaginated) {
             // Fall back to regular pagination
-            renderBackupPagination(filteredDevices.length, Math.ceil(filteredDevices.length / pageSize));
+            renderBackupPagination(
+              filteredDevices.length,
+              Math.ceil(filteredDevices.length / pageSize)
+            );
             return;
           }
-          
+
           const currentPageNum = Math.floor(paginationState.currentOffset / pageSize);
           const totalPages = Math.ceil(paginationState.totalCount / pageSize);
           const showPaginationControls = totalPages > 1;
-          
+
           const startItem = paginationState.currentOffset + 1;
-          const endItem = Math.min(paginationState.currentOffset + pageSize, paginationState.totalCount);
-          
+          const endItem = Math.min(
+            paginationState.currentOffset + pageSize,
+            paginationState.totalCount
+          );
+
           let paginationHtml = `
             <div class="row mt-3">
               <div class="col-md-6">
                 <div class="dataTables_info">
                   Showing ${startItem} to ${endItem} of ${paginationState.totalCount} entries
-                  ${paginationState.filterValue ? `(filtered by: ${paginationState.filterValue})` : ''}
+                  ${paginationState.filterValue ? `(filtered by: ${paginationState.filterValue})` : ""}
                 </div>
               </div>
               <div class="col-md-6">
@@ -1413,35 +1621,37 @@
                   <div class="me-3">
                     <label for="backend-page-size-selector" class="form-label me-2 mb-0">Show:</label>
                     <select class="form-select form-select-sm d-inline-block" id="backend-page-size-selector" style="width: auto;">
-                      <option value="10" ${pageSize === 10 ? 'selected' : ''}>10</option>
-                      <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
-                      <option value="100" ${pageSize === 100 ? 'selected' : ''}>100</option>
-                      <option value="200" ${pageSize === 200 ? 'selected' : ''}>200</option>
-                      <option value="500" ${pageSize === 500 ? 'selected' : ''}>500</option>
+                      <option value="10" ${pageSize === 10 ? "selected" : ""}>10</option>
+                      <option value="50" ${pageSize === 50 ? "selected" : ""}>50</option>
+                      <option value="100" ${pageSize === 100 ? "selected" : ""}>100</option>
+                      <option value="200" ${pageSize === 200 ? "selected" : ""}>200</option>
+                      <option value="500" ${pageSize === 500 ? "selected" : ""}>500</option>
                     </select>
                     <span class="ms-1">entries</span>
                   </div>
-                  ${showPaginationControls ? 
-                    '<div class="dataTables_paginate paging_simple_numbers">' : 
-                    '<div class="dataTables_paginate paging_simple_numbers" style="opacity: 0.5;">'}
+                  ${
+                    showPaginationControls
+                      ? '<div class="dataTables_paginate paging_simple_numbers">'
+                      : '<div class="dataTables_paginate paging_simple_numbers" style="opacity: 0.5;">'
+                  }
                     <ul class="pagination mb-0">
           `;
-          
-          // Previous button  
+
+          // Previous button
           paginationHtml += `
-            <li class="paginate_button page-item previous ${!showPaginationControls || currentPageNum === 0 ? 'disabled' : ''}" id="backend-previous">
+            <li class="paginate_button page-item previous ${!showPaginationControls || currentPageNum === 0 ? "disabled" : ""}" id="backend-previous">
               <a href="#" class="page-link">Previous</a>
             </li>
           `;
-          
+
           // Page numbers (show max 5 pages around current page)
           if (showPaginationControls) {
             let startPage = Math.max(0, currentPageNum - 2);
             let endPage = Math.min(totalPages - 1, currentPageNum + 2);
-            
+
             for (let i = startPage; i <= endPage; i++) {
               paginationHtml += `
-                <li class="paginate_button page-item ${i === currentPageNum ? 'active' : ''}" data-backend-page="${i}">
+                <li class="paginate_button page-item ${i === currentPageNum ? "active" : ""}" data-backend-page="${i}">
                   <a href="#" class="page-link">${i + 1}</a>
                 </li>
               `;
@@ -1454,14 +1664,14 @@
               </li>
             `;
           }
-          
+
           // Next button
           paginationHtml += `
-            <li class="paginate_button page-item next ${!showPaginationControls || !paginationState.hasMore ? 'disabled' : ''}" id="backend-next">
+            <li class="paginate_button page-item next ${!showPaginationControls || !paginationState.hasMore ? "disabled" : ""}" id="backend-next">
               <a href="#" class="page-link">Next</a>
             </li>
           `;
-          
+
           paginationHtml += `
                     </ul>
                   </div>
@@ -1469,7 +1679,7 @@
               </div>
             </div>
           `;
-          
+
           // Add load all button for switching to full data mode
           paginationHtml += `
             <div class="row mt-2">
@@ -1483,45 +1693,49 @@
               </div>
             </div>
           `;
-          
+
           paginationContainer.innerHTML = paginationHtml;
-          
+
           // Add event listeners for backend pagination controls
-          paginationContainer.addEventListener('click', function(e) {
+          paginationContainer.addEventListener("click", function (e) {
             e.preventDefault();
-            const target = e.target.closest('li, button');
-            if (!target || target.classList.contains('disabled') || target.classList.contains('active')) {
+            const target = e.target.closest("li, button");
+            if (
+              !target ||
+              target.classList.contains("disabled") ||
+              target.classList.contains("active")
+            ) {
               return;
             }
-            
-            if (target.id === 'backend-previous') {
+
+            if (target.id === "backend-previous") {
               const newOffset = Math.max(0, paginationState.currentOffset - pageSize);
-              loadDevices(paginationState.filterValue || '', true, pageSize, newOffset);
-            } else if (target.id === 'backend-next') {
+              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+            } else if (target.id === "backend-next") {
               const newOffset = paginationState.currentOffset + pageSize;
-              loadDevices(paginationState.filterValue || '', true, pageSize, newOffset);
-            } else if (target.hasAttribute('data-backend-page')) {
-              const pageNum = parseInt(target.getAttribute('data-backend-page'));
+              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+            } else if (target.hasAttribute("data-backend-page")) {
+              const pageNum = parseInt(target.getAttribute("data-backend-page"));
               const newOffset = pageNum * pageSize;
-              loadDevices(paginationState.filterValue || '', true, pageSize, newOffset);
-            } else if (target.id === 'load-all-devices-btn') {
+              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+            } else if (target.id === "load-all-devices-btn") {
               // Switch to full data mode
-              loadDevices('', false);
+              loadDevices("", false);
             }
           });
-          
+
           // Add event listener for backend page size selector
-          const backendPageSizeSelector = document.getElementById('backend-page-size-selector');
+          const backendPageSizeSelector = document.getElementById("backend-page-size-selector");
           if (backendPageSizeSelector) {
-            backendPageSizeSelector.addEventListener('change', function() {
+            backendPageSizeSelector.addEventListener("change", function () {
               const newPageSize = parseInt(this.value);
               console.log(`Changing backend page size from ${pageSize} to ${newPageSize}`);
-              
+
               // Update page size
               pageSize = newPageSize;
-              
+
               // Reload current page with new page size (reset to first page)
-              loadDevices(paginationState.filterValue || '', true, pageSize, 0);
+              loadDevices(paginationState.filterValue || "", true, pageSize, 0);
             });
           }
         }
@@ -1534,19 +1748,19 @@
         // Attach event listeners to device buttons
         function attachDeviceEventListeners() {
           // Individual device backup buttons
-          document.querySelectorAll('.backup-device-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-              const deviceName = this.getAttribute('data-device');
-              const deviceId = this.getAttribute('data-device-id');
+          document.querySelectorAll(".backup-device-btn").forEach((btn) => {
+            btn.addEventListener("click", function () {
+              const deviceName = this.getAttribute("data-device");
+              const deviceId = this.getAttribute("data-device-id");
               performDeviceBackup(deviceName, deviceId);
             });
           });
 
           // View backup history
-          document.querySelectorAll('.view-backups-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-              const deviceName = this.getAttribute('data-device');
-              const deviceId = this.getAttribute('data-device-id');
+          document.querySelectorAll(".view-backups-btn").forEach((btn) => {
+            btn.addEventListener("click", function () {
+              const deviceName = this.getAttribute("data-device");
+              const deviceId = this.getAttribute("data-device-id");
               showBackupHistory(deviceName, deviceId);
             });
           });
@@ -1554,29 +1768,39 @@
 
         // Perform device backup
         async function performDeviceBackup(deviceName, deviceId) {
-          updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Backing up ${deviceName}...`, 'info');
-          
+          updateStatusPanel(
+            `<i class="fas fa-spinner fa-spin"></i> Backing up ${deviceName}...`,
+            "info"
+          );
+
           try {
             // Simulate backup API call - replace with actual backup endpoint
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            updateStatusPanel(`<i class="fas fa-check-circle"></i> Backup completed for ${deviceName}.`, 'success');
-            
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            updateStatusPanel(
+              `<i class="fas fa-check-circle"></i> Backup completed for ${deviceName}.`,
+              "success"
+            );
+
             // Refresh devices data to update last backup time
             setTimeout(() => {
               loadDevices();
             }, 1000);
           } catch (error) {
-            console.error('Backup failed:', error);
-            updateStatusPanel(`<i class="fas fa-exclamation-triangle"></i> Backup failed for ${deviceName}: ${error.message}`, 'danger');
+            console.error("Backup failed:", error);
+            updateStatusPanel(
+              `<i class="fas fa-exclamation-triangle"></i> Backup failed for ${deviceName}: ${error.message}`,
+              "danger"
+            );
           }
         }
 
         // Show backup history
         function showBackupHistory(deviceName, deviceId) {
-          document.getElementById('backupHistoryModalLabel').textContent = `Backup History - ${deviceName}`;
-          
+          document.getElementById("backupHistoryModalLabel").textContent =
+            `Backup History - ${deviceName}`;
+
           // Populate backup history (sample data - replace with actual API call)
-          const historyBody = document.getElementById('backup-history-body');
+          const historyBody = document.getElementById("backup-history-body");
           historyBody.innerHTML = `
             <tr>
               <td>2024-01-15 10:30:00</td>
@@ -1593,75 +1817,82 @@
               </td>
             </tr>
           `;
-          
-          const modal = new bootstrap.Modal(document.getElementById('backupHistoryModal'));
+
+          const modal = new bootstrap.Modal(document.getElementById("backupHistoryModal"));
           modal.show();
         }
 
         // Show restore dialog
         function showRestoreDialog(deviceName, deviceId) {
           // Placeholder for restore functionality
-          updateStatusPanel(`<i class="fas fa-info-circle"></i> Restore functionality for ${deviceName} - Integration needed.`, 'info');
+          updateStatusPanel(
+            `<i class="fas fa-info-circle"></i> Restore functionality for ${deviceName} - Integration needed.`,
+            "info"
+          );
         }
 
         // Utility functions
         let statusTimeout;
-        function updateStatusPanel(message, type = 'info', autoHide = true) {
-          const statusPanel = document.getElementById('status-panel');
+        function updateStatusPanel(message, type = "info", autoHide = true) {
+          const statusPanel = document.getElementById("status-panel");
           statusPanel.className = `alert alert-${type}`;
           statusPanel.innerHTML = message;
-          statusPanel.style.display = 'block';
-          
+          statusPanel.style.display = "block";
+
           // Clear any existing timeout
           if (statusTimeout) {
             clearTimeout(statusTimeout);
           }
-          
+
           // Auto-hide success and info messages after 3 seconds
-          if (autoHide && (type === 'success' || type === 'info')) {
+          if (autoHide && (type === "success" || type === "info")) {
             statusTimeout = setTimeout(() => {
-              statusPanel.style.display = 'none';
+              statusPanel.style.display = "none";
             }, 3000);
           }
         }
 
         function showError(message) {
-          updateStatusPanel(`<i class="fas fa-exclamation-triangle"></i> ${message}`, 'danger', false);
+          updateStatusPanel(
+            `<i class="fas fa-exclamation-triangle"></i> ${message}`,
+            "danger",
+            false
+          );
         }
 
         // Add date filter event listeners
-        const dateInput = document.getElementById('backup-date-filter');
-        const comparisonSelect = document.getElementById('date-comparison');
-        
+        const dateInput = document.getElementById("backup-date-filter");
+        const comparisonSelect = document.getElementById("date-comparison");
+
         if (dateInput) {
-          dateInput.addEventListener('change', () => {
+          dateInput.addEventListener("change", () => {
             const newDateFilter = dateInput.value;
             filterDevices(currentSearchTerm, newDateFilter, currentDateComparison);
           });
         }
-        
+
         if (comparisonSelect) {
-          comparisonSelect.addEventListener('change', () => {
+          comparisonSelect.addEventListener("change", () => {
             const newDateComparison = comparisonSelect.value;
             filterDevices(currentSearchTerm, currentDateFilter, newDateComparison);
           });
         }
-        
+
         // Add clear filters button event listener
-        const clearButton = document.getElementById('clear-filters-btn');
+        const clearButton = document.getElementById("clear-filters-btn");
         if (clearButton) {
-          clearButton.addEventListener('click', resetPagination);
+          clearButton.addEventListener("click", resetPagination);
         }
-        
-        // Add clear all filters button event listener  
-        const clearAllButton = document.getElementById('clear-all-filters-btn');
+
+        // Add clear all filters button event listener
+        const clearAllButton = document.getElementById("clear-all-filters-btn");
         if (clearAllButton) {
-          clearAllButton.addEventListener('click', resetAllFilters);
+          clearAllButton.addEventListener("click", resetAllFilters);
         }
 
         // Initialize the page
-        console.log('Initializing backup page...');
-        
+        console.log("Initializing backup page...");
+
         // Wait a bit for AuthManager to be ready, then load devices
         setTimeout(() => {
           loadDevices();
@@ -1670,52 +1901,57 @@
         // Update navbar username display
         function updateNavbarUsername() {
           try {
-            const userInfo = JSON.parse(localStorage.getItem('user_info') || 'null');
-            const navbarUsernameElement = document.getElementById('navbar-username');
-            
+            const userInfo = JSON.parse(localStorage.getItem("user_info") || "null");
+            const navbarUsernameElement = document.getElementById("navbar-username");
+
             if (navbarUsernameElement && userInfo && userInfo.username) {
               navbarUsernameElement.textContent = userInfo.username;
-              console.log('Updated navbar username:', userInfo.username);
+              console.log("Updated navbar username:", userInfo.username);
             }
           } catch (error) {
-            console.error('Error updating navbar username:', error);
+            console.error("Error updating navbar username:", error);
           }
         }
 
         // Initial update
         updateNavbarUsername();
-        
+
         // Update after delays to catch auth updates
         setTimeout(updateNavbarUsername, 1000);
         setTimeout(updateNavbarUsername, 2000);
 
         // Basic event handlers for backup functionality
-        const statusPanel = document.getElementById('status-panel');
-        
+        const statusPanel = document.getElementById("status-panel");
+
         // Custom schedule toggle
-        document.getElementById('backup-schedule').addEventListener('change', function() {
-          const customGroup = document.getElementById('custom-schedule-group');
-          if (this.value === 'custom') {
-            customGroup.style.display = 'block';
+        document.getElementById("backup-schedule").addEventListener("change", function () {
+          const customGroup = document.getElementById("custom-schedule-group");
+          if (this.value === "custom") {
+            customGroup.style.display = "block";
           } else {
-            customGroup.style.display = 'none';
+            customGroup.style.display = "none";
           }
         });
 
         // Save schedule
-        document.getElementById('save-schedule-btn').addEventListener('click', function() {
-          const form = document.getElementById('schedule-backup-form');
+        document.getElementById("save-schedule-btn").addEventListener("click", function () {
+          const form = document.getElementById("schedule-backup-form");
           if (form.checkValidity()) {
-            updateStatusPanel('<i class="fas fa-check-circle"></i> Backup schedule saved successfully.', 'success');
-            
-            const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleBackupModal'));
+            updateStatusPanel(
+              '<i class="fas fa-check-circle"></i> Backup schedule saved successfully.',
+              "success"
+            );
+
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("scheduleBackupModal")
+            );
             modal.hide();
           } else {
             form.reportValidity();
           }
         });
 
-        console.log('Backup page initialized successfully');
+        console.log("Backup page initialized successfully");
       });
     </script>
   </body>

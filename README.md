@@ -5,6 +5,7 @@ A modern web-based dashboard for managing network devices through Nautobot API i
 ## 🚀 Features
 
 ### Frontend Dashboard
+
 - **Modern Bootstrap 5 UI** - Clean, responsive admin interface based on Gentelella template
 - **Device Synchronization** - Interactive dual-pane interface for device selection and management
 - **Advanced Filtering** - Filter devices by name (regex), location, or IP prefix (CIDR)
@@ -13,6 +14,7 @@ A modern web-based dashboard for managing network devices through Nautobot API i
 - **Multiple Dashboard Layouts** - 3 different dashboard styles for various use cases
 
 ### Backend API
+
 - **FastAPI Framework** - High-performance async Python API
 - **Nautobot Integration** - GraphQL queries to fetch device, location, and namespace data
 - **JWT Authentication** - Secure token-based authentication system
@@ -20,6 +22,7 @@ A modern web-based dashboard for managing network devices through Nautobot API i
 - **RESTful Endpoints** - Clean API design for device management operations
 
 ### Device Management
+
 - **Device Discovery** - Query devices from Nautobot by multiple criteria
 - **Network Synchronization** - Bulk sync network data from devices to Nautobot
 - **Location-based Filtering** - Find devices by location patterns
@@ -29,6 +32,7 @@ A modern web-based dashboard for managing network devices through Nautobot API i
 ## 🛠️ Technology Stack
 
 ### Frontend
+
 - **Bootstrap 5** - Modern CSS framework
 - **Vite** - Fast build tool and dev server
 - **JavaScript ES6+** - Modern JavaScript features
@@ -38,6 +42,7 @@ A modern web-based dashboard for managing network devices through Nautobot API i
 - **FontAwesome** - Icon library
 
 ### Backend
+
 - **FastAPI** - Modern Python web framework
 - **Uvicorn** - ASGI server
 - **JWT Authentication** - JSON Web Token security
@@ -45,18 +50,21 @@ A modern web-based dashboard for managing network devices through Nautobot API i
 - **Vite Proxy Support** - Simplified development without CORS middleware
 
 ### External Integrations
+
 - **Nautobot** - Network source of truth platform
 - **GraphQL** - Efficient data querying
 
 ## 📋 Prerequisites
 
 ### For Local Development
+
 - **Node.js** (v16 or higher)
 - **Python** (3.8 or higher)
 - **Nautobot instance** with GraphQL API access
 - **Modern web browser** (Chrome, Firefox, Safari, Edge)
 
 ### For Docker Deployment
+
 - **Docker** (20.10 or higher)
 - **Docker Compose** (v2.0 or higher)
 - **Nautobot instance** with GraphQL API access
@@ -86,6 +94,7 @@ cp .env.docker .env
 ```
 
 The application will be available at:
+
 - **Frontend**: http://localhost
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
@@ -93,12 +102,14 @@ The application will be available at:
 ### Option 2: Local Development Setup
 
 ### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd cockpit
 ```
 
 ### 2. Frontend Setup
+
 ```bash
 # Install Node.js dependencies
 npm install
@@ -110,6 +121,7 @@ npm run dev
 The frontend will be available at `http://localhost:3000`
 
 ### 3. Backend Setup
+
 ```bash
 # Navigate to backend directory
 cd backend
@@ -137,6 +149,7 @@ python -m uvicorn main:app --reload
 The backend API will be available at `http://localhost:8000` (or your configured port)
 
 ### 4. Production Build
+
 ```bash
 # Build for production
 npm run build
@@ -148,6 +161,7 @@ npm run preview
 ## 🐳 Docker Deployment
 
 ### Quick Start with Docker
+
 ```bash
 # 1. Clone and configure
 git clone <repository-url>
@@ -164,6 +178,7 @@ cp .env.docker .env
 ```
 
 ### Docker Commands
+
 ```bash
 # Start containers
 ./docker-start.sh
@@ -186,15 +201,16 @@ cp .env.docker .env
 ```
 
 ### Docker Environment Variables
+
 All configuration is handled via environment variables in Docker:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NAUTOBOT_HOST` | Nautobot URL | `https://nautobot.example.com` |
-| `NAUTOBOT_TOKEN` | API token | `abc123...` |
-| `SECRET_KEY` | JWT secret | `your-secret-key` |
-| `DEBUG` | Debug mode | `false` |
-| `LOG_LEVEL` | Logging level | `INFO` |
+| Variable         | Description   | Example                        |
+| ---------------- | ------------- | ------------------------------ |
+| `NAUTOBOT_HOST`  | Nautobot URL  | `https://nautobot.example.com` |
+| `NAUTOBOT_TOKEN` | API token     | `abc123...`                    |
+| `SECRET_KEY`     | JWT secret    | `your-secret-key`              |
+| `DEBUG`          | Debug mode    | `false`                        |
+| `LOG_LEVEL`      | Logging level | `INFO`                         |
 
 ## ⚙️ Configuration
 
@@ -209,19 +225,20 @@ cp .env.example .env
 
 #### Environment Variables (`.env` file)
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `SERVER_HOST` | Backend server host | `127.0.0.1` | No |
-| `SERVER_PORT` | Backend server port | `8000` | No |
-| `DEBUG` | Enable debug mode | `false` | No |
-| `NAUTOBOT_HOST` | Nautobot instance URL | `http://localhost:8080` | **Yes** |
-| `NAUTOBOT_TOKEN` | Nautobot API token | - | **Yes** |
-| `NAUTOBOT_TIMEOUT` | Request timeout (seconds) | `30` | No |
-| `SECRET_KEY` | JWT signing key | - | **Yes** |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | `30` | No |
-| `LOG_LEVEL` | Logging level | `INFO` | No |
+| Variable                      | Description               | Default                 | Required |
+| ----------------------------- | ------------------------- | ----------------------- | -------- |
+| `SERVER_HOST`                 | Backend server host       | `127.0.0.1`             | No       |
+| `SERVER_PORT`                 | Backend server port       | `8000`                  | No       |
+| `DEBUG`                       | Enable debug mode         | `false`                 | No       |
+| `NAUTOBOT_HOST`               | Nautobot instance URL     | `http://localhost:8080` | **Yes**  |
+| `NAUTOBOT_TOKEN`              | Nautobot API token        | -                       | **Yes**  |
+| `NAUTOBOT_TIMEOUT`            | Request timeout (seconds) | `30`                    | No       |
+| `SECRET_KEY`                  | JWT signing key           | -                       | **Yes**  |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration          | `30`                    | No       |
+| `LOG_LEVEL`                   | Logging level             | `INFO`                  | No       |
 
 #### Example Configuration
+
 ```bash
 # Required Settings
 NAUTOBOT_HOST=https://your-nautobot.example.com
@@ -242,31 +259,34 @@ LOG_LEVEL=INFO
 Frontend configuration is handled in `production/js/config.js`. This file contains environment-specific settings for API URLs, endpoints, and debugging options.
 
 #### Configuration File Location
+
 - **File:** `production/js/config.js`
 - **Purpose:** Centralized configuration for frontend-backend communication
 - **Scope:** URL management, environment detection, debug settings
 
 #### Configuration Variables
 
-| Variable | Description | Default | Environment |
-|----------|-------------|---------|-------------|
-| `api.baseUrl` | Backend API base URL | Auto-detected based on protocol | All |
-| `frontend.baseUrl` | Frontend base URL | Auto-detected from current host | All |
-| `environment.isDevelopment` | Development mode flag | Auto-detected from hostname | All |
-| `debug.enabled` | Enable debug logging | `true` in development | All |
+| Variable                    | Description           | Default                         | Environment |
+| --------------------------- | --------------------- | ------------------------------- | ----------- |
+| `api.baseUrl`               | Backend API base URL  | Auto-detected based on protocol | All         |
+| `frontend.baseUrl`          | Frontend base URL     | Auto-detected from current host | All         |
+| `environment.isDevelopment` | Development mode flag | Auto-detected from hostname     | All         |
+| `debug.enabled`             | Enable debug logging  | `true` in development           | All         |
 
 #### Configuration Options
 
 **Option 1: Auto-detection (Default)**
+
 ```javascript
 api: {
-  baseUrl: window.location.protocol === 'https:' 
+  baseUrl: window.location.protocol === 'https:'
     ? 'https://localhost:8000'  // Use HTTPS in production
     : 'http://localhost:8000',  // Use HTTP in development
 }
 ```
 
 **Option 2: Host-based detection**
+
 ```javascript
 api: {
   // Alternative: detect from current host
@@ -275,9 +295,10 @@ api: {
 ```
 
 **Option 3: Environment-specific URLs**
+
 ```javascript
 api: {
-  baseUrl: window.location.hostname === 'localhost' 
+  baseUrl: window.location.hostname === 'localhost'
     ? 'http://localhost:8000'                    // Development
     : 'https://api.your-domain.com',            // Production
 }
@@ -288,32 +309,35 @@ api: {
 For production deployment, edit `production/js/config.js`:
 
 1. **Update the API base URL** to point to your production backend:
+
 ```javascript
 const CockpitConfig = {
   api: {
-    baseUrl: 'https://api.your-domain.com',  // Your production backend URL
+    baseUrl: "https://api.your-domain.com", // Your production backend URL
     // ... rest of configuration
-  }
+  },
 };
 ```
 
 2. **Configure HTTPS** for secure environments:
+
 ```javascript
 api: {
-  baseUrl: window.location.protocol === 'https:' 
+  baseUrl: window.location.protocol === 'https:'
     ? 'https://api.your-domain.com'     // Production HTTPS
     : 'http://localhost:8000',          // Development HTTP
 }
 ```
 
 3. **Environment-specific settings**:
+
 ```javascript
 // Production example
 api: {
   baseUrl: 'https://api.production.com',
 }
 
-// Staging example  
+// Staging example
 api: {
   baseUrl: 'https://api.staging.com',
 }
@@ -330,11 +354,11 @@ The configuration provides helper functions for URL generation:
 
 ```javascript
 // Get full API URL for any endpoint
-const loginUrl = CockpitConfig.getApiUrl('/auth/login');
+const loginUrl = CockpitConfig.getApiUrl("/auth/login");
 // Returns: https://api.your-domain.com/auth/login
 
 // Get frontend URL with path
-const dashboardUrl = CockpitConfig.getFrontendUrl('/dashboard.html');
+const dashboardUrl = CockpitConfig.getFrontendUrl("/dashboard.html");
 // Returns: https://your-frontend.com/dashboard.html
 ```
 
@@ -345,12 +369,12 @@ The configuration automatically detects the environment:
 ```javascript
 // Check environment
 if (CockpitConfig.environment.isDevelopment) {
-  console.log('Running in development mode');
+  console.log("Running in development mode");
 }
 
 // Debug logging (enabled automatically in development)
 if (CockpitConfig.debug.enabled) {
-  console.log('Debug mode enabled');
+  console.log("Debug mode enabled");
 }
 ```
 
@@ -359,14 +383,16 @@ if (CockpitConfig.debug.enabled) {
 The following files automatically use the configuration from `config.js`:
 
 - `production/onboard-device.html` - Device onboarding form
-- `production/js/auth.js` - Authentication system  
+- `production/js/auth.js` - Authentication system
 - `production/login.html` - Login page
 - Any other frontend components that make API calls
 
 > **Note:** The configuration file must be included in HTML pages before other JavaScript files that depend on it.
 
 ### Default Login Credentials
+
 The application comes with a default admin user:
+
 - **Username:** `admin`, **Password:** `admin`
 
 > ⚠️ **Security Notice:** Change default password and secret key in production!
@@ -376,19 +402,22 @@ The application comes with a default admin user:
 ### Before Production Deployment
 
 **Backend Configuration (`backend/.env`):**
+
 1. ✅ Set `NAUTOBOT_HOST` to your Nautobot instance URL
-2. ✅ Set `NAUTOBOT_TOKEN` to your API token  
+2. ✅ Set `NAUTOBOT_TOKEN` to your API token
 3. ✅ Generate and set a secure `SECRET_KEY`
 4. ✅ Set `DEBUG=false` for production
 5. ✅ Set appropriate `LOG_LEVEL` (INFO or WARNING)
 
 **Frontend Configuration (`production/js/config.js`):**
+
 1. ✅ Update `api.baseUrl` to your production backend URL
 2. ✅ Ensure HTTPS is used in production environments
 3. ✅ Verify all endpoint paths are correct
 4. ✅ Test configuration with helper functions
 
 **Security Settings:**
+
 1. ✅ Change default admin password (`admin`/`admin`)
 2. ✅ Use strong, unique `SECRET_KEY` for JWT signing
 3. ✅ Enable HTTPS for production deployments
@@ -397,6 +426,7 @@ The application comes with a default admin user:
 **Example Production Configuration:**
 
 `backend/.env`:
+
 ```bash
 NAUTOBOT_HOST=https://nautobot.company.com
 NAUTOBOT_TOKEN=your-secure-api-token-here
@@ -408,18 +438,20 @@ LOG_LEVEL=INFO
 ```
 
 `production/js/config.js`:
+
 ```javascript
 const CockpitConfig = {
   api: {
-    baseUrl: 'https://api.cockpit.company.com',  // Your production API
+    baseUrl: "https://api.cockpit.company.com", // Your production API
     // ... rest of configuration
-  }
+  },
 };
 ```
 
 ## 📖 Usage
 
 ### Device Synchronization
+
 1. **Login** to the dashboard using default credentials
 2. **Navigate** to the "Sync Devices" page
 3. **Apply Filters:**
@@ -434,17 +466,20 @@ const CockpitConfig = {
 ### API Endpoints
 
 #### Authentication
+
 - `POST /api/auth/login` - User authentication
 - `POST /api/auth/register` - User registration
 - `GET /api/auth/me` - Get current user info
 
 #### Device Management
+
 - `GET /api/nautobot/devices` - List devices with optional filtering
   - `?filter_type=name&filter_value=pattern` - Filter by device name
   - `?filter_type=location&filter_value=location` - Filter by location
   - `?filter_type=prefix&filter_value=192.168.1.0/24` - Filter by IP prefix
 
 #### Network Operations
+
 - `GET /api/nautobot/namespaces` - List available namespaces
 - `POST /api/nautobot/sync-network-data` - Sync network data to Nautobot
 
@@ -484,6 +519,7 @@ cockpit/
 ## 🔧 Development
 
 ### Running in Development Mode
+
 ```bash
 # Terminal 1: Start backend with auto-reload
 cd backend
@@ -495,9 +531,11 @@ npm run dev
 ```
 
 ### Available VS Code Tasks
+
 - **Run FastAPI backend (Uvicorn)** - Starts the backend server with configuration
 
 ### Building for Production
+
 ```bash
 npm run build
 ```
@@ -517,6 +555,7 @@ This project is based on the Gentelella Admin Template by Colorlib and is availa
 ## 📞 Support
 
 For issues and questions:
+
 - Check the documentation in the `docs/` folder
 - Review the API integration guide
 - Examine the component reference

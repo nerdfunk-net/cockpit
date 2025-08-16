@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   cockpit:
@@ -8,35 +8,36 @@ services:
     container_name: cockpit-production
     restart: unless-stopped
     ports:
-      - "3000:3000"  # Frontend port
-      - "8000:8000"  # Backend port
+      - "3000:3000" # Frontend port
+      - "8000:8000" # Backend port
     networks:
       - backend
     environment:
       # Node.js Frontend Configuration
       - NODE_ENV=production
-      
+
       # Backend Server Configuration
       - SERVER_HOST=0.0.0.0
       - SERVER_PORT=8000
       - DEBUG=false
-      
+
       # Nautobot Configuration (REQUIRED - Set these values)
       - NAUTOBOT_HOST=${NAUTOBOT_HOST}
       - NAUTOBOT_TOKEN=${NAUTOBOT_TOKEN}
       - NAUTOBOT_TIMEOUT=${NAUTOBOT_TIMEOUT:-30}
-      
+
       # Authentication Configuration (REQUIRED - Change in production)
       - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
-      
+
       # Logging Configuration
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
       # Persistent database storage (read-write)
       - ./data/settings:/app/data/settings
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs"]
+      test:
+        ["CMD", "sh", "-c", "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs"]
       interval: 30s
       timeout: 10s
       retries: 3

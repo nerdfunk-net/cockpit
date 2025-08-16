@@ -55,13 +55,16 @@ debug: {
 ## Deployment Configurations
 
 ### Development Environment
+
 - Backend: `http://localhost:8000`
 - Frontend: `http://localhost:3000`
 - Debug: Enabled
 - Auto-detection: Based on hostname
 
 ### Staging Environment
+
 Update `config.js`:
+
 ```javascript
 api: {
   baseUrl: 'https://staging-api.your-domain.com',
@@ -70,7 +73,9 @@ api: {
 ```
 
 ### Production Environment
+
 Update `config.js`:
+
 ```javascript
 api: {
   baseUrl: 'https://api.your-domain.com',
@@ -85,9 +90,9 @@ For more advanced deployments, you can modify `config.js` to read from environme
 ```javascript
 const CockpitConfig = {
   api: {
-    baseUrl: window.ENV?.API_BASE_URL || 'http://localhost:8000',
+    baseUrl: window.ENV?.API_BASE_URL || "http://localhost:8000",
     // ...
-  }
+  },
 };
 ```
 
@@ -96,7 +101,7 @@ Then inject environment variables during build:
 ```html
 <script>
   window.ENV = {
-    API_BASE_URL: '${API_BASE_URL}',
+    API_BASE_URL: "${API_BASE_URL}",
     // other variables
   };
 </script>
@@ -106,22 +111,24 @@ Then inject environment variables during build:
 ## Usage in Code
 
 ### Getting API URLs
+
 ```javascript
 // Get full API URL
-const apiUrl = CockpitConfig.getApiUrl('/api/nautobot/locations');
+const apiUrl = CockpitConfig.getApiUrl("/api/nautobot/locations");
 
 // Use predefined endpoints
 const locationsUrl = CockpitConfig.getApiUrl(CockpitConfig.api.endpoints.nautobot.locations);
 ```
 
 ### Environment Checks
+
 ```javascript
 if (CockpitConfig.environment.isDevelopment) {
-  console.log('Running in development mode');
+  console.log("Running in development mode");
 }
 
 if (CockpitConfig.debug.enabled) {
-  console.log('Debug information');
+  console.log("Debug information");
 }
 ```
 

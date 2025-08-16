@@ -5,6 +5,7 @@ This update modifies the Cockpit backend to use database-stored settings instead
 ## Changes Made
 
 ### 1. Modified `main.py`
+
 - Added `get_nautobot_config()` function that prioritizes database settings over environment variables
 - Updated all Nautobot API functions to use database settings:
   - `nautobot_request()`
@@ -15,15 +16,18 @@ This update modifies the Cockpit backend to use database-stored settings instead
 - Added logging to show which configuration source is being used
 
 ### 2. Enhanced `settings_manager.py`
+
 - Now uses environment variables as initial defaults when creating the database
 - Improved error handling and fallback mechanisms
 
 ### 3. Updated `start.py`
+
 - Added database initialization on startup
 - Automatically populates database with environment variables if no settings exist
 - Better startup logging
 
 ### 4. Updated `backend/Dockerfile`
+
 - Now uses `start.py` instead of direct uvicorn command
 - Ensures proper database initialization
 
@@ -37,12 +41,14 @@ This update modifies the Cockpit backend to use database-stored settings instead
 ## Testing
 
 Use the test script to verify configuration:
+
 ```bash
 cd backend
 python test_config.py
 ```
 
 Test API endpoint:
+
 ```bash
 curl -H "Authorization: Bearer <your-token>" http://localhost:8000/api/nautobot/test
 ```
@@ -50,8 +56,9 @@ curl -H "Authorization: Bearer <your-token>" http://localhost:8000/api/nautobot/
 ## Environment Variables (Fallback)
 
 These are still used as defaults and fallback:
+
 - `NAUTOBOT_HOST`
-- `NAUTOBOT_TOKEN` 
+- `NAUTOBOT_TOKEN`
 - `NAUTOBOT_TIMEOUT`
 
 ## Database Settings (Primary)

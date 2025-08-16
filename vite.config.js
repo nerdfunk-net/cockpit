@@ -1,41 +1,47 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  root: '.',
-  publicDir: 'production',
+  root: ".",
+  publicDir: "production",
   plugins: [
     // Custom plugin to redirect root to index.html
     {
-      name: 'redirect-root',
+      name: "redirect-root",
       configureServer(server) {
-        server.middlewares.use('/', (req, res, next) => {
-          if (req.url === '/') {
-            res.writeHead(302, { Location: '/index.html' });
+        server.middlewares.use("/", (req, res, next) => {
+          if (req.url === "/") {
+            res.writeHead(302, { Location: "/index.html" });
             res.end();
             return;
           }
           next();
         });
-      }
-    }
+      },
+    },
   ],
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
-    target: 'es2022',
+    target: "es2022",
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-core': ['jquery', 'bootstrap', '@popperjs/core'],
-          'vendor-charts': ['chart.js', 'echarts', 'leaflet'],
-          'vendor-forms': ['select2', 'ion-rangeslider', 'autosize', 'switchery', '@eonasdan/tempus-dominus'],
-          'vendor-ui': ['jquery-ui', 'nprogress', 'datatables.net', 'datatables.net-bs5'],
-          'vendor-utils': ['dayjs', 'jquery-sparkline', 'skycons']
+          "vendor-core": ["jquery", "bootstrap", "@popperjs/core"],
+          "vendor-charts": ["chart.js", "echarts", "leaflet"],
+          "vendor-forms": [
+            "select2",
+            "ion-rangeslider",
+            "autosize",
+            "switchery",
+            "@eonasdan/tempus-dominus",
+          ],
+          "vendor-ui": ["jquery-ui", "nprogress", "datatables.net", "datatables.net-bs5"],
+          "vendor-utils": ["dayjs", "jquery-sparkline", "skycons"],
         },
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.');
+          const info = assetInfo.name.split(".");
           const extType = info[info.length - 1];
           if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name)) {
             return `images/[name]-[hash][extname]`;
@@ -45,117 +51,113 @@ export default defineConfig({
           }
           return `assets/[name]-[hash][extname]`;
         },
-        chunkFileNames: 'js/[name]-[hash].js',
-        entryFileNames: 'js/[name]-[hash].js'
+        chunkFileNames: "js/[name]-[hash].js",
+        entryFileNames: "js/[name]-[hash].js",
       },
       input: {
-        main: 'production/index.html',
-        index2: 'production/index2.html',
-        index3: 'production/index3.html',
-        index4: 'production/index4.html',
-        
-        form: 'production/form.html',
-        form_advanced: 'production/form_advanced.html',
-        form_buttons: 'production/form_buttons.html',
-        form_upload: 'production/form_upload.html',
-        form_validation: 'production/form_validation.html',
-        form_wizards: 'production/form_wizards.html',
-        
-        general_elements: 'production/general_elements.html',
-        media_gallery: 'production/media_gallery.html',
-        typography: 'production/typography.html',
-        icons: 'production/icons.html',
+        main: "production/index.html",
+        index2: "production/index2.html",
+        index3: "production/index3.html",
+        index4: "production/index4.html",
 
-        widgets: 'production/widgets.html',
-        invoice: 'production/invoice.html',
-        inbox: 'production/inbox.html',
-        calendar: 'production/calendar.html',
-        
-        tables: 'production/tables.html',
-        tables_dynamic: 'production/tables_dynamic.html',
-        
-        chartjs: 'production/chartjs.html',
-        chartjs2: 'production/chartjs2.html',
-        chart3: 'production/chart3.html',
-        echarts: 'production/echarts.html',
-        other_charts: 'production/other_charts.html',
-        
-        fixed_sidebar: 'production/fixed_sidebar.html',
-        fixed_footer: 'production/fixed_footer.html',
-        
-        e_commerce: 'production/e_commerce.html',
-        projects: 'production/projects.html',
-        project_detail: 'production/project_detail.html',
-        contacts: 'production/contacts.html',
-        profile: 'production/profile.html',
-        
-        page_403: 'production/page_403.html',
-        page_404: 'production/page_404.html',
-        page_500: 'production/page_500.html',
-        plain_page: 'production/plain_page.html',
-        login: 'production/login.html',
-        pricing_tables: 'production/pricing_tables.html',
-        
-        level2: 'production/level2.html',
-        sidebar_test: 'production/sidebar_test.html',
-        map: 'production/map.html',
-        xx: 'production/xx.html',
-        
+        form: "production/form.html",
+        form_advanced: "production/form_advanced.html",
+        form_buttons: "production/form_buttons.html",
+        form_upload: "production/form_upload.html",
+        form_validation: "production/form_validation.html",
+        form_wizards: "production/form_wizards.html",
+
+        general_elements: "production/general_elements.html",
+        media_gallery: "production/media_gallery.html",
+        typography: "production/typography.html",
+        icons: "production/icons.html",
+
+        widgets: "production/widgets.html",
+        invoice: "production/invoice.html",
+        inbox: "production/inbox.html",
+        calendar: "production/calendar.html",
+
+        tables: "production/tables.html",
+        tables_dynamic: "production/tables_dynamic.html",
+
+        chartjs: "production/chartjs.html",
+        chartjs2: "production/chartjs2.html",
+        chart3: "production/chart3.html",
+        echarts: "production/echarts.html",
+        other_charts: "production/other_charts.html",
+
+        fixed_sidebar: "production/fixed_sidebar.html",
+        fixed_footer: "production/fixed_footer.html",
+
+        e_commerce: "production/e_commerce.html",
+        projects: "production/projects.html",
+        project_detail: "production/project_detail.html",
+        contacts: "production/contacts.html",
+        profile: "production/profile.html",
+
+        page_403: "production/page_403.html",
+        page_404: "production/page_404.html",
+        page_500: "production/page_500.html",
+        plain_page: "production/plain_page.html",
+        login: "production/login.html",
+        pricing_tables: "production/pricing_tables.html",
+
+        level2: "production/level2.html",
+        sidebar_test: "production/sidebar_test.html",
+        map: "production/map.html",
+        xx: "production/xx.html",
+
         // New additions
-        compare: 'production/compare.html',
-        sync_devices: 'production/sync_devices.html'
-      }
+        compare: "production/compare.html",
+        sync_devices: "production/sync_devices.html",
+      },
     },
-    minify: 'terser',
+    minify: "terser",
     terserOptions: {
       compress: {
         drop_console: true,
-        drop_debugger: true
-      }
-    }
+        drop_debugger: true,
+      },
+    },
   },
   esbuild: {
-    target: 'es2022'
+    target: "es2022",
   },
   server: {
-    open: '/',
+    open: "/",
     port: 3000,
-    host: process.env.VITE_HOST || 'localhost',
-    allowedHosts: process.env.VITE_ALLOWED_HOSTS ? process.env.VITE_ALLOWED_HOSTS.split(',') : 'auto',
+    host: process.env.VITE_HOST || "localhost",
+    allowedHosts: process.env.VITE_ALLOWED_HOSTS
+      ? process.env.VITE_ALLOWED_HOSTS.split(",")
+      : "auto",
     watch: {
       ignored: [
-        '**/data/**',
-        '**/backend/**', 
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/docs/**',
-        '**/.git/**',
-        '**/.venv/**',
-        '**/.*'
-      ]
+        "**/data/**",
+        "**/backend/**",
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/docs/**",
+        "**/.git/**",
+        "**/.venv/**",
+        "**/.*",
+      ],
     },
     proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8000',
+      "/api": {
+        target: "http://127.0.0.1:8000",
         changeOrigin: true,
-        secure: false
+        secure: false,
       },
-      '/auth': {
-        target: 'http://127.0.0.1:8000',
+      "/auth": {
+        target: "http://127.0.0.1:8000",
         changeOrigin: true,
-        secure: false
-      }
-    }
+        secure: false,
+      },
+    },
   },
   optimizeDeps: {
-    include: [
-      'jquery', 
-      'bootstrap',
-      '@popperjs/core',
-      'dayjs',
-      'nprogress'
-    ],
-    force: true
+    include: ["jquery", "bootstrap", "@popperjs/core", "dayjs", "nprogress"],
+    force: true,
   },
   css: {
     preprocessorOptions: {
@@ -164,23 +166,23 @@ export default defineConfig({
         quietDeps: true,
         // Silence specific deprecated features
         silenceDeprecations: [
-          'color-functions',
-          'global-builtin',
-          'import',
-          'mixed-decls',
-          'color-module-compat'
-        ]
-      }
-    }
+          "color-functions",
+          "global-builtin",
+          "import",
+          "mixed-decls",
+          "color-module-compat",
+        ],
+      },
+    },
   },
   resolve: {
     alias: {
-      jquery: 'jquery'
-    }
+      jquery: "jquery",
+    },
   },
   define: {
-    global: 'globalThis',
-    'process.env': {},
-    'process.env.NODE_ENV': '"production"'
-  }
-}); 
+    global: "globalThis",
+    "process.env": {},
+    "process.env.NODE_ENV": '"production"',
+  },
+});

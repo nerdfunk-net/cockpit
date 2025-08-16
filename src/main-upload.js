@@ -1,65 +1,60 @@
 // Form Upload.html specific JavaScript with Dropzone integration
 
-
 // Import jQuery setup first
-import $ from './jquery-setup.js';
+import $ from "./jquery-setup.js";
 window.jQuery = window.$ = $;
 globalThis.jQuery = globalThis.$ = $;
 
 // Bootstrap 5
-import * as bootstrap from 'bootstrap';
+import * as bootstrap from "bootstrap";
 window.bootstrap = bootstrap;
 globalThis.bootstrap = bootstrap;
 
 // Global styles
-import './main.scss';
+import "./main.scss";
 
 // Essential scripts for layout
-import './js/helpers/smartresize.js';
-import './js/sidebar.js';
-import './js/init.js';
+import "./js/helpers/smartresize.js";
+import "./js/sidebar.js";
+import "./js/init.js";
 
 // Dropzone for file uploads
-import Dropzone from 'dropzone';
-import 'dropzone/dist/dropzone.css';
+import Dropzone from "dropzone";
+import "dropzone/dist/dropzone.css";
 
 // Make Dropzone available globally
 window.Dropzone = Dropzone;
 globalThis.Dropzone = Dropzone;
 
-
-
 // Configure Dropzone defaults
 Dropzone.autoDiscover = false;
 
 // Initialize Dropzone when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    
-    
-    const dropzoneElement = document.querySelector('.dropzone');
-    
-    if (dropzoneElement) {
-        try {
-            const myDropzone = new Dropzone(dropzoneElement, {
-                url: "#", // Since this is a demo, we'll use a dummy URL
-                maxFilesize: 20, // MB
-                acceptedFiles: "image/*,application/pdf,.psd,.doc,.docx,.xls,.xlsx,.ppt,.pptx",
-                addRemoveLinks: true,
-                dictDefaultMessage: `
+document.addEventListener("DOMContentLoaded", function () {
+  const dropzoneElement = document.querySelector(".dropzone");
+
+  if (dropzoneElement) {
+    try {
+      const myDropzone = new Dropzone(dropzoneElement, {
+        url: "#", // Since this is a demo, we'll use a dummy URL
+        maxFilesize: 20, // MB
+        acceptedFiles: "image/*,application/pdf,.psd,.doc,.docx,.xls,.xlsx,.ppt,.pptx",
+        addRemoveLinks: true,
+        dictDefaultMessage: `
                     <div class="text-center">
                         <i class="fa fa-cloud-upload" style="font-size: 48px; color: #26B99A; margin-bottom: 10px;"></i>
                         <h4>Drop files here or click to upload</h4>
                         <p class="text-muted">Maximum file size: 20MB</p>
                     </div>
                 `,
-                dictRemoveFile: "Remove file",
-                dictCancelUpload: "Cancel upload",
-                dictUploadCanceled: "Upload canceled",
-                dictCancelUploadConfirmation: "Are you sure you want to cancel this upload?",
-                dictRemoveFileConfirmation: "Are you sure you want to remove this file?",
-                
-                // Custom styling
-                previewTemplate: `
+        dictRemoveFile: "Remove file",
+        dictCancelUpload: "Cancel upload",
+        dictUploadCanceled: "Upload canceled",
+        dictCancelUploadConfirmation: "Are you sure you want to cancel this upload?",
+        dictRemoveFileConfirmation: "Are you sure you want to remove this file?",
+
+        // Custom styling
+        previewTemplate: `
                     <div class="dz-preview dz-file-preview">
                         <div class="dz-image">
                             <img data-dz-thumbnail />
@@ -93,50 +88,37 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="dz-remove" data-dz-remove></div>
                     </div>
                 `,
-                
-                init: function() {
-                    this.on("addedfile", function(file) {
-                        
-                    });
-                    
-                    this.on("removedfile", function(file) {
-                        
-                    });
-                    
-                    this.on("success", function(file, response) {
-                        
-                    });
-                    
-                    this.on("error", function(file, errorMessage) {
-                        
-                    });
-                    
-                    // Since this is a demo, simulate successful uploads
-                    this.on("sending", function(file, xhr, formData) {
-                        // Simulate upload success after 2 seconds
-                        setTimeout(() => {
-                            this.emit("success", file, "Upload successful (demo)");
-                            this.emit("complete", file);
-                        }, 2000);
-                        
-                        // Prevent actual sending since this is demo
-                        xhr.abort();
-                    });
-                }
-            });
-            
-            // Store reference globally
-            window.myDropzone = myDropzone;
-            globalThis.myDropzone = myDropzone;
-            
-            
-            
-        } catch (error) {
-            console.error('❌ Error initializing Dropzone:', error);
-        }
-    } else {
-        console.warn('⚠️ Dropzone element not found');
-    }
-});
 
- 
+        init: function () {
+          this.on("addedfile", function (file) {});
+
+          this.on("removedfile", function (file) {});
+
+          this.on("success", function (file, response) {});
+
+          this.on("error", function (file, errorMessage) {});
+
+          // Since this is a demo, simulate successful uploads
+          this.on("sending", function (file, xhr, formData) {
+            // Simulate upload success after 2 seconds
+            setTimeout(() => {
+              this.emit("success", file, "Upload successful (demo)");
+              this.emit("complete", file);
+            }, 2000);
+
+            // Prevent actual sending since this is demo
+            xhr.abort();
+          });
+        },
+      });
+
+      // Store reference globally
+      window.myDropzone = myDropzone;
+      globalThis.myDropzone = myDropzone;
+    } catch (error) {
+      console.error("❌ Error initializing Dropzone:", error);
+    }
+  } else {
+    console.warn("⚠️ Dropzone element not found");
+  }
+});

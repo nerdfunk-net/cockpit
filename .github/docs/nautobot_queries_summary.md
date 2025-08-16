@@ -81,6 +81,7 @@
             }
         }
     }
+
 # devices by role
 
     query devices_by_role($role_filter: [String]) {
@@ -134,6 +135,7 @@
             }
         }
     }
+
 # devices by manufacturer
 
     query devices_by_manufacturer($manufacturer_filter: [String]) {
@@ -170,7 +172,7 @@
         }
     }
 
-# get roles by content_type (eg. dcim.device)   
+# get roles by content_type (eg. dcim.device)
 
 ## GraphQL
 
@@ -201,12 +203,15 @@
 # There is no graphql query to get ALL custom fields. We have to use the REST API
 
 ## all custom fields
+
 {nautobot_url}/api/extras/custom-fields/?depth=0&exclude_m2m=false
 
 ## custom fields for dcim.device
+
 {nautobot_url}/api/extras/custom-fields/?content_types=dcim.device
 
 # get custom fields for devices via Cockpit API
 
 ## REST API endpoint
+
 /api/nautobot/custom-fields/devices

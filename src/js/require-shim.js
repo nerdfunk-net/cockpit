@@ -7,16 +7,19 @@
 (function (global) {
   // Helper – link module.exports to jQuery if possible
   function ensureModuleExports() {
-    if (typeof global.jQuery !== 'undefined' && (typeof global.module === 'undefined' || !global.module.exports)) {
+    if (
+      typeof global.jQuery !== "undefined" &&
+      (typeof global.module === "undefined" || !global.module.exports)
+    ) {
       global.module = { exports: global.jQuery };
       global.exports = global.jQuery;
     }
   }
 
   // Define require() if it doesn't already exist
-  if (typeof global.require === 'undefined') {
+  if (typeof global.require === "undefined") {
     global.require = function (name) {
-      if (name === 'jquery' || name === 'jquery') {
+      if (name === "jquery" || name === "jquery") {
         return global.jQuery || global.$;
       }
       return {};
@@ -29,7 +32,7 @@
   ensureModuleExports();
 
   // If jQuery is loaded later (unlikely but safe), run again after the load event.
-  if (typeof global.jQuery === 'undefined') {
-    global.addEventListener('load', ensureModuleExports);
+  if (typeof global.jQuery === "undefined") {
+    global.addEventListener("load", ensureModuleExports);
   }
-})(typeof window !== 'undefined' ? window : this); 
+})(typeof window !== "undefined" ? window : this);

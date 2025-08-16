@@ -7,8 +7,8 @@ services:
     hostname: cockpit
     restart: unless-stopped
     ports:
-      - "3000:3000"  # Frontend port
-      - "8000:8000"  # Backend port
+      - "3000:3000" # Frontend port
+      - "8000:8000" # Backend port
     networks:
       - backend
     environment:
@@ -17,12 +17,12 @@ services:
       - VITE_HOST=0.0.0.0
       - VITE_PORT=3000
       - VITE_ALLOWED_HOSTS=${VITE_ALLOWED_HOSTS:-auto}
-      
+
       # Backend Server Configuration
       - SERVER_HOST=0.0.0.0
       - SERVER_PORT=8000
       - DEBUG=false
-      
+
       # Nautobot Configuration (REQUIRED - Set these values)
       - NAUTOBOT_HOST=${NAUTOBOT_HOST:-http://localhost:8080}
       - NAUTOBOT_TOKEN=${NAUTOBOT_TOKEN:-your-nautobot-token-here}
@@ -51,7 +51,8 @@ services:
       - ./data/settings:/app/data/settings
       - ./data/git:/app/data/git
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs"]
+      test:
+        ["CMD", "sh", "-c", "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs"]
       interval: 30s
       timeout: 10s
       retries: 3
