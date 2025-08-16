@@ -179,8 +179,8 @@
                         <label class="control-label">Network Discovery Mode</label>
                         <small class="help-block">Choose the method for device authentication and detection.</small>
                         <select class="form-control" id="discovery-mode" required>
-                          <option value="napalm">Napalm (Default - Full device detection with platform identification)</option>
-                          <option value="ssh-login">SSH Login (Command-based device detection)</option>
+                          <option value="napalm">Napalm (Full device detection with platform identification)</option>
+                          <option value="ssh-login" selected>SSH Login (Command-based device detection)</option>
                         </select>
                         <div class="help-block" style="margin-top:8px;">
                           <strong>Napalm:</strong> Attempts Cisco (ios/nxos/iosxr) and Linux detection with full platform details.<br>
@@ -448,6 +448,30 @@
   .location-dropdown-item.no-results{color:#858796;font-style:italic;cursor:default;}
   .location-dropdown-item.no-results:hover{background-color:transparent;}
   .has-selection{background-color:#d1ecf1;border-color:#bee5eb;}
+  /* Remove hover effect on the Onboard Selected Devices button */
+  #onboard-selected-btn.btn-success{
+    background-color:#26b99a !important;
+    border-color:#169F85 !important;
+    color:#fff !important;
+    transition:none !important;
+  }
+  #onboard-selected-btn.btn-success:hover,
+  #onboard-selected-btn.btn-success:focus,
+  #onboard-selected-btn.btn-success:active,
+  #onboard-selected-btn.btn-success.active{
+    background-color:#26b99a !important;
+    border-color:#169F85 !important;
+    color:#fff !important;
+    box-shadow:none !important;
+  }
+  #onboard-selected-btn.btn-success:disabled,
+  #onboard-selected-btn.btn-success[disabled]{
+    background-color:#26b99a !important;
+    border-color:#169F85 !important;
+    color:#fff !important;
+    opacity:0.5;
+    cursor:not-allowed;
+  }
   </style>
 
   <script>
@@ -455,7 +479,12 @@
     if(!localStorage.getItem('auth_token')){window.location.href='login.html';}
 
     // State
-  let credentialsData=[]; let scanJob=null; let discoveredDevices=[]; let deviceMetadata={}; let deviceModalInstance=null; let namespacesList=[]; let rolesList=[]; let locationsData=[]; let secretGroupsList=[];
+  // Debugging: set window.SCAN_ADD_DEBUG=false in console to silence
+  window.SCAN_ADD_DEBUG = true;
+  function dbg(){ try{ if(window.SCAN_ADD_DEBUG){ const ts=new Date().toISOString(); console.debug('[scan-and-add]', ts, ...arguments); } }catch(e){} }
+    let credentialsData=[]; let scanJob=null; let discoveredDevices=[]; let deviceMetadata={}; let deviceModalInstance=null; let namespacesList=[]; let rolesList=[]; let locationsData=[]; let secretGroupsList=[];
+    // Track selection in a Set to avoid DOM-event ordering races when counting checked boxes
+    let selectedDevices = new Set();
   // Full objects with IDs for mapping to backend *_id fields
   let namespacesFull=[]; let rolesFull=[]; let platformsList=[]; let deviceStatusesList=[]; let interfaceStatusesList=[]; let ipAddressStatusesList=[];
 
@@ -484,6 +513,7 @@
   await loadOnboardingGitRepos();
   await loadInventoryTemplates();
   setupEventListeners();
+  try{ observeOnboardBtn(); }catch(e){ dbg('observeOnboardBtn failed', e); }
   // Normalize initial CIDR button states
   updateCIDRButtons();
   // Normalize initial credential button states
@@ -501,6 +531,29 @@
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) logoutBtn.addEventListener('click', e => { e.preventDefault(); if(window.authManager) window.authManager.logout(); });
       } catch(e){ console.error('Init failed', e); }
+    }
+
+    function observeOnboardBtn(){
+      const btn=document.getElementById('onboard-selected-btn'); if(!btn) return;
+      const obs=new MutationObserver((muts)=>{
+        muts.forEach(m=>{
+          if(m.attributeName==='disabled'){
+            dbg('MutationObserver: onboard button disabled =>', btn.disabled);
+            // Auto-correct: if something else disabled the button while selections exist, re-enable
+            try{
+              const domCheckedCount = document.querySelectorAll('.device-checkbox:checked').length;
+              const shouldBeEnabled = (selectedDevices && selectedDevices.size>0) || domCheckedCount>0;
+              if(shouldBeEnabled && btn.disabled){
+                dbg('MutationObserver: correcting unintended disable (selections present)');
+                btn.disabled = false;
+              }
+            }catch(e){ /* noop */ }
+          }
+        });
+      });
+      obs.observe(btn, { attributes:true, attributeFilter:['disabled'] });
+      window._onboardBtnObserver = obs;
+      dbg('MutationObserver attached to onboard button');
     }
 
     async function loadNamespaces(){
@@ -604,7 +657,17 @@
             return `<option value="${String(value)}">${display} ${cat?` (${cat})`:''}</option>`;
           }).join('');
         }
-        sel.innerHTML = '<option value="">— select repository —</option>' + (optionsHtml || '');
+        // If there is exactly one candidate (either filtered or fallback list), pre-select it for convenience
+        const candidates = (filtered && filtered.length) ? filtered : repos;
+        if(candidates && candidates.length === 1){
+          const r = candidates[0];
+          const display = r.name || r.repo_name || r.display_name || r.path || r.url || (r.id?String(r.id):JSON.stringify(r));
+          const value = (r.id != null ? String(r.id) : (r.name || r.repo_name || display));
+          sel.innerHTML = '<option value="">— select repository —</option>' + `<option value="${String(value)}">${display}</option>`;
+          sel.value = String(value);
+        } else {
+          sel.innerHTML = '<option value="">— select repository —</option>' + (optionsHtml || '');
+        }
       }catch(e){ console.error('Failed to load onboarding git repos', e); sel.innerHTML = '<option value="">(failed to load)</option>'; }
     }
 
@@ -613,7 +676,7 @@
       const sel = document.getElementById('onboarding-inventory-template-select'); if(!sel) return;
       sel.innerHTML = '<option value="">Loading...</option>';
       try{
-        const resp = await authManager.apiRequest('/api/templates?category=inventory&active_only=true');
+  const resp = await authManager.apiRequest('/api/templates?category=onboarding&active_only=true');
         console.debug('loadInventoryTemplates: raw response', resp);
         let templates = [];
         if(Array.isArray(resp)) templates = resp;
@@ -631,7 +694,17 @@
           console.warn('loadInventoryTemplates: templates present but mapping produced no options; showing raw list');
           optionsHtml = templates.map(t=>{ const name = t.name || t.title || t.template_name || JSON.stringify(t); const id = t.id || t.template_id || JSON.stringify(t); return `<option value="${String(id)}">${name}</option>`; }).join('');
         }
-        sel.innerHTML = '<option value="">— select template —</option>' + (optionsHtml || '');
+        // If exactly one template candidate exists, auto-select it for convenience
+        const candidates = templates;
+        if(candidates && candidates.length === 1){
+          const t = candidates[0];
+          const id = t.id || t.template_id || t.name || JSON.stringify(t);
+          const name = t.name || t.title || t.template_name || String(id);
+          sel.innerHTML = '<option value="">— select template —</option>' + `<option value="${String(id)}">${name}</option>`;
+          sel.value = String(id);
+        } else {
+          sel.innerHTML = '<option value="">— select template —</option>' + (optionsHtml || '');
+        }
       }catch(e){ console.error('Failed to load inventory templates', e); sel.innerHTML = '<option value="">(failed to load)</option>'; }
     }
 
@@ -751,6 +824,32 @@
       // Delegated for dynamic add/remove
       document.getElementById('cidrs-container').addEventListener('click', cidrContainerHandler);
       document.getElementById('credentials-container').addEventListener('click', credentialContainerHandler);
+      // Devices table delegated handlers: row click toggles checkbox, changes update onboard button
+      const _devicesTbody = document.getElementById('devices-tbody');
+      if(_devicesTbody){
+        _devicesTbody.addEventListener('click', e=>{
+          try{
+            // If the Configure button was clicked, let its own handler run
+            if(e.target.closest('.device-config-btn')) return;
+            // If the checkbox itself (or any control) was clicked, let the native change handler handle it
+            if(e.target.closest('input[type="checkbox"]')) return;
+            if(e.target.closest('a') || e.target.closest('button')) return;
+            // Otherwise, toggle the row's checkbox and dispatch a change event to keep state in sync
+            const row = e.target.closest('tr');
+            if(row){
+              const cb = row.querySelector('.device-checkbox');
+              if(cb){
+    const before = cb.checked;
+    cb.checked = !cb.checked;
+    dbg('Row click toggled checkbox', { ip: cb.dataset.ip, before, after: cb.checked });
+                // Dispatch change so our change listener updates the Set and button
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            }
+          }catch(err){ console.error('devices-tbody click handler error', err); updateOnboardButton(); }
+        });
+  _devicesTbody.addEventListener('change', e=>{ try{ if(e.target && e.target.classList && e.target.classList.contains('device-checkbox')){ const ip = e.target.dataset.ip; const checked = !!e.target.checked; if(checked) selectedDevices.add(ip); else selectedDevices.delete(ip); const domCount = document.querySelectorAll('.device-checkbox:checked').length; dbg('Checkbox change', { ip, checked, selectedSize: selectedDevices.size, domChecked: domCount }); updateOnboardButton(); } }catch(err){ console.error('devices-tbody change handler error', err); } });
+      }
     }
 
     function cidrContainerHandler(e){
@@ -893,7 +992,9 @@
   function populateDevicesTable(){
       const tbody=document.getElementById('devices-tbody');
       tbody.innerHTML='';
+      const presentIps = new Set();
       discoveredDevices.forEach(d=>{
+        presentIps.add(d.ip);
         const existing = deviceMetadata[d.ip] || {};
         // establish defaults once, then keep overrides
         const merged = {
@@ -928,7 +1029,12 @@
            <td><button class='btn btn-sm btn-info device-config-btn' data-ip='${merged.ip}'><i class='fa fa-edit'></i> Configure</button></td>`;
         tbody.appendChild(tr);
       });
-      document.querySelectorAll('.device-checkbox').forEach(cb=>cb.addEventListener('change', updateOnboardButton));
+  // Remove any selections for IPs that are no longer present
+  for(const ip of Array.from(selectedDevices)){ if(!presentIps.has(ip)) selectedDevices.delete(ip); }
+  // Ensure checkboxes reflect current selectedDevices set
+  document.querySelectorAll('.device-checkbox').forEach(cb=>{ const ip = cb.dataset.ip; cb.checked = selectedDevices.has(ip); });
+  // Update select-all checkbox state
+  try{ const master = document.getElementById('select-all-devices'); if(master){ const all = Array.from(document.querySelectorAll('.device-checkbox')); master.checked = all.length>0 && all.every(cb=>cb.checked); } }catch(e){}
       updateOnboardButton();
     }
 
@@ -959,9 +1065,41 @@
     }
   function clearScanProgressUI(){ try{ const bar=document.getElementById('scan-progress-bar'); if(bar) bar.style.width='0%'; const txt=document.getElementById('scan-progress-text'); if(txt) txt.textContent='0 / 0'; const status=document.getElementById('scan-status'); if(status) status.textContent='-'; ['metric-alive','metric-authenticated','metric-unreachable','metric-auth-failed','metric-driver-na'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; }); }catch(e){}
   }
-  function resetScanForm(){ const btn=document.getElementById('start-scan-btn'); if(btn) btn.disabled=false; const sp=document.getElementById('scan-progress'); if(sp) sp.style.display='none'; clearScanProgressUI(); scanJob=null; discoveredDevices=[]; deviceMetadata={}; }
-    function toggleAllDevices(){ const master=document.getElementById('select-all-devices'); document.querySelectorAll('.device-checkbox').forEach(cb=>cb.checked=master.checked); updateOnboardButton(); }
-    function updateOnboardButton(){ const cnt=document.querySelectorAll('.device-checkbox:checked').length; const btn=document.getElementById('onboard-selected-btn'); if(btn) btn.disabled=cnt===0; }
+  
+  function resetScanForm(){
+    const btn=document.getElementById('start-scan-btn'); if(btn) btn.disabled=false;
+    const sp=document.getElementById('scan-progress'); if(sp) sp.style.display='none';
+    clearScanProgressUI();
+    scanJob=null; discoveredDevices=[]; deviceMetadata={};
+    // Also clear any previous selections to ensure button state is accurate when returning later
+  try{ selectedDevices.clear(); dbg('resetScanForm: cleared selections'); updateOnboardButton(); }catch(e){}
+  }
+  function toggleAllDevices(){
+    const master=document.getElementById('select-all-devices');
+    const check = !!(master && master.checked);
+  const boxes = Array.from(document.querySelectorAll('.device-checkbox'));
+  boxes.forEach(cb=>{
+      cb.checked = check;
+      const ip = cb.dataset.ip; if(!ip) return;
+      if(check) selectedDevices.add(ip); else selectedDevices.delete(ip);
+    });
+  dbg('toggleAllDevices', { masterChecked: check, boxes: boxes.length, selectedSize: selectedDevices.size });
+    updateOnboardButton();
+  }
+
+    // More robust onboard button updater: use authoritative selectedDevices Set
+    function updateOnboardButton(){
+      const btn = document.getElementById('onboard-selected-btn'); if(!btn) return;
+      try{
+        // Primary source of truth is the selection Set; fall back to DOM in case of desync
+  const domCheckedCount = document.querySelectorAll('.device-checkbox:checked').length;
+  const anySelected = selectedDevices.size > 0 || domCheckedCount > 0;
+  const before = btn.disabled;
+  btn.disabled = !anySelected;
+  if(before !== btn.disabled){ dbg('updateOnboardButton: state changed', { selectedSize: selectedDevices.size, domCheckedCount, disabled: btn.disabled }); }
+  else { dbg('updateOnboardButton: unchanged', { selectedSize: selectedDevices.size, domCheckedCount, disabled: btn.disabled }); }
+      }catch(e){ console.error('updateOnboardButton error', e); btn.disabled = true; }
+    }
 
   function editDeviceMetadata(ip){
       const d = deviceMetadata[ip];
@@ -1072,7 +1210,7 @@
     // Assign to All
     let assignAllModalInstance=null;
     function openAssignAllModal(){
-      const selected=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip);
+      const selected = Array.from(selectedDevices);
       if(selected.length===0){ showAlert('Select devices first','warning'); return; }
       const modal=document.getElementById('assign-all-modal');
       if(!assignAllModalInstance){ assignAllModalInstance=new bootstrap.Modal(modal,{backdrop:true}); }
@@ -1082,7 +1220,7 @@
       assignAllModalInstance.show();
     }
     function confirmAssignAll(){
-      const selected=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip);
+      const selected = Array.from(selectedDevices);
       if(selected.length===0){ showAlert('Select devices first','warning'); return; }
       const updates={};
       const getVal=(id)=>document.getElementById(id).value.trim();
@@ -1115,7 +1253,7 @@
 
 
   async function onboardSelectedDevices(){
-      const ips=[...document.querySelectorAll('.device-checkbox:checked')].map(cb=>cb.dataset.ip);
+      const ips = Array.from(selectedDevices);
       if(ips.length===0){ showAlert('Select devices to onboard','warning'); return; }
 
       const btn=document.getElementById('onboard-selected-btn');
