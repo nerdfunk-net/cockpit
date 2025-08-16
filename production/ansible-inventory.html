@@ -297,7 +297,10 @@
             <br />
 
             <!-- sidebar menu -->
-            <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+            <div
+              id="sidebar-menu"
+              class="main_menu_side hidden-print main_menu"
+            >
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
@@ -316,7 +319,9 @@
                         >
                       </li>
                       <li>
-                        <a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a>
+                        <a href="sync_devices.html"
+                          ><i class="fas fa-sync"></i> Sync Devices</a
+                        >
                       </li>
                       <li>
                         <a href="scan-and-add.html"
@@ -327,20 +332,26 @@
                   </li>
                   <li>
                     <a
-                      ><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span
+                      ><i class="fas fa-cogs"></i> Configs
+                      <span class="fas fa-chevron-down"></span
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="backup.html"><i class="fas fa-save"></i> Backup</a>
+                        <a href="backup.html"
+                          ><i class="fas fa-save"></i> Backup</a
+                        >
                       </li>
                       <li>
-                        <a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a>
+                        <a href="compare.html"
+                          ><i class="fas fa-exchange-alt"></i> Compare</a
+                        >
                       </li>
                     </ul>
                   </li>
                   <li>
                     <a
-                      ><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span
+                      ><i class="fas fa-cogs"></i> Ansible
+                      <span class="fas fa-chevron-down"></span
                     ></a>
                     <ul class="nav child_menu">
                       <li>
@@ -357,7 +368,9 @@
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a>
+                        <a href="settings-nautobot.html"
+                          ><i class="fas fa-server"></i> Nautobot</a
+                        >
                       </li>
                       <li>
                         <a href="settings-templates.html"
@@ -370,7 +383,9 @@
                         >
                       </li>
                       <li>
-                        <a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a>
+                        <a href="settings-cache.html"
+                          ><i class="fas fa-bolt"></i> Cache</a
+                        >
                       </li>
                       <li>
                         <a href="settings-credentials.html"
@@ -394,13 +409,22 @@
               >
                 <span class="fas fa-cog" aria-hidden="true"></span>
               </a>
-              <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
+              <a
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="FullScreen"
+              >
                 <span class="fas fa-expand" aria-hidden="true"></span>
               </a>
               <a data-bs-toggle="tooltip" data-bs-placement="top" title="Lock">
                 <span class="fas fa-eye-slash" aria-hidden="true"></span>
               </a>
-              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Logout" href="login.html">
+              <a
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Logout"
+                href="login.html"
+              >
                 <span class="fas fa-power-off" aria-hidden="true"></span>
               </a>
             </div>
@@ -488,7 +512,10 @@
                           <option value="device_type">Device Type</option>
                           <option value="manufacturer">Manufacturer</option>
                           <option value="platform">Platform</option>
-                          <option value="custom_fields" class="custom-fields-trigger">
+                          <option
+                            value="custom_fields"
+                            class="custom-fields-trigger"
+                          >
                             Custom fields...
                           </option>
                         </select>
@@ -498,8 +525,13 @@
                           id="custom-fields-container"
                           style="display: none"
                         >
-                          <div class="custom-fields-menu" id="custom-fields-menu">
-                            <div class="custom-field-item no-results">Loading custom fields...</div>
+                          <div
+                            class="custom-fields-menu"
+                            id="custom-fields-menu"
+                          >
+                            <div class="custom-field-item no-results">
+                              Loading custom fields...
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -538,7 +570,10 @@
                             placeholder="Search locations..."
                             autocomplete="off"
                           />
-                          <input type="hidden" id="condition-value-location-hidden" />
+                          <input
+                            type="hidden"
+                            id="condition-value-location-hidden"
+                          />
                           <div
                             id="condition-value-location-dropdown"
                             class="location-dropdown"
@@ -554,7 +589,8 @@
                           class="form-control text-muted"
                           style="display: block"
                         >
-                          <i class="fas fa-info-circle"></i> Select a field first
+                          <i class="fas fa-info-circle"></i> Select a field
+                          first
                         </div>
                       </div>
                       <div class="col-md-1">
@@ -568,7 +604,10 @@
                       <div class="col-md-2">
                         <label>&nbsp;</label>
                         <div>
-                          <button id="add-condition" class="btn btn-primary btn-sm">
+                          <button
+                            id="add-condition"
+                            class="btn btn-primary btn-sm"
+                          >
                             <i class="fas fa-plus"></i> Add Condition
                           </button>
                         </div>
@@ -580,8 +619,8 @@
                       <h4>Current Conditions:</h4>
                       <div id="conditions-list" class="alert alert-info">
                         <em
-                          >No conditions added yet. Add conditions above to build your inventory
-                          filter.</em
+                          >No conditions added yet. Add conditions above to
+                          build your inventory filter.</em
                         >
                       </div>
                     </div>
@@ -589,10 +628,18 @@
                     <!-- Preview Button -->
                     <div class="row" style="margin-bottom: 20px">
                       <div class="col-md-12 text-center">
-                        <button id="preview-btn" class="btn btn-success btn-lg" disabled>
+                        <button
+                          id="preview-btn"
+                          class="btn btn-success btn-lg"
+                          disabled
+                        >
                           <i class="fas fa-eye"></i> Preview Results
                         </button>
-                        <span id="preview-loading" class="ml-2" style="display: none">
+                        <span
+                          id="preview-loading"
+                          class="ml-2"
+                          style="display: none"
+                        >
                           <i class="fas fa-spinner fa-spin"></i> Loading...
                         </span>
                       </div>
@@ -627,8 +674,8 @@
                           <!-- Loading state -->
                           <tr>
                             <td colspan="8" class="text-center">
-                              <i class="fas fa-info-circle"></i> Add conditions and click "Preview
-                              Results" to load devices.
+                              <i class="fas fa-info-circle"></i> Add conditions
+                              and click "Preview Results" to load devices.
                             </td>
                           </tr>
                         </tbody>
@@ -636,7 +683,10 @@
                     </div>
 
                     <!-- Pagination Container - OUTSIDE table-responsive like sync_devices.html -->
-                    <div id="ansible-pagination" class="pagination-container"></div>
+                    <div
+                      id="ansible-pagination"
+                      class="pagination-container"
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -660,14 +710,22 @@
                       </div>
                       <div class="col-md-4">
                         <label>Template Name:</label>
-                        <select id="template-name" class="form-control" disabled>
+                        <select
+                          id="template-name"
+                          class="form-control"
+                          disabled
+                        >
                           <option value="">Select Template...</option>
                         </select>
                       </div>
                       <div class="col-md-4">
                         <label>&nbsp;</label>
                         <div>
-                          <button id="generate-btn" class="btn btn-primary btn-lg" disabled>
+                          <button
+                            id="generate-btn"
+                            class="btn btn-primary btn-lg"
+                            disabled
+                          >
                             <i class="fas fa-cog"></i> Generate Inventory
                           </button>
                         </div>
@@ -690,12 +748,14 @@
                     <div class="row" style="margin-bottom: 15px">
                       <div class="col-md-6">
                         <div class="alert alert-success">
-                          <strong id="final-device-count">0</strong> devices in inventory
+                          <strong id="final-device-count">0</strong> devices in
+                          inventory
                         </div>
                       </div>
                       <div class="col-md-6 text-right">
                         <button id="download-btn" class="btn btn-success">
-                          <i class="fas fa-download"></i> Download inventory.yaml
+                          <i class="fas fa-download"></i> Download
+                          inventory.yaml
                         </button>
                         <button id="copy-btn" class="btn btn-info ml-2">
                           <i class="fas fa-copy"></i> Copy to Clipboard
@@ -753,14 +813,18 @@
 
         bindEvents() {
           // Add condition button
-          document.getElementById("add-condition").addEventListener("click", () => {
-            this.addCondition();
-          });
+          document
+            .getElementById("add-condition")
+            .addEventListener("click", () => {
+              this.addCondition();
+            });
 
           // Preview button
-          document.getElementById("preview-btn").addEventListener("click", () => {
-            this.previewResults();
-          });
+          document
+            .getElementById("preview-btn")
+            .addEventListener("click", () => {
+              this.previewResults();
+            });
 
           // Clear all button
           document.getElementById("clear-all").addEventListener("click", () => {
@@ -768,19 +832,25 @@
           });
 
           // Template category change
-          document.getElementById("template-category").addEventListener("change", (e) => {
-            this.loadTemplatesForCategory(e.target.value);
-          });
+          document
+            .getElementById("template-category")
+            .addEventListener("change", (e) => {
+              this.loadTemplatesForCategory(e.target.value);
+            });
 
           // Generate inventory button
-          document.getElementById("generate-btn").addEventListener("click", () => {
-            this.generateInventory();
-          });
+          document
+            .getElementById("generate-btn")
+            .addEventListener("click", () => {
+              this.generateInventory();
+            });
 
           // Download button
-          document.getElementById("download-btn").addEventListener("click", () => {
-            this.downloadInventory();
-          });
+          document
+            .getElementById("download-btn")
+            .addEventListener("click", () => {
+              this.downloadInventory();
+            });
 
           // Copy button
           document.getElementById("copy-btn").addEventListener("click", () => {
@@ -788,37 +858,48 @@
           });
 
           // Template name change - enable generate button
-          document.getElementById("template-name").addEventListener("change", (e) => {
-            document.getElementById("generate-btn").disabled = !e.target.value;
-          });
+          document
+            .getElementById("template-name")
+            .addEventListener("change", (e) => {
+              document.getElementById("generate-btn").disabled =
+                !e.target.value;
+            });
 
           // Field change - update value input type
           // Field change handler
-          document.getElementById("condition-field").addEventListener("change", (e) => {
-            this.handleFieldChange(e.target.value);
-          });
+          document
+            .getElementById("condition-field")
+            .addEventListener("change", (e) => {
+              this.handleFieldChange(e.target.value);
+            });
 
           // Operator change handler for location field
-          document.getElementById("condition-operator").addEventListener("change", (e) => {
-            const field = document.getElementById("condition-field").value;
-            if (field === "location") {
-              this.handleLocationOperatorChange(e.target.value);
-            }
-          });
+          document
+            .getElementById("condition-operator")
+            .addEventListener("change", (e) => {
+              const field = document.getElementById("condition-field").value;
+              if (field === "location") {
+                this.handleLocationOperatorChange(e.target.value);
+              }
+            });
 
           // Enter key in value field
-          document.getElementById("condition-value").addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-              this.addCondition();
-            }
-          });
+          document
+            .getElementById("condition-value")
+            .addEventListener("keypress", (e) => {
+              if (e.key === "Enter") {
+                this.addCondition();
+              }
+            });
 
           // Enter key in value select field
-          document.getElementById("condition-value-select").addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-              this.addCondition();
-            }
-          });
+          document
+            .getElementById("condition-value-select")
+            .addEventListener("keypress", (e) => {
+              if (e.key === "Enter") {
+                this.addCondition();
+              }
+            });
 
           // Enter key in location search field
           document
@@ -832,7 +913,13 @@
 
         updateOperatorOptions(fieldName) {
           const operatorSelect = document.getElementById("condition-operator");
-          const restrictedFields = ["role", "tag", "device_type", "manufacturer", "platform"];
+          const restrictedFields = [
+            "role",
+            "tag",
+            "device_type",
+            "manufacturer",
+            "platform",
+          ];
 
           // Check if this is a custom field (starts with cf_)
           const isCustomField = fieldName && fieldName.startsWith("cf_");
@@ -882,7 +969,9 @@
         async loadFieldValues(fieldName, forceInputType = null) {
           const textInput = document.getElementById("condition-value");
           const selectInput = document.getElementById("condition-value-select");
-          const locationSelector = document.getElementById("condition-value-location");
+          const locationSelector = document.getElementById(
+            "condition-value-location",
+          );
           const loadingDiv = document.getElementById("condition-value-loading");
 
           // Hide all input types
@@ -890,7 +979,8 @@
           selectInput.style.display = "none";
           locationSelector.style.display = "none";
           loadingDiv.style.display = "block";
-          loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading values...';
+          loadingDiv.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Loading values...';
 
           try {
             console.log("Making API request for field:", fieldName); // Debug log
@@ -906,7 +996,9 @@
                 return;
               } else {
                 // Use hierarchical selector for equals operator (default)
-                const response = await window.authManager.apiRequest("/api/nautobot/locations");
+                const response = await window.authManager.apiRequest(
+                  "/api/nautobot/locations",
+                );
                 console.log("Location API response:", response); // Debug log
 
                 // Initialize the hierarchical location selector
@@ -914,13 +1006,15 @@
 
                 loadingDiv.style.display = "none";
                 locationSelector.style.display = "block";
-                document.getElementById("condition-value-location-search").focus();
+                document
+                  .getElementById("condition-value-location-search")
+                  .focus();
                 return;
               }
             }
 
             const response = await window.authManager.apiRequest(
-              `/api/ansible-inventory/field-values/${fieldName}`
+              `/api/ansible-inventory/field-values/${fieldName}`,
             );
             console.log("API response:", response); // Debug log
 
@@ -933,8 +1027,13 @@
 
             if (shouldUseSelect) {
               // Use select dropdown
-              console.log("Using select dropdown with", response.values.length, "options"); // Debug log
-              selectInput.innerHTML = '<option value="">Choose value...</option>';
+              console.log(
+                "Using select dropdown with",
+                response.values.length,
+                "options",
+              ); // Debug log
+              selectInput.innerHTML =
+                '<option value="">Choose value...</option>';
               response.values.forEach((item) => {
                 const option = document.createElement("option");
                 option.value = item.value;
@@ -978,23 +1077,31 @@
 
           if (!fieldName) {
             // No field selected - show default message
-            const loadingDiv = document.getElementById("condition-value-loading");
+            const loadingDiv = document.getElementById(
+              "condition-value-loading",
+            );
             const textInput = document.getElementById("condition-value");
-            const selectInput = document.getElementById("condition-value-select");
-            const locationSelector = document.getElementById("condition-value-location");
+            const selectInput = document.getElementById(
+              "condition-value-select",
+            );
+            const locationSelector = document.getElementById(
+              "condition-value-location",
+            );
 
             textInput.style.display = "none";
             selectInput.style.display = "none";
             locationSelector.style.display = "none";
             loadingDiv.style.display = "block";
-            loadingDiv.innerHTML = '<i class="fas fa-info-circle"></i> Select a field first';
+            loadingDiv.innerHTML =
+              '<i class="fas fa-info-circle"></i> Select a field first';
             console.log("No field selected"); // Debug log
             return;
           }
 
           // Special handling for location field - always use hierarchical selector for equals
           if (fieldName === "location") {
-            const operator = document.getElementById("condition-operator").value;
+            const operator =
+              document.getElementById("condition-operator").value;
             if (operator === "equals") {
               await this.loadFieldValues(fieldName, "select");
             } else {
@@ -1014,7 +1121,9 @@
           // Get value from the active input (text, select, or location selector)
           const textInput = document.getElementById("condition-value");
           const selectInput = document.getElementById("condition-value-select");
-          const locationSelector = document.getElementById("condition-value-location");
+          const locationSelector = document.getElementById(
+            "condition-value-location",
+          );
 
           let value = "";
 
@@ -1137,13 +1246,16 @@
           // Reset to loading display
           const textInput = document.getElementById("condition-value");
           const selectInput = document.getElementById("condition-value-select");
-          const locationSelector = document.getElementById("condition-value-location");
+          const locationSelector = document.getElementById(
+            "condition-value-location",
+          );
           const loadingDiv = document.getElementById("condition-value-loading");
           textInput.style.display = "none";
           selectInput.style.display = "none";
           locationSelector.style.display = "none";
           loadingDiv.style.display = "block";
-          loadingDiv.innerHTML = '<i class="fas fa-info-circle"></i> Select a field first';
+          loadingDiv.innerHTML =
+            '<i class="fas fa-info-circle"></i> Select a field first';
         }
 
         clearAll() {
@@ -1188,23 +1300,34 @@
 
             // Convert conditions to API format
             const operations = this.buildOperationsFromConditions();
-            console.log("Sending operations to API:", JSON.stringify(operations, null, 2));
+            console.log(
+              "Sending operations to API:",
+              JSON.stringify(operations, null, 2),
+            );
 
-            const response = await window.authManager.apiRequest("/api/ansible-inventory/preview", {
-              method: "POST",
-              body: JSON.stringify({ operations: operations }),
-            });
+            const response = await window.authManager.apiRequest(
+              "/api/ansible-inventory/preview",
+              {
+                method: "POST",
+                body: JSON.stringify({ operations: operations }),
+              },
+            );
 
             console.log("Received API response:", response);
 
             if (response && response.devices) {
               this.currentResults = response.devices;
               this.currentPage = 1; // Reset to first page
-              console.log("Setting currentResults to:", this.currentResults.length, "devices");
+              console.log(
+                "Setting currentResults to:",
+                this.currentResults.length,
+                "devices",
+              );
               this.displayResults(response);
 
               // Show template section
-              document.getElementById("template-section").style.display = "block";
+              document.getElementById("template-section").style.display =
+                "block";
               console.log("Results loaded successfully");
             } else {
               console.error("Invalid response format. Response:", response);
@@ -1272,7 +1395,11 @@
             }
           });
 
-          console.log("Grouped conditions:", { andConditions, orConditions, andNotConditions });
+          console.log("Grouped conditions:", {
+            andConditions,
+            orConditions,
+            andNotConditions,
+          });
 
           // Build operations based on what we have
           const operations = [];
@@ -1309,12 +1436,15 @@
         displayResults(response) {
           console.log("displayResults called with:", response);
 
-          document.getElementById("device-count").textContent = response.total_count;
+          document.getElementById("device-count").textContent =
+            response.total_count;
           document.getElementById("operations-count").textContent =
             `(${response.operations_executed} queries executed)`;
 
           // Calculate pagination
-          this.totalPages = Math.ceil(this.currentResults.length / this.pageSize);
+          this.totalPages = Math.ceil(
+            this.currentResults.length / this.pageSize,
+          );
 
           // Display current page
           this.displayCurrentPage();
@@ -1328,10 +1458,13 @@
           tbody.innerHTML = "";
 
           const startIndex = (this.currentPage - 1) * this.pageSize;
-          const endIndex = Math.min(startIndex + this.pageSize, this.currentResults.length);
+          const endIndex = Math.min(
+            startIndex + this.pageSize,
+            this.currentResults.length,
+          );
 
           console.log(
-            `Displaying page ${this.currentPage}: devices ${startIndex + 1} to ${endIndex} of ${this.currentResults.length}`
+            `Displaying page ${this.currentPage}: devices ${startIndex + 1} to ${endIndex} of ${this.currentResults.length}`,
           );
 
           const pageDevices = this.currentResults.slice(startIndex, endIndex);
@@ -1351,11 +1484,15 @@
             `;
           });
 
-          console.log("Finished populating table. Table rows count:", tbody.rows.length);
+          console.log(
+            "Finished populating table. Table rows count:",
+            tbody.rows.length,
+          );
         }
 
         updatePaginationControls() {
-          const paginationContainer = document.getElementById("ansible-pagination");
+          const paginationContainer =
+            document.getElementById("ansible-pagination");
 
           // Always show pagination if we have results
           if (this.currentResults.length === 0) {
@@ -1430,7 +1567,11 @@
             const link = e.target.closest("a[data-page]");
             if (link) {
               const page = parseInt(link.getAttribute("data-page"));
-              if (page !== this.currentPage && page >= 1 && page <= this.totalPages) {
+              if (
+                page !== this.currentPage &&
+                page >= 1 &&
+                page <= this.totalPages
+              ) {
                 this.currentPage = page;
                 this.displayCurrentPage();
                 this.updatePaginationControls();
@@ -1439,12 +1580,15 @@
           });
 
           // Add change event listener for page size selector
-          const pageSizeSelect = paginationContainer.querySelector("#page-size");
+          const pageSizeSelect =
+            paginationContainer.querySelector("#page-size");
           if (pageSizeSelect) {
             pageSizeSelect.addEventListener("change", (e) => {
               this.pageSize = parseInt(e.target.value);
               this.currentPage = 1;
-              this.totalPages = Math.ceil(this.currentResults.length / this.pageSize);
+              this.totalPages = Math.ceil(
+                this.currentResults.length / this.pageSize,
+              );
               this.displayCurrentPage();
               this.updatePaginationControls();
             });
@@ -1471,7 +1615,9 @@
 
         async loadTemplateCategories() {
           try {
-            const response = await window.authManager.apiRequest("/api/templates/categories");
+            const response = await window.authManager.apiRequest(
+              "/api/templates/categories",
+            );
             if (response && Array.isArray(response)) {
               this.templateCategories = response;
               const select = document.getElementById("template-category");
@@ -1491,7 +1637,8 @@
 
         async loadTemplatesForCategory(category) {
           const templateSelect = document.getElementById("template-name");
-          templateSelect.innerHTML = '<option value="">Select Template...</option>';
+          templateSelect.innerHTML =
+            '<option value="">Select Template...</option>';
           templateSelect.disabled = true;
           document.getElementById("generate-btn").disabled = true;
 
@@ -1499,7 +1646,7 @@
 
           try {
             const response = await window.authManager.apiRequest(
-              `/api/templates?category=${encodeURIComponent(category)}`
+              `/api/templates?category=${encodeURIComponent(category)}`,
             );
             if (response && response.templates) {
               response.templates.forEach((template) => {
@@ -1518,7 +1665,8 @@
 
         async generateInventory() {
           const templateName = document.getElementById("template-name").value;
-          const templateCategory = document.getElementById("template-category").value;
+          const templateCategory =
+            document.getElementById("template-category").value;
 
           if (!templateName || !templateCategory) {
             alert("Please select both template category and name.");
@@ -1541,16 +1689,21 @@
                   template_name: templateName,
                   template_category: templateCategory,
                 }),
-              }
+              },
             );
 
             if (response && response.inventory_content) {
-              document.getElementById("inventory-content").textContent = response.inventory_content;
-              document.getElementById("final-device-count").textContent = response.device_count;
-              document.getElementById("inventory-section").style.display = "block";
+              document.getElementById("inventory-content").textContent =
+                response.inventory_content;
+              document.getElementById("final-device-count").textContent =
+                response.device_count;
+              document.getElementById("inventory-section").style.display =
+                "block";
 
               // Scroll to inventory section
-              document.getElementById("inventory-section").scrollIntoView({ behavior: "smooth" });
+              document
+                .getElementById("inventory-section")
+                .scrollIntoView({ behavior: "smooth" });
             } else {
               throw new Error("Invalid response format");
             }
@@ -1562,7 +1715,8 @@
 
         async downloadInventory() {
           const templateName = document.getElementById("template-name").value;
-          const templateCategory = document.getElementById("template-category").value;
+          const templateCategory =
+            document.getElementById("template-category").value;
 
           if (!templateName || !templateCategory) {
             alert("Please select both template category and name.");
@@ -1606,7 +1760,8 @@
         }
 
         copyToClipboard() {
-          const content = document.getElementById("inventory-content").textContent;
+          const content =
+            document.getElementById("inventory-content").textContent;
           if (navigator.clipboard) {
             navigator.clipboard
               .writeText(content)
@@ -1650,7 +1805,10 @@
 
           // Build hierarchical path for each location
           this.locationsData.forEach((location) => {
-            location.hierarchicalPath = this.buildLocationPath(location, locationMap);
+            location.hierarchicalPath = this.buildLocationPath(
+              location,
+              locationMap,
+            );
             location.displayName = location.hierarchicalPath;
           });
 
@@ -1661,7 +1819,7 @@
 
           console.log(
             "Location hierarchy built and sorted:",
-            this.locationsData.map((l) => l.hierarchicalPath)
+            this.locationsData.map((l) => l.hierarchicalPath),
           );
         }
 
@@ -1681,7 +1839,7 @@
               if (path.includes(current?.name)) {
                 console.warn(
                   "Circular reference detected in location hierarchy for:",
-                  location.name
+                  location.name,
                 );
                 break;
               }
@@ -1695,15 +1853,25 @@
         }
 
         initializeLocationSelector(locations) {
-          console.log("Initializing location selector with", locations.length, "locations");
+          console.log(
+            "Initializing location selector with",
+            locations.length,
+            "locations",
+          );
 
           // Store locations data and build hierarchical paths
           this.locationsData = locations;
           this.buildLocationHierarchy();
 
-          const searchInput = document.getElementById("condition-value-location-search");
-          const hiddenInput = document.getElementById("condition-value-location-hidden");
-          const dropdown = document.getElementById("condition-value-location-dropdown");
+          const searchInput = document.getElementById(
+            "condition-value-location-search",
+          );
+          const hiddenInput = document.getElementById(
+            "condition-value-location-hidden",
+          );
+          const dropdown = document.getElementById(
+            "condition-value-location-dropdown",
+          );
 
           // Initialize event listeners
           searchInput.addEventListener("input", (e) => {
@@ -1716,7 +1884,10 @@
 
           // Hide dropdown when clicking outside
           document.addEventListener("click", (e) => {
-            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            if (
+              !searchInput.contains(e.target) &&
+              !dropdown.contains(e.target)
+            ) {
               this.hideLocationDropdown();
             }
           });
@@ -1726,7 +1897,9 @@
         }
 
         filterLocations(searchTerm) {
-          const dropdown = document.getElementById("condition-value-location-dropdown");
+          const dropdown = document.getElementById(
+            "condition-value-location-dropdown",
+          );
           const dropdownContent = dropdown.querySelector(".dropdown-content");
 
           if (!this.locationsData) {
@@ -1768,15 +1941,20 @@
           // Show dropdown if we have search term or focus
           if (
             searchTerm ||
-            document.activeElement === document.getElementById("condition-value-location-search")
+            document.activeElement ===
+              document.getElementById("condition-value-location-search")
           ) {
             this.showLocationDropdown();
           }
         }
 
         selectLocation(location) {
-          const searchInput = document.getElementById("condition-value-location-search");
-          const hiddenInput = document.getElementById("condition-value-location-hidden");
+          const searchInput = document.getElementById(
+            "condition-value-location-search",
+          );
+          const hiddenInput = document.getElementById(
+            "condition-value-location-hidden",
+          );
 
           // Use the hierarchical path for display, but store the actual location name for filtering
           const locationDisplayName = location.hierarchicalPath;
@@ -1788,27 +1966,39 @@
 
           this.hideLocationDropdown();
 
-          console.log(`Selected location: ${locationDisplayName} (value: ${locationValue})`);
+          console.log(
+            `Selected location: ${locationDisplayName} (value: ${locationValue})`,
+          );
         }
 
         showLocationDropdown() {
-          const dropdown = document.getElementById("condition-value-location-dropdown");
+          const dropdown = document.getElementById(
+            "condition-value-location-dropdown",
+          );
           dropdown.style.display = "block";
         }
 
         hideLocationDropdown() {
-          const dropdown = document.getElementById("condition-value-location-dropdown");
+          const dropdown = document.getElementById(
+            "condition-value-location-dropdown",
+          );
           dropdown.style.display = "none";
         }
 
         getLocationSelectorValue() {
-          const hiddenInput = document.getElementById("condition-value-location-hidden");
+          const hiddenInput = document.getElementById(
+            "condition-value-location-hidden",
+          );
           return hiddenInput.value;
         }
 
         clearLocationSelector() {
-          const searchInput = document.getElementById("condition-value-location-search");
-          const hiddenInput = document.getElementById("condition-value-location-hidden");
+          const searchInput = document.getElementById(
+            "condition-value-location-search",
+          );
+          const hiddenInput = document.getElementById(
+            "condition-value-location-hidden",
+          );
 
           searchInput.value = "";
           searchInput.classList.remove("has-selection");
@@ -1822,14 +2012,20 @@
           try {
             // Load custom fields from API
             const response = await window.authManager.apiRequest(
-              "/api/ansible-inventory/custom-fields"
+              "/api/ansible-inventory/custom-fields",
             );
             console.log("Custom fields response:", response);
 
             const menu = document.getElementById("custom-fields-menu");
-            const container = document.getElementById("custom-fields-container");
+            const container = document.getElementById(
+              "custom-fields-container",
+            );
 
-            if (response && response.custom_fields && response.custom_fields.length > 0) {
+            if (
+              response &&
+              response.custom_fields &&
+              response.custom_fields.length > 0
+            ) {
               // Clear existing content
               menu.innerHTML = "";
 
@@ -1880,7 +2076,9 @@
           const fieldSelect = document.getElementById("condition-field");
 
           // Check if this custom field option already exists
-          let existingOption = fieldSelect.querySelector(`option[value="${cfValue}"]`);
+          let existingOption = fieldSelect.querySelector(
+            `option[value="${cfValue}"]`,
+          );
           if (!existingOption) {
             // Add a new option for this custom field
             existingOption = document.createElement("option");
@@ -1889,7 +2087,9 @@
             existingOption.classList.add("custom-field-option");
 
             // Insert before the "Custom fields..." option
-            const customFieldsTrigger = fieldSelect.querySelector('option[value="custom_fields"]');
+            const customFieldsTrigger = fieldSelect.querySelector(
+              'option[value="custom_fields"]',
+            );
             fieldSelect.insertBefore(existingOption, customFieldsTrigger);
           }
 
@@ -1907,7 +2107,8 @@
 
           // Position the container relative to the field select
           const rect = fieldSelect.getBoundingClientRect();
-          const containerRect = fieldSelect.offsetParent.getBoundingClientRect();
+          const containerRect =
+            fieldSelect.offsetParent.getBoundingClientRect();
 
           container.style.position = "absolute";
           container.style.left = `${rect.left - containerRect.left}px`;
@@ -1923,19 +2124,27 @@
           container.style.display = "none";
 
           // Remove event listeners
-          document.removeEventListener("click", this._customFieldsMenuClickHandler);
+          document.removeEventListener(
+            "click",
+            this._customFieldsMenuClickHandler,
+          );
         }
 
         addCustomFieldsMenuCloseHandler() {
           // Remove existing handler if any
           if (this._customFieldsMenuClickHandler) {
-            document.removeEventListener("click", this._customFieldsMenuClickHandler);
+            document.removeEventListener(
+              "click",
+              this._customFieldsMenuClickHandler,
+            );
           }
 
           // Add new click outside handler
           this._customFieldsMenuClickHandler = (event) => {
             const menu = document.getElementById("custom-fields-menu");
-            const container = document.getElementById("custom-fields-container");
+            const container = document.getElementById(
+              "custom-fields-container",
+            );
             const fieldSelect = document.getElementById("condition-field");
 
             if (
@@ -1949,7 +2158,10 @@
 
           // Delay adding the event listener to avoid immediate triggering
           setTimeout(() => {
-            document.addEventListener("click", this._customFieldsMenuClickHandler);
+            document.addEventListener(
+              "click",
+              this._customFieldsMenuClickHandler,
+            );
           }, 100);
         }
       }

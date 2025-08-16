@@ -25,8 +25,18 @@ import interactionPlugin from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 
 // Make FullCalendar available globally
-window.FullCalendar = { Calendar, dayGridPlugin, interactionPlugin, timeGridPlugin };
-globalThis.FullCalendar = { Calendar, dayGridPlugin, interactionPlugin, timeGridPlugin };
+window.FullCalendar = {
+  Calendar,
+  dayGridPlugin,
+  interactionPlugin,
+  timeGridPlugin,
+};
+globalThis.FullCalendar = {
+  Calendar,
+  dayGridPlugin,
+  interactionPlugin,
+  timeGridPlugin,
+};
 
 // Global variables
 let currentCalendar = null;
@@ -53,7 +63,8 @@ const sampleEvents = [
     end: "2032-06-05T14:30:00",
     backgroundColor: "#5A738E",
     borderColor: "#5A738E",
-    description: "Daily team standup to discuss progress, blockers, and sprint planning.",
+    description:
+      "Daily team standup to discuss progress, blockers, and sprint planning.",
     location: "Meeting Room B",
     category: "meeting",
   },
@@ -147,7 +158,10 @@ document.addEventListener("DOMContentLoaded", function () {
         info.el.setAttribute("title", info.event.title);
         if (info.event.extendedProps.description) {
           info.el.setAttribute("data-bs-toggle", "tooltip");
-          info.el.setAttribute("data-bs-title", info.event.extendedProps.description);
+          info.el.setAttribute(
+            "data-bs-title",
+            info.event.extendedProps.description,
+          );
         }
       },
     });
@@ -159,9 +173,11 @@ document.addEventListener("DOMContentLoaded", function () {
     globalThis.calendar = currentCalendar;
 
     // Initialize tooltips
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipTriggerList = document.querySelectorAll(
+      '[data-bs-toggle="tooltip"]',
+    );
     const tooltipList = [...tooltipTriggerList].map(
-      (tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl)
+      (tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl),
     );
   }
 
@@ -170,13 +186,19 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function openNewEventModal(selectInfo) {
-  const modal = new bootstrap.Modal(document.getElementById("CalenderModalNew"));
+  const modal = new bootstrap.Modal(
+    document.getElementById("CalenderModalNew"),
+  );
 
   // Pre-fill dates if provided
   if (selectInfo) {
-    document.getElementById("eventStartDate").value = formatDateForInput(selectInfo.start);
+    document.getElementById("eventStartDate").value = formatDateForInput(
+      selectInfo.start,
+    );
     if (selectInfo.end) {
-      document.getElementById("eventEndDate").value = formatDateForInput(selectInfo.end);
+      document.getElementById("eventEndDate").value = formatDateForInput(
+        selectInfo.end,
+      );
     }
     document.getElementById("allDayEvent").checked = selectInfo.allDay;
   }
@@ -189,13 +211,19 @@ function openNewEventModal(selectInfo) {
 }
 
 function showEventDetails(event) {
-  const modal = new bootstrap.Modal(document.getElementById("EventDetailsModal"));
+  const modal = new bootstrap.Modal(
+    document.getElementById("EventDetailsModal"),
+  );
   const contentEl = document.getElementById("eventDetailsContent");
 
-  const startDate = event.start ? event.start.toLocaleDateString() : "Not specified";
-  const startTime = event.start && !event.allDay ? event.start.toLocaleTimeString() : "";
+  const startDate = event.start
+    ? event.start.toLocaleDateString()
+    : "Not specified";
+  const startTime =
+    event.start && !event.allDay ? event.start.toLocaleTimeString() : "";
   const endDate = event.end ? event.end.toLocaleDateString() : "";
-  const endTime = event.end && !event.allDay ? event.end.toLocaleTimeString() : "";
+  const endTime =
+    event.end && !event.allDay ? event.end.toLocaleTimeString() : "";
 
   contentEl.innerHTML = `
         <div class="row mb-3">
@@ -252,91 +280,117 @@ function showEventDetails(event) {
 }
 
 function openEditEventModal(event) {
-  const modal = new bootstrap.Modal(document.getElementById("CalenderModalEdit"));
+  const modal = new bootstrap.Modal(
+    document.getElementById("CalenderModalEdit"),
+  );
 
   // Populate form with event data
   document.getElementById("editEventTitle").value = event.title || "";
-  document.getElementById("editEventColor").value = event.backgroundColor || "#26B99A";
-  document.getElementById("editEventStartDate").value = formatDateForInput(event.start);
-  document.getElementById("editEventEndDate").value = formatDateForInput(event.end);
+  document.getElementById("editEventColor").value =
+    event.backgroundColor || "#26B99A";
+  document.getElementById("editEventStartDate").value = formatDateForInput(
+    event.start,
+  );
+  document.getElementById("editEventEndDate").value = formatDateForInput(
+    event.end,
+  );
   document.getElementById("editAllDayEvent").checked = event.allDay || false;
-  document.getElementById("editEventDescription").value = event.extendedProps.description || "";
-  document.getElementById("editEventLocation").value = event.extendedProps.location || "";
-  document.getElementById("editEventCategory").value = event.extendedProps.category || "";
+  document.getElementById("editEventDescription").value =
+    event.extendedProps.description || "";
+  document.getElementById("editEventLocation").value =
+    event.extendedProps.location || "";
+  document.getElementById("editEventCategory").value =
+    event.extendedProps.category || "";
 
   modal.show();
 }
 
 function setupModalHandlers() {
   // Save new event
-  document.getElementById("saveNewEvent").addEventListener("click", function () {
-    const form = document.getElementById("newEventForm");
-
-    if (form.checkValidity()) {
-      const formData = new FormData(form);
-      const eventData = {
-        id: generateEventId(),
-        title: formData.get("title"),
-        start: formData.get("start"),
-        end: formData.get("end"),
-        allDay: formData.has("allDay"),
-        backgroundColor: formData.get("color"),
-        borderColor: formData.get("color"),
-        description: formData.get("description"),
-        location: formData.get("location"),
-        category: formData.get("category"),
-      };
-
-      // Add to calendar
-      currentCalendar.addEvent(eventData);
-
-      // Close modal
-      bootstrap.Modal.getInstance(document.getElementById("CalenderModalNew")).hide();
-
-      // Show success message
-      showToast("Event created successfully!", "success");
-    } else {
-      form.classList.add("was-validated");
-    }
-  });
-
-  // Save edited event
-  document.getElementById("saveEditEvent").addEventListener("click", function () {
-    if (selectedEvent) {
-      const form = document.getElementById("editEventForm");
+  document
+    .getElementById("saveNewEvent")
+    .addEventListener("click", function () {
+      const form = document.getElementById("newEventForm");
 
       if (form.checkValidity()) {
         const formData = new FormData(form);
+        const eventData = {
+          id: generateEventId(),
+          title: formData.get("title"),
+          start: formData.get("start"),
+          end: formData.get("end"),
+          allDay: formData.has("allDay"),
+          backgroundColor: formData.get("color"),
+          borderColor: formData.get("color"),
+          description: formData.get("description"),
+          location: formData.get("location"),
+          category: formData.get("category"),
+        };
 
-        // Update event properties
-        selectedEvent.setProp("title", formData.get("title"));
-        selectedEvent.setProp("backgroundColor", formData.get("color"));
-        selectedEvent.setProp("borderColor", formData.get("color"));
-        selectedEvent.setStart(formData.get("start"));
-        selectedEvent.setEnd(formData.get("end"));
-        selectedEvent.setAllDay(formData.has("allDay"));
-        selectedEvent.setExtendedProp("description", formData.get("description"));
-        selectedEvent.setExtendedProp("location", formData.get("location"));
-        selectedEvent.setExtendedProp("category", formData.get("category"));
+        // Add to calendar
+        currentCalendar.addEvent(eventData);
 
         // Close modal
-        bootstrap.Modal.getInstance(document.getElementById("CalenderModalEdit")).hide();
+        bootstrap.Modal.getInstance(
+          document.getElementById("CalenderModalNew"),
+        ).hide();
 
         // Show success message
-        showToast("Event updated successfully!", "success");
+        showToast("Event created successfully!", "success");
       } else {
         form.classList.add("was-validated");
       }
-    }
-  });
+    });
+
+  // Save edited event
+  document
+    .getElementById("saveEditEvent")
+    .addEventListener("click", function () {
+      if (selectedEvent) {
+        const form = document.getElementById("editEventForm");
+
+        if (form.checkValidity()) {
+          const formData = new FormData(form);
+
+          // Update event properties
+          selectedEvent.setProp("title", formData.get("title"));
+          selectedEvent.setProp("backgroundColor", formData.get("color"));
+          selectedEvent.setProp("borderColor", formData.get("color"));
+          selectedEvent.setStart(formData.get("start"));
+          selectedEvent.setEnd(formData.get("end"));
+          selectedEvent.setAllDay(formData.has("allDay"));
+          selectedEvent.setExtendedProp(
+            "description",
+            formData.get("description"),
+          );
+          selectedEvent.setExtendedProp("location", formData.get("location"));
+          selectedEvent.setExtendedProp("category", formData.get("category"));
+
+          // Close modal
+          bootstrap.Modal.getInstance(
+            document.getElementById("CalenderModalEdit"),
+          ).hide();
+
+          // Show success message
+          showToast("Event updated successfully!", "success");
+        } else {
+          form.classList.add("was-validated");
+        }
+      }
+    });
 
   // Delete event
   document.getElementById("deleteEvent").addEventListener("click", function () {
-    if (selectedEvent && confirm("Are you sure you want to delete this event?")) {
+    if (
+      selectedEvent &&
+      confirm("Are you sure you want to delete this event?")
+    ) {
       selectedEvent.remove();
 
       // Close modal
-      bootstrap.Modal.getInstance(document.getElementById("CalenderModalEdit")).hide();
+      bootstrap.Modal.getInstance(
+        document.getElementById("CalenderModalEdit"),
+      ).hide();
 
       // Show success message
       showToast("Event deleted successfully!", "success");
@@ -344,33 +398,49 @@ function setupModalHandlers() {
   });
 
   // Edit event button from details modal
-  document.getElementById("editEventBtn").addEventListener("click", function () {
-    if (selectedEvent) {
-      // Close details modal
-      bootstrap.Modal.getInstance(document.getElementById("EventDetailsModal")).hide();
+  document
+    .getElementById("editEventBtn")
+    .addEventListener("click", function () {
+      if (selectedEvent) {
+        // Close details modal
+        bootstrap.Modal.getInstance(
+          document.getElementById("EventDetailsModal"),
+        ).hide();
 
-      // Open edit modal
-      setTimeout(() => openEditEventModal(selectedEvent), 300);
-    }
-  });
+        // Open edit modal
+        setTimeout(() => openEditEventModal(selectedEvent), 300);
+      }
+    });
 
   // Clear form validation on modal close
-  document.getElementById("CalenderModalNew").addEventListener("hidden.bs.modal", function () {
-    document.getElementById("newEventForm").classList.remove("was-validated");
-    document.getElementById("newEventForm").reset();
-  });
+  document
+    .getElementById("CalenderModalNew")
+    .addEventListener("hidden.bs.modal", function () {
+      document.getElementById("newEventForm").classList.remove("was-validated");
+      document.getElementById("newEventForm").reset();
+    });
 
-  document.getElementById("CalenderModalEdit").addEventListener("hidden.bs.modal", function () {
-    document.getElementById("editEventForm").classList.remove("was-validated");
-    selectedEvent = null;
-  });
+  document
+    .getElementById("CalenderModalEdit")
+    .addEventListener("hidden.bs.modal", function () {
+      document
+        .getElementById("editEventForm")
+        .classList.remove("was-validated");
+      selectedEvent = null;
+    });
 }
 
 function showToast(message, type = "info") {
-  const toastContainer = document.querySelector(".toast-container") || createToastContainer();
+  const toastContainer =
+    document.querySelector(".toast-container") || createToastContainer();
   const toastId = "toast_" + Date.now();
 
-  const bgClass = type === "success" ? "bg-success" : type === "error" ? "bg-danger" : "bg-primary";
+  const bgClass =
+    type === "success"
+      ? "bg-success"
+      : type === "error"
+        ? "bg-danger"
+        : "bg-primary";
 
   const toastHtml = `
         <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">

@@ -56,7 +56,11 @@
           setContentHeight();
         });
         // Close all nested active menus
-        $submenu.find("li.active").removeClass("active").children("ul.child_menu").hide();
+        $submenu
+          .find("li.active")
+          .removeClass("active")
+          .children("ul.child_menu")
+          .hide();
       } else {
         // Close sibling menus at the same level
         $li.siblings("li.active").each(function () {
@@ -64,7 +68,11 @@
           $sibling.removeClass("active");
           $sibling.children("ul.child_menu").slideUp(200);
           // Close nested menus in siblings
-          $sibling.find("li.active").removeClass("active").children("ul.child_menu").hide();
+          $sibling
+            .find("li.active")
+            .removeClass("active")
+            .children("ul.child_menu")
+            .hide();
         });
 
         // Open this menu

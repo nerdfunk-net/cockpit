@@ -21,23 +21,28 @@
       async function testAPI() {
         const token = localStorage.getItem("auth_token");
         if (!token) {
-          document.getElementById("results").innerHTML = "<p>No token available</p>";
+          document.getElementById("results").innerHTML =
+            "<p>No token available</p>";
           return;
         }
 
         try {
-          const response = await fetch("http://localhost:8000/api/nautobot/locations", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
+          const response = await fetch(
+            "http://localhost:8000/api/nautobot/locations",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
             },
-          });
+          );
 
           const data = await response.json();
           document.getElementById("results").innerHTML =
             `<p>API Response: ${JSON.stringify(data, null, 2)}</p>`;
         } catch (error) {
-          document.getElementById("results").innerHTML = `<p>Error: ${error.message}</p>`;
+          document.getElementById("results").innerHTML =
+            `<p>Error: ${error.message}</p>`;
         }
       }
 

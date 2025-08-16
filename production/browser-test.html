@@ -89,13 +89,18 @@
 
         function testLibrary(libName) {
           const windowAvailable = typeof window[libName] !== "undefined";
-          const globalThisAvailable = typeof globalThis[libName] !== "undefined";
+          const globalThisAvailable =
+            typeof globalThis[libName] !== "undefined";
           const available = windowAvailable || globalThisAvailable;
 
           results.push({
             name: libName,
             available: available,
-            location: windowAvailable ? "window" : globalThisAvailable ? "globalThis" : "none",
+            location: windowAvailable
+              ? "window"
+              : globalThisAvailable
+                ? "globalThis"
+                : "none",
           });
 
           return available;
@@ -147,7 +152,12 @@
                   {
                     label: "Browser Compatibility",
                     data: [100, 100, 100, 100],
-                    backgroundColor: ["#26B99A", "#3498DB", "#E74C3C", "#9B59B6"],
+                    backgroundColor: [
+                      "#26B99A",
+                      "#3498DB",
+                      "#E74C3C",
+                      "#9B59B6",
+                    ],
                   },
                 ],
               },
@@ -164,7 +174,8 @@
           }
 
           // Test TempusDominus
-          const TempusDominus = window.TempusDominus || globalThis.TempusDominus;
+          const TempusDominus =
+            window.TempusDominus || globalThis.TempusDominus;
           if (TempusDominus) {
             new TempusDominus(document.getElementById("test-datepicker"), {
               display: {

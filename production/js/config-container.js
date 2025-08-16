@@ -21,8 +21,12 @@ const isViteEnvironment = !!(
 console.log("🐳 Vite environment detected:", isViteEnvironment);
 
 if (isViteEnvironment) {
-  console.log("🐳 ABORTING container config - Vite environment detected behind proxy");
-  console.log("🐳 This prevents container config from overriding Vite proxy setup");
+  console.log(
+    "🐳 ABORTING container config - Vite environment detected behind proxy",
+  );
+  console.log(
+    "🐳 This prevents container config from overriding Vite proxy setup",
+  );
   // Don't set any container overrides
 } else {
   console.log("🐳 Proceeding with container configuration");
@@ -30,7 +34,8 @@ if (isViteEnvironment) {
   // Container-specific environment variables
   window.COCKPIT_CONTAINER_MODE = true;
   const containerApiUrl =
-    window.COCKPIT_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+    window.COCKPIT_API_URL ||
+    `${window.location.protocol}//${window.location.hostname}:8000`;
   window.COCKPIT_API_URL = containerApiUrl;
   window.COCKPIT_DEBUG = false; // Disable debug in production containers
 

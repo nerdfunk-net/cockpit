@@ -16,7 +16,10 @@ const CockpitConfig = {
 
       // Check for environment variable first (Docker containers)
       if (typeof window !== "undefined" && window.COCKPIT_API_URL) {
-        console.log("🔧 Config.js: Found COCKPIT_API_URL override:", window.COCKPIT_API_URL);
+        console.log(
+          "🔧 Config.js: Found COCKPIT_API_URL override:",
+          window.COCKPIT_API_URL,
+        );
         // But if we detect this is likely a Vite dev environment behind a proxy,
         // we should still use relative URLs
         const isLikelyViteProxy =
@@ -26,7 +29,9 @@ const CockpitConfig = {
           document.querySelector('script[type="module"]');
 
         if (isLikelyViteProxy) {
-          console.log("🔧 Config.js: Detected Vite environment behind proxy - using relative URLs");
+          console.log(
+            "🔧 Config.js: Detected Vite environment behind proxy - using relative URLs",
+          );
           return "";
         }
 
@@ -46,7 +51,9 @@ const CockpitConfig = {
       if (isDevelopment) {
         // Development mode - use empty string to enable relative URLs
         // Vite proxy will handle forwarding to backend
-        console.log("🔧 Config.js: Development mode detected - using empty baseUrl for Vite proxy");
+        console.log(
+          "🔧 Config.js: Development mode detected - using empty baseUrl for Vite proxy",
+        );
         return "";
       }
 
@@ -59,7 +66,7 @@ const CockpitConfig = {
 
       if (hasViteElements) {
         console.log(
-          "🔧 Config.js: Detected Vite environment indicators - using empty baseUrl for proxy"
+          "🔧 Config.js: Detected Vite environment indicators - using empty baseUrl for proxy",
         );
         return "";
       }
@@ -68,7 +75,10 @@ const CockpitConfig = {
       const protocol = window.location.protocol;
       const hostname = window.location.hostname;
       const productionUrl = `${protocol}//${hostname}:8000`;
-      console.log("🔧 Config.js: Production mode detected - using baseUrl:", productionUrl);
+      console.log(
+        "🔧 Config.js: Production mode detected - using baseUrl:",
+        productionUrl,
+      );
       return productionUrl;
     })(),
 
@@ -108,9 +118,11 @@ const CockpitConfig = {
   // Environment Detection
   environment: {
     isDevelopment:
-      window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1",
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1",
     isProduction:
-      window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1",
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1",
     isContainer:
       typeof window !== "undefined" &&
       (window.COCKPIT_CONTAINER_MODE === true ||
@@ -119,7 +131,8 @@ const CockpitConfig = {
 
   // Debug Settings
   debug: {
-    enabled: window.location.hostname === "localhost" || window.COCKPIT_DEBUG === true,
+    enabled:
+      window.location.hostname === "localhost" || window.COCKPIT_DEBUG === true,
     logLevel: window.location.hostname === "localhost" ? "debug" : "error",
   },
 };
@@ -168,7 +181,10 @@ if (CockpitConfig.debug.enabled) {
     apiBaseUrl: CockpitConfig.api.baseUrl,
   });
 
-  if (CockpitConfig.debug.showContainerInfo && CockpitConfig.environment.isContainer) {
+  if (
+    CockpitConfig.debug.showContainerInfo &&
+    CockpitConfig.environment.isContainer
+  ) {
     console.log("🐳 Container mode detected");
   }
 }

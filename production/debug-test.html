@@ -46,7 +46,10 @@
                   <canvas id="test-weather" width="64" height="64"></canvas>
 
                   <!-- ECharts test -->
-                  <div id="test-echarts" style="width: 400px; height: 200px"></div>
+                  <div
+                    id="test-echarts"
+                    style="width: 400px; height: 200px"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -71,7 +74,15 @@
         const debugDiv = document.getElementById("debug-results");
 
         // Test library availability
-        const libraries = ["jQuery", "$", "Chart", "echarts", "Skycons", "L", "TempusDominus"];
+        const libraries = [
+          "jQuery",
+          "$",
+          "Chart",
+          "echarts",
+          "Skycons",
+          "L",
+          "TempusDominus",
+        ];
 
         results.push("<h4>Library Availability:</h4>");
         libraries.forEach((lib) => {
@@ -86,10 +97,14 @@
         });
 
         results.push("<h4>Browser Information:</h4>");
-        results.push(`<p><strong>User Agent:</strong> ${navigator.userAgent}</p>`);
+        results.push(
+          `<p><strong>User Agent:</strong> ${navigator.userAgent}</p>`,
+        );
         results.push(`<p><strong>Platform:</strong> ${navigator.platform}</p>`);
         results.push(`<p><strong>Language:</strong> ${navigator.language}</p>`);
-        results.push(`<p><strong>Cookie Enabled:</strong> ${navigator.cookieEnabled}</p>`);
+        results.push(
+          `<p><strong>Cookie Enabled:</strong> ${navigator.cookieEnabled}</p>`,
+        );
         results.push(`<p><strong>Online:</strong> ${navigator.onLine}</p>`);
 
         // Test Chart.js
@@ -185,7 +200,10 @@
         setTimeout(function () {
           if (typeof window.waitForLibraries === "function") {
             console.log("Using delayed waitForLibraries for debug test");
-            window.waitForLibraries(["Chart", "echarts", "Skycons"], runDebugTest);
+            window.waitForLibraries(
+              ["Chart", "echarts", "Skycons"],
+              runDebugTest,
+            );
           } else {
             console.warn("waitForLibraries not found, running test directly.");
             runDebugTest();

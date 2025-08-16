@@ -37,7 +37,12 @@ export default defineConfig({
             "switchery",
             "@eonasdan/tempus-dominus",
           ],
-          "vendor-ui": ["jquery-ui", "nprogress", "datatables.net", "datatables.net-bs5"],
+          "vendor-ui": [
+            "jquery-ui",
+            "nprogress",
+            "datatables.net",
+            "datatables.net-bs5",
+          ],
           "vendor-utils": ["dayjs", "jquery-sparkline", "skycons"],
         },
         assetFileNames: (assetInfo) => {

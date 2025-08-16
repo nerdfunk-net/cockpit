@@ -52,7 +52,9 @@
 
     // Switchery
     if (typeof Switchery !== "undefined") {
-      var elems = Array.prototype.slice.call(document.querySelectorAll(".js-switch"));
+      var elems = Array.prototype.slice.call(
+        document.querySelectorAll(".js-switch"),
+      );
       elems.forEach(function (html) {
         var switchery = new Switchery(html, {
           size: "small",
@@ -93,17 +95,27 @@
 
         // Add markers for visitor locations with popups showing percentages
         var visitorData = [
-          { coords: [39.8283, -98.5795], country: "United States", percentage: "33%" },
+          {
+            coords: [39.8283, -98.5795],
+            country: "United States",
+            percentage: "33%",
+          },
           { coords: [46.2276, 2.2137], country: "France", percentage: "27%" },
           { coords: [51.1657, 10.4515], country: "Germany", percentage: "16%" },
           { coords: [40.4637, -3.7492], country: "Spain", percentage: "11%" },
-          { coords: [55.3781, -3.436], country: "United Kingdom", percentage: "10%" },
+          {
+            coords: [55.3781, -3.436],
+            country: "United Kingdom",
+            percentage: "10%",
+          },
         ];
 
         visitorData.forEach(function (location) {
           L.marker(location.coords)
             .addTo(visitorsMap)
-            .bindPopup(`<b>${location.country}</b><br/>Visitors: ${location.percentage}`)
+            .bindPopup(
+              `<b>${location.country}</b><br/>Visitors: ${location.percentage}`,
+            )
             .openPopup();
         });
       } catch (error) {
@@ -219,8 +231,20 @@
             datasets: [
               {
                 data: [30, 10, 20, 15, 30],
-                backgroundColor: ["#3498DB", "#2ECC71", "#9B59B6", "#1ABC9C", "#E74C3C"],
-                hoverBackgroundColor: ["#5DADE2", "#58D68D", "#BB8FCE", "#52C9B4", "#EC7063"],
+                backgroundColor: [
+                  "#3498DB",
+                  "#2ECC71",
+                  "#9B59B6",
+                  "#1ABC9C",
+                  "#E74C3C",
+                ],
+                hoverBackgroundColor: [
+                  "#5DADE2",
+                  "#58D68D",
+                  "#BB8FCE",
+                  "#52C9B4",
+                  "#EC7063",
+                ],
               },
             ],
           };
@@ -257,7 +281,15 @@
         new Chart(ctx, {
           type: "line",
           data: {
-            labels: ["January", "February", "March", "April", "May", "June", "July"],
+            labels: [
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+            ],
             datasets: [
               {
                 label: "My First dataset",
@@ -300,7 +332,15 @@
         new Chart(ctx, {
           type: "bar",
           data: {
-            labels: ["January", "February", "March", "April", "May", "June", "July"],
+            labels: [
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+            ],
             datasets: [
               {
                 label: "# of Votes",
@@ -347,7 +387,15 @@
         new Chart(ctx, {
           type: "radar",
           data: {
-            labels: ["Eating", "Drinking", "Sleeping", "Designing", "Coding", "Cycling", "Running"],
+            labels: [
+              "Eating",
+              "Drinking",
+              "Sleeping",
+              "Designing",
+              "Coding",
+              "Cycling",
+              "Running",
+            ],
             datasets: [
               {
                 label: "My First dataset",
@@ -390,8 +438,20 @@
             datasets: [
               {
                 data: [15, 20, 30, 10, 30],
-                backgroundColor: ["#455C73", "#9B59B6", "#26B99A", "#3498DB", "#BDC3C7"],
-                hoverBackgroundColor: ["#34495E", "#B370CF", "#36CAAB", "#49A9EA", "#CFD4D8"],
+                backgroundColor: [
+                  "#455C73",
+                  "#9B59B6",
+                  "#26B99A",
+                  "#3498DB",
+                  "#BDC3C7",
+                ],
+                hoverBackgroundColor: [
+                  "#34495E",
+                  "#B370CF",
+                  "#36CAAB",
+                  "#49A9EA",
+                  "#CFD4D8",
+                ],
               },
             ],
           },
@@ -414,8 +474,20 @@
             datasets: [
               {
                 data: [20, 50, 30, 25, 40],
-                backgroundColor: ["#455C73", "#9B59B6", "#26B99A", "#3498DB", "#BDC3C7"],
-                hoverBackgroundColor: ["#34495E", "#B370CF", "#36CAAB", "#49A9EA", "#CFD4D8"],
+                backgroundColor: [
+                  "#455C73",
+                  "#9B59B6",
+                  "#26B99A",
+                  "#3498DB",
+                  "#BDC3C7",
+                ],
+                hoverBackgroundColor: [
+                  "#34495E",
+                  "#B370CF",
+                  "#36CAAB",
+                  "#49A9EA",
+                  "#CFD4D8",
+                ],
               },
             ],
           },
@@ -438,8 +510,20 @@
             datasets: [
               {
                 data: [20, 50, 30, 25, 40],
-                backgroundColor: ["#455C73", "#9B59B6", "#26B99A", "#3498DB", "#BDC3C7"],
-                hoverBackgroundColor: ["#34495E", "#B370CF", "#36CAAB", "#49A9EA", "#CFD4D8"],
+                backgroundColor: [
+                  "#455C73",
+                  "#9B59B6",
+                  "#26B99A",
+                  "#3498DB",
+                  "#BDC3C7",
+                ],
+                hoverBackgroundColor: [
+                  "#34495E",
+                  "#B370CF",
+                  "#36CAAB",
+                  "#49A9EA",
+                  "#CFD4D8",
+                ],
               },
             ],
           },
@@ -472,10 +556,15 @@
    */
   function initializeProgressBars() {
     // Animate all progress bars with data-transitiongoal
-    const progressBars = document.querySelectorAll(".progress-bar[data-transitiongoal]");
+    const progressBars = document.querySelectorAll(
+      ".progress-bar[data-transitiongoal]",
+    );
 
     progressBars.forEach((bar) => {
-      const targetPercent = parseInt(bar.getAttribute("data-transitiongoal"), 10);
+      const targetPercent = parseInt(
+        bar.getAttribute("data-transitiongoal"),
+        10,
+      );
       const displayText = bar.getAttribute("data-display-text") !== "false";
 
       // Set initial state
@@ -496,10 +585,11 @@
 
     // For progress bars without data-transitiongoal, just show them immediately
     const staticProgressBars = document.querySelectorAll(
-      ".progress-bar:not([data-transitiongoal])"
+      ".progress-bar:not([data-transitiongoal])",
     );
     staticProgressBars.forEach((bar) => {
-      const currentPercent = bar.style.width || bar.getAttribute("aria-valuenow") + "%" || "0%";
+      const currentPercent =
+        bar.style.width || bar.getAttribute("aria-valuenow") + "%" || "0%";
       bar.style.width = currentPercent;
     });
   }
@@ -596,7 +686,13 @@
             datasets: [
               {
                 data: [120, 50, 140, 180, 100],
-                backgroundColor: ["#26B99A", "#3498DB", "#BDC3C7", "#9B59B6", "#E74C3C"],
+                backgroundColor: [
+                  "#26B99A",
+                  "#3498DB",
+                  "#BDC3C7",
+                  "#9B59B6",
+                  "#E74C3C",
+                ],
               },
             ],
           };
@@ -630,7 +726,13 @@
             datasets: [
               {
                 data: [350, 250, 180, 220, 150],
-                backgroundColor: ["#F39C12", "#E74C3C", "#8E44AD", "#3498DB", "#16A085"],
+                backgroundColor: [
+                  "#F39C12",
+                  "#E74C3C",
+                  "#8E44AD",
+                  "#3498DB",
+                  "#16A085",
+                ],
               },
             ],
           };
@@ -692,7 +794,8 @@
                 {
                   label: "Licensed Vehicles (thousands)",
                   data: [
-                    3407, 3551, 3269, 3846, 4171, 4387, 4625, 4891, 5156, 5423, 5678, 5945, 6201,
+                    3407, 3551, 3269, 3846, 4171, 4387, 4625, 4891, 5156, 5423,
+                    5678, 5945, 6201,
                   ],
                   backgroundColor: "#26B99A",
                   borderColor: "#1e8e7a",
@@ -700,7 +803,10 @@
                 },
                 {
                   label: "SORN (Off Road)",
-                  data: [660, 729, 818, 761, 681, 645, 598, 567, 534, 501, 468, 435, 402],
+                  data: [
+                    660, 729, 818, 761, 681, 645, 598, 567, 534, 501, 468, 435,
+                    402,
+                  ],
                   backgroundColor: "#34495E",
                   borderColor: "#2c3e50",
                   borderWidth: 1,
@@ -729,7 +835,8 @@
                 {
                   label: "Cloud Services (millions)",
                   data: [
-                    2407, 2851, 3469, 4246, 5057, 5687, 6225, 6891, 7456, 8123, 8678, 9245, 9801,
+                    2407, 2851, 3469, 4246, 5057, 5687, 6225, 6891, 7456, 8123,
+                    8678, 9245, 9801,
                   ],
                   backgroundColor: "#26B99A",
                   borderColor: "#1e8e7a",
@@ -737,7 +844,10 @@
                 },
                 {
                   label: "AI/ML Adoption (millions)",
-                  data: [360, 529, 718, 961, 1281, 1645, 2098, 2567, 3034, 3501, 3968, 4435, 4902],
+                  data: [
+                    360, 529, 718, 961, 1281, 1645, 2098, 2567, 3034, 3501,
+                    3968, 4435, 4902,
+                  ],
                   backgroundColor: "#3498DB",
                   borderColor: "#2980b9",
                   borderWidth: 1,
@@ -765,7 +875,10 @@
               datasets: [
                 {
                   label: "Revenue (millions)",
-                  data: [100, 125, 95, 138, 164, 195, 226, 258, 291, 325, 360, 396, 433],
+                  data: [
+                    100, 125, 95, 138, 164, 195, 226, 258, 291, 325, 360, 396,
+                    433,
+                  ],
                   borderColor: "#26B99A",
                   backgroundColor: "rgba(38, 185, 154, 0.1)",
                   tension: 0.4,
@@ -775,7 +888,9 @@
                 },
                 {
                   label: "Profit (millions)",
-                  data: [25, 35, 18, 42, 58, 72, 89, 108, 127, 147, 168, 190, 213],
+                  data: [
+                    25, 35, 18, 42, 58, 72, 89, 108, 127, 147, 168, 190, 213,
+                  ],
                   borderColor: "#3498DB",
                   backgroundColor: "rgba(52, 152, 219, 0.1)",
                   tension: 0.4,
@@ -785,7 +900,9 @@
                 },
                 {
                   label: "Expenses (millions)",
-                  data: [75, 90, 77, 96, 106, 123, 137, 150, 164, 178, 192, 206, 220],
+                  data: [
+                    75, 90, 77, 96, 106, 123, 137, 150, 164, 178, 192, 206, 220,
+                  ],
                   borderColor: "#E74C3C",
                   backgroundColor: "rgba(231, 76, 60, 0.1)",
                   tension: 0.4,
@@ -830,9 +947,9 @@
                 {
                   label: "Mobile Revenue (millions)",
                   data: [
-                    2666, 2778, 4912, 3767, 6810, 7234, 8156, 9023, 8567, 9234, 10456, 11789, 12345,
-                    13567, 14890, 16123, 17456, 18789, 20123, 21456, 22789, 24123, 25456, 26789,
-                    28123,
+                    2666, 2778, 4912, 3767, 6810, 7234, 8156, 9023, 8567, 9234,
+                    10456, 11789, 12345, 13567, 14890, 16123, 17456, 18789,
+                    20123, 21456, 22789, 24123, 25456, 26789, 28123,
                   ],
                   fill: true,
                   backgroundColor: "rgba(38, 185, 154, 0.3)",
@@ -845,8 +962,9 @@
                 {
                   label: "Web Revenue (millions)",
                   data: [
-                    1890, 2294, 1969, 3597, 1914, 2456, 2789, 3123, 3456, 3789, 4123, 4456, 4789,
-                    5123, 5456, 5789, 6123, 6456, 6789, 7123, 7456, 7789, 8123, 8456, 8789,
+                    1890, 2294, 1969, 3597, 1914, 2456, 2789, 3123, 3456, 3789,
+                    4123, 4456, 4789, 5123, 5456, 5789, 6123, 6456, 6789, 7123,
+                    7456, 7789, 8123, 8456, 8789,
                   ],
                   fill: true,
                   backgroundColor: "rgba(52, 152, 219, 0.3)",
@@ -982,7 +1100,9 @@
           datasets: [
             {
               label: "Network Requests (millions)",
-              data: [128, 148, 140, 119, 186, 227, 290, 360, 430, 480, 550, 620, 700],
+              data: [
+                128, 148, 140, 119, 186, 227, 290, 360, 430, 480, 550, 620, 700,
+              ],
               backgroundColor: "rgba(38, 185, 154, 0.3)",
               borderColor: "rgba(38, 185, 154, 0.7)",
               borderWidth: 2,
@@ -991,7 +1111,9 @@
             },
             {
               label: "Data Transfer (TB)",
-              data: [65, 89, 120, 181, 256, 355, 440, 545, 660, 770, 855, 950, 1050],
+              data: [
+                65, 89, 120, 181, 256, 355, 440, 545, 660, 770, 855, 950, 1050,
+              ],
               backgroundColor: "rgba(3, 88, 106, 0.3)",
               borderColor: "rgba(3, 88, 106, 0.7)",
               borderWidth: 2,
@@ -1056,7 +1178,10 @@
           datasets: [
             {
               label: "Email Campaigns (thousands)",
-              data: [1120, 1490, 1800, 2200, 2650, 3100, 3580, 4090, 4620, 5180, 5760, 6360, 7000],
+              data: [
+                1120, 1490, 1800, 2200, 2650, 3100, 3580, 4090, 4620, 5180,
+                5760, 6360, 7000,
+              ],
               backgroundColor: "rgba(150, 202, 89, 0.3)",
               borderColor: "rgba(150, 202, 89, 0.7)",
               borderWidth: 2,
@@ -1121,7 +1246,10 @@
           datasets: [
             {
               label: "User Registrations (thousands)",
-              data: [450, 650, 580, 720, 890, 1050, 1230, 1420, 1620, 1830, 2050, 2280, 2520],
+              data: [
+                450, 650, 580, 720, 890, 1050, 1230, 1420, 1620, 1830, 2050,
+                2280, 2520,
+              ],
               backgroundColor: "rgba(150, 202, 89, 0.3)",
               borderColor: "rgba(150, 202, 89, 0.7)",
               borderWidth: 2,
@@ -1189,7 +1317,16 @@
           },
           xAxis: {
             type: "category",
-            data: ["React", "Vue.js", "Angular", "Node.js", "Python", "Java", "Go", ".NET"],
+            data: [
+              "React",
+              "Vue.js",
+              "Angular",
+              "Node.js",
+              "Python",
+              "Java",
+              "Go",
+              ".NET",
+            ],
           },
           yAxis: {
             type: "value",
@@ -1221,7 +1358,9 @@
 
       // 2. Mini Pie Chart (echart_mini_pie)
       if (document.getElementById("echart_mini_pie")) {
-        const miniPieChart = echarts.init(document.getElementById("echart_mini_pie"));
+        const miniPieChart = echarts.init(
+          document.getElementById("echart_mini_pie"),
+        );
         const miniPieOption = {
           title: {
             text: "User Devices",
@@ -1312,8 +1451,16 @@
               data: [
                 { value: 35, name: "AWS", itemStyle: { color: "#FF9900" } },
                 { value: 28, name: "Azure", itemStyle: { color: "#0078D4" } },
-                { value: 22, name: "Google Cloud", itemStyle: { color: "#4285F4" } },
-                { value: 10, name: "Digital Ocean", itemStyle: { color: "#0080FF" } },
+                {
+                  value: 22,
+                  name: "Google Cloud",
+                  itemStyle: { color: "#4285F4" },
+                },
+                {
+                  value: 10,
+                  name: "Digital Ocean",
+                  itemStyle: { color: "#0080FF" },
+                },
                 { value: 5, name: "Others", itemStyle: { color: "#34495E" } },
               ],
               label: {
@@ -1338,7 +1485,9 @@
 
       // 5. Donut Chart (echart_donut)
       if (document.getElementById("echart_donut")) {
-        const donutChart = echarts.init(document.getElementById("echart_donut"));
+        const donutChart = echarts.init(
+          document.getElementById("echart_donut"),
+        );
         const donutOption = {
           title: {
             text: "Revenue Sources",
@@ -1354,9 +1503,21 @@
               type: "pie",
               radius: ["40%", "70%"],
               data: [
-                { value: 45, name: "Subscriptions", itemStyle: { color: "#26B99A" } },
-                { value: 30, name: "Consulting", itemStyle: { color: "#3498DB" } },
-                { value: 15, name: "Training", itemStyle: { color: "#F39C12" } },
+                {
+                  value: 45,
+                  name: "Subscriptions",
+                  itemStyle: { color: "#26B99A" },
+                },
+                {
+                  value: 30,
+                  name: "Consulting",
+                  itemStyle: { color: "#3498DB" },
+                },
+                {
+                  value: 15,
+                  name: "Training",
+                  itemStyle: { color: "#F39C12" },
+                },
                 { value: 10, name: "Support", itemStyle: { color: "#9B59B6" } },
               ],
               emphasis: {
@@ -1374,7 +1535,9 @@
 
       // 6. Scatter Chart (echart_scatter)
       if (document.getElementById("echart_scatter")) {
-        const scatterChart = echarts.init(document.getElementById("echart_scatter"));
+        const scatterChart = echarts.init(
+          document.getElementById("echart_scatter"),
+        );
         const scatterOption = {
           title: {
             text: "Performance vs Experience",
@@ -1472,14 +1635,19 @@
             {
               name: "Users",
               type: "line",
-              data: [1200, 1450, 1300, 1680, 1950, 2200, 2500, 2850, 3200, 3600, 4000, 4450, 4900],
+              data: [
+                1200, 1450, 1300, 1680, 1950, 2200, 2500, 2850, 3200, 3600,
+                4000, 4450, 4900,
+              ],
               smooth: true,
               itemStyle: { color: "#26B99A" },
             },
             {
               name: "Revenue",
               type: "line",
-              data: [100, 125, 95, 138, 164, 195, 226, 258, 291, 325, 360, 396, 433],
+              data: [
+                100, 125, 95, 138, 164, 195, 226, 258, 291, 325, 360, 396, 433,
+              ],
               smooth: true,
               itemStyle: { color: "#3498DB" },
             },
@@ -1497,7 +1665,9 @@
 
       // 8. Horizontal Bar Chart (echart_bar_horizontal)
       if (document.getElementById("echart_bar_horizontal")) {
-        const hBarChart = echarts.init(document.getElementById("echart_bar_horizontal"));
+        const hBarChart = echarts.init(
+          document.getElementById("echart_bar_horizontal"),
+        );
         const hBarOption = {
           title: {
             text: "Top Programming Languages",
@@ -1510,7 +1680,16 @@
           },
           yAxis: {
             type: "category",
-            data: ["JavaScript", "Python", "Java", "TypeScript", "C#", "Go", "Rust", "Swift"],
+            data: [
+              "JavaScript",
+              "Python",
+              "Java",
+              "TypeScript",
+              "C#",
+              "Go",
+              "Rust",
+              "Swift",
+            ],
           },
           xAxis: {
             type: "value",
@@ -1544,11 +1723,17 @@
 
       // 9. World Map (echart_world_map) - Interactive scatter plot with geographic visualization
       if (document.getElementById("echart_world_map")) {
-        const worldMapChart = echarts.init(document.getElementById("echart_world_map"));
+        const worldMapChart = echarts.init(
+          document.getElementById("echart_world_map"),
+        );
 
         // Global user distribution data with coordinates
         const globalData = [
-          { name: "United States", value: [2300, -95.7129, 37.0902], users: 2300 },
+          {
+            name: "United States",
+            value: [2300, -95.7129, 37.0902],
+            users: 2300,
+          },
           { name: "China", value: [1800, 104.1954, 35.8617], users: 1800 },
           { name: "Japan", value: [1200, 138.2529, 36.2048], users: 1200 },
           { name: "Germany", value: [1000, 10.4515, 51.1657], users: 1000 },
@@ -1695,7 +1880,9 @@
             worldMapChart.setOption(worldMapOption);
           })
           .catch((error) => {
-            console.warn("⚠️ Failed to load world map data from CDN, using fallback visualization");
+            console.warn(
+              "⚠️ Failed to load world map data from CDN, using fallback visualization",
+            );
             // Fallback to scatter plot only
             const fallbackOption = {
               backgroundColor: "#f5f5f5",
@@ -1812,7 +1999,9 @@
 
       // 10. Pyramid Chart (echart_pyramid) - Using bar chart to create pyramid effect
       if (document.getElementById("echart_pyramid")) {
-        const pyramidChart = echarts.init(document.getElementById("echart_pyramid"));
+        const pyramidChart = echarts.init(
+          document.getElementById("echart_pyramid"),
+        );
         const pyramidOption = {
           title: {
             text: "User Hierarchy",
@@ -1829,7 +2018,13 @@
           },
           yAxis: {
             type: "category",
-            data: ["Admin", "Enterprise", "Pro Users", "Premium Users", "Basic Users"],
+            data: [
+              "Admin",
+              "Enterprise",
+              "Pro Users",
+              "Premium Users",
+              "Basic Users",
+            ],
             axisLabel: {
               fontSize: 12,
             },
@@ -1840,10 +2035,26 @@
               type: "bar",
               data: [
                 { value: 20, name: "Admin", itemStyle: { color: "#E74C3C" } },
-                { value: 40, name: "Enterprise", itemStyle: { color: "#9B59B6" } },
-                { value: 60, name: "Pro Users", itemStyle: { color: "#F39C12" } },
-                { value: 80, name: "Premium Users", itemStyle: { color: "#3498DB" } },
-                { value: 100, name: "Basic Users", itemStyle: { color: "#26B99A" } },
+                {
+                  value: 40,
+                  name: "Enterprise",
+                  itemStyle: { color: "#9B59B6" },
+                },
+                {
+                  value: 60,
+                  name: "Pro Users",
+                  itemStyle: { color: "#F39C12" },
+                },
+                {
+                  value: 80,
+                  name: "Premium Users",
+                  itemStyle: { color: "#3498DB" },
+                },
+                {
+                  value: 100,
+                  name: "Basic Users",
+                  itemStyle: { color: "#26B99A" },
+                },
               ],
               label: {
                 show: true,
@@ -1865,7 +2076,9 @@
 
       // 11. Sonar/Radar Chart (echart_sonar)
       if (document.getElementById("echart_sonar")) {
-        const sonarChart = echarts.init(document.getElementById("echart_sonar"));
+        const sonarChart = echarts.init(
+          document.getElementById("echart_sonar"),
+        );
         const sonarOption = {
           title: {
             text: "Technology Skills Radar",
@@ -1996,14 +2209,54 @@
 
         // Add markers for major US cities with business data
         const usaCities = [
-          { coords: [40.7128, -74.006], city: "New York", value: "$2.5M", color: "#26B99A" },
-          { coords: [34.0522, -118.2437], city: "Los Angeles", value: "$1.8M", color: "#3498DB" },
-          { coords: [41.8781, -87.6298], city: "Chicago", value: "$1.2M", color: "#E74C3C" },
-          { coords: [29.7604, -95.3698], city: "Houston", value: "$950K", color: "#F39C12" },
-          { coords: [33.4484, -112.074], city: "Phoenix", value: "$750K", color: "#9B59B6" },
-          { coords: [39.9526, -75.1652], city: "Philadelphia", value: "$850K", color: "#1ABC9C" },
-          { coords: [32.7767, -96.797], city: "Dallas", value: "$920K", color: "#E67E22" },
-          { coords: [37.7749, -122.4194], city: "San Francisco", value: "$2.1M", color: "#2ECC71" },
+          {
+            coords: [40.7128, -74.006],
+            city: "New York",
+            value: "$2.5M",
+            color: "#26B99A",
+          },
+          {
+            coords: [34.0522, -118.2437],
+            city: "Los Angeles",
+            value: "$1.8M",
+            color: "#3498DB",
+          },
+          {
+            coords: [41.8781, -87.6298],
+            city: "Chicago",
+            value: "$1.2M",
+            color: "#E74C3C",
+          },
+          {
+            coords: [29.7604, -95.3698],
+            city: "Houston",
+            value: "$950K",
+            color: "#F39C12",
+          },
+          {
+            coords: [33.4484, -112.074],
+            city: "Phoenix",
+            value: "$750K",
+            color: "#9B59B6",
+          },
+          {
+            coords: [39.9526, -75.1652],
+            city: "Philadelphia",
+            value: "$850K",
+            color: "#1ABC9C",
+          },
+          {
+            coords: [32.7767, -96.797],
+            city: "Dallas",
+            value: "$920K",
+            color: "#E67E22",
+          },
+          {
+            coords: [37.7749, -122.4194],
+            city: "San Francisco",
+            value: "$2.1M",
+            color: "#2ECC71",
+          },
         ];
 
         usaCities.forEach(function (location) {
@@ -2014,7 +2267,9 @@
             radius: 12,
           }).addTo(usaMap);
 
-          marker.bindPopup(`<b>${location.city}</b><br/>Revenue: ${location.value}`);
+          marker.bindPopup(
+            `<b>${location.city}</b><br/>Revenue: ${location.value}`,
+          );
         });
       }
 
@@ -2028,7 +2283,9 @@
 
       // Handle all chart types with different sizes
       Object.keys(chartSizes).forEach(function (chartClass) {
-        const charts = document.querySelectorAll(`.${chartClass}[data-percent]`);
+        const charts = document.querySelectorAll(
+          `.${chartClass}[data-percent]`,
+        );
         const config = chartSizes[chartClass];
 
         charts.forEach(function (element, index) {
@@ -2221,7 +2478,10 @@
         {
           selector: ".sparkline_discreet",
           type: "scatter",
-          data: [12, 24, 18, 32, 28, 15, 41, 38, 22, 29, 45, 33, 19, 36, 42, 27, 51, 38],
+          data: [
+            12, 24, 18, 32, 28, 15, 41, 38, 22, 29, 45, 33, 19, 36, 42, 27, 51,
+            38,
+          ],
           width: 380,
           height: 80,
           color: "#9B59B6",
@@ -2257,10 +2517,26 @@
                   radius: ["35%", "65%"],
                   center: ["50%", "50%"],
                   data: [
-                    { value: config.data[0], name: "Product A", itemStyle: { color: "#26B99A" } },
-                    { value: config.data[1], name: "Product B", itemStyle: { color: "#3498DB" } },
-                    { value: config.data[2], name: "Product C", itemStyle: { color: "#E74C3C" } },
-                    { value: config.data[3], name: "Others", itemStyle: { color: "#F39C12" } },
+                    {
+                      value: config.data[0],
+                      name: "Product A",
+                      itemStyle: { color: "#26B99A" },
+                    },
+                    {
+                      value: config.data[1],
+                      name: "Product B",
+                      itemStyle: { color: "#3498DB" },
+                    },
+                    {
+                      value: config.data[2],
+                      name: "Product C",
+                      itemStyle: { color: "#E74C3C" },
+                    },
+                    {
+                      value: config.data[3],
+                      name: "Others",
+                      itemStyle: { color: "#F39C12" },
+                    },
                   ],
                   label: { show: false },
                   emphasis: {
@@ -2336,7 +2612,10 @@
                 series: [
                   {
                     lineStyle: {
-                      width: config.type === "line" || config.type === "area" ? 4 : 3,
+                      width:
+                        config.type === "line" || config.type === "area"
+                          ? 4
+                          : 3,
                       shadowBlur: 10,
                       shadowColor: config.color,
                     },
@@ -2365,7 +2644,7 @@
       window.addEventListener("resize", function () {
         // Resize ECharts instances
         const allCharts = document.querySelectorAll(
-          '[id^="chart-large-"], [id^="chart-medium-"], [id^="chart-small-"], [id^="chart-"], [id^="sparkline-"]'
+          '[id^="chart-large-"], [id^="chart-medium-"], [id^="chart-small-"], [id^="chart-"], [id^="sparkline-"]',
         );
         allCharts.forEach(function (chartElement) {
           const chart = echarts.getInstanceByDom(chartElement);
@@ -2398,12 +2677,16 @@
   function initializeWeeklySummaryCharts() {
     const echarts = window.echarts || globalThis.echarts;
     if (typeof echarts === "undefined") {
-      console.warn("⚠️ ECharts library not available for Weekly Summary Charts");
+      console.warn(
+        "⚠️ ECharts library not available for Weekly Summary Charts",
+      );
       return;
     }
 
     // Weekly Sales Trend Chart
-    const weeklySalesChart = echarts.init(document.getElementById("weeklySalesChart"));
+    const weeklySalesChart = echarts.init(
+      document.getElementById("weeklySalesChart"),
+    );
     weeklySalesChart.setOption({
       tooltip: {
         trigger: "axis",
@@ -2456,7 +2739,9 @@
     });
 
     // Sales Distribution Chart
-    const salesDistributionChart = echarts.init(document.getElementById("salesDistributionChart"));
+    const salesDistributionChart = echarts.init(
+      document.getElementById("salesDistributionChart"),
+    );
     salesDistributionChart.setOption({
       tooltip: {
         trigger: "item",
@@ -2488,7 +2773,9 @@
     });
 
     // Daily Activity Chart
-    const dailyActivityChart = echarts.init(document.getElementById("dailyActivityChart"));
+    const dailyActivityChart = echarts.init(
+      document.getElementById("dailyActivityChart"),
+    );
     dailyActivityChart.setOption({
       tooltip: {
         trigger: "axis",
@@ -2511,7 +2798,16 @@
       xAxis: {
         type: "category",
         boundaryGap: false,
-        data: ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"],
+        data: [
+          "00:00",
+          "03:00",
+          "06:00",
+          "09:00",
+          "12:00",
+          "15:00",
+          "18:00",
+          "21:00",
+        ],
       },
       yAxis: [
         {
@@ -2563,7 +2859,7 @@
 
     // Performance Metrics Chart
     const performanceMetricsChart = echarts.init(
-      document.getElementById("performanceMetricsChart")
+      document.getElementById("performanceMetricsChart"),
     );
     performanceMetricsChart.setOption({
       tooltip: {
@@ -2586,7 +2882,12 @@
       },
       yAxis: {
         type: "category",
-        data: ["Conversion Rate", "Avg. Order Value", "Customer Retention", "ROI"],
+        data: [
+          "Conversion Rate",
+          "Avg. Order Value",
+          "Customer Retention",
+          "ROI",
+        ],
       },
       series: [
         {
@@ -2710,7 +3011,9 @@
           radius: loc.profit * 20, // Adjust multiplier for radius
         })
           .addTo(map)
-          .bindPopup(`<b>${loc.name}</b><br>Profit: $${loc.profit.toLocaleString()}`);
+          .bindPopup(
+            `<b>${loc.name}</b><br>Profit: $${loc.profit.toLocaleString()}`,
+          );
       });
     }
 
@@ -2718,11 +3021,36 @@
     const topProductsList = document.querySelector(".top_products_scroll");
     if (topProductsList) {
       const products = [
-        { name: "Ergonomic Office Chair", price: 249.99, sold: 124, img: "images/prod-1.jpg" },
-        { name: "Wireless Bluetooth Headphones", price: 89.99, sold: 98, img: "images/prod-2.jpg" },
-        { name: "Smart Home Hub", price: 129.0, sold: 76, img: "images/prod-3.jpg" },
-        { name: "4K Action Camera", price: 199.5, sold: 65, img: "images/prod-4.jpg" },
-        { name: "Mechanical Keyboard", price: 110.0, sold: 52, img: "images/prod-5.jpg" },
+        {
+          name: "Ergonomic Office Chair",
+          price: 249.99,
+          sold: 124,
+          img: "images/prod-1.jpg",
+        },
+        {
+          name: "Wireless Bluetooth Headphones",
+          price: 89.99,
+          sold: 98,
+          img: "images/prod-2.jpg",
+        },
+        {
+          name: "Smart Home Hub",
+          price: 129.0,
+          sold: 76,
+          img: "images/prod-3.jpg",
+        },
+        {
+          name: "4K Action Camera",
+          price: 199.5,
+          sold: 65,
+          img: "images/prod-4.jpg",
+        },
+        {
+          name: "Mechanical Keyboard",
+          price: 110.0,
+          sold: 52,
+          img: "images/prod-5.jpg",
+        },
       ];
       let productHTML = "";
       products.forEach((p) => {
@@ -3072,7 +3400,9 @@
     }
 
     // Profile Completion Gauge (test_page.html)
-    const profileGaugeTest = document.getElementById("profile_completion_gauge_test");
+    const profileGaugeTest = document.getElementById(
+      "profile_completion_gauge_test",
+    );
     if (profileGaugeTest && typeof echarts !== "undefined") {
       const gaugeChartTest = echarts.init(profileGaugeTest);
       gaugeChartTest.setOption({
@@ -3119,7 +3449,8 @@
 
     try {
       // Sales Overview (Line)
-      const salesOverviewContainer = document.getElementById("salesOverviewChart");
+      const salesOverviewContainer =
+        document.getElementById("salesOverviewChart");
       if (!salesOverviewContainer) {
         console.warn("salesOverviewChart container not found");
         return;
@@ -3128,15 +3459,19 @@
       salesOverviewChart.setOption({
         tooltip: { trigger: "axis" },
         legend: { data: ["Sales", "Orders"] },
-        xAxis: { type: "category", data: Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`) },
+        xAxis: {
+          type: "category",
+          data: Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`),
+        },
         yAxis: { type: "value" },
         series: [
           {
             name: "Sales",
             type: "line",
             data: [
-              120, 132, 101, 134, 90, 230, 210, 180, 160, 170, 190, 200, 210, 220, 230, 240, 250,
-              260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380,
+              120, 132, 101, 134, 90, 230, 210, 180, 160, 170, 190, 200, 210,
+              220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340,
+              350, 360, 370, 380,
             ],
             smooth: true,
             lineStyle: { color: "#26B99A" },
@@ -3145,8 +3480,9 @@
             name: "Orders",
             type: "line",
             data: [
-              80, 95, 110, 130, 120, 140, 155, 160, 150, 145, 140, 135, 130, 125, 120, 115, 110,
-              105, 100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45,
+              80, 95, 110, 130, 120, 140, 155, 160, 150, 145, 140, 135, 130,
+              125, 120, 115, 110, 105, 100, 95, 90, 85, 80, 75, 70, 65, 60, 55,
+              50, 45,
             ],
             smooth: true,
             lineStyle: { color: "#3498DB" },
@@ -3155,7 +3491,9 @@
       });
 
       // Revenue Breakdown (Pie)
-      const revenueBreakdownContainer = document.getElementById("revenueBreakdownChart");
+      const revenueBreakdownContainer = document.getElementById(
+        "revenueBreakdownChart",
+      );
       if (!revenueBreakdownContainer) {
         console.warn("revenueBreakdownChart container not found");
         return;
@@ -3176,7 +3514,11 @@
               { value: 4840, name: "Phone" },
             ],
             emphasis: {
-              itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: "rgba(0,0,0,0.5)" },
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: "rgba(0,0,0,0.5)",
+              },
             },
           },
         ],
@@ -3191,7 +3533,10 @@
       const topProductsChart = echarts.init(topProductsContainer);
       topProductsChart.setOption({
         tooltip: { trigger: "axis" },
-        xAxis: { type: "category", data: ["Chair", "Headphones", "Hub", "Camera", "Keyboard"] },
+        xAxis: {
+          type: "category",
+          data: ["Chair", "Headphones", "Hub", "Camera", "Keyboard"],
+        },
         yAxis: { type: "value" },
         series: [
           {
@@ -3203,7 +3548,9 @@
       });
 
       // Conversion Funnel (Funnel)
-      const conversionFunnelContainer = document.getElementById("conversionFunnelChart");
+      const conversionFunnelContainer = document.getElementById(
+        "conversionFunnelChart",
+      );
       if (!conversionFunnelContainer) {
         console.warn("conversionFunnelChart container not found");
         return;
@@ -3241,7 +3588,9 @@
       });
 
       // Traffic Sources (Radar)
-      const trafficSourcesContainer = document.getElementById("trafficSourcesChart");
+      const trafficSourcesContainer = document.getElementById(
+        "trafficSourcesChart",
+      );
       if (!trafficSourcesContainer) {
         console.warn("trafficSourcesChart container not found");
         return;
@@ -3274,7 +3623,9 @@
       // Orders Analytics Dashboard
       try {
         // Orders Analytics Chart (Line Chart)
-        const ordersAnalyticsContainer = document.getElementById("ordersAnalyticsChart");
+        const ordersAnalyticsContainer = document.getElementById(
+          "ordersAnalyticsChart",
+        );
         if (ordersAnalyticsContainer) {
           const ordersChart = echarts.init(ordersAnalyticsContainer);
 
@@ -3286,16 +3637,24 @@
           for (let i = 29; i >= 0; i--) {
             const date = new Date();
             date.setDate(date.getDate() - i);
-            dates.push(date.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
+            dates.push(
+              date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              }),
+            );
 
             // Simulate realistic order data with some variation
             const baseOrders = 15 + Math.floor(Math.random() * 10);
-            const weekendReduction = date.getDay() === 0 || date.getDay() === 6 ? 0.7 : 1;
+            const weekendReduction =
+              date.getDay() === 0 || date.getDay() === 6 ? 0.7 : 1;
             orderCounts.push(Math.floor(baseOrders * weekendReduction));
 
             // Revenue correlates with orders but has some randomness
             const avgOrderValue = 800 + Math.random() * 400;
-            revenues.push(Math.floor(orderCounts[orderCounts.length - 1] * avgOrderValue));
+            revenues.push(
+              Math.floor(orderCounts[orderCounts.length - 1] * avgOrderValue),
+            );
           }
 
           const ordersOption = {
@@ -3413,7 +3772,8 @@
         }
 
         // Order Status Distribution Chart (Donut Chart)
-        const orderStatusContainer = document.getElementById("orderStatusChart");
+        const orderStatusContainer =
+          document.getElementById("orderStatusChart");
         if (orderStatusContainer) {
           const statusChart = echarts.init(orderStatusContainer);
 

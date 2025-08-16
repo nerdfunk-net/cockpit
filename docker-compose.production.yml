@@ -37,7 +37,12 @@ services:
       - ./data/settings:/app/data/settings
     healthcheck:
       test:
-        ["CMD", "sh", "-c", "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs"]
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "curl -f http://localhost:3000/ && curl -f http://localhost:8000/docs",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

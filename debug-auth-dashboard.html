@@ -75,7 +75,10 @@
   </head>
   <body>
     <h1>🐛 Cockpit Authentication Debug Dashboard</h1>
-    <p>This page helps diagnose authentication configuration issues in your Docker container.</p>
+    <p>
+      This page helps diagnose authentication configuration issues in your
+      Docker container.
+    </p>
 
     <div class="debug-section">
       <h3>📍 Current Environment</h3>
@@ -90,14 +93,24 @@
     <div class="debug-section">
       <h3>🔗 URL Testing</h3>
       <div id="url-testing">
-        <button class="test-button" onclick="testUrl('/auth/login', 'Auth Login Endpoint')">
+        <button
+          class="test-button"
+          onclick="testUrl('/auth/login', 'Auth Login Endpoint')"
+        >
           Test Auth Login
         </button>
-        <button class="test-button" onclick="testUrl('/api/test', 'API Endpoint')">Test API</button>
+        <button
+          class="test-button"
+          onclick="testUrl('/api/test', 'API Endpoint')"
+        >
+          Test API
+        </button>
         <button class="test-button" onclick="testUrl('/docs', 'Backend Docs')">
           Test Backend Docs
         </button>
-        <button class="test-button" onclick="testActualLogin()">Test Actual Login</button>
+        <button class="test-button" onclick="testActualLogin()">
+          Test Actual Login
+        </button>
       </div>
       <div id="url-results"></div>
     </div>
@@ -105,7 +118,9 @@
     <div class="debug-section">
       <h3>📝 Console Output</h3>
       <div id="console-output"></div>
-      <button class="test-button" onclick="clearConsole()">Clear Console</button>
+      <button class="test-button" onclick="clearConsole()">
+        Clear Console
+      </button>
     </div>
 
     <!-- Load the actual config files to test -->
@@ -115,7 +130,8 @@
       const currentPort = window.location.port;
       const isDevelopment = currentPort === "3000" || currentPort === "3001";
       const isNonLocalhost =
-        window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1";
 
       if (isNonLocalhost && !isDevelopment) {
         const script = document.createElement("script");
@@ -147,9 +163,11 @@
           Hostname: window.location.hostname,
           Port: window.location.port || "default",
           Protocol: window.location.protocol,
-          "Is Development Port": window.location.port === "3000" || window.location.port === "3001",
+          "Is Development Port":
+            window.location.port === "3000" || window.location.port === "3001",
           "Is Non-Localhost":
-            window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1",
+            window.location.hostname !== "localhost" &&
+            window.location.hostname !== "127.0.0.1",
           "Container Mode Expected": window.COCKPIT_CONTAINER_MODE || false,
         };
 
@@ -165,33 +183,46 @@
 
         // Check CockpitConfig
         if (typeof CockpitConfig !== "undefined") {
-          info.push(`<strong>CockpitConfig Base URL:</strong> "${CockpitConfig.api.baseUrl}"`);
+          info.push(
+            `<strong>CockpitConfig Base URL:</strong> "${CockpitConfig.api.baseUrl}"`,
+          );
         } else {
-          info.push('<strong style="color: red;">CockpitConfig:</strong> NOT FOUND');
+          info.push(
+            '<strong style="color: red;">CockpitConfig:</strong> NOT FOUND',
+          );
           status = "status-error";
         }
 
         // Check container overrides
         if (window.COCKPIT_API_URL) {
-          info.push(`<strong>Container Override URL:</strong> "${window.COCKPIT_API_URL}"`);
-          info.push(`<strong>Container Mode:</strong> ${window.COCKPIT_CONTAINER_MODE}`);
+          info.push(
+            `<strong>Container Override URL:</strong> "${window.COCKPIT_API_URL}"`,
+          );
+          info.push(
+            `<strong>Container Mode:</strong> ${window.COCKPIT_CONTAINER_MODE}`,
+          );
         } else {
           info.push("<strong>Container Override:</strong> Not active");
         }
 
         // Check AuthManager
         if (window.authManager) {
-          info.push(`<strong>AuthManager Base URL:</strong> "${window.authManager.baseURL}"`);
           info.push(
-            `<strong>AuthManager Development Mode:</strong> ${window.authManager.isDevelopment}`
+            `<strong>AuthManager Base URL:</strong> "${window.authManager.baseURL}"`,
+          );
+          info.push(
+            `<strong>AuthManager Development Mode:</strong> ${window.authManager.isDevelopment}`,
           );
         } else {
-          info.push('<strong style="color: red;">AuthManager:</strong> NOT INITIALIZED');
+          info.push(
+            '<strong style="color: red;">AuthManager:</strong> NOT INITIALIZED',
+          );
           status = "status-error";
         }
 
         configInfo.innerHTML = info.join("<br>");
-        document.querySelector("#config-info").parentNode.className = `debug-section ${status}`;
+        document.querySelector("#config-info").parentNode.className =
+          `debug-section ${status}`;
       }
 
       async function testActualLogin() {

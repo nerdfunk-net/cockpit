@@ -8,7 +8,9 @@
 export const API_CONFIG = {
   // Backend API base URL
   BASE_URL:
-    window.location.protocol === "https:" ? "https://localhost:8000" : "http://localhost:8000",
+    window.location.protocol === "https:"
+      ? "https://localhost:8000"
+      : "http://localhost:8000",
 
   // API endpoints
   ENDPOINTS: {

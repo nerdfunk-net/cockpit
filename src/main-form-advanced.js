@@ -47,7 +47,10 @@ window.waitForLibraries = function (libraries, callback, timeout = 5000) {
 
   function check() {
     const allAvailable = libraries.every((lib) => {
-      return typeof window[lib] !== "undefined" || typeof globalThis[lib] !== "undefined";
+      return (
+        typeof window[lib] !== "undefined" ||
+        typeof globalThis[lib] !== "undefined"
+      );
     });
 
     if (allAvailable) {
@@ -58,8 +61,10 @@ window.waitForLibraries = function (libraries, callback, timeout = 5000) {
       console.warn(
         "Timeout waiting for libraries:",
         libraries.filter(
-          (lib) => typeof window[lib] === "undefined" && typeof globalThis[lib] === "undefined"
-        )
+          (lib) =>
+            typeof window[lib] === "undefined" &&
+            typeof globalThis[lib] === "undefined",
+        ),
       );
       callback(); // Call anyway to prevent hanging
     }

@@ -1,7 +1,9 @@
 // Sales Analytics Widget Initialization
 function initSalesAnalytics() {
   // Animate progress bars on page load
-  const progressBars = document.querySelectorAll(".sales-progress .progress-bar");
+  const progressBars = document.querySelectorAll(
+    ".sales-progress .progress-bar",
+  );
 
   if (progressBars.length > 0) {
     // Reset all progress bars to 0 width initially
@@ -14,7 +16,8 @@ function initSalesAnalytics() {
       progressBars.forEach((bar, index) => {
         setTimeout(() => {
           const targetWidth =
-            bar.style.getPropertyValue("--final-width") || bar.getAttribute("data-width");
+            bar.style.getPropertyValue("--final-width") ||
+            bar.getAttribute("data-width");
           if (targetWidth) {
             bar.style.width = targetWidth;
           } else {

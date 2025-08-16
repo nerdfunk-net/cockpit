@@ -66,7 +66,9 @@ globalThis.echarts = echarts;
 // Skycons (Animated weather icons)
 import SkyconsFactory from "skycons";
 try {
-  const Skycons = SkyconsFactory(typeof window !== "undefined" ? window : globalThis);
+  const Skycons = SkyconsFactory(
+    typeof window !== "undefined" ? window : globalThis,
+  );
   window.Skycons = Skycons;
   globalThis.Skycons = Skycons;
 } catch (error) {
@@ -188,7 +190,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Initialize all DataTables with proper configurations
 
       // Basic DataTable
-      if (document.getElementById("datatable") && !$.fn.DataTable.isDataTable("#datatable")) {
+      if (
+        document.getElementById("datatable") &&
+        !$.fn.DataTable.isDataTable("#datatable")
+      ) {
         new DataTable("#datatable", {
           responsive: true,
           pageLength: 10,
@@ -388,7 +393,10 @@ window.waitForLibraries = function (libraries, callback, timeout = 5000) {
 
   function check() {
     const allAvailable = libraries.every((lib) => {
-      return typeof window[lib] !== "undefined" || typeof globalThis[lib] !== "undefined";
+      return (
+        typeof window[lib] !== "undefined" ||
+        typeof globalThis[lib] !== "undefined"
+      );
     });
 
     if (allAvailable) {
@@ -401,8 +409,10 @@ window.waitForLibraries = function (libraries, callback, timeout = 5000) {
         console.warn(
           "Timeout waiting for libraries:",
           libraries.filter(
-            (lib) => typeof window[lib] === "undefined" && typeof globalThis[lib] === "undefined"
-          )
+            (lib) =>
+              typeof window[lib] === "undefined" &&
+              typeof globalThis[lib] === "undefined",
+          ),
         );
       }
       callback(); // Call anyway to prevent hanging
@@ -434,8 +444,8 @@ $(document).ready(function () {
     // Sparkline chart configurations
     $(".sparkline_one, .sparkline_two").sparkline(
       [
-        2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 4, 5, 6, 3, 5, 4, 5, 4, 5, 4, 3, 4, 5, 6, 7, 5, 4, 3, 5,
-        6,
+        2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 4, 5, 6, 3, 5, 4, 5, 4, 5, 4, 3, 4,
+        5, 6, 7, 5, 4, 3, 5, 6,
       ],
       {
         type: "line",
@@ -446,19 +456,22 @@ $(document).ready(function () {
         lineWidth: 2,
         spotColor: "#26B99A",
         minSpotColor: "#26B99A",
-      }
+      },
     );
 
-    $(".sparkline_three").sparkline([2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 7, 5, 4, 3, 5, 6], {
-      type: "line",
-      width: "100%",
-      height: "30",
-      lineColor: "#34495E",
-      fillColor: "#ccc",
-      lineWidth: 2,
-      spotColor: "#34495E",
-      minSpotColor: "#34495E",
-    });
+    $(".sparkline_three").sparkline(
+      [2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 7, 5, 4, 3, 5, 6],
+      {
+        type: "line",
+        width: "100%",
+        height: "30",
+        lineColor: "#34495E",
+        fillColor: "#ccc",
+        lineWidth: 2,
+        spotColor: "#34495E",
+        minSpotColor: "#34495E",
+      },
+    );
   }
 
   // Initialize Charts
@@ -572,7 +585,9 @@ $(document).ready(function () {
     });
 
     // Initialize Agent Performance chart for index3.html
-    const agentPerformanceChart = document.getElementById("agentPerformanceChart");
+    const agentPerformanceChart = document.getElementById(
+      "agentPerformanceChart",
+    );
     if (agentPerformanceChart) {
       const ctx = agentPerformanceChart.getContext("2d");
       new Chart(ctx, {
@@ -643,7 +658,7 @@ $(document).ready(function () {
           step: function () {
             $this.val(Math.ceil(this.animatedVal)).trigger("change");
           },
-        }
+        },
       );
     });
   }
@@ -666,7 +681,7 @@ $(document).ready(function () {
           width: goal + "%",
         },
         1000,
-        "easeInOutQuart"
+        "easeInOutQuart",
       );
     });
   }
@@ -737,7 +752,7 @@ function initUniversalProgressBars() {
               bar.classList.add("animation-complete");
             }, 1000);
           },
-          index * 100 + 300
+          index * 100 + 300,
         ); // Staggered animation
       }
     });

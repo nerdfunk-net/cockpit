@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import timedelta
 from fastapi import APIRouter, HTTPException, status
 from models.auth import UserLogin, LoginResponse
-from core.auth import create_access_token
+from core.auth import create_access_token, verify_token
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -62,11 +62,38 @@ async def login(user_data: UserLogin):
         )
 
 
-@router.post("/refresh")
-async def refresh_token(current_user: str = None):
-    """Refresh JWT token (placeholder for future implementation)."""
-    # This would be implemented for token refresh functionality
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Token refresh not implemented yet"
-    )
+@router.post("/refresh", response_model=LoginResponse)
+async def refresh_token(current_user: str = verify_token):
+    """Issue a new access token for the currently authenticated user.
+
+    Uses the same expiration policy as login. Since we don't have a user DB,
+    we reconstruct a minimal user payload based on the username.
+    """
+    from config import settings
+
+    try:
+        access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+        access_token = create_access_token(
+            data={"sub": current_user}, expires_delta=access_token_expires
+        )
+
+        # Recreate minimal user info
+        role = "guest" if current_user == "guest" else (
+            "admin" if current_user == settings.demo_username else "user"
+        )
+
+        return LoginResponse(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=settings.access_token_expire_minutes * 60,
+            user={
+                "username": current_user,
+                "role": role,
+            },
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token refresh failed: {exc}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )

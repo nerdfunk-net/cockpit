@@ -62,8 +62,13 @@
                   </div>
                   <div class="x_content">
                     <p>Welcome to Cockpit running in container mode.</p>
-                    <p><strong>Status:</strong> <span id="connection-status">Online</span></p>
-                    <p><strong>Backend:</strong> <span id="backend-url"></span></p>
+                    <p>
+                      <strong>Status:</strong>
+                      <span id="connection-status">Online</span>
+                    </p>
+                    <p>
+                      <strong>Backend:</strong> <span id="backend-url"></span>
+                    </p>
                     <p><strong>Mode:</strong> <span id="app-mode"></span></p>
 
                     <div class="btn-group" role="group">
@@ -87,8 +92,10 @@
       // Initialize container mode interface
       document.addEventListener("DOMContentLoaded", () => {
         // Update status information
-        document.getElementById("backend-url").textContent = CockpitConfig.api.baseUrl;
-        document.getElementById("app-mode").textContent = CockpitConfig.environment.isContainer
+        document.getElementById("backend-url").textContent =
+          CockpitConfig.api.baseUrl;
+        document.getElementById("app-mode").textContent = CockpitConfig
+          .environment.isContainer
           ? "Container"
           : CockpitConfig.environment.isDevelopment
             ? "Development"

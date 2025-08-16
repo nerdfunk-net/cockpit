@@ -52,7 +52,9 @@
             console.log("Storage change detected, updating user display");
             if (window.authManager) {
               window.authManager.token = localStorage.getItem("auth_token");
-              window.authManager.user = JSON.parse(localStorage.getItem("user_info") || "null");
+              window.authManager.user = JSON.parse(
+                localStorage.getItem("user_info") || "null",
+              );
               window.authManager.updateUserDisplay();
             }
           }
@@ -288,15 +290,23 @@
               (function () {
                 function updateSidebar() {
                   try {
-                    const userInfo = JSON.parse(localStorage.getItem("user_info") || "null");
+                    const userInfo = JSON.parse(
+                      localStorage.getItem("user_info") || "null",
+                    );
                     console.log("Updating sidebar with user info:", userInfo);
 
-                    const usernameElement = document.getElementById("sidebar-username");
+                    const usernameElement =
+                      document.getElementById("sidebar-username");
                     if (usernameElement && userInfo && userInfo.username) {
                       usernameElement.textContent = userInfo.username;
-                      console.log("Updated sidebar username:", userInfo.username);
+                      console.log(
+                        "Updated sidebar username:",
+                        userInfo.username,
+                      );
                     } else {
-                      console.log("Could not update sidebar - missing element or user info");
+                      console.log(
+                        "Could not update sidebar - missing element or user info",
+                      );
                     }
                   } catch (error) {
                     console.error("Error updating sidebar:", error);
@@ -317,7 +327,10 @@
             <br />
 
             <!-- sidebar menu -->
-            <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+            <div
+              id="sidebar-menu"
+              class="main_menu_side hidden-print main_menu"
+            >
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
@@ -349,24 +362,32 @@
                   </li>
                   <li>
                     <a
-                      ><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span
+                      ><i class="fas fa-cogs"></i> Configs
+                      <span class="fas fa-chevron-down"></span
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="backup.html"><i class="fas fa-save"></i> Backup</a>
+                        <a href="backup.html"
+                          ><i class="fas fa-save"></i> Backup</a
+                        >
                       </li>
                       <li>
-                        <a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a>
+                        <a href="compare.html"
+                          ><i class="fas fa-exchange-alt"></i> Compare</a
+                        >
                       </li>
                     </ul>
                   </li>
                   <li>
                     <a
-                      ><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span
+                      ><i class="fas fa-cogs"></i> Ansible
+                      <span class="fas fa-chevron-down"></span
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a>
+                        <a href="ansible-inventory.html"
+                          ><i class="fas fa-list"></i> Inventory</a
+                        >
                       </li>
                     </ul>
                   </li>
@@ -377,7 +398,9 @@
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a>
+                        <a href="settings-nautobot.html"
+                          ><i class="fas fa-server"></i> Nautobot</a
+                        >
                       </li>
                       <li>
                         <a href="settings-templates.html"
@@ -390,7 +413,9 @@
                         >
                       </li>
                       <li>
-                        <a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a>
+                        <a href="settings-cache.html"
+                          ><i class="fas fa-bolt"></i> Cache</a
+                        >
                       </li>
                       <li>
                         <a href="settings-credentials.html"
@@ -417,13 +442,22 @@
               >
                 <span class="fas fa-cog" aria-hidden="true"></span>
               </a>
-              <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
+              <a
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="FullScreen"
+              >
                 <span class="fas fa-expand" aria-hidden="true"></span>
               </a>
               <a data-bs-toggle="tooltip" data-bs-placement="top" title="Lock">
                 <span class="fas fa-eye-slash" aria-hidden="true"></span>
               </a>
-              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Logout" href="login.html">
+              <a
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Logout"
+                href="login.html"
+              >
                 <span class="fas fa-power-off" aria-hidden="true"></span>
               </a>
             </div>
@@ -499,9 +533,13 @@
                     <!-- Status Panel -->
                     <div class="row mb-4">
                       <div class="col-md-12">
-                        <div class="alert alert-info" role="alert" id="status-panel">
-                          <i class="fas fa-info-circle"></i> Ready to perform synchronization
-                          operations.
+                        <div
+                          class="alert alert-info"
+                          role="alert"
+                          id="status-panel"
+                        >
+                          <i class="fas fa-info-circle"></i> Ready to perform
+                          synchronization operations.
                         </div>
                       </div>
                     </div>
@@ -521,10 +559,16 @@
                                 <!-- Prefix Status Selection -->
                                 <div class="col-md-3">
                                   <div class="form-group mb-3">
-                                    <label for="sync-prefix-status" class="form-label"
+                                    <label
+                                      for="sync-prefix-status"
+                                      class="form-label"
                                       >Prefix Status</label
                                     >
-                                    <select class="form-control" id="sync-prefix-status" required>
+                                    <select
+                                      class="form-control"
+                                      id="sync-prefix-status"
+                                      required
+                                    >
                                       <option value="">Select Status</option>
                                     </select>
                                   </div>
@@ -533,7 +577,9 @@
                                 <!-- Interface Status Selection -->
                                 <div class="col-md-3">
                                   <div class="form-group mb-3">
-                                    <label for="sync-interface-status" class="form-label"
+                                    <label
+                                      for="sync-interface-status"
+                                      class="form-label"
                                       >Interface Status</label
                                     >
                                     <select
@@ -550,7 +596,10 @@
                                 <div class="col-md-3">
                                   <div class="form-group mb-3">
                                     <label class="form-label">&nbsp;</label>
-                                    <div class="form-check" style="padding-top: 8px">
+                                    <div
+                                      class="form-check"
+                                      style="padding-top: 8px"
+                                    >
                                       <input
                                         class="form-check-input"
                                         type="checkbox"
@@ -558,7 +607,10 @@
                                         value="cables"
                                         checked
                                       />
-                                      <label class="form-check-label" for="sync-cables">
+                                      <label
+                                        class="form-check-label"
+                                        for="sync-cables"
+                                      >
                                         <i class="fas fa-plug"></i> Sync Cables
                                       </label>
                                     </div>
@@ -569,7 +621,10 @@
                                 <div class="col-md-3">
                                   <div class="form-group mb-3">
                                     <label class="form-label">&nbsp;</label>
-                                    <div class="form-check" style="padding-top: 8px">
+                                    <div
+                                      class="form-check"
+                                      style="padding-top: 8px"
+                                    >
                                       <input
                                         class="form-check-input"
                                         type="checkbox"
@@ -577,8 +632,12 @@
                                         value="software"
                                         checked
                                       />
-                                      <label class="form-check-label" for="sync-software">
-                                        <i class="fas fa-code"></i> Sync Software
+                                      <label
+                                        class="form-check-label"
+                                        for="sync-software"
+                                      >
+                                        <i class="fas fa-code"></i> Sync
+                                        Software
                                       </label>
                                     </div>
                                   </div>
@@ -590,7 +649,9 @@
                                 <!-- IP Address Status Selection -->
                                 <div class="col-md-3">
                                   <div class="form-group mb-3">
-                                    <label for="sync-ipaddress-status" class="form-label"
+                                    <label
+                                      for="sync-ipaddress-status"
+                                      class="form-label"
                                       >IP Address Status</label
                                     >
                                     <select
@@ -606,8 +667,16 @@
                                 <!-- Namespace Selection -->
                                 <div class="col-md-3">
                                   <div class="form-group mb-3">
-                                    <label for="sync-namespace" class="form-label">Namespace</label>
-                                    <select class="form-control" id="sync-namespace" required>
+                                    <label
+                                      for="sync-namespace"
+                                      class="form-label"
+                                      >Namespace</label
+                                    >
+                                    <select
+                                      class="form-control"
+                                      id="sync-namespace"
+                                      required
+                                    >
                                       <option value="">Select Namespace</option>
                                       <option value="global">Global</option>
                                       <!-- Additional namespaces will be populated dynamically -->
@@ -619,7 +688,10 @@
                                 <div class="col-md-3">
                                   <div class="form-group mb-3">
                                     <label class="form-label">&nbsp;</label>
-                                    <div class="form-check" style="padding-top: 8px">
+                                    <div
+                                      class="form-check"
+                                      style="padding-top: 8px"
+                                    >
                                       <input
                                         class="form-check-input"
                                         type="checkbox"
@@ -627,8 +699,12 @@
                                         value="vlans"
                                         checked
                                       />
-                                      <label class="form-check-label" for="sync-vlans">
-                                        <i class="fas fa-network-wired"></i> Sync VLANs
+                                      <label
+                                        class="form-check-label"
+                                        for="sync-vlans"
+                                      >
+                                        <i class="fas fa-network-wired"></i>
+                                        Sync VLANs
                                       </label>
                                     </div>
                                   </div>
@@ -638,7 +714,10 @@
                                 <div class="col-md-3">
                                   <div class="form-group mb-3">
                                     <label class="form-label">&nbsp;</label>
-                                    <div class="form-check" style="padding-top: 8px">
+                                    <div
+                                      class="form-check"
+                                      style="padding-top: 8px"
+                                    >
                                       <input
                                         class="form-check-input"
                                         type="checkbox"
@@ -646,7 +725,10 @@
                                         value="vrfs"
                                         checked
                                       />
-                                      <label class="form-check-label" for="sync-vrfs">
+                                      <label
+                                        class="form-check-label"
+                                        for="sync-vrfs"
+                                      >
                                         <i class="fas fa-route"></i> Sync VRFs
                                       </label>
                                     </div>
@@ -694,7 +776,11 @@
                         <thead>
                           <tr class="headings">
                             <th class="column-title">
-                              <input type="checkbox" id="select-all-devices" title="Select All" />
+                              <input
+                                type="checkbox"
+                                id="select-all-devices"
+                                title="Select All"
+                              />
                             </th>
                             <th class="column-title">
                               Device Name
@@ -711,7 +797,10 @@
                             <th class="column-title">
                               Role
                               <div class="header-filter mt-1">
-                                <select class="form-control form-control-sm" id="role-filter">
+                                <select
+                                  class="form-control form-control-sm"
+                                  id="role-filter"
+                                >
                                   <option value="">All Roles</option>
                                 </select>
                               </div>
@@ -719,7 +808,10 @@
                             <th class="column-title">
                               Location
                               <div class="header-filter mt-1">
-                                <select class="form-control form-control-sm" id="location-filter">
+                                <select
+                                  class="form-control form-control-sm"
+                                  id="location-filter"
+                                >
                                   <option value="">All Locations</option>
                                 </select>
                               </div>
@@ -738,7 +830,10 @@
                             <th class="column-title no-link last">
                               Status
                               <div class="header-filter mt-1">
-                                <select class="form-control form-control-sm" id="status-filter">
+                                <select
+                                  class="form-control form-control-sm"
+                                  id="status-filter"
+                                >
                                   <option value="">All Statuses</option>
                                 </select>
                               </div>
@@ -750,15 +845,18 @@
                           <!-- Loading state -->
                           <tr>
                             <td colspan="7" class="text-center">
-                              <i class="fas fa-spinner fa-spin"></i> Loading devices from
-                              Nautobot...
+                              <i class="fas fa-spinner fa-spin"></i> Loading
+                              devices from Nautobot...
                             </td>
                           </tr>
                         </tbody>
                       </table>
 
                       <!-- Pagination Container -->
-                      <div id="sync-pagination" class="pagination-container"></div>
+                      <div
+                        id="sync-pagination"
+                        class="pagination-container"
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -780,7 +878,9 @@
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="backupHistoryModalLabel">Backup History</h5>
+                <h5 class="modal-title" id="backupHistoryModalLabel">
+                  Backup History
+                </h5>
                 <button
                   type="button"
                   class="btn-close"
@@ -806,7 +906,11 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
                   Close
                 </button>
               </div>
@@ -826,7 +930,9 @@
           <div class="modal-dialog" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="scheduleBackupModalLabel">Schedule Backup</h5>
+                <h5 class="modal-title" id="scheduleBackupModalLabel">
+                  Schedule Backup
+                </h5>
                 <button
                   type="button"
                   class="btn-close"
@@ -856,15 +962,23 @@
                       <option value="custom">Custom</option>
                     </select>
                   </div>
-                  <div class="form-group mb-3" id="custom-schedule-group" style="display: none">
-                    <label for="custom-schedule">Custom Schedule (Cron Expression)</label>
+                  <div
+                    class="form-group mb-3"
+                    id="custom-schedule-group"
+                    style="display: none"
+                  >
+                    <label for="custom-schedule"
+                      >Custom Schedule (Cron Expression)</label
+                    >
                     <input
                       type="text"
                       class="form-control"
                       id="custom-schedule"
                       placeholder="0 2 * * *"
                     />
-                    <small class="form-text text-muted">Enter a valid cron expression</small>
+                    <small class="form-text text-muted"
+                      >Enter a valid cron expression</small
+                    >
                   </div>
                   <div class="form-group mb-3">
                     <label for="retention-days">Retention (Days)</label>
@@ -880,10 +994,18 @@
                 </form>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
                   Cancel
                 </button>
-                <button type="button" class="btn btn-primary" id="save-schedule-btn">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  id="save-schedule-btn"
+                >
                   Save Schedule
                 </button>
               </div>
@@ -942,7 +1064,7 @@
           deviceNameFilter = "",
           useBackendPagination = false,
           limit = null,
-          offset = 0
+          offset = 0,
         ) {
           try {
             if (isLoading) {
@@ -960,7 +1082,9 @@
 
             if (!window.authManager) {
               console.error("AuthManager not available");
-              showError("Authentication manager not ready. Please refresh the page.");
+              showError(
+                "Authentication manager not ready. Please refresh the page.",
+              );
               return;
             }
 
@@ -983,7 +1107,10 @@
             }
 
             console.log("API URL:", apiUrl);
-            updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Loading devices...`, "info");
+            updateStatusPanel(
+              `<i class="fas fa-spinner fa-spin"></i> Loading devices...`,
+              "info",
+            );
 
             const response = await window.authManager.apiRequest(apiUrl);
             console.log("API response:", response);
@@ -1004,7 +1131,7 @@
                 // Backend pagination mode - display current page of devices
                 allDevices = response.devices;
                 console.log(
-                  `Loaded ${allDevices.length} devices (page ${Math.floor(offset / limit) + 1})`
+                  `Loaded ${allDevices.length} devices (page ${Math.floor(offset / limit) + 1})`,
                 );
 
                 // For backend pagination, we work with the current page data
@@ -1016,12 +1143,14 @@
 
                 updateStatusPanel(
                   `<i class="fas fa-check-circle"></i> Loaded ${allDevices.length} devices (${paginationState.totalCount} total).`,
-                  "success"
+                  "success",
                 );
               } else {
                 // Full data load mode - load all devices for client-side filtering
                 allDevices = response.devices;
-                console.log(`Loaded ${allDevices.length} devices from Nautobot`);
+                console.log(
+                  `Loaded ${allDevices.length} devices from Nautobot`,
+                );
 
                 // Extract filter options from loaded devices
                 extractFilterOptions(allDevices);
@@ -1031,12 +1160,17 @@
                 renderDevicesTable(allDevices);
                 updateStatusPanel(
                   `<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`,
-                  "success"
+                  "success",
                 );
               }
             } else {
-              console.error("Failed to load devices - invalid response:", response);
-              showError("Failed to load devices from Nautobot: Invalid response format");
+              console.error(
+                "Failed to load devices - invalid response:",
+                response,
+              );
+              showError(
+                "Failed to load devices from Nautobot: Invalid response format",
+              );
             }
           } catch (error) {
             console.error("Error loading devices:", error);
@@ -1058,9 +1192,12 @@
 
           devices.forEach((device) => {
             if (device.role?.name) filterOptions.roles.add(device.role.name);
-            if (device.location?.name) filterOptions.locations.add(device.location.name);
-            if (device.device_type?.model) filterOptions.deviceTypes.add(device.device_type.model);
-            if (device.status?.name) filterOptions.statuses.add(device.status.name);
+            if (device.location?.name)
+              filterOptions.locations.add(device.location.name);
+            if (device.device_type?.model)
+              filterOptions.deviceTypes.add(device.device_type.model);
+            if (device.status?.name)
+              filterOptions.statuses.add(device.status.name);
           });
 
           console.log("Filter options extracted:", {
@@ -1092,7 +1229,8 @@
           // Populate location filter
           const locationFilter = document.getElementById("location-filter");
           if (locationFilter) {
-            locationFilter.innerHTML = '<option value="">All Locations</option>';
+            locationFilter.innerHTML =
+              '<option value="">All Locations</option>';
             Array.from(filterOptions.locations)
               .sort()
               .forEach((location) => {
@@ -1104,7 +1242,8 @@
           }
 
           // Populate device type filter
-          const deviceTypeFilter = document.getElementById("device-type-filter");
+          const deviceTypeFilter =
+            document.getElementById("device-type-filter");
           if (deviceTypeFilter) {
             deviceTypeFilter.innerHTML = '<option value="">All Types</option>';
             Array.from(filterOptions.deviceTypes)
@@ -1139,10 +1278,12 @@
 
         // Initialize header filter event listeners
         function initializeHeaderFilterListeners() {
-          const deviceNameFilter = document.getElementById("device-name-filter");
+          const deviceNameFilter =
+            document.getElementById("device-name-filter");
           const roleFilter = document.getElementById("role-filter");
           const locationFilter = document.getElementById("location-filter");
-          const deviceTypeFilter = document.getElementById("device-type-filter");
+          const deviceTypeFilter =
+            document.getElementById("device-type-filter");
           const statusFilter = document.getElementById("status-filter");
 
           // Device name filter with debouncing and backend search
@@ -1160,7 +1301,9 @@
                   loadDevices(deviceName, true, pageSize, 0);
                 } else if (deviceName.length === 0) {
                   // Clear filter - load all devices in full mode
-                  console.log("Clearing device name filter, loading all devices");
+                  console.log(
+                    "Clearing device name filter, loading all devices",
+                  );
                   loadDevices("", false);
                 } else {
                   // Less than 3 characters - apply client-side filtering only
@@ -1267,12 +1410,23 @@
             }
 
             // Header filters
-            if (currentRoleFilter && device.role?.name !== currentRoleFilter) return false;
-            if (currentLocationFilter && device.location?.name !== currentLocationFilter)
+            if (currentRoleFilter && device.role?.name !== currentRoleFilter)
               return false;
-            if (currentDeviceTypeFilter && device.device_type?.model !== currentDeviceTypeFilter)
+            if (
+              currentLocationFilter &&
+              device.location?.name !== currentLocationFilter
+            )
               return false;
-            if (currentStatusFilter && device.status?.name !== currentStatusFilter) return false;
+            if (
+              currentDeviceTypeFilter &&
+              device.device_type?.model !== currentDeviceTypeFilter
+            )
+              return false;
+            if (
+              currentStatusFilter &&
+              device.status?.name !== currentStatusFilter
+            )
+              return false;
 
             // Date filter
             if (currentDateFilter && currentDateComparison) {
@@ -1281,11 +1435,16 @@
                 const backupDate = new Date(deviceBackupDate);
                 const filterDate = new Date(currentDateFilter);
 
-                if (currentDateComparison === "lte" && backupDate > filterDate) return false;
-                if (currentDateComparison === "lt" && backupDate >= filterDate) return false;
+                if (currentDateComparison === "lte" && backupDate > filterDate)
+                  return false;
+                if (currentDateComparison === "lt" && backupDate >= filterDate)
+                  return false;
               } else if (deviceBackupDate === "Never" || !deviceBackupDate) {
                 // Handle devices with no backup date based on filter logic
-                if (currentDateComparison === "lte" || currentDateComparison === "lt") {
+                if (
+                  currentDateComparison === "lte" ||
+                  currentDateComparison === "lt"
+                ) {
                   return false; // Exclude devices with no backup when filtering by date
                 }
               }
@@ -1296,7 +1455,11 @@
 
           // Apply sorting if a column is selected
           if (currentSortColumn && currentSortOrder !== "none") {
-            filtered = sortDevices(filtered, currentSortColumn, currentSortOrder);
+            filtered = sortDevices(
+              filtered,
+              currentSortColumn,
+              currentSortOrder,
+            );
           }
 
           currentPage = 0; // Reset to first page
@@ -1323,7 +1486,7 @@
           } else {
             updateStatusPanel(
               `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices`,
-              "success"
+              "success",
             );
           }
         }
@@ -1364,13 +1527,22 @@
               element: document.getElementById("device-name-filter"),
               value: currentDeviceNameFilter,
             },
-            { element: document.getElementById("role-filter"), value: currentRoleFilter },
-            { element: document.getElementById("location-filter"), value: currentLocationFilter },
+            {
+              element: document.getElementById("role-filter"),
+              value: currentRoleFilter,
+            },
+            {
+              element: document.getElementById("location-filter"),
+              value: currentLocationFilter,
+            },
             {
               element: document.getElementById("device-type-filter"),
               value: currentDeviceTypeFilter,
             },
-            { element: document.getElementById("status-filter"), value: currentStatusFilter },
+            {
+              element: document.getElementById("status-filter"),
+              value: currentStatusFilter,
+            },
           ];
 
           filters.forEach((filter) => {
@@ -1399,10 +1571,12 @@
           currentPage = 0;
 
           // Reset form inputs
-          const deviceNameFilter = document.getElementById("device-name-filter");
+          const deviceNameFilter =
+            document.getElementById("device-name-filter");
           const roleFilter = document.getElementById("role-filter");
           const locationFilter = document.getElementById("location-filter");
-          const deviceTypeFilter = document.getElementById("device-type-filter");
+          const deviceTypeFilter =
+            document.getElementById("device-type-filter");
           const statusFilter = document.getElementById("status-filter");
 
           if (deviceNameFilter) deviceNameFilter.value = "";
@@ -1419,8 +1593,11 @@
 
           // Reset page size selectors to default value (50)
           pageSize = 50;
-          const pageSizeSelector = document.getElementById("page-size-selector");
-          const backendPageSizeSelector = document.getElementById("backend-page-size-selector");
+          const pageSizeSelector =
+            document.getElementById("page-size-selector");
+          const backendPageSizeSelector = document.getElementById(
+            "backend-page-size-selector",
+          );
           if (pageSizeSelector) pageSizeSelector.value = "50";
           if (backendPageSizeSelector) backendPageSizeSelector.value = "50";
 
@@ -1428,7 +1605,7 @@
           renderDevicesTable(allDevices);
           updateStatusPanel(
             `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`,
-            "success"
+            "success",
           );
         }
 
@@ -1442,7 +1619,7 @@
             renderDevicesTable(allDevices);
             updateStatusPanel(
               `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`,
-              "success"
+              "success",
             );
             return;
           }
@@ -1465,20 +1642,26 @@
             );
           });
 
-          console.log(`Found ${filtered.length} devices matching "${searchTerm}"`);
+          console.log(
+            `Found ${filtered.length} devices matching "${searchTerm}"`,
+          );
           currentPage = 0;
           currentSearchTerm = searchTerm;
           renderDevicesTable(filtered);
           updateStatusPanel(
             `<i class="fas fa-search"></i> Found ${filtered.length} devices matching "${searchTerm}".`,
-            "info"
+            "info",
           );
         }
 
         // Filter devices with combined filters (client-side filtering)
-        function filterDevices(searchTerm = "", dateFilter = "", dateComparison = "") {
+        function filterDevices(
+          searchTerm = "",
+          dateFilter = "",
+          dateComparison = "",
+        ) {
           console.log(
-            `Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}"`
+            `Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}"`,
           );
 
           // Update global filter variables
@@ -1511,16 +1694,22 @@
           totalPages = Math.ceil(filteredDevices.length / pageSize);
 
           console.log(
-            `renderDevicesTable: currentPage=${currentPage}, totalPages=${totalPages}, devices.length=${devices.length}, pageSize=${pageSize}`
+            `renderDevicesTable: currentPage=${currentPage}, totalPages=${totalPages}, devices.length=${devices.length}, pageSize=${pageSize}`,
           );
 
           // Calculate start and end indices for current page
           const startIndex = currentPage * pageSize;
-          const endIndex = Math.min(startIndex + pageSize, filteredDevices.length);
-          const currentPageDevices = filteredDevices.slice(startIndex, endIndex);
+          const endIndex = Math.min(
+            startIndex + pageSize,
+            filteredDevices.length,
+          );
+          const currentPageDevices = filteredDevices.slice(
+            startIndex,
+            endIndex,
+          );
 
           console.log(
-            `renderDevicesTable: startIndex=${startIndex}, endIndex=${endIndex}, showing ${currentPageDevices.length} devices`
+            `renderDevicesTable: startIndex=${startIndex}, endIndex=${endIndex}, showing ${currentPageDevices.length} devices`,
           );
 
           tableBody.innerHTML = currentPageDevices
@@ -1551,7 +1740,8 @@
               }
 
               const isOffline =
-                status.toLowerCase().includes("offline") || status.toLowerCase().includes("failed");
+                status.toLowerCase().includes("offline") ||
+                status.toLowerCase().includes("failed");
 
               return `
               <tr class="${rowClass}">
@@ -1580,7 +1770,8 @@
 
         // Render pagination controls for sync page
         function renderSyncPagination(totalItems, totalPagesParam) {
-          const paginationContainer = document.getElementById("sync-pagination");
+          const paginationContainer =
+            document.getElementById("sync-pagination");
 
           if (!paginationContainer) {
             console.error("Pagination container not found");
@@ -1588,19 +1779,21 @@
           }
 
           // Use the passed parameter or calculate from totalItems
-          const calculatedTotalPages = totalPagesParam || Math.ceil(totalItems / pageSize);
+          const calculatedTotalPages =
+            totalPagesParam || Math.ceil(totalItems / pageSize);
 
           console.log(
-            `renderSyncPagination: currentPage=${currentPage}, calculatedTotalPages=${calculatedTotalPages}, totalItems=${totalItems}, pageSize=${pageSize}`
+            `renderSyncPagination: currentPage=${currentPage}, calculatedTotalPages=${calculatedTotalPages}, totalItems=${totalItems}, pageSize=${pageSize}`,
           );
 
           // Always show pagination container with page size selector, even for single page
           const startItem = totalItems > 0 ? currentPage * pageSize + 1 : 0;
           const endItem = Math.min((currentPage + 1) * pageSize, totalItems);
-          const showPaginationControls = totalItems > 0 && calculatedTotalPages > 1;
+          const showPaginationControls =
+            totalItems > 0 && calculatedTotalPages > 1;
 
           console.log(
-            `renderSyncPagination: Showing ${startItem} to ${endItem} of ${totalItems} entries - this should be page ${currentPage + 1}`
+            `renderSyncPagination: Showing ${startItem} to ${endItem} of ${totalItems} entries - this should be page ${currentPage + 1}`,
           );
 
           let paginationHtml = `
@@ -1670,7 +1863,7 @@
             for (let i = startPage; i <= endPage; i++) {
               const isActive = i === currentPage;
               console.log(
-                `Creating page button: page ${i + 1}, currentPage=${currentPage}, isActive=${isActive}`
+                `Creating page button: page ${i + 1}, currentPage=${currentPage}, isActive=${isActive}`,
               );
               paginationHtml += `
                 <li class="paginate_button page-item ${isActive ? "active" : ""}" data-page="${i}">
@@ -1716,7 +1909,10 @@
 
           // Remove any existing event listeners by cloning and replacing the container
           const newPaginationContainer = paginationContainer.cloneNode(true);
-          paginationContainer.parentNode.replaceChild(newPaginationContainer, paginationContainer);
+          paginationContainer.parentNode.replaceChild(
+            newPaginationContainer,
+            paginationContainer,
+          );
 
           // Add event listeners for pagination controls to the new container
           newPaginationContainer.addEventListener("click", function (e) {
@@ -1730,10 +1926,12 @@
             const oldCurrentPage = currentPage;
 
             // Recalculate totalPages to ensure it's correct
-            const actualTotalPages = Math.ceil(filteredDevices.length / pageSize);
+            const actualTotalPages = Math.ceil(
+              filteredDevices.length / pageSize,
+            );
 
             console.log(
-              `Before navigation: currentPage=${currentPage}, totalPages=${totalPages}, actualTotalPages=${actualTotalPages}, target.id=${target.id}, target.data-page=${target.getAttribute("data-page")}`
+              `Before navigation: currentPage=${currentPage}, totalPages=${totalPages}, actualTotalPages=${actualTotalPages}, target.id=${target.id}, target.data-page=${target.getAttribute("data-page")}`,
             );
 
             if (target.id === "sync-first") {
@@ -1748,7 +1946,9 @@
               currentPage = parseInt(target.getAttribute("data-page"));
             }
 
-            console.log(`After navigation: currentPage=${currentPage} (was ${oldCurrentPage})`);
+            console.log(
+              `After navigation: currentPage=${currentPage} (was ${oldCurrentPage})`,
+            );
 
             // Only re-render if page actually changed
             if (currentPage !== oldCurrentPage) {
@@ -1757,11 +1957,15 @@
           });
 
           // Add event listener for page size selector to the new container
-          const pageSizeSelector = newPaginationContainer.querySelector("#page-size-selector");
+          const pageSizeSelector = newPaginationContainer.querySelector(
+            "#page-size-selector",
+          );
           if (pageSizeSelector) {
             pageSizeSelector.addEventListener("change", function () {
               const newPageSize = parseInt(this.value);
-              console.log(`Changing page size from ${pageSize} to ${newPageSize}`);
+              console.log(
+                `Changing page size from ${pageSize} to ${newPageSize}`,
+              );
 
               // Calculate the current first item index
               const currentFirstItem = currentPage * pageSize;
@@ -1780,7 +1984,8 @@
 
         // Render pagination controls for backend pagination
         function renderBackendSyncPagination() {
-          const paginationContainer = document.getElementById("sync-pagination");
+          const paginationContainer =
+            document.getElementById("sync-pagination");
 
           if (!paginationContainer) {
             console.error("Pagination container not found");
@@ -1791,19 +1996,21 @@
             // Fall back to regular pagination
             renderSyncPagination(
               filteredDevices.length,
-              Math.ceil(filteredDevices.length / pageSize)
+              Math.ceil(filteredDevices.length / pageSize),
             );
             return;
           }
 
-          const currentPageNum = Math.floor(paginationState.currentOffset / pageSize);
+          const currentPageNum = Math.floor(
+            paginationState.currentOffset / pageSize,
+          );
           const totalPages = Math.ceil(paginationState.totalCount / pageSize);
           const showPaginationControls = totalPages > 1;
 
           const startItem = paginationState.currentOffset + 1;
           const endItem = Math.min(
             paginationState.currentOffset + pageSize,
-            paginationState.totalCount
+            paginationState.totalCount,
           );
 
           let paginationHtml = `
@@ -1907,15 +2114,35 @@
             }
 
             if (target.id === "backend-previous") {
-              const newOffset = Math.max(0, paginationState.currentOffset - pageSize);
-              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+              const newOffset = Math.max(
+                0,
+                paginationState.currentOffset - pageSize,
+              );
+              loadDevices(
+                paginationState.filterValue || "",
+                true,
+                pageSize,
+                newOffset,
+              );
             } else if (target.id === "backend-next") {
               const newOffset = paginationState.currentOffset + pageSize;
-              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+              loadDevices(
+                paginationState.filterValue || "",
+                true,
+                pageSize,
+                newOffset,
+              );
             } else if (target.hasAttribute("data-backend-page")) {
-              const pageNum = parseInt(target.getAttribute("data-backend-page"));
+              const pageNum = parseInt(
+                target.getAttribute("data-backend-page"),
+              );
               const newOffset = pageNum * pageSize;
-              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+              loadDevices(
+                paginationState.filterValue || "",
+                true,
+                pageSize,
+                newOffset,
+              );
             } else if (target.id === "load-all-devices-btn") {
               // Switch to full data mode
               loadDevices("", false);
@@ -1923,11 +2150,15 @@
           });
 
           // Add event listener for backend page size selector
-          const backendPageSizeSelector = document.getElementById("backend-page-size-selector");
+          const backendPageSizeSelector = document.getElementById(
+            "backend-page-size-selector",
+          );
           if (backendPageSizeSelector) {
             backendPageSizeSelector.addEventListener("change", function () {
               const newPageSize = parseInt(this.value);
-              console.log(`Changing backend page size from ${pageSize} to ${newPageSize}`);
+              console.log(
+                `Changing backend page size from ${pageSize} to ${newPageSize}`,
+              );
 
               // Update page size
               pageSize = newPageSize;
@@ -1978,7 +2209,7 @@
           updateStatusPanel(
             `<i class="fas fa-exclamation-triangle"></i> ${message}`,
             "danger",
-            false
+            false,
           );
         }
 
@@ -1988,10 +2219,12 @@
         // Initialize sync form functionality
         function initializeSyncForm() {
           // Check/uncheck all devices functionality
-          const selectAllCheckbox = document.getElementById("select-all-devices");
+          const selectAllCheckbox =
+            document.getElementById("select-all-devices");
           if (selectAllCheckbox) {
             selectAllCheckbox.addEventListener("change", function () {
-              const deviceCheckboxes = document.querySelectorAll(".device-checkbox");
+              const deviceCheckboxes =
+                document.querySelectorAll(".device-checkbox");
               deviceCheckboxes.forEach((checkbox) => {
                 checkbox.checked = this.checked;
                 const deviceId = checkbox.getAttribute("data-device-id");
@@ -2006,7 +2239,9 @@
           }
 
           // Sync button functionality
-          const syncButton = document.getElementById("sync-selected-devices-btn");
+          const syncButton = document.getElementById(
+            "sync-selected-devices-btn",
+          );
           if (syncButton) {
             syncButton.addEventListener("click", performDeviceSync);
           }
@@ -2022,15 +2257,23 @@
 
         // Update sync button state based on selected devices and form completion
         function updateSyncButtonState() {
-          const syncButton = document.getElementById("sync-selected-devices-btn");
-          const prefixStatus = document.getElementById("sync-prefix-status").value;
-          const interfaceStatus = document.getElementById("sync-interface-status").value;
-          const ipAddressStatus = document.getElementById("sync-ipaddress-status").value;
+          const syncButton = document.getElementById(
+            "sync-selected-devices-btn",
+          );
+          const prefixStatus =
+            document.getElementById("sync-prefix-status").value;
+          const interfaceStatus = document.getElementById(
+            "sync-interface-status",
+          ).value;
+          const ipAddressStatus = document.getElementById(
+            "sync-ipaddress-status",
+          ).value;
           const namespace = document.getElementById("sync-namespace").value;
           const hasSelectedDevices = selectedDevices.size > 0;
           const hasAtLeastOneOption =
-            document.querySelectorAll('#sync-properties-form input[type="checkbox"]:checked')
-              .length > 0;
+            document.querySelectorAll(
+              '#sync-properties-form input[type="checkbox"]:checked',
+            ).length > 0;
 
           const isFormValid =
             prefixStatus &&
@@ -2061,7 +2304,8 @@
           } else {
             selectedDevices.delete(deviceId);
             // Uncheck "select all" if individual device is unchecked
-            const selectAllCheckbox = document.getElementById("select-all-devices");
+            const selectAllCheckbox =
+              document.getElementById("select-all-devices");
             if (selectAllCheckbox) {
               selectAllCheckbox.checked = false;
             }
@@ -2072,15 +2316,22 @@
 
         // Perform device synchronization
         async function performDeviceSync() {
-          const prefixStatus = document.getElementById("sync-prefix-status").value;
-          const interfaceStatus = document.getElementById("sync-interface-status").value;
-          const ipAddressStatus = document.getElementById("sync-ipaddress-status").value;
+          const prefixStatus =
+            document.getElementById("sync-prefix-status").value;
+          const interfaceStatus = document.getElementById(
+            "sync-interface-status",
+          ).value;
+          const ipAddressStatus = document.getElementById(
+            "sync-ipaddress-status",
+          ).value;
           const namespace = document.getElementById("sync-namespace").value;
           const syncOptions = [];
 
           // Collect selected sync options
           document
-            .querySelectorAll('#sync-properties-form input[type="checkbox"]:checked')
+            .querySelectorAll(
+              '#sync-properties-form input[type="checkbox"]:checked',
+            )
             .forEach((checkbox) => {
               syncOptions.push(checkbox.value);
             });
@@ -2090,7 +2341,12 @@
             return;
           }
 
-          if (!prefixStatus || !interfaceStatus || !ipAddressStatus || !namespace) {
+          if (
+            !prefixStatus ||
+            !interfaceStatus ||
+            !ipAddressStatus ||
+            !namespace
+          ) {
             showError("Please select all status fields and namespace.");
             return;
           }
@@ -2102,7 +2358,7 @@
 
           updateStatusPanel(
             `<i class="fas fa-spinner fa-spin"></i> Synchronizing ${selectedDevices.size} device${selectedDevices.size > 1 ? "s" : ""}...`,
-            "info"
+            "info",
           );
 
           try {
@@ -2129,13 +2385,13 @@
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(syncData),
-              }
+              },
             );
 
             if (response.success) {
               updateStatusPanel(
                 `<i class="fas fa-check-circle"></i> Successfully started sync job for ${selectedDevices.size} device${selectedDevices.size > 1 ? "s" : ""}. Job ID: ${response.job_id}`,
-                "success"
+                "success",
               );
             } else {
               throw new Error(response.message || "Sync request failed");
@@ -2143,9 +2399,11 @@
 
             // Clear selections after successful sync
             selectedDevices.clear();
-            document.querySelectorAll(".device-checkbox").forEach((checkbox) => {
-              checkbox.checked = false;
-            });
+            document
+              .querySelectorAll(".device-checkbox")
+              .forEach((checkbox) => {
+                checkbox.checked = false;
+              });
             document.getElementById("select-all-devices").checked = false;
             updateSyncButtonState();
 
@@ -2157,7 +2415,7 @@
             console.error("Sync failed:", error);
             updateStatusPanel(
               `<i class="fas fa-exclamation-triangle"></i> Sync failed: ${error.message}`,
-              "danger"
+              "danger",
             );
           }
         }
@@ -2166,11 +2424,14 @@
         async function loadNamespaces() {
           try {
             // Call the real API endpoint for namespaces
-            const response = await window.authManager.apiRequest("/api/nautobot/namespaces");
+            const response = await window.authManager.apiRequest(
+              "/api/nautobot/namespaces",
+            );
 
             const namespaceSelect = document.getElementById("sync-namespace");
             if (namespaceSelect) {
-              namespaceSelect.innerHTML = '<option value="">Select Namespace</option>';
+              namespaceSelect.innerHTML =
+                '<option value="">Select Namespace</option>';
 
               // Set default value to Global if it exists
               let globalFound = false;
@@ -2201,7 +2462,8 @@
 
             const namespaceSelect = document.getElementById("sync-namespace");
             if (namespaceSelect) {
-              namespaceSelect.innerHTML = '<option value="">Select Namespace</option>';
+              namespaceSelect.innerHTML =
+                '<option value="">Select Namespace</option>';
               namespaces.forEach((namespace) => {
                 const option = document.createElement("option");
                 option.value = namespace.id;
@@ -2220,11 +2482,14 @@
         // Load prefix statuses from Nautobot
         async function loadPrefixStatuses() {
           try {
-            const response = await window.authManager.apiRequest("/api/nautobot/statuses/prefix");
+            const response = await window.authManager.apiRequest(
+              "/api/nautobot/statuses/prefix",
+            );
 
             const statusSelect = document.getElementById("sync-prefix-status");
             if (statusSelect) {
-              statusSelect.innerHTML = '<option value="">Select Status</option>';
+              statusSelect.innerHTML =
+                '<option value="">Select Status</option>';
 
               // Set default value to Active if it exists
               let activeFound = false;
@@ -2252,12 +2517,15 @@
         async function loadInterfaceStatuses() {
           try {
             const response = await window.authManager.apiRequest(
-              "/api/nautobot/statuses/interface"
+              "/api/nautobot/statuses/interface",
             );
 
-            const statusSelect = document.getElementById("sync-interface-status");
+            const statusSelect = document.getElementById(
+              "sync-interface-status",
+            );
             if (statusSelect) {
-              statusSelect.innerHTML = '<option value="">Select Status</option>';
+              statusSelect.innerHTML =
+                '<option value="">Select Status</option>';
 
               // Set default value to Active if it exists
               let activeFound = false;
@@ -2285,12 +2553,15 @@
         async function loadIPAddressStatuses() {
           try {
             const response = await window.authManager.apiRequest(
-              "/api/nautobot/statuses/ipaddress"
+              "/api/nautobot/statuses/ipaddress",
             );
 
-            const statusSelect = document.getElementById("sync-ipaddress-status");
+            const statusSelect = document.getElementById(
+              "sync-ipaddress-status",
+            );
             if (statusSelect) {
-              statusSelect.innerHTML = '<option value="">Select Status</option>';
+              statusSelect.innerHTML =
+                '<option value="">Select Status</option>';
 
               // Set default value to Active if it exists
               let activeFound = false;
@@ -2340,8 +2611,11 @@
         // Update navbar username display
         function updateNavbarUsername() {
           try {
-            const userInfo = JSON.parse(localStorage.getItem("user_info") || "null");
-            const navbarUsernameElement = document.getElementById("navbar-username");
+            const userInfo = JSON.parse(
+              localStorage.getItem("user_info") || "null",
+            );
+            const navbarUsernameElement =
+              document.getElementById("navbar-username");
 
             if (navbarUsernameElement && userInfo && userInfo.username) {
               navbarUsernameElement.textContent = userInfo.username;

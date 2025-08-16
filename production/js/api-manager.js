@@ -10,7 +10,9 @@ class ApiManager {
     if (this.config) {
       this.init();
     } else {
-      console.warn("ApiManager: CockpitConfig not available, deferring initialization");
+      console.warn(
+        "ApiManager: CockpitConfig not available, deferring initialization",
+      );
     }
   }
 
@@ -72,7 +74,9 @@ window.initializeApiManager = function () {
 
     console.log("✅ ApiManager initialized with config");
   } else {
-    console.warn("⚠️ CockpitConfig not available, cannot initialize ApiManager");
+    console.warn(
+      "⚠️ CockpitConfig not available, cannot initialize ApiManager",
+    );
   }
 };
 

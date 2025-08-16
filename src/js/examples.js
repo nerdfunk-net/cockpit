@@ -201,7 +201,15 @@ function init_flot_chart() {
       width: 40,
       height: 1,
     },
-    colors: ["#96CA59", "#3F97EB", "#72c380", "#6f7a8a", "#f7cb38", "#5a8022", "#2c7282"],
+    colors: [
+      "#96CA59",
+      "#3F97EB",
+      "#72c380",
+      "#6f7a8a",
+      "#f7cb38",
+      "#5a8022",
+      "#2c7282",
+    ],
     shadowSize: 0,
     tooltip: true,
     tooltipOpts: {
@@ -267,7 +275,7 @@ function init_flot_chart() {
           },
         },
       ],
-      chart_plot_02_settings
+      chart_plot_02_settings,
     );
   }
 
@@ -286,7 +294,7 @@ function init_flot_chart() {
           },
         },
       ],
-      chart_plot_03_settings
+      chart_plot_03_settings,
     );
   }
 }
@@ -392,8 +400,20 @@ function init_chart_doughnut() {
         datasets: [
           {
             data: [15, 20, 30, 10, 30],
-            backgroundColor: ["#BDC3C7", "#9B59B6", "#E74C3C", "#26B99A", "#3498DB"],
-            hoverBackgroundColor: ["#CFD4D8", "#B370CF", "#E95E4F", "#36CAAB", "#49A9EA"],
+            backgroundColor: [
+              "#BDC3C7",
+              "#9B59B6",
+              "#E74C3C",
+              "#26B99A",
+              "#3498DB",
+            ],
+            hoverBackgroundColor: [
+              "#CFD4D8",
+              "#B370CF",
+              "#E95E4F",
+              "#36CAAB",
+              "#49A9EA",
+            ],
           },
         ],
       },
@@ -419,8 +439,8 @@ function init_sparklines() {
 
   $(".sparkline_one").sparkline(
     [
-      2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 4, 5, 6, 3, 5, 4, 5, 4, 5, 4, 3, 4, 5, 6, 7, 5, 4, 3, 5,
-      6,
+      2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 4, 5, 6, 3, 5, 4, 5, 4, 5, 4, 3, 4, 5,
+      6, 7, 5, 4, 3, 5, 6,
     ],
     {
       type: "bar",
@@ -431,60 +451,75 @@ function init_sparklines() {
       },
       barSpacing: 2,
       barColor: "#26B99A",
-    }
+    },
   );
 
-  $(".sparkline_two").sparkline([2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 7, 5, 4, 3, 5, 6], {
-    type: "bar",
-    height: "40",
-    barWidth: 9,
-    colorMap: {
-      7: "#a1a1a1",
+  $(".sparkline_two").sparkline(
+    [2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 7, 5, 4, 3, 5, 6],
+    {
+      type: "bar",
+      height: "40",
+      barWidth: 9,
+      colorMap: {
+        7: "#a1a1a1",
+      },
+      barSpacing: 2,
+      barColor: "#26B99A",
     },
-    barSpacing: 2,
-    barColor: "#26B99A",
-  });
+  );
 
-  $(".sparkline_three").sparkline([2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 7, 5, 4, 3, 5, 6], {
-    type: "line",
-    width: "200",
-    height: "40",
-    lineColor: "#26B99A",
-    fillColor: "rgba(223, 223, 223, 0.57)",
-    lineWidth: 2,
-    spotColor: "#26B99A",
-    minSpotColor: "#26B99A",
-  });
-
-  $(".sparkline11").sparkline([2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 6, 2, 4, 3, 4, 5, 4, 5, 4, 3], {
-    type: "bar",
-    height: "40",
-    barWidth: 8,
-    colorMap: {
-      7: "#a1a1a1",
+  $(".sparkline_three").sparkline(
+    [2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 7, 5, 4, 3, 5, 6],
+    {
+      type: "line",
+      width: "200",
+      height: "40",
+      lineColor: "#26B99A",
+      fillColor: "rgba(223, 223, 223, 0.57)",
+      lineWidth: 2,
+      spotColor: "#26B99A",
+      minSpotColor: "#26B99A",
     },
-    barSpacing: 2,
-    barColor: "#26B99A",
-  });
+  );
 
-  $(".sparkline22").sparkline([2, 4, 3, 4, 7, 5, 4, 3, 5, 6, 2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 6], {
-    type: "line",
-    height: "40",
-    width: "200",
-    lineColor: "#26B99A",
-    fillColor: "#ffffff",
-    lineWidth: 3,
-    spotColor: "#34495E",
-    minSpotColor: "#34495E",
-  });
-
-  $(".sparkline_bar").sparkline([2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 4, 5, 6, 3, 5], {
-    type: "bar",
-    colorMap: {
-      7: "#a1a1a1",
+  $(".sparkline11").sparkline(
+    [2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 6, 2, 4, 3, 4, 5, 4, 5, 4, 3],
+    {
+      type: "bar",
+      height: "40",
+      barWidth: 8,
+      colorMap: {
+        7: "#a1a1a1",
+      },
+      barSpacing: 2,
+      barColor: "#26B99A",
     },
-    barColor: "#26B99A",
-  });
+  );
+
+  $(".sparkline22").sparkline(
+    [2, 4, 3, 4, 7, 5, 4, 3, 5, 6, 2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 6],
+    {
+      type: "line",
+      height: "40",
+      width: "200",
+      lineColor: "#26B99A",
+      fillColor: "#ffffff",
+      lineWidth: 3,
+      spotColor: "#34495E",
+      minSpotColor: "#34495E",
+    },
+  );
+
+  $(".sparkline_bar").sparkline(
+    [2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 4, 5, 6, 3, 5],
+    {
+      type: "bar",
+      colorMap: {
+        7: "#a1a1a1",
+      },
+      barColor: "#26B99A",
+    },
+  );
 
   $(".sparkline_area").sparkline([5, 6, 7, 9, 9, 5, 3, 2, 2, 4, 6, 7], {
     type: "line",
@@ -499,26 +534,32 @@ function init_sparklines() {
     width: 85,
   });
 
-  $(".sparkline_line").sparkline([2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 4, 5, 6, 3, 5], {
-    type: "line",
-    lineColor: "#26B99A",
-    fillColor: "#ffffff",
-    width: 85,
-    spotColor: "#34495E",
-    minSpotColor: "#34495E",
-  });
+  $(".sparkline_line").sparkline(
+    [2, 4, 3, 4, 5, 4, 5, 4, 3, 4, 5, 6, 4, 5, 6, 3, 5],
+    {
+      type: "line",
+      lineColor: "#26B99A",
+      fillColor: "#ffffff",
+      width: 85,
+      spotColor: "#34495E",
+      minSpotColor: "#34495E",
+    },
+  );
 
   $(".sparkline_pie").sparkline([1, 1, 2, 1], {
     type: "pie",
     sliceColors: ["#26B99A", "#ccc", "#75BCDD", "#D66DE2"],
   });
 
-  $(".sparkline_discreet").sparkline([4, 6, 7, 7, 4, 3, 2, 1, 4, 4, 2, 4, 3, 7, 8, 9, 7, 6, 4, 3], {
-    type: "discrete",
-    barWidth: 3,
-    lineColor: "#26B99A",
-    width: "85",
-  });
+  $(".sparkline_discreet").sparkline(
+    [4, 6, 7, 7, 4, 3, 2, 1, 4, 4, 2, 4, 3, 7, 8, 9, 7, 6, 4, 3],
+    {
+      type: "discrete",
+      barWidth: 3,
+      lineColor: "#26B99A",
+      width: "85",
+    },
+  );
 }
 
 /* AUTOCOMPLETE */
@@ -940,8 +981,8 @@ function init_wysiwyg() {
             fontName +
             "'\">" +
             fontName +
-            "</a></li>"
-        )
+            "</a></li>",
+        ),
       );
     });
     $("a[title]").tooltip({
@@ -952,7 +993,10 @@ function init_wysiwyg() {
         return false;
       })
       .change(function () {
-        $(this).parent(".dropdown-menu").siblings(".dropdown-toggle").dropdown("toggle");
+        $(this)
+          .parent(".dropdown-menu")
+          .siblings(".dropdown-toggle")
+          .dropdown("toggle");
       })
       .keydown("esc", function () {
         this.value = "";
@@ -994,7 +1038,7 @@ function init_wysiwyg() {
       '<div class="alert"> <button type="button" class="close" data-dismiss="alert">&times;</button>' +
         "<strong>File upload error</strong> " +
         msg +
-        " </div>"
+        " </div>",
     ).prependTo("#alerts");
   }
 
@@ -1062,7 +1106,9 @@ function init_cropper() {
     $('button[data-method="getCroppedCanvas"]').prop("disabled", true);
   }
 
-  if (typeof document.createElement("cropper").style.transition === "undefined") {
+  if (
+    typeof document.createElement("cropper").style.transition === "undefined"
+  ) {
     $('button[data-method="rotate"]').prop("disabled", true);
     $('button[data-method="scale"]').prop("disabled", true);
   }
@@ -1135,7 +1181,10 @@ function init_cropper() {
         case "getCroppedCanvas":
           if (result) {
             // Bootstrap's Modal
-            $("#getCroppedCanvasModal").modal().find(".modal-body").html(result);
+            $("#getCroppedCanvasModal")
+              .modal()
+              .find(".modal-body")
+              .html(result);
 
             if (!$download.hasClass("disabled")) {
               $download.attr("href", result.toDataURL());
@@ -1254,13 +1303,27 @@ function init_knob() {
           pa = this.arc(this.v);
           this.g.beginPath();
           this.g.strokeStyle = this.pColor;
-          this.g.arc(this.xy, this.xy, this.radius - this.lineWidth, pa.s, pa.e, pa.d);
+          this.g.arc(
+            this.xy,
+            this.xy,
+            this.radius - this.lineWidth,
+            pa.s,
+            pa.e,
+            pa.d,
+          );
           this.g.stroke();
         }
 
         this.g.beginPath();
         this.g.strokeStyle = r ? this.o.fgColor : this.fgColor;
-        this.g.arc(this.xy, this.xy, this.radius - this.lineWidth, a.s, a.e, a.d);
+        this.g.arc(
+          this.xy,
+          this.xy,
+          this.radius - this.lineWidth,
+          a.s,
+          a.e,
+          a.d,
+        );
         this.g.stroke();
 
         this.g.lineWidth = 2;
@@ -1272,7 +1335,7 @@ function init_knob() {
           this.radius - this.lineWidth + 1 + (this.lineWidth * 2) / 3,
           0,
           2 * Math.PI,
-          false
+          false,
         );
         this.g.stroke();
 
@@ -1436,7 +1499,9 @@ function init_daterangepicker() {
   }
 
   var cb = function (start, end, label) {
-    $("#reportrange span").html(start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY"));
+    $("#reportrange span").html(
+      start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY"),
+    );
   };
 
   var optionSet1 = {
@@ -1495,7 +1560,9 @@ function init_daterangepicker() {
   };
 
   $("#reportrange span").html(
-    dayjs().subtract(29, "days").format("MMMM D, YYYY") + " - " + dayjs().format("MMMM D, YYYY")
+    dayjs().subtract(29, "days").format("MMMM D, YYYY") +
+      " - " +
+      dayjs().format("MMMM D, YYYY"),
   );
   $("#reportrange").daterangepicker(optionSet1, cb);
   $("#reportrange").on("show.daterangepicker", function () {});
@@ -1520,7 +1587,7 @@ function init_daterangepicker_right() {
 
   var cb = function (start, end, label) {
     $("#reportrange_right span").html(
-      start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY")
+      start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY"),
     );
   };
 
@@ -1580,7 +1647,9 @@ function init_daterangepicker_right() {
   };
 
   $("#reportrange_right span").html(
-    dayjs().subtract(29, "days").format("MMMM D, YYYY") + " - " + dayjs().format("MMMM D, YYYY")
+    dayjs().subtract(29, "days").format("MMMM D, YYYY") +
+      " - " +
+      dayjs().format("MMMM D, YYYY"),
   );
 
   $("#reportrange_right").daterangepicker(optionSet1, cb);
@@ -1588,7 +1657,10 @@ function init_daterangepicker_right() {
   $("#reportrange_right").on("show.daterangepicker", function () {});
   $("#reportrange_right").on("hide.daterangepicker", function () {});
   $("#reportrange_right").on("apply.daterangepicker", function (ev, picker) {});
-  $("#reportrange_right").on("cancel.daterangepicker", function (ev, picker) {});
+  $("#reportrange_right").on(
+    "cancel.daterangepicker",
+    function (ev, picker) {},
+  );
 
   $("#options1").click(function () {
     $("#reportrange_right").data("daterangepicker").setOptions(optionSet1, cb);
@@ -1615,7 +1687,7 @@ function init_daterangepicker_single_call() {
       applyButtonClasses: "btn-primary",
       cancelButtonClasses: "btn-secondary",
     },
-    function (start, end, label) {}
+    function (start, end, label) {},
   );
   $("#single_cal2").daterangepicker(
     {
@@ -1624,7 +1696,7 @@ function init_daterangepicker_single_call() {
       applyButtonClasses: "btn-primary",
       cancelButtonClasses: "btn-secondary",
     },
-    function (start, end, label) {}
+    function (start, end, label) {},
   );
   $("#single_cal3").daterangepicker(
     {
@@ -1633,7 +1705,7 @@ function init_daterangepicker_single_call() {
       applyButtonClasses: "btn-primary",
       cancelButtonClasses: "btn-secondary",
     },
-    function (start, end, label) {}
+    function (start, end, label) {},
   );
   $("#single_cal4").daterangepicker(
     {
@@ -1642,7 +1714,7 @@ function init_daterangepicker_single_call() {
       applyButtonClasses: "btn-primary",
       cancelButtonClasses: "btn-secondary",
     },
-    function (start, end, label) {}
+    function (start, end, label) {},
   );
 }
 
@@ -1657,7 +1729,7 @@ function init_daterangepicker_reservation() {
       applyButtonClasses: "btn-primary",
       cancelButtonClasses: "btn-secondary",
     },
-    function (start, end, label) {}
+    function (start, end, label) {},
   );
 
   $("#reservation-time").daterangepicker(
@@ -1671,7 +1743,7 @@ function init_daterangepicker_reservation() {
       applyButtonClasses: "btn-primary",
       cancelButtonClasses: "btn-secondary",
     },
-    function (start, end, label) {}
+    function (start, end, label) {},
   );
 }
 
@@ -1771,7 +1843,11 @@ function init_validator() {
 
   // validate a field on "blur" event, a 'select' on 'change' event & a '.reuired' classed multifield on 'keyup':
   $("form")
-    .on("blur", "input[required], input.optional, select.required", validator.checkField)
+    .on(
+      "blur",
+      "input[required], input.optional, select.required",
+      validator.checkField,
+    )
     .on("change", "select.required", validator.checkField)
     .on("keypress", "input[required][pattern]", validator.keypress);
 
@@ -1833,7 +1909,7 @@ function init_CustomNotification() {
           options.type +
           "' href='#ntf" +
           cnt +
-          "'><i class='fa fa-bell animated shake'></i></a></li>"
+          "'><i class='fa fa-bell animated shake'></i></a></li>",
       );
       $("#custom_notifications #notif-group").append(message);
       cnt++;
@@ -1848,7 +1924,8 @@ function init_CustomNotification() {
     $(".notifications a").click(function (e) {
       e.preventDefault();
       var $this = $(this),
-        tabbed_notifications = "#" + $this.parents(".notifications").data("tabbed_notifications"),
+        tabbed_notifications =
+          "#" + $this.parents(".notifications").data("tabbed_notifications"),
         others = $this.closest("li").siblings().children("a"),
         target = $this.attr("href");
       others.removeClass("active");
@@ -1949,7 +2026,15 @@ function init_charts() {
     var canvas_line_00 = new Chart(document.getElementById("canvas_line"), {
       type: "line",
       data: {
-        labels: ["January", "February", "March", "April", "May", "June", "July"],
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+        ],
         datasets: [
           {
             label: "My First dataset",
@@ -1982,7 +2067,15 @@ function init_charts() {
     var canvas_line_01 = new Chart(document.getElementById("canvas_line1"), {
       type: "line",
       data: {
-        labels: ["January", "February", "March", "April", "May", "June", "July"],
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+        ],
         datasets: [
           {
             label: "My First dataset",
@@ -2015,7 +2108,15 @@ function init_charts() {
     var canvas_line_02 = new Chart(document.getElementById("canvas_line2"), {
       type: "line",
       data: {
-        labels: ["January", "February", "March", "April", "May", "June", "July"],
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+        ],
         datasets: [
           {
             label: "My First dataset",
@@ -2048,7 +2149,15 @@ function init_charts() {
     var canvas_line_03 = new Chart(document.getElementById("canvas_line3"), {
       type: "line",
       data: {
-        labels: ["January", "February", "March", "April", "May", "June", "July"],
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+        ],
         datasets: [
           {
             label: "My First dataset",
@@ -2081,7 +2190,15 @@ function init_charts() {
     var canvas_line_04 = new Chart(document.getElementById("canvas_line4"), {
       type: "line",
       data: {
-        labels: ["January", "February", "March", "April", "May", "June", "July"],
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+        ],
         datasets: [
           {
             label: "My First dataset",
@@ -2117,7 +2234,15 @@ function init_charts() {
     var lineChart = new Chart(ctx, {
       type: "line",
       data: {
-        labels: ["January", "February", "March", "April", "May", "June", "July"],
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+        ],
         datasets: [
           {
             label: "My First dataset",
@@ -2153,7 +2278,15 @@ function init_charts() {
     var mybarChart = new Chart(ctx, {
       type: "bar",
       data: {
-        labels: ["January", "February", "March", "April", "May", "June", "July"],
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+        ],
         datasets: [
           {
             label: "# of Votes",
@@ -2187,12 +2320,30 @@ function init_charts() {
   if ($("#canvasDoughnut").length) {
     var ctx = document.getElementById("canvasDoughnut");
     var data = {
-      labels: ["Dark Grey", "Purple Color", "Gray Color", "Green Color", "Blue Color"],
+      labels: [
+        "Dark Grey",
+        "Purple Color",
+        "Gray Color",
+        "Green Color",
+        "Blue Color",
+      ],
       datasets: [
         {
           data: [120, 50, 140, 180, 100],
-          backgroundColor: ["#455C73", "#9B59B6", "#BDC3C7", "#26B99A", "#3498DB"],
-          hoverBackgroundColor: ["#34495E", "#B370CF", "#CFD4D8", "#36CAAB", "#49A9EA"],
+          backgroundColor: [
+            "#455C73",
+            "#9B59B6",
+            "#BDC3C7",
+            "#26B99A",
+            "#3498DB",
+          ],
+          hoverBackgroundColor: [
+            "#34495E",
+            "#B370CF",
+            "#CFD4D8",
+            "#36CAAB",
+            "#49A9EA",
+          ],
         },
       ],
     };
@@ -2209,7 +2360,15 @@ function init_charts() {
   if ($("#canvasRadar").length) {
     var ctx = document.getElementById("canvasRadar");
     var data = {
-      labels: ["Eating", "Drinking", "Sleeping", "Designing", "Coding", "Cycling", "Running"],
+      labels: [
+        "Eating",
+        "Drinking",
+        "Sleeping",
+        "Designing",
+        "Coding",
+        "Cycling",
+        "Running",
+      ],
       datasets: [
         {
           label: "My First dataset",
@@ -2247,7 +2406,13 @@ function init_charts() {
       datasets: [
         {
           data: [120, 50, 140, 180, 100],
-          backgroundColor: ["#455C73", "#9B59B6", "#BDC3C7", "#26B99A", "#3498DB"],
+          backgroundColor: [
+            "#455C73",
+            "#9B59B6",
+            "#BDC3C7",
+            "#26B99A",
+            "#3498DB",
+          ],
           label: "My dataset", // for legend
         },
       ],
@@ -2271,7 +2436,13 @@ function init_charts() {
       datasets: [
         {
           data: [120, 50, 140, 180, 100],
-          backgroundColor: ["#455C73", "#9B59B6", "#BDC3C7", "#26B99A", "#3498DB"],
+          backgroundColor: [
+            "#455C73",
+            "#9B59B6",
+            "#BDC3C7",
+            "#26B99A",
+            "#3498DB",
+          ],
           label: "My dataset",
         },
       ],
@@ -2349,7 +2520,7 @@ function init_calendar() {
               end: end,
               allDay: allDay,
             },
-            true // make the event "stick"
+            true, // make the event "stick"
           );
         }
 
@@ -2504,7 +2675,16 @@ function init_echarts() {
   }
 
   var theme = {
-    color: ["#26B99A", "#34495E", "#BDC3C7", "#3498DB", "#9B59B6", "#8abb6f", "#759c6a", "#bfd3b7"],
+    color: [
+      "#26B99A",
+      "#34495E",
+      "#BDC3C7",
+      "#3498DB",
+      "#9B59B6",
+      "#8abb6f",
+      "#759c6a",
+      "#bfd3b7",
+    ],
 
     title: {
       itemGap: 8,
@@ -2693,7 +2873,20 @@ function init_echarts() {
       xAxis: [
         {
           type: "category",
-          data: ["1?", "2?", "3?", "4?", "5?", "6?", "7?", "8?", "9?", "10?", "11?", "12?"],
+          data: [
+            "1?",
+            "2?",
+            "3?",
+            "4?",
+            "5?",
+            "6?",
+            "7?",
+            "8?",
+            "9?",
+            "10?",
+            "11?",
+            "12?",
+          ],
         },
       ],
       yAxis: [
@@ -2705,7 +2898,9 @@ function init_echarts() {
         {
           name: "sales",
           type: "bar",
-          data: [2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3],
+          data: [
+            2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3,
+          ],
           markPoint: {
             data: [
               {
@@ -2730,7 +2925,9 @@ function init_echarts() {
         {
           name: "purchases",
           type: "bar",
-          data: [2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3],
+          data: [
+            2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3,
+          ],
           markPoint: {
             data: [
               {
@@ -2763,7 +2960,10 @@ function init_echarts() {
   //echart Radar
 
   if ($("#echart_sonar").length) {
-    var echartRadar = echarts.init(document.getElementById("echart_sonar"), theme);
+    var echartRadar = echarts.init(
+      document.getElementById("echart_sonar"),
+      theme,
+    );
 
     echartRadar.setOption({
       title: {
@@ -2845,7 +3045,10 @@ function init_echarts() {
   //echart Funnel
 
   if ($("#echart_pyramid").length) {
-    var echartFunnel = echarts.init(document.getElementById("echart_pyramid"), theme);
+    var echartFunnel = echarts.init(
+      document.getElementById("echart_pyramid"),
+      theme,
+    );
 
     echartFunnel.setOption({
       title: {
@@ -2870,7 +3073,13 @@ function init_echarts() {
         },
       },
       legend: {
-        data: ["Something #1", "Something #2", "Something #3", "Something #4", "Something #5"],
+        data: [
+          "Something #1",
+          "Something #2",
+          "Something #3",
+          "Something #4",
+          "Something #5",
+        ],
         orient: "vertical",
         x: "left",
         y: "bottom",
@@ -2911,7 +3120,10 @@ function init_echarts() {
   //echart Line
 
   if ($("#echart_line").length) {
-    var echartLine = echarts.init(document.getElementById("echart_line"), theme);
+    var echartLine = echarts.init(
+      document.getElementById("echart_line"),
+      theme,
+    );
 
     echartLine.setOption({
       title: {
@@ -3009,7 +3221,10 @@ function init_echarts() {
   //echart Scatter
 
   if ($("#echart_scatter").length) {
-    var echartScatter = echarts.init(document.getElementById("echart_scatter"), theme);
+    var echartScatter = echarts.init(
+      document.getElementById("echart_scatter"),
+      theme,
+    );
 
     echartScatter.setOption({
       title: {
@@ -3066,10 +3281,22 @@ function init_echarts() {
             formatter: function (params) {
               if (params.value.length > 1) {
                 return (
-                  params.seriesName + " :<br/>" + params.value[0] + "cm " + params.value[1] + "kg "
+                  params.seriesName +
+                  " :<br/>" +
+                  params.value[0] +
+                  "cm " +
+                  params.value[1] +
+                  "kg "
                 );
               } else {
-                return params.seriesName + " :<br/>" + params.name + " : " + params.value + "kg ";
+                return (
+                  params.seriesName +
+                  " :<br/>" +
+                  params.name +
+                  " : " +
+                  params.value +
+                  "kg "
+                );
               }
             },
           },
@@ -3364,10 +3591,22 @@ function init_echarts() {
             formatter: function (params) {
               if (params.value.length > 1) {
                 return (
-                  params.seriesName + " :<br/>" + params.value[0] + "cm " + params.value[1] + "kg "
+                  params.seriesName +
+                  " :<br/>" +
+                  params.value[0] +
+                  "cm " +
+                  params.value[1] +
+                  "kg "
                 );
               } else {
-                return params.seriesName + " :<br/>" + params.name + " : " + params.value + "kg ";
+                return (
+                  params.seriesName +
+                  " :<br/>" +
+                  params.name +
+                  " : " +
+                  params.value +
+                  "kg "
+                );
               }
             },
           },
@@ -3648,7 +3887,10 @@ function init_echarts() {
   //echart Bar Horizontal
 
   if ($("#echart_bar_horizontal").length) {
-    var echartBar = echarts.init(document.getElementById("echart_bar_horizontal"), theme);
+    var echartBar = echarts.init(
+      document.getElementById("echart_bar_horizontal"),
+      theme,
+    );
 
     echartBar.setOption({
       title: {
@@ -3702,7 +3944,10 @@ function init_echarts() {
   //echart Pie Collapse
 
   if ($("#echart_pie2").length) {
-    var echartPieCollapse = echarts.init(document.getElementById("echart_pie2"), theme);
+    var echartPieCollapse = echarts.init(
+      document.getElementById("echart_pie2"),
+      theme,
+    );
 
     echartPieCollapse.setOption({
       tooltip: {
@@ -3776,7 +4021,10 @@ function init_echarts() {
   //echart Donut
 
   if ($("#echart_donut").length) {
-    var echartDonut = echarts.init(document.getElementById("echart_donut"), theme);
+    var echartDonut = echarts.init(
+      document.getElementById("echart_donut"),
+      theme,
+    );
 
     echartDonut.setOption({
       tooltip: {
@@ -3787,7 +4035,13 @@ function init_echarts() {
       legend: {
         x: "center",
         y: "bottom",
-        data: ["Direct Access", "E-mail Marketing", "Union Ad", "Video Ads", "Search Engine"],
+        data: [
+          "Direct Access",
+          "E-mail Marketing",
+          "Union Ad",
+          "Video Ads",
+          "Search Engine",
+        ],
       },
       toolbox: {
         show: true,
@@ -3879,7 +4133,13 @@ function init_echarts() {
       legend: {
         x: "center",
         y: "bottom",
-        data: ["Direct Access", "E-mail Marketing", "Union Ad", "Video Ads", "Search Engine"],
+        data: [
+          "Direct Access",
+          "E-mail Marketing",
+          "Union Ad",
+          "Video Ads",
+          "Search Engine",
+        ],
       },
       toolbox: {
         show: true,
@@ -3969,7 +4229,10 @@ function init_echarts() {
   //echart Mini Pie
 
   if ($("#echart_mini_pie").length) {
-    var echartMiniPie = echarts.init(document.getElementById("echart_mini_pie"), theme);
+    var echartMiniPie = echarts.init(
+      document.getElementById("echart_mini_pie"),
+      theme,
+    );
 
     echartMiniPie.setOption({
       title: {
@@ -4081,7 +4344,10 @@ function init_echarts() {
   //echart Map
 
   if ($("#echart_world_map").length) {
-    var echartMap = echarts.init(document.getElementById("echart_world_map"), theme);
+    var echartMap = echarts.init(
+      document.getElementById("echart_world_map"),
+      theme,
+    );
 
     echartMap.setOption({
       title: {
@@ -4095,7 +4361,10 @@ function init_echarts() {
         trigger: "item",
         formatter: function (params) {
           var value = (params.value + "").split(".");
-          value = value[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, "$1,") + "." + value[1];
+          value =
+            value[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, "$1,") +
+            "." +
+            value[1];
           return params.seriesName + "<br/>" + params.name + " : " + value;
         },
       },

@@ -33,7 +33,10 @@
   </head>
   <body>
     <h1>Auth Configuration Test</h1>
-    <p>This page tests the authentication configuration logic for different hostnames and ports.</p>
+    <p>
+      This page tests the authentication configuration logic for different
+      hostnames and ports.
+    </p>
 
     <div id="results"></div>
 
@@ -68,11 +71,12 @@
       const currentPort = window.location.port;
       const isDevelopment = currentPort === "3000" || currentPort === "3001";
       const isNonLocalhost =
-        window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1";
       const shouldLoadContainer = isNonLocalhost && !isDevelopment;
 
       addInfo(
-        `Should load container config: ${shouldLoadContainer} (non-localhost: ${isNonLocalhost}, development: ${isDevelopment})`
+        `Should load container config: ${shouldLoadContainer} (non-localhost: ${isNonLocalhost}, development: ${isDevelopment})`,
       );
 
       // Test configuration detection
@@ -85,13 +89,13 @@
             addResult(
               "Container Override Active",
               true,
-              `Container config is overriding base URL to: "${window.COCKPIT_API_URL}"`
+              `Container config is overriding base URL to: "${window.COCKPIT_API_URL}"`,
             );
           } else {
             addResult(
               "Container Override Conflict",
               false,
-              `Config: "${CockpitConfig.api.baseUrl}", Container: "${window.COCKPIT_API_URL}"`
+              `Config: "${CockpitConfig.api.baseUrl}", Container: "${window.COCKPIT_API_URL}"`,
             );
           }
         }
@@ -105,7 +109,7 @@
           addResult(
             "Development Mode Detection",
             success,
-            `Expected empty base URL for Vite proxy, got: "${CockpitConfig.api.baseUrl}"`
+            `Expected empty base URL for Vite proxy, got: "${CockpitConfig.api.baseUrl}"`,
           );
 
           // In development mode, container config should NOT be loaded
@@ -113,13 +117,13 @@
             addResult(
               "Container Config Prevention",
               false,
-              "Container config was loaded in development mode - this will break Vite proxy!"
+              "Container config was loaded in development mode - this will break Vite proxy!",
             );
           } else {
             addResult(
               "Container Config Prevention",
               true,
-              "Container config correctly not loaded in development mode"
+              "Container config correctly not loaded in development mode",
             );
           }
         } else {
@@ -128,7 +132,7 @@
           addResult(
             "Production Mode Detection",
             success,
-            `Expected "${expectedBaseUrl}", got: "${CockpitConfig.api.baseUrl}"`
+            `Expected "${expectedBaseUrl}", got: "${CockpitConfig.api.baseUrl}"`,
           );
         }
       } else {
@@ -143,12 +147,14 @@
 
         const currentPort = window.location.port;
         const expectedDevelopment =
-          currentPort === "3000" || currentPort === "3001" || authManager.baseURL === "";
+          currentPort === "3000" ||
+          currentPort === "3001" ||
+          authManager.baseURL === "";
         const success = authManager.isDevelopment === expectedDevelopment;
         addResult(
           "AuthManager Development Detection",
           success,
-          `Expected development mode: ${expectedDevelopment}, got: ${authManager.isDevelopment}`
+          `Expected development mode: ${expectedDevelopment}, got: ${authManager.isDevelopment}`,
         );
       } catch (error) {
         addResult("AuthManager Creation", false, error.message);
@@ -165,22 +171,26 @@
         addInfo(`Login URL would be: "${loginUrl}"`);
 
         // Test API URL
-        const apiUrl = authManager.isDevelopment ? "/api/test" : `${authManager.baseURL}/api/test`;
+        const apiUrl = authManager.isDevelopment
+          ? "/api/test"
+          : `${authManager.baseURL}/api/test`;
         addInfo(`API URL would be: "${apiUrl}"`);
 
         if (authManager.isDevelopment) {
-          const relativeUrlsUsed = loginUrl.startsWith("/") && apiUrl.startsWith("/");
+          const relativeUrlsUsed =
+            loginUrl.startsWith("/") && apiUrl.startsWith("/");
           addResult(
             "Relative URLs in Development",
             relativeUrlsUsed,
-            `Using relative URLs for Vite proxy: Login="${loginUrl}", API="${apiUrl}"`
+            `Using relative URLs for Vite proxy: Login="${loginUrl}", API="${apiUrl}"`,
           );
         } else {
-          const absoluteUrlsUsed = loginUrl.includes(":8000") && apiUrl.includes(":8000");
+          const absoluteUrlsUsed =
+            loginUrl.includes(":8000") && apiUrl.includes(":8000");
           addResult(
             "Absolute URLs in Production",
             absoluteUrlsUsed,
-            `Using absolute URLs for direct backend: Login="${loginUrl}", API="${apiUrl}"`
+            `Using absolute URLs for direct backend: Login="${loginUrl}", API="${apiUrl}"`,
           );
         }
       }

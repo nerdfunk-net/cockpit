@@ -30,7 +30,8 @@
       const currentPort = window.location.port;
       const isDevelopment = currentPort === "3000" || currentPort === "3001";
       const isNonLocalhost =
-        window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1";
 
       // Additional check: if we're behind a reverse proxy but still using Vite,
       // we should detect Vite-specific indicators
@@ -40,7 +41,8 @@
       );
 
       // Don't load container config if we detect Vite environment
-      const shouldLoadContainer = isNonLocalhost && !isDevelopment && !hasViteElements;
+      const shouldLoadContainer =
+        isNonLocalhost && !isDevelopment && !hasViteElements;
 
       console.log("🚀 Login page: Detection results:", {
         currentPort,
@@ -57,7 +59,7 @@
         document.head.appendChild(script);
       } else {
         console.log(
-          "🚀 Login page: NOT loading container configuration (Vite environment detected)"
+          "🚀 Login page: NOT loading container configuration (Vite environment detected)",
         );
       }
     </script>
@@ -77,7 +79,10 @@
 
         // Initialize global auth manager
         window.authManager = new AuthManager();
-        console.log("AuthManager initialized with baseURL:", window.authManager.baseURL);
+        console.log(
+          "AuthManager initialized with baseURL:",
+          window.authManager.baseURL,
+        );
       });
     </script>
 
@@ -128,7 +133,9 @@
   </head>
 
   <body class="login-bg">
-    <div class="container-fluid d-flex align-items-center justify-content-center min-vh-100">
+    <div
+      class="container-fluid d-flex align-items-center justify-content-center min-vh-100"
+    >
       <div class="row justify-content-center w-100">
         <div class="col-xl-4 col-lg-5 col-md-6 col-sm-8 col-10">
           <!-- Login Form Card -->
@@ -136,7 +143,9 @@
             <div class="card-body p-5">
               <!-- Brand Header -->
               <div class="text-center mb-4">
-                <div class="d-flex align-items-center justify-content-center mb-3">
+                <div
+                  class="d-flex align-items-center justify-content-center mb-3"
+                >
                   <i class="fas fa-paw brand-logo"></i>
                   <h3 class="mb-0 fw-bold text-dark">Cockpit</h3>
                 </div>
@@ -146,7 +155,9 @@
               <!-- Login Form -->
               <form id="loginForm">
                 <div class="mb-3">
-                  <label for="username" class="form-label text-muted">Username</label>
+                  <label for="username" class="form-label text-muted"
+                    >Username</label
+                  >
                   <div class="input-group login-input-group">
                     <span class="input-group-text bg-light border-end-0">
                       <i class="fas fa-user text-muted"></i>
@@ -162,7 +173,9 @@
                 </div>
 
                 <div class="mb-3">
-                  <label for="password" class="form-label text-muted">Password</label>
+                  <label for="password" class="form-label text-muted"
+                    >Password</label
+                  >
                   <div class="input-group login-input-group">
                     <span class="input-group-text bg-light border-end-0">
                       <i class="fas fa-lock text-muted"></i>
@@ -184,14 +197,23 @@
                   </div>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-4"
+                >
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="rememberMe" />
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="rememberMe"
+                    />
                     <label class="form-check-label text-muted" for="rememberMe">
                       Remember me
                     </label>
                   </div>
-                  <a href="#" class="text-decoration-none" id="forgotPasswordLink"
+                  <a
+                    href="#"
+                    class="text-decoration-none"
+                    id="forgotPasswordLink"
                     >Forgot password?</a
                   >
                 </div>
@@ -206,7 +228,10 @@
               <!-- Divider -->
               <div class="text-center mb-3">
                 <span class="text-muted">Don't have an account?</span>
-                <a href="#" class="text-decoration-none ms-1" id="showRegisterForm"
+                <a
+                  href="#"
+                  class="text-decoration-none ms-1"
+                  id="showRegisterForm"
                   >Create Account</a
                 >
               </div>
@@ -218,7 +243,9 @@
             <div class="card-body p-5">
               <!-- Brand Header -->
               <div class="text-center mb-4">
-                <div class="d-flex align-items-center justify-content-center mb-3">
+                <div
+                  class="d-flex align-items-center justify-content-center mb-3"
+                >
                   <i class="fas fa-paw brand-logo"></i>
                   <h3 class="mb-0 fw-bold text-dark">Cockpit!</h3>
                 </div>
@@ -228,7 +255,9 @@
               <!-- Registration Form -->
               <form id="registerForm">
                 <div class="mb-3">
-                  <label for="regUsername" class="form-label text-muted">Username</label>
+                  <label for="regUsername" class="form-label text-muted"
+                    >Username</label
+                  >
                   <div class="input-group login-input-group">
                     <span class="input-group-text bg-light border-end-0">
                       <i class="fas fa-user text-muted"></i>
@@ -244,7 +273,9 @@
                 </div>
 
                 <div class="mb-3">
-                  <label for="regEmail" class="form-label text-muted">Email Address</label>
+                  <label for="regEmail" class="form-label text-muted"
+                    >Email Address</label
+                  >
                   <div class="input-group login-input-group">
                     <span class="input-group-text bg-light border-end-0">
                       <i class="fas fa-envelope text-muted"></i>
@@ -260,7 +291,9 @@
                 </div>
 
                 <div class="mb-3">
-                  <label for="regFullName" class="form-label text-muted">Full Name</label>
+                  <label for="regFullName" class="form-label text-muted"
+                    >Full Name</label
+                  >
                   <div class="input-group login-input-group">
                     <span class="input-group-text bg-light border-end-0">
                       <i class="fas fa-id-card text-muted"></i>
@@ -276,7 +309,9 @@
                 </div>
 
                 <div class="mb-3">
-                  <label for="regPassword" class="form-label text-muted">Password</label>
+                  <label for="regPassword" class="form-label text-muted"
+                    >Password</label
+                  >
                   <div class="input-group login-input-group">
                     <span class="input-group-text bg-light border-end-0">
                       <i class="fas fa-lock text-muted"></i>
@@ -311,11 +346,21 @@
 
                 <div class="mb-4">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="agreeTerms" required />
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="agreeTerms"
+                      required
+                    />
                     <label class="form-check-label text-muted" for="agreeTerms">
                       I agree to the
-                      <a href="#" class="text-decoration-none">Terms of Service</a> and
-                      <a href="#" class="text-decoration-none">Privacy Policy</a>
+                      <a href="#" class="text-decoration-none"
+                        >Terms of Service</a
+                      >
+                      and
+                      <a href="#" class="text-decoration-none"
+                        >Privacy Policy</a
+                      >
                     </label>
                   </div>
                 </div>
@@ -330,7 +375,9 @@
               <!-- Divider -->
               <div class="text-center mb-3">
                 <span class="text-muted">Already have an account?</span>
-                <a href="#" class="text-decoration-none ms-1" id="showLoginForm">Sign In</a>
+                <a href="#" class="text-decoration-none ms-1" id="showLoginForm"
+                  >Sign In</a
+                >
               </div>
             </div>
           </div>
@@ -338,12 +385,23 @@
           <!-- Footer -->
           <div class="text-center mt-4">
             <p class="text-light opacity-75 mb-2">
-              &copy; 2025 All Rights Reserved. Cockpit is a network management dashboard.
+              &copy; 2025 All Rights Reserved. Cockpit is a network management
+              dashboard.
             </p>
             <div>
-              <a href="#" class="text-light text-decoration-none opacity-75 me-3">Privacy</a>
-              <a href="#" class="text-light text-decoration-none opacity-75 me-3">Terms</a>
-              <a href="#" class="text-light text-decoration-none opacity-75">Support</a>
+              <a
+                href="#"
+                class="text-light text-decoration-none opacity-75 me-3"
+                >Privacy</a
+              >
+              <a
+                href="#"
+                class="text-light text-decoration-none opacity-75 me-3"
+                >Terms</a
+              >
+              <a href="#" class="text-light text-decoration-none opacity-75"
+                >Support</a
+              >
             </div>
           </div>
         </div>
@@ -381,139 +439,162 @@
 
         // Password toggle
         togglePassword.addEventListener("click", function () {
-          const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+          const type =
+            passwordInput.getAttribute("type") === "password"
+              ? "text"
+              : "password";
           passwordInput.setAttribute("type", type);
           eyeIcon.classList.toggle("fa-eye");
           eyeIcon.classList.toggle("fa-eye-slash");
         });
 
         // Login form submission
-        document.getElementById("loginForm").addEventListener("submit", async function (e) {
-          e.preventDefault();
+        document
+          .getElementById("loginForm")
+          .addEventListener("submit", async function (e) {
+            e.preventDefault();
 
-          console.log("🔑 Login form: Form submission started");
-          console.log("🔑 Login form: AuthManager available:", !!window.authManager);
+            console.log("🔑 Login form: Form submission started");
+            console.log(
+              "🔑 Login form: AuthManager available:",
+              !!window.authManager,
+            );
 
-          // Check if authManager is available
-          if (!window.authManager) {
-            console.error("🔑 Login form: AuthManager not available!");
-            alert("Login failed: Authentication system not ready. Please refresh the page.");
-            return;
-          }
+            // Check if authManager is available
+            if (!window.authManager) {
+              console.error("🔑 Login form: AuthManager not available!");
+              alert(
+                "Login failed: Authentication system not ready. Please refresh the page.",
+              );
+              return;
+            }
 
-          console.log("🔑 Login form: AuthManager config:", {
-            baseURL: window.authManager.baseURL,
-            isDevelopment: window.authManager.isDevelopment,
+            console.log("🔑 Login form: AuthManager config:", {
+              baseURL: window.authManager.baseURL,
+              isDevelopment: window.authManager.isDevelopment,
+            });
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+
+            // Show loading state
+            submitBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
+            submitBtn.disabled = true;
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            console.log("🔑 Login form: Attempting login for user:", username);
+
+            try {
+              const result = await window.authManager.login(username, password);
+
+              console.log("🔑 Login form: Login result:", result);
+
+              if (result.success) {
+                // Show success message briefly
+                submitBtn.innerHTML =
+                  '<i class="fas fa-check me-2"></i>Success!';
+                submitBtn.classList.add("btn-success");
+
+                // Redirect after brief delay
+                setTimeout(() => {
+                  // Check if there's a redirect URL in the query params, otherwise go to index
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const redirectTo = urlParams.get("redirect") || "index.html";
+                  window.location.href = redirectTo;
+                }, 1000);
+              } else {
+                throw new Error(result.error);
+              }
+            } catch (error) {
+              console.error("🔑 Login form: Login failed:", error);
+
+              // Show error message
+              submitBtn.innerHTML =
+                '<i class="fas fa-exclamation-triangle me-2"></i>Login Failed';
+              submitBtn.classList.add("btn-danger");
+
+              // Show error alert
+              alert("Login failed: " + error.message);
+
+              // Reset button after delay
+              setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.classList.remove("btn-danger");
+                submitBtn.disabled = false;
+              }, 2000);
+            }
           });
 
-          const submitBtn = this.querySelector('button[type="submit"]');
-          const originalText = submitBtn.innerHTML;
-
-          // Show loading state
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
-          submitBtn.disabled = true;
-
-          const username = document.getElementById("username").value;
-          const password = document.getElementById("password").value;
-
-          console.log("🔑 Login form: Attempting login for user:", username);
-
-          try {
-            const result = await window.authManager.login(username, password);
-
-            console.log("🔑 Login form: Login result:", result);
-
-            if (result.success) {
-              // Show success message briefly
-              submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Success!';
-              submitBtn.classList.add("btn-success");
-
-              // Redirect after brief delay
-              setTimeout(() => {
-                // Check if there's a redirect URL in the query params, otherwise go to index
-                const urlParams = new URLSearchParams(window.location.search);
-                const redirectTo = urlParams.get("redirect") || "index.html";
-                window.location.href = redirectTo;
-              }, 1000);
-            } else {
-              throw new Error(result.error);
-            }
-          } catch (error) {
-            console.error("🔑 Login form: Login failed:", error);
-
-            // Show error message
-            submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Login Failed';
-            submitBtn.classList.add("btn-danger");
-
-            // Show error alert
-            alert("Login failed: " + error.message);
-
-            // Reset button after delay
-            setTimeout(() => {
-              submitBtn.innerHTML = originalText;
-              submitBtn.classList.remove("btn-danger");
-              submitBtn.disabled = false;
-            }, 2000);
-          }
-        });
-
         // Registration form submission
-        document.getElementById("registerForm").addEventListener("submit", async function (e) {
-          e.preventDefault();
+        document
+          .getElementById("registerForm")
+          .addEventListener("submit", async function (e) {
+            e.preventDefault();
 
-          const submitBtn = this.querySelector('button[type="submit"]');
-          const originalText = submitBtn.innerHTML;
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
 
-          // Show loading state
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
-          submitBtn.disabled = true;
-
-          const username = document.getElementById("regUsername").value;
-          const email = document.getElementById("regEmail").value;
-          const password = document.getElementById("regPassword").value;
-          const confirmPassword = document.getElementById("regConfirmPassword").value;
-          const fullName = document.getElementById("regFullName").value;
-
-          // Validate passwords match
-          if (password !== confirmPassword) {
-            alert("Passwords do not match");
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-            return;
-          }
-
-          try {
-            const result = await window.authManager.register(username, password, email, fullName);
-
-            if (result.success) {
-              // Show success message briefly
-              submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Account Created!';
-              submitBtn.classList.add("btn-success");
-
-              // Redirect after brief delay
-              setTimeout(() => {
-                window.location.href = "index.html";
-              }, 1000);
-            } else {
-              throw new Error(result.error);
-            }
-          } catch (error) {
-            // Show error message
+            // Show loading state
             submitBtn.innerHTML =
-              '<i class="fas fa-exclamation-triangle me-2"></i>Registration Failed';
-            submitBtn.classList.add("btn-danger");
+              '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+            submitBtn.disabled = true;
 
-            // Show error alert
-            alert("Registration failed: " + error.message);
+            const username = document.getElementById("regUsername").value;
+            const email = document.getElementById("regEmail").value;
+            const password = document.getElementById("regPassword").value;
+            const confirmPassword =
+              document.getElementById("regConfirmPassword").value;
+            const fullName = document.getElementById("regFullName").value;
 
-            // Reset button after delay
-            setTimeout(() => {
+            // Validate passwords match
+            if (password !== confirmPassword) {
+              alert("Passwords do not match");
               submitBtn.innerHTML = originalText;
-              submitBtn.classList.remove("btn-danger");
               submitBtn.disabled = false;
-            }, 2000);
-          }
-        });
+              return;
+            }
+
+            try {
+              const result = await window.authManager.register(
+                username,
+                password,
+                email,
+                fullName,
+              );
+
+              if (result.success) {
+                // Show success message briefly
+                submitBtn.innerHTML =
+                  '<i class="fas fa-check me-2"></i>Account Created!';
+                submitBtn.classList.add("btn-success");
+
+                // Redirect after brief delay
+                setTimeout(() => {
+                  window.location.href = "index.html";
+                }, 1000);
+              } else {
+                throw new Error(result.error);
+              }
+            } catch (error) {
+              // Show error message
+              submitBtn.innerHTML =
+                '<i class="fas fa-exclamation-triangle me-2"></i>Registration Failed';
+              submitBtn.classList.add("btn-danger");
+
+              // Show error alert
+              alert("Registration failed: " + error.message);
+
+              // Reset button after delay
+              setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.classList.remove("btn-danger");
+                submitBtn.disabled = false;
+              }, 2000);
+            }
+          });
       });
     </script>
   </body>

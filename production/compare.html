@@ -72,7 +72,10 @@
                 window.authManager.user = user;
                 window.authManager.token = token;
                 window.authManager.updateUserDisplay();
-                console.log("Refreshed display with login data:", user.username);
+                console.log(
+                  "Refreshed display with login data:",
+                  user.username,
+                );
               }
             } catch (e) {
               console.log("Error parsing fresh user info:", e);
@@ -120,8 +123,10 @@
                   const userInfo = localStorage.getItem("user_info");
                   console.log("User info for sidebar:", userInfo);
 
-                  const sidebarElement = document.getElementById("sidebar-username");
-                  const welcomeElement = document.getElementById("welcome-message");
+                  const sidebarElement =
+                    document.getElementById("sidebar-username");
+                  const welcomeElement =
+                    document.getElementById("welcome-message");
                   console.log("Sidebar element found:", !!sidebarElement);
                   console.log("Welcome element found:", !!welcomeElement);
 
@@ -129,7 +134,8 @@
                     try {
                       const user = JSON.parse(userInfo);
                       console.log("Parsed user for sidebar:", user);
-                      sidebarElement.textContent = user.full_name || user.username || "User";
+                      sidebarElement.textContent =
+                        user.full_name || user.username || "User";
                       if (welcomeElement) {
                         welcomeElement.textContent = `Welcome, ${user.username || "User"}!`;
                       }
@@ -164,7 +170,10 @@
             <br />
 
             <!-- sidebar menu -->
-            <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+            <div
+              id="sidebar-menu"
+              class="main_menu_side hidden-print main_menu"
+            >
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
@@ -183,7 +192,9 @@
                         >
                       </li>
                       <li>
-                        <a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a>
+                        <a href="sync_devices.html"
+                          ><i class="fas fa-sync"></i> Sync Devices</a
+                        >
                       </li>
                       <li>
                         <a href="scan-and-add.html"
@@ -194,20 +205,26 @@
                   </li>
                   <li>
                     <a
-                      ><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span
+                      ><i class="fas fa-cogs"></i> Configs
+                      <span class="fas fa-chevron-down"></span
                     ></a>
                     <ul class="nav child_menu">
                       <li><a href="backup.html">Backup</a></li>
-                      <li><a href="compare.html" class="current-page">Compare</a></li>
+                      <li>
+                        <a href="compare.html" class="current-page">Compare</a>
+                      </li>
                     </ul>
                   </li>
                   <li>
                     <a
-                      ><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span
+                      ><i class="fas fa-cogs"></i> Ansible
+                      <span class="fas fa-chevron-down"></span
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a>
+                        <a href="ansible-inventory.html"
+                          ><i class="fas fa-list"></i> Inventory</a
+                        >
                       </li>
                     </ul>
                   </li>
@@ -218,7 +235,9 @@
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a>
+                        <a href="settings-nautobot.html"
+                          ><i class="fas fa-server"></i> Nautobot</a
+                        >
                       </li>
                       <li>
                         <a href="settings-templates.html"
@@ -231,7 +250,9 @@
                         >
                       </li>
                       <li>
-                        <a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a>
+                        <a href="settings-cache.html"
+                          ><i class="fas fa-bolt"></i> Cache</a
+                        >
                       </li>
                       <li>
                         <a href="settings-credentials.html"
@@ -258,13 +279,22 @@
               >
                 <span class="fas fa-cog" aria-hidden="true"></span>
               </a>
-              <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
+              <a
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="FullScreen"
+              >
                 <span class="fas fa-expand" aria-hidden="true"></span>
               </a>
               <a data-bs-toggle="tooltip" data-bs-placement="top" title="Lock">
                 <span class="fas fa-eye-slash" aria-hidden="true"></span>
               </a>
-              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Logout" href="login.html">
+              <a
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Logout"
+                href="login.html"
+              >
                 <span class="fas fa-power-off" aria-hidden="true"></span>
               </a>
             </div>
@@ -302,14 +332,16 @@
                         console.log("User info:", userInfo);
                         console.log("Token:", token);
 
-                        const element = document.getElementById("navbar-username");
+                        const element =
+                          document.getElementById("navbar-username");
                         console.log("Element found:", !!element);
 
                         if (userInfo && element) {
                           try {
                             const user = JSON.parse(userInfo);
                             console.log("Parsed user:", user);
-                            const displayName = user.full_name || user.username || "User";
+                            const displayName =
+                              user.full_name || user.username || "User";
                             element.textContent = displayName;
                             console.log("Set username to:", displayName);
                           } catch (e) {
@@ -370,8 +402,8 @@
                           <span class="time">3 mins ago</span>
                         </span>
                         <span class="message">
-                          Film festivals used to be do-or-die moments for movie makers. They were
-                          where...
+                          Film festivals used to be do-or-die moments for movie
+                          makers. They were where...
                         </span>
                       </a>
                     </li>
@@ -382,8 +414,8 @@
                           <span class="time">3 mins ago</span>
                         </span>
                         <span class="message">
-                          Film festivals used to be do-or-die moments for movie makers. They were
-                          where...
+                          Film festivals used to be do-or-die moments for movie
+                          makers. They were where...
                         </span>
                       </a>
                     </li>
@@ -394,8 +426,8 @@
                           <span class="time">3 mins ago</span>
                         </span>
                         <span class="message">
-                          Film festivals used to be do-or-die moments for movie makers. They were
-                          where...
+                          Film festivals used to be do-or-die moments for movie
+                          makers. They were where...
                         </span>
                       </a>
                     </li>
@@ -406,8 +438,8 @@
                           <span class="time">3 mins ago</span>
                         </span>
                         <span class="message">
-                          Film festivals used to be do-or-die moments for movie makers. They were
-                          where...
+                          Film festivals used to be do-or-die moments for movie
+                          makers. They were where...
                         </span>
                       </a>
                     </li>
@@ -428,7 +460,11 @@
         <!-- /top navigation -->
 
         <!-- page content -->
-        <div class="right_col" role="main" style="height: 100vh; overflow-y: auto">
+        <div
+          class="right_col"
+          role="main"
+          style="height: 100vh; overflow-y: auto"
+        >
           <!-- page title -->
           <div class="">
             <div class="page-title">
@@ -447,11 +483,15 @@
                 <div class="x_title">
                   <h2>
                     Git Repository Configuration
-                    <small>Select repository for configuration comparison</small>
+                    <small
+                      >Select repository for configuration comparison</small
+                    >
                   </h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li>
-                      <a class="collapse-link"><i class="fas fa-chevron-down"></i></a>
+                      <a class="collapse-link"
+                        ><i class="fas fa-chevron-down"></i
+                      ></a>
                     </li>
                   </ul>
                   <div class="clearfix"></div>
@@ -468,7 +508,10 @@
                           <select id="repoSelector" class="form-control">
                             <option value="">Loading repositories...</option>
                           </select>
-                          <span id="repoStatusCheck" style="display: none; margin-left: 10px">
+                          <span
+                            id="repoStatusCheck"
+                            style="display: none; margin-left: 10px"
+                          >
                             <i
                               class="fas fa-check-circle"
                               style="color: #28a745; font-size: 18px"
@@ -477,22 +520,38 @@
                           </span>
                         </div>
                         <small class="form-text text-muted"
-                          >Choose a repository from the "configs" category for configuration
-                          comparison</small
+                          >Choose a repository from the "configs" category for
+                          configuration comparison</small
                         >
                         <!-- Compact repository info display -->
-                        <div id="selectedRepoInfoInline" style="display: none; margin-top: 5px">
+                        <div
+                          id="selectedRepoInfoInline"
+                          style="display: none; margin-top: 5px"
+                        >
                           <small class="text-muted">
-                            <strong><span id="selectedRepoName">-</span></strong> | Branch:
-                            <span id="selectedRepoBranch">-</span> | URL:
-                            <code id="selectedRepoUrl" style="font-size: 10px">-</code>
+                            <strong
+                              ><span id="selectedRepoName">-</span></strong
+                            >
+                            | Branch: <span id="selectedRepoBranch">-</span> |
+                            URL:
+                            <code id="selectedRepoUrl" style="font-size: 10px"
+                              >-</code
+                            >
                           </small>
                         </div>
                       </div>
                     </div>
                     <div class="col-md-4">
-                      <div class="btn-group w-100" role="group" style="margin-top: 25px">
-                        <button class="btn btn-success" id="syncRepository" disabled>
+                      <div
+                        class="btn-group w-100"
+                        role="group"
+                        style="margin-top: 25px"
+                      >
+                        <button
+                          class="btn btn-success"
+                          id="syncRepository"
+                          disabled
+                        >
                           <i class="fas fa-sync"></i> Sync Repository
                         </button>
                         <button class="btn btn-info" id="gitStatusBtn" disabled>
@@ -503,18 +562,25 @@
                   </div>
 
                   <!-- No Repositories Message -->
-                  <div class="row" id="noRepositoriesMessage" style="display: none">
+                  <div
+                    class="row"
+                    id="noRepositoriesMessage"
+                    style="display: none"
+                  >
                     <div class="col-md-12">
                       <div class="alert alert-warning">
                         <h5>
-                          <i class="fas fa-exclamation-triangle"></i> No Configuration Repositories
-                          Found
+                          <i class="fas fa-exclamation-triangle"></i> No
+                          Configuration Repositories Found
                         </h5>
                         <p>
-                          No Git repositories in the "configs" category are available for
-                          configuration comparison.
+                          No Git repositories in the "configs" category are
+                          available for configuration comparison.
                         </p>
-                        <p>Please configure a Git repository in the Git Management system:</p>
+                        <p>
+                          Please configure a Git repository in the Git
+                          Management system:
+                        </p>
                         <a href="settings-git.html" class="btn btn-primary">
                           <i class="fab fa-git-alt"></i> Go to Git Management
                         </a>
@@ -532,11 +598,14 @@
               <div class="x_panel">
                 <div class="x_title">
                   <h2>
-                    Configuration Comparison <small>Choose files or Git commits to compare</small>
+                    Configuration Comparison
+                    <small>Choose files or Git commits to compare</small>
                   </h2>
                   <ul class="nav navbar-right panel_toolbox">
                     <li>
-                      <a class="collapse-link"><i class="fas fa-chevron-down"></i></a>
+                      <a class="collapse-link"
+                        ><i class="fas fa-chevron-down"></i
+                      ></a>
                     </li>
                   </ul>
                   <div class="clearfix"></div>
@@ -547,7 +616,11 @@
                     <div class="col-md-12">
                       <div class="form-group">
                         <label class="control-label">Comparison Mode</label>
-                        <div class="btn-group w-100" role="group" id="comparisonModeToggle">
+                        <div
+                          class="btn-group w-100"
+                          role="group"
+                          id="comparisonModeToggle"
+                        >
                           <input
                             type="radio"
                             class="btn-check"
@@ -576,7 +649,10 @@
                             id="historyMode"
                             value="history"
                           />
-                          <label class="btn btn-outline-primary" for="historyMode">
+                          <label
+                            class="btn btn-outline-primary"
+                            for="historyMode"
+                          >
                             <i class="fas fa-history"></i> File History
                           </label>
                         </div>
@@ -629,7 +705,9 @@
                       <!-- Right File Selection -->
                       <div class="col-md-6">
                         <div class="form-group">
-                          <label for="rightFileSearch">Target File (Right)</label>
+                          <label for="rightFileSearch"
+                            >Target File (Right)</label
+                          >
                           <div class="input-group">
                             <input
                               type="text"
@@ -689,7 +767,9 @@
                       <!-- Left Commit Selection -->
                       <div class="col-md-4">
                         <div class="form-group">
-                          <label for="leftCommitSelect">Source Commit (Left)</label>
+                          <label for="leftCommitSelect"
+                            >Source Commit (Left)</label
+                          >
                           <div class="input-group">
                             <select class="form-control" id="leftCommitSelect">
                               <option value="">Select commit...</option>
@@ -704,7 +784,9 @@
                       <!-- Right Commit Selection -->
                       <div class="col-md-4">
                         <div class="form-group">
-                          <label for="rightCommitSelect">Target Commit (Right)</label>
+                          <label for="rightCommitSelect"
+                            >Target Commit (Right)</label
+                          >
                           <div class="input-group">
                             <select class="form-control" id="rightCommitSelect">
                               <option value="">Select commit...</option>
@@ -721,7 +803,9 @@
                     <div class="row">
                       <div class="col-md-12">
                         <div class="form-group">
-                          <label for="gitFileSearch">File to Compare (from selected commits)</label>
+                          <label for="gitFileSearch"
+                            >File to Compare (from selected commits)</label
+                          >
                           <div class="input-group">
                             <input
                               type="text"
@@ -767,7 +851,10 @@
                         <div class="form-group">
                           <label for="historyBranchSelect">Branch</label>
                           <div class="input-group">
-                            <select class="form-control" id="historyBranchSelect">
+                            <select
+                              class="form-control"
+                              id="historyBranchSelect"
+                            >
                               <option value="main">main</option>
                             </select>
                             <span class="input-group-text">
@@ -782,7 +869,10 @@
                         <div class="form-group">
                           <label for="historyCommitSelect">Commit</label>
                           <div class="input-group">
-                            <select class="form-control" id="historyCommitSelect">
+                            <select
+                              class="form-control"
+                              id="historyCommitSelect"
+                            >
                               <option value="">Select commit...</option>
                             </select>
                             <span class="input-group-text">
@@ -826,13 +916,25 @@
                     <div class="row">
                       <div class="col-md-12">
                         <div class="text-center" style="margin-top: 15px">
-                          <button class="btn btn-primary" id="showHistoryBtn" disabled>
+                          <button
+                            class="btn btn-primary"
+                            id="showHistoryBtn"
+                            disabled
+                          >
                             <i class="fas fa-history"></i> Show History
                           </button>
-                          <button class="btn btn-primary ms-2" id="historyCompareBtn" disabled>
+                          <button
+                            class="btn btn-primary ms-2"
+                            id="historyCompareBtn"
+                            disabled
+                          >
                             <i class="fas fa-exchange-alt"></i> Compare
                           </button>
-                          <button class="btn btn-success ms-2" id="historyExportBtn" disabled>
+                          <button
+                            class="btn btn-success ms-2"
+                            id="historyExportBtn"
+                            disabled
+                          >
                             <i class="fas fa-download"></i> Export Diff
                           </button>
                         </div>
@@ -874,12 +976,19 @@
                   </div>
 
                   <!-- File History Information - Shared between both modes -->
-                  <div class="row" id="fileHistorySection" style="display: none; margin-top: 15px">
+                  <div
+                    class="row"
+                    id="fileHistorySection"
+                    style="display: none; margin-top: 15px"
+                  >
                     <div class="col-md-12">
                       <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                        <div
+                          class="card-header d-flex justify-content-between align-items-center"
+                        >
                           <h6 class="mb-0">
-                            <i class="fas fa-clock"></i> File History Information
+                            <i class="fas fa-clock"></i> File History
+                            Information
                           </h6>
                           <button
                             type="button"
@@ -896,7 +1005,9 @@
                               <div id="leftFileHistory">
                                 <h6 class="text-muted">Source File</h6>
                                 <div id="leftFileHistoryContent">
-                                  <p class="text-muted"><i>Select a file to view its history</i></p>
+                                  <p class="text-muted">
+                                    <i>Select a file to view its history</i>
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -904,7 +1015,9 @@
                               <div id="rightFileHistory">
                                 <h6 class="text-muted">Target File</h6>
                                 <div id="rightFileHistoryContent">
-                                  <p class="text-muted"><i>Select a file to view its history</i></p>
+                                  <p class="text-muted">
+                                    <i>Select a file to view its history</i>
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -918,10 +1031,18 @@
                   <div class="row" id="sharedCompareControls">
                     <div class="col-md-12">
                       <div class="text-center" style="margin-top: 15px">
-                        <button class="btn btn-primary" id="compareBtn" disabled>
+                        <button
+                          class="btn btn-primary"
+                          id="compareBtn"
+                          disabled
+                        >
                           <i class="fas fa-exchange-alt"></i> Compare
                         </button>
-                        <button class="btn btn-success ms-2" id="exportBtn" disabled>
+                        <button
+                          class="btn btn-success ms-2"
+                          id="exportBtn"
+                          disabled
+                        >
                           <i class="fas fa-download"></i> Export Diff
                         </button>
                       </div>
@@ -937,23 +1058,37 @@
             <div class="col-md-12 col-sm-12">
               <div class="x_panel">
                 <div class="x_title">
-                  <h2>Comparison Results <small id="comparisonStats">Comparing files...</small></h2>
+                  <h2>
+                    Comparison Results
+                    <small id="comparisonStats">Comparing files...</small>
+                  </h2>
                   <ul
                     class="nav navbar-right panel_toolbox"
                     style="display: flex; align-items: center; gap: 8px"
                   >
                     <li>
                       <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-outline-secondary" id="prevDiffBtn" disabled>
+                        <button
+                          class="btn btn-sm btn-outline-secondary"
+                          id="prevDiffBtn"
+                          disabled
+                        >
                           <i class="fas fa-chevron-up"></i> Previous
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" id="nextDiffBtn" disabled>
+                        <button
+                          class="btn btn-sm btn-outline-secondary"
+                          id="nextDiffBtn"
+                          disabled
+                        >
                           <i class="fas fa-chevron-down"></i> Next
                         </button>
                       </div>
                     </li>
                     <li>
-                      <button class="btn btn-sm btn-outline-secondary" id="toggleUnchangedBtn">
+                      <button
+                        class="btn btn-sm btn-outline-secondary"
+                        id="toggleUnchangedBtn"
+                      >
                         <i class="fas fa-eye-slash"></i> Hide Unchanged
                       </button>
                     </li>
@@ -1005,7 +1140,9 @@
                       </button>
                     </li>
                     <li>
-                      <a class="collapse-link"><i class="fas fa-chevron-up"></i></a>
+                      <a class="collapse-link"
+                        ><i class="fas fa-chevron-up"></i
+                      ></a>
                     </li>
                   </ul>
                   <div class="clearfix"></div>
@@ -1023,7 +1160,10 @@
                     </div>
 
                     <div class="diff-content" id="diffContent">
-                      <div class="diff-loading text-center" style="padding: 50px">
+                      <div
+                        class="diff-loading text-center"
+                        style="padding: 50px"
+                      >
                         <i class="fas fa-spinner fa-spin fa-2x"></i>
                         <p class="mt-3">Select files to start comparison...</p>
                       </div>
@@ -1470,36 +1610,56 @@
                     element.addEventListener(event, handler);
                   } else {
                     console.warn(
-                      `ConfigCompare: Element '${id}' not found, skipping event listener`
+                      `ConfigCompare: Element '${id}' not found, skipping event listener`,
                     );
                   }
                 };
 
-                addEventListenerSafe("compareBtn", "click", () => this.handleCompare());
-                addEventListenerSafe("exportBtn", "click", () => this.exportDiff());
-                addEventListenerSafe("historyCompareBtn", "click", () => this.handleCompare());
-                addEventListenerSafe("historyExportBtn", "click", () => this.exportDiff());
-                addEventListenerSafe("prevDiffBtn", "click", () => this.navigateDiff(-1));
-                addEventListenerSafe("nextDiffBtn", "click", () => this.navigateDiff(1));
-                addEventListenerSafe("toggleUnchangedBtn", "click", () => this.toggleUnchanged());
+                addEventListenerSafe("compareBtn", "click", () =>
+                  this.handleCompare(),
+                );
+                addEventListenerSafe("exportBtn", "click", () =>
+                  this.exportDiff(),
+                );
+                addEventListenerSafe("historyCompareBtn", "click", () =>
+                  this.handleCompare(),
+                );
+                addEventListenerSafe("historyExportBtn", "click", () =>
+                  this.exportDiff(),
+                );
+                addEventListenerSafe("prevDiffBtn", "click", () =>
+                  this.navigateDiff(-1),
+                );
+                addEventListenerSafe("nextDiffBtn", "click", () =>
+                  this.navigateDiff(1),
+                );
+                addEventListenerSafe("toggleUnchangedBtn", "click", () =>
+                  this.toggleUnchanged(),
+                );
                 addEventListenerSafe("fontSizeSelect", "change", (e) =>
-                  this.changeFontSize(e.target.value)
+                  this.changeFontSize(e.target.value),
                 );
-                addEventListenerSafe("gitStatusBtn", "click", () => this.showGitStatus());
-                addEventListenerSafe("closeHistoryBtn", "click", () => this.closeFileHistory());
+                addEventListenerSafe("gitStatusBtn", "click", () =>
+                  this.showGitStatus(),
+                );
+                addEventListenerSafe("closeHistoryBtn", "click", () =>
+                  this.closeFileHistory(),
+                );
                 addEventListenerSafe("closeResultsBtn", "click", () =>
-                  this.closeComparisonResults()
+                  this.closeComparisonResults(),
                 );
-                addEventListenerSafe("closeFileHistoryDisplayBtn", "click", () =>
-                  this.closeFileHistoryDisplay()
+                addEventListenerSafe(
+                  "closeFileHistoryDisplayBtn",
+                  "click",
+                  () => this.closeFileHistoryDisplay(),
                 );
 
                 // Repository selection event listeners
                 addEventListenerSafe("repoSelector", "change", (e) =>
-                  this.handleRepositorySelection(e)
+                  this.handleRepositorySelection(e),
                 );
                 addEventListenerSafe("syncRepository", "click", () =>
-                  this.syncSelectedRepository()
+                  this.syncSelectedRepository(),
                 );
 
                 // File search will be initialized when files are loaded by populateFileSelects
@@ -1524,12 +1684,16 @@
                 });
 
                 // File History mode selection change handlers
-                addEventListenerSafe("historyBranchSelect", "change", async (e) => {
-                  const selectedBranch = e.target.value;
-                  if (selectedBranch) {
-                    await this.loadHistoryCommitsForBranch(selectedBranch);
-                  }
-                });
+                addEventListenerSafe(
+                  "historyBranchSelect",
+                  "change",
+                  async (e) => {
+                    const selectedBranch = e.target.value;
+                    if (selectedBranch) {
+                      await this.loadHistoryCommitsForBranch(selectedBranch);
+                    }
+                  },
+                );
                 addEventListenerSafe("historyCommitSelect", "change", () => {
                   // Update the show history button state
                   this.updateShowHistoryButton();
@@ -1537,12 +1701,14 @@
                 addEventListenerSafe("showHistoryBtn", "click", () => {
                   this.showFileHistory();
                 }); // Comparison mode toggle
-                document.querySelectorAll('input[name="comparisonMode"]').forEach((radio) => {
-                  radio.addEventListener(
-                    "change",
-                    async (e) => await this.handleModeChange(e.target.value)
-                  );
-                });
+                document
+                  .querySelectorAll('input[name="comparisonMode"]')
+                  .forEach((radio) => {
+                    radio.addEventListener(
+                      "change",
+                      async (e) => await this.handleModeChange(e.target.value),
+                    );
+                  });
 
                 // Load files and Git data on page load (with delay for authManager)
                 this.loadFiles();
@@ -1559,41 +1725,65 @@
                 console.log("ConfigCompare: Starting to load repositories...");
 
                 if (!window.authManager) {
-                  console.log("ConfigCompare: AuthManager not ready, retrying in 500ms...");
+                  console.log(
+                    "ConfigCompare: AuthManager not ready, retrying in 500ms...",
+                  );
                   setTimeout(() => this.loadRepositories(), 500);
                   return;
                 }
 
-                console.log("ConfigCompare: AuthManager ready, loading repositories...");
+                console.log(
+                  "ConfigCompare: AuthManager ready, loading repositories...",
+                );
                 console.log(
                   "ConfigCompare: AuthManager authenticated?",
-                  window.authManager.isAuthenticated()
+                  window.authManager.isAuthenticated(),
                 );
-                console.log("ConfigCompare: AuthManager token?", !!window.authManager.token);
-                console.log("ConfigCompare: AuthManager user?", !!window.authManager.user);
+                console.log(
+                  "ConfigCompare: AuthManager token?",
+                  !!window.authManager.token,
+                );
+                console.log(
+                  "ConfigCompare: AuthManager user?",
+                  !!window.authManager.user,
+                );
 
                 try {
                   // Load config repositories
-                  console.log("ConfigCompare: Calling /api/git-repositories/configs...");
-                  const response = await window.authManager.apiRequest(
-                    "/api/git-repositories/configs"
+                  console.log(
+                    "ConfigCompare: Calling /api/git-repositories/configs...",
                   );
-                  console.log("ConfigCompare: Repositories response:", response);
+                  const response = await window.authManager.apiRequest(
+                    "/api/git-repositories/configs",
+                  );
+                  console.log(
+                    "ConfigCompare: Repositories response:",
+                    response,
+                  );
                   this.repositories = response.repositories || [];
-                  console.log("ConfigCompare: Found", this.repositories.length, "repositories");
+                  console.log(
+                    "ConfigCompare: Found",
+                    this.repositories.length,
+                    "repositories",
+                  );
 
                   // Load currently selected repository
-                  console.log("ConfigCompare: Calling /api/git-repositories/selected...");
+                  console.log(
+                    "ConfigCompare: Calling /api/git-repositories/selected...",
+                  );
                   let selectedResponse;
                   try {
                     selectedResponse = await window.authManager.apiRequest(
-                      "/api/git-repositories/selected"
+                      "/api/git-repositories/selected",
                     );
-                    console.log("ConfigCompare: Selected repository response:", selectedResponse);
+                    console.log(
+                      "ConfigCompare: Selected repository response:",
+                      selectedResponse,
+                    );
                   } catch (selectedError) {
                     console.log(
                       "ConfigCompare: Error calling /api/git-repositories/selected:",
-                      selectedError
+                      selectedError,
                     );
                     console.log("ConfigCompare: Selected error details:", {
                       message: selectedError.message,
@@ -1609,21 +1799,30 @@
                   this.populateRepositorySelector();
 
                   if (selectedResponse.selected_repository) {
-                    this.selectedRepository = selectedResponse.selected_repository;
-                    this.selectRepository(selectedResponse.selected_repository.id, false);
+                    this.selectedRepository =
+                      selectedResponse.selected_repository;
+                    this.selectRepository(
+                      selectedResponse.selected_repository.id,
+                      false,
+                    );
                   } else if (this.repositories.length === 1) {
                     // Auto-select if only one repository available
                     console.log(
                       "ConfigCompare: Auto-selecting single repository:",
-                      this.repositories[0].name
+                      this.repositories[0].name,
                     );
                     this.selectRepository(this.repositories[0].id, true);
                   } else if (this.repositories.length === 0) {
-                    console.log("ConfigCompare: No repositories found, showing message");
+                    console.log(
+                      "ConfigCompare: No repositories found, showing message",
+                    );
                     this.showNoRepositoriesMessage();
                   }
                 } catch (error) {
-                  console.error("ConfigCompare: Error loading repositories:", error);
+                  console.error(
+                    "ConfigCompare: Error loading repositories:",
+                    error,
+                  );
                   console.error("ConfigCompare: Error details:", {
                     message: error.message,
                     status: error.status,
@@ -1636,13 +1835,18 @@
                     error.message.includes("Not authenticated") ||
                     error.message.includes("Authentication expired")
                   ) {
-                    console.log("ConfigCompare: Authentication issue, redirecting to login...");
+                    console.log(
+                      "ConfigCompare: Authentication issue, redirecting to login...",
+                    );
                     window.location.href = "login.html";
                     return;
                   }
 
                   // Show user-friendly error message
-                  this.showStatus("Failed to load repositories: " + error.message, "error");
+                  this.showStatus(
+                    "Failed to load repositories: " + error.message,
+                    "error",
+                  );
                   this.showNoRepositoriesMessage();
                 }
               }
@@ -1651,22 +1855,28 @@
                 console.log(
                   "ConfigCompare: Populating repository selector with",
                   this.repositories.length,
-                  "repositories"
+                  "repositories",
                 );
                 const selector = document.getElementById("repoSelector");
 
                 if (this.repositories.length === 0) {
                   console.log("ConfigCompare: No repositories available");
-                  selector.innerHTML = '<option value="">No repositories available</option>';
+                  selector.innerHTML =
+                    '<option value="">No repositories available</option>';
                   selector.disabled = true;
                   this.showNoRepositoriesMessage();
                   return;
                 }
 
                 console.log("ConfigCompare: Adding repositories to selector");
-                selector.innerHTML = '<option value="">Select a repository...</option>';
+                selector.innerHTML =
+                  '<option value="">Select a repository...</option>';
                 this.repositories.forEach((repo) => {
-                  console.log("ConfigCompare: Adding repository:", repo.name, repo.id);
+                  console.log(
+                    "ConfigCompare: Adding repository:",
+                    repo.name,
+                    repo.id,
+                  );
                   const option = document.createElement("option");
                   option.value = repo.id;
                   option.textContent = `${repo.name} (${repo.url})`;
@@ -1674,17 +1884,25 @@
                 });
 
                 selector.disabled = false;
-                document.getElementById("noRepositoriesMessage").style.display = "none";
-                console.log("ConfigCompare: Repository selector populated successfully");
+                document.getElementById("noRepositoriesMessage").style.display =
+                  "none";
+                console.log(
+                  "ConfigCompare: Repository selector populated successfully",
+                );
               }
 
               showNoRepositoriesMessage() {
-                document.getElementById("repositorySelection").style.display = "none";
-                document.getElementById("noRepositoriesMessage").style.display = "block";
+                document.getElementById("repositorySelection").style.display =
+                  "none";
+                document.getElementById("noRepositoriesMessage").style.display =
+                  "block";
 
                 // Hide inline repository info
-                document.getElementById("repoStatusCheck").style.display = "none";
-                document.getElementById("selectedRepoInfoInline").style.display = "none";
+                document.getElementById("repoStatusCheck").style.display =
+                  "none";
+                document.getElementById(
+                  "selectedRepoInfoInline",
+                ).style.display = "none";
 
                 // Disable comparison modes that require Git
                 this.updateRepositoryControls("error");
@@ -1699,7 +1917,9 @@
 
               async selectRepository(repositoryId, saveSelection = true) {
                 try {
-                  const repository = this.repositories.find((r) => r.id === repositoryId);
+                  const repository = this.repositories.find(
+                    (r) => r.id === repositoryId,
+                  );
                   if (!repository) {
                     console.error("Repository not found:", repositoryId);
                     return;
@@ -1716,7 +1936,7 @@
                       `/api/git-repositories/selected/${repositoryId}`,
                       {
                         method: "POST",
-                      }
+                      },
                     );
                   }
 
@@ -1726,7 +1946,10 @@
                   console.log("Repository selected:", repository.name);
                 } catch (error) {
                   console.error("Error selecting repository:", error);
-                  this.showStatus("Error selecting repository: " + error.message, "error");
+                  this.showStatus(
+                    "Error selecting repository: " + error.message,
+                    "error",
+                  );
                 }
               }
 
@@ -1736,7 +1959,7 @@
                 try {
                   console.log(
                     "ConfigCompare: Checking repository state for:",
-                    this.selectedRepository.name
+                    this.selectedRepository.name,
                   );
 
                   // Show loading state
@@ -1748,19 +1971,25 @@
                   try {
                     // Get repository status using the unified git-repositories API
                     const repoResponse = await window.authManager.apiRequest(
-                      `/api/git-repositories/${this.selectedRepository.id}/status`
+                      `/api/git-repositories/${this.selectedRepository.id}/status`,
                     );
                     if (repoResponse && repoResponse.success) {
                       repoStatus = repoResponse.data;
-                      console.log("ConfigCompare: Repository status:", repoStatus);
+                      console.log(
+                        "ConfigCompare: Repository status:",
+                        repoStatus,
+                      );
                     } else {
                       console.log(
                         "ConfigCompare: Repository status check failed:",
-                        repoResponse.message
+                        repoResponse.message,
                       );
                     }
                   } catch (repoError) {
-                    console.log("ConfigCompare: Repository status API error:", repoError.message);
+                    console.log(
+                      "ConfigCompare: Repository status API error:",
+                      repoError.message,
+                    );
                   }
 
                   // Determine repository state
@@ -1769,7 +1998,10 @@
 
                   if (repoStatus) {
                     if (repoStatus.exists && repoStatus.is_git_repo) {
-                      if (repoStatus.is_synced === false || repoStatus.behind_count > 0) {
+                      if (
+                        repoStatus.is_synced === false ||
+                        repoStatus.behind_count > 0
+                      ) {
                         repositoryState = "needs_sync";
                         statusMessage = `Repository needs sync (${repoStatus.behind_count || 0} commits behind)`;
                       } else {
@@ -1795,7 +2027,10 @@
                   this.gitData.statusMessage = statusMessage;
 
                   // If repository is ready, load Git data for branches and commits
-                  if (repositoryState === "ready" || repositoryState === "needs_sync") {
+                  if (
+                    repositoryState === "ready" ||
+                    repositoryState === "needs_sync"
+                  ) {
                     try {
                       await this.loadGitData();
                     } catch (error) {
@@ -1812,39 +2047,57 @@
                   this.updateRepositoryInfo(repositoryState, statusMessage);
                   this.updateRepositoryControls(repositoryState);
 
-                  console.log("ConfigCompare: Repository state check complete:", repositoryState);
+                  console.log(
+                    "ConfigCompare: Repository state check complete:",
+                    repositoryState,
+                  );
                 } catch (error) {
-                  console.error("ConfigCompare: Error checking repository state:", error);
-                  this.updateRepositoryInfo("error", "Error checking repository: " + error.message);
+                  console.error(
+                    "ConfigCompare: Error checking repository state:",
+                    error,
+                  );
+                  this.updateRepositoryInfo(
+                    "error",
+                    "Error checking repository: " + error.message,
+                  );
                   this.updateRepositoryControls("error");
                 }
               }
 
               async loadGitData() {
                 try {
-                  console.log("ConfigCompare: Loading Git data (status, branches, commits)...");
+                  console.log(
+                    "ConfigCompare: Loading Git data (status, branches, commits)...",
+                  );
 
                   // Load Git status to get current branch and commits
                   try {
-                    const gitResponse = await window.authManager.apiRequest("/api/git/status");
+                    const gitResponse =
+                      await window.authManager.apiRequest("/api/git/status");
                     if (gitResponse && gitResponse.current_branch) {
                       this.gitData.currentBranch = gitResponse.current_branch;
                       this.gitData.commits = gitResponse.commits || [];
                       console.log(
                         "ConfigCompare: Loaded",
                         this.gitData.commits.length,
-                        "commits from Git status"
+                        "commits from Git status",
                       );
                     }
                   } catch (error) {
-                    console.warn("ConfigCompare: Could not load Git status:", error.message);
+                    console.warn(
+                      "ConfigCompare: Could not load Git status:",
+                      error.message,
+                    );
                   }
 
                   // Load Git branches
                   try {
                     await this.populateGitBranches();
                   } catch (error) {
-                    console.warn("ConfigCompare: Could not load Git branches:", error.message);
+                    console.warn(
+                      "ConfigCompare: Could not load Git branches:",
+                      error.message,
+                    );
                   }
 
                   // Populate commits in UI dropdowns if we have commits
@@ -1854,7 +2107,10 @@
 
                   console.log("ConfigCompare: Git data loaded successfully");
                 } catch (error) {
-                  console.error("ConfigCompare: Error loading Git data:", error);
+                  console.error(
+                    "ConfigCompare: Error loading Git data:",
+                    error,
+                  );
                   throw error;
                 }
               }
@@ -1872,9 +2128,15 @@
 
                 // Show/hide elements based on state
                 const statusCheck = document.getElementById("repoStatusCheck");
-                const inlineInfo = document.getElementById("selectedRepoInfoInline");
-                const repoSelection = document.getElementById("repositorySelection");
-                const noReposMessage = document.getElementById("noRepositoriesMessage");
+                const inlineInfo = document.getElementById(
+                  "selectedRepoInfoInline",
+                );
+                const repoSelection = document.getElementById(
+                  "repositorySelection",
+                );
+                const noReposMessage = document.getElementById(
+                  "noRepositoriesMessage",
+                );
 
                 repoSelection.style.display = "block";
                 noReposMessage.style.display = "none";
@@ -1962,11 +2224,14 @@
 
                 if (statusBtn) {
                   statusBtn.disabled =
-                    state === "checking" || state === "error" || state === "needs_clone";
+                    state === "checking" ||
+                    state === "error" ||
+                    state === "needs_clone";
                 }
 
                 // Enable/disable Git comparison modes
-                const gitModesEnabled = state === "ready" || state === "needs_sync";
+                const gitModesEnabled =
+                  state === "ready" || state === "needs_sync";
 
                 if (gitModeRadio) {
                   gitModeRadio.disabled = !gitModesEnabled;
@@ -1994,26 +2259,37 @@
                   console.log("ConfigCompare: Syncing repository...");
 
                   // Show syncing state
-                  this.updateRepositoryInfo("checking", "Syncing repository...");
+                  this.updateRepositoryInfo(
+                    "checking",
+                    "Syncing repository...",
+                  );
                   this.updateRepositoryControls("checking");
 
                   const response = await window.authManager.apiRequest(
                     `/api/git-repositories/${this.selectedRepository.id}/sync`,
                     {
                       method: "POST",
-                    }
+                    },
                   );
 
-                  console.log("ConfigCompare: Repository sync response:", response);
+                  console.log(
+                    "ConfigCompare: Repository sync response:",
+                    response,
+                  );
 
                   if (response.success) {
-                    console.log("ConfigCompare: Repository synced successfully");
-                    console.log("ConfigCompare: Repository path:", response.repository_path);
+                    console.log(
+                      "ConfigCompare: Repository synced successfully",
+                    );
+                    console.log(
+                      "ConfigCompare: Repository path:",
+                      response.repository_path,
+                    );
 
                     // Show success message temporarily
                     this.updateRepositoryInfo(
                       "ready",
-                      response.message || "Repository synced successfully"
+                      response.message || "Repository synced successfully",
                     );
 
                     // Immediately check repository state after sync to update UI properly
@@ -2021,8 +2297,14 @@
                       await this.checkRepositoryState();
                     }, 1000);
                   } else {
-                    console.error("ConfigCompare: Repository sync failed:", response.message);
-                    this.updateRepositoryInfo("error", response.message || "Sync failed");
+                    console.error(
+                      "ConfigCompare: Repository sync failed:",
+                      response.message,
+                    );
+                    this.updateRepositoryInfo(
+                      "error",
+                      response.message || "Sync failed",
+                    );
                     this.updateRepositoryControls("error");
                   }
                 } catch (error) {
@@ -2032,7 +2314,10 @@
                   // Extract more specific error message if available
                   if (error.detail) {
                     errorMessage = error.detail;
-                  } else if (error.message && error.message.includes("detail:")) {
+                  } else if (
+                    error.message &&
+                    error.message.includes("detail:")
+                  ) {
                     const detailMatch = error.message.match(/detail:\s*(.+)/);
                     if (detailMatch) {
                       errorMessage = detailMatch[1];
@@ -2052,8 +2337,12 @@
               // File Search Functionality
               initializeFileSearch(inputId, side, onSelectCallback) {
                 const searchInput = document.getElementById(inputId);
-                const resultsDiv = document.getElementById(`${side}FileResults`);
-                const selectedDiv = document.getElementById(`${side}SelectedFile`);
+                const resultsDiv = document.getElementById(
+                  `${side}FileResults`,
+                );
+                const selectedDiv = document.getElementById(
+                  `${side}SelectedFile`,
+                );
 
                 if (!searchInput) {
                   console.error(`Search input element not found: ${inputId}`);
@@ -2097,7 +2386,10 @@
                 searchInput.addEventListener("blur", (e) => {
                   // Delay hiding to allow clicking on results
                   setTimeout(() => {
-                    if (!e.relatedTarget || !resultsDiv.contains(e.relatedTarget)) {
+                    if (
+                      !e.relatedTarget ||
+                      !resultsDiv.contains(e.relatedTarget)
+                    ) {
                       this.hideSearchResults(side);
                     }
                   }, 150);
@@ -2153,7 +2445,10 @@
                 searchInput.addEventListener("blur", (e) => {
                   // Delay hiding to allow clicking on results
                   setTimeout(() => {
-                    if (!e.relatedTarget || !resultsDiv.contains(e.relatedTarget)) {
+                    if (
+                      !e.relatedTarget ||
+                      !resultsDiv.contains(e.relatedTarget)
+                    ) {
                       this.hideGitSearchResults();
                     }
                   }, 150);
@@ -2174,33 +2469,48 @@
 
                   if (!this.selectedRepository) {
                     console.warn("No repository selected for file search");
-                    this.showSearchError(side, "Please select a repository first.");
+                    this.showSearchError(
+                      side,
+                      "Please select a repository first.",
+                    );
                     return;
                   }
 
                   const response = await window.authManager.apiRequest(
-                    `/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}&limit=20`
+                    `/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}&limit=20`,
                   );
 
                   if (response.success) {
                     this.displaySearchResults(side, response.data.files, query);
                   } else {
                     console.error("File search failed:", response.message);
-                    this.showSearchError(side, "Search failed. Please try again.");
+                    this.showSearchError(
+                      side,
+                      "Search failed. Please try again.",
+                    );
                   }
                 } catch (error) {
                   console.error("Error searching files:", error);
-                  this.showSearchError(side, "Search error. Check your connection.");
+                  this.showSearchError(
+                    side,
+                    "Search error. Check your connection.",
+                  );
                 }
               }
 
               displaySearchResults(side, files, query) {
-                const resultsDiv = document.getElementById(`${side}FileResults`);
+                const resultsDiv = document.getElementById(
+                  `${side}FileResults`,
+                );
                 const listGroup = resultsDiv.querySelector(".list-group");
-                const searchInput = document.getElementById(`${side}FileSearch`);
+                const searchInput = document.getElementById(
+                  `${side}FileSearch`,
+                );
 
                 // Filter out files with repo_ prefix
-                const filteredFiles = files.filter((file) => !file.path.startsWith("repo_"));
+                const filteredFiles = files.filter(
+                  (file) => !file.path.startsWith("repo_"),
+                );
 
                 // Clear previous results
                 listGroup.innerHTML = "";
@@ -2240,14 +2550,22 @@
 
               highlightMatch(text, query) {
                 if (!query) return text;
-                const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+                const regex = new RegExp(
+                  `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+                  "gi",
+                );
                 return text.replace(regex, "<mark>$1</mark>");
               }
 
               selectFile(side, file) {
-                const searchInput = document.getElementById(`${side}FileSearch`);
-                const selectedDiv = document.getElementById(`${side}SelectedFile`);
-                const selectedPath = selectedDiv.querySelector(".selected-path");
+                const searchInput = document.getElementById(
+                  `${side}FileSearch`,
+                );
+                const selectedDiv = document.getElementById(
+                  `${side}SelectedFile`,
+                );
+                const selectedPath =
+                  selectedDiv.querySelector(".selected-path");
 
                 // Update input and display
                 searchInput.value = file.name;
@@ -2277,7 +2595,9 @@
               }
 
               hideSearchResults(side) {
-                const resultsDiv = document.getElementById(`${side}FileResults`);
+                const resultsDiv = document.getElementById(
+                  `${side}FileResults`,
+                );
                 resultsDiv.style.display = "none";
               }
 
@@ -2286,13 +2606,15 @@
                 try {
                   if (!this.selectedRepository) {
                     console.warn("No repository selected for Git file search");
-                    this.showGitSearchError("Please select a repository first.");
+                    this.showGitSearchError(
+                      "Please select a repository first.",
+                    );
                     return;
                   }
 
                   // Use new unified git-repositories search endpoint
                   const result = await window.authManager.apiRequest(
-                    `/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}`
+                    `/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}`,
                   );
 
                   if (result.success && result.data && result.data.files) {
@@ -2357,7 +2679,8 @@
               selectGitFile(file) {
                 const searchInput = document.getElementById("gitFileSearch");
                 const selectedDiv = document.getElementById("gitSelectedFile");
-                const selectedPath = selectedDiv.querySelector(".selected-path");
+                const selectedPath =
+                  selectedDiv.querySelector(".selected-path");
 
                 // Update input and display
                 searchInput.value = file.name;
@@ -2397,12 +2720,16 @@
 
               handleGitFileKeyboardNavigation(e) {
                 const resultsDiv = document.getElementById("gitFileResults");
-                const items = resultsDiv.querySelectorAll(".list-group-item-action");
+                const items = resultsDiv.querySelectorAll(
+                  ".list-group-item-action",
+                );
 
                 if (items.length === 0) return;
 
                 let currentIndex = -1;
-                const activeItem = resultsDiv.querySelector(".list-group-item.active");
+                const activeItem = resultsDiv.querySelector(
+                  ".list-group-item.active",
+                );
                 if (activeItem) {
                   currentIndex = parseInt(activeItem.dataset.index);
                 }
@@ -2434,7 +2761,9 @@
               }
 
               highlightGitResultItem(resultsDiv, index) {
-                const items = resultsDiv.querySelectorAll(".list-group-item-action");
+                const items = resultsDiv.querySelectorAll(
+                  ".list-group-item-action",
+                );
                 items.forEach((item) => item.classList.remove("active"));
 
                 if (items[index]) {
@@ -2443,7 +2772,9 @@
               }
 
               showSearchError(side, message) {
-                const resultsDiv = document.getElementById(`${side}FileResults`);
+                const resultsDiv = document.getElementById(
+                  `${side}FileResults`,
+                );
                 const listGroup = resultsDiv.querySelector(".list-group");
 
                 listGroup.innerHTML = `
@@ -2456,13 +2787,19 @@
               }
 
               handleKeyboardNavigation(side, e) {
-                const resultsDiv = document.getElementById(`${side}FileResults`);
-                const items = resultsDiv.querySelectorAll(".list-group-item-action");
+                const resultsDiv = document.getElementById(
+                  `${side}FileResults`,
+                );
+                const items = resultsDiv.querySelectorAll(
+                  ".list-group-item-action",
+                );
 
                 if (items.length === 0) return;
 
                 let currentIndex = -1;
-                const activeItem = resultsDiv.querySelector(".list-group-item.active");
+                const activeItem = resultsDiv.querySelector(
+                  ".list-group-item.active",
+                );
                 if (activeItem) {
                   currentIndex = parseInt(activeItem.dataset.index);
                 }
@@ -2494,7 +2831,9 @@
               }
 
               highlightResultItem(resultsDiv, index) {
-                const items = resultsDiv.querySelectorAll(".list-group-item-action");
+                const items = resultsDiv.querySelectorAll(
+                  ".list-group-item-action",
+                );
                 items.forEach((item) => item.classList.remove("active"));
 
                 if (items[index]) {
@@ -2504,8 +2843,10 @@
 
               // History File Search Functionality
               initializeHistoryFileSearch() {
-                const searchInput = document.getElementById("historyFileSearch");
-                const resultsDiv = document.getElementById("historyFileResults");
+                const searchInput =
+                  document.getElementById("historyFileSearch");
+                const resultsDiv =
+                  document.getElementById("historyFileResults");
 
                 if (!searchInput) {
                   console.error("History file search input element not found");
@@ -2545,7 +2886,10 @@
                 searchInput.addEventListener("blur", (e) => {
                   // Delay hiding to allow clicking on results
                   setTimeout(() => {
-                    if (!e.relatedTarget || !resultsDiv.contains(e.relatedTarget)) {
+                    if (
+                      !e.relatedTarget ||
+                      !resultsDiv.contains(e.relatedTarget)
+                    ) {
                       this.hideHistorySearchResults();
                     }
                   }, 150);
@@ -2560,14 +2904,18 @@
               async searchHistoryFiles(query) {
                 try {
                   if (!this.selectedRepository) {
-                    console.warn("No repository selected for history file search");
-                    this.showHistorySearchError("Please select a repository first.");
+                    console.warn(
+                      "No repository selected for history file search",
+                    );
+                    this.showHistorySearchError(
+                      "Please select a repository first.",
+                    );
                     return;
                   }
 
                   // Use new unified git-repositories search endpoint
                   const result = await window.authManager.apiRequest(
-                    `/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}`
+                    `/api/git-repositories/${this.selectedRepository.id}/files/search?query=${encodeURIComponent(query)}`,
                   );
 
                   if (result.success && result.data && result.data.files) {
@@ -2590,7 +2938,8 @@
               }
 
               displayHistorySearchResults(files, query) {
-                const resultsDiv = document.getElementById("historyFileResults");
+                const resultsDiv =
+                  document.getElementById("historyFileResults");
                 const listGroup = resultsDiv.querySelector(".list-group");
 
                 // Clear previous results
@@ -2613,7 +2962,9 @@
                       ${file.directory ? `<span class="file-item-directory">${file.directory}</span>` : ""}
                     `;
 
-                    item.addEventListener("click", () => this.selectHistoryFile(file));
+                    item.addEventListener("click", () =>
+                      this.selectHistoryFile(file),
+                    );
                     listGroup.appendChild(item);
                   });
                 }
@@ -2622,7 +2973,8 @@
               }
 
               selectHistoryFile(file) {
-                const searchInput = document.getElementById("historyFileSearch");
+                const searchInput =
+                  document.getElementById("historyFileSearch");
 
                 // Update input
                 searchInput.value = file.name;
@@ -2640,12 +2992,14 @@
               }
 
               hideHistorySearchResults() {
-                const resultsDiv = document.getElementById("historyFileResults");
+                const resultsDiv =
+                  document.getElementById("historyFileResults");
                 resultsDiv.style.display = "none";
               }
 
               showHistorySearchError(message) {
-                const resultsDiv = document.getElementById("historyFileResults");
+                const resultsDiv =
+                  document.getElementById("historyFileResults");
                 const listGroup = resultsDiv.querySelector(".list-group");
 
                 listGroup.innerHTML = `
@@ -2658,13 +3012,18 @@
               }
 
               handleHistoryFileKeyboardNavigation(e) {
-                const resultsDiv = document.getElementById("historyFileResults");
-                const items = resultsDiv.querySelectorAll(".list-group-item-action");
+                const resultsDiv =
+                  document.getElementById("historyFileResults");
+                const items = resultsDiv.querySelectorAll(
+                  ".list-group-item-action",
+                );
 
                 if (items.length === 0) return;
 
                 let currentIndex = -1;
-                const activeItem = resultsDiv.querySelector(".list-group-item.active");
+                const activeItem = resultsDiv.querySelector(
+                  ".list-group-item.active",
+                );
                 if (activeItem) {
                   currentIndex = parseInt(activeItem.dataset.index);
                 }
@@ -2696,7 +3055,9 @@
               }
 
               highlightHistoryResultItem(resultsDiv, index) {
-                const items = resultsDiv.querySelectorAll(".list-group-item-action");
+                const items = resultsDiv.querySelectorAll(
+                  ".list-group-item-action",
+                );
                 items.forEach((item) => item.classList.remove("active"));
 
                 if (items[index]) {
@@ -2710,7 +3071,9 @@
                 const fileMode = document.getElementById("fileComparisonMode");
                 const gitMode = document.getElementById("gitComparisonMode");
                 const historyMode = document.getElementById("fileHistoryMode");
-                const sharedControls = document.getElementById("sharedCompareControls");
+                const sharedControls = document.getElementById(
+                  "sharedCompareControls",
+                );
 
                 if (mode === "files") {
                   fileMode.style.display = "block";
@@ -2727,7 +3090,9 @@
 
                   // Ensure commits are loaded when switching to Git mode
                   if (this.gitData.commits.length === 0) {
-                    console.log("No commits loaded, checking repository state...");
+                    console.log(
+                      "No commits loaded, checking repository state...",
+                    );
                     await this.checkRepositoryState();
                   } else {
                     // Refresh the commit dropdowns to make sure they're populated
@@ -2757,7 +3122,9 @@
               }
 
               async handleRefresh() {
-                const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
+                const mode = document.querySelector(
+                  'input[name="comparisonMode"]:checked',
+                ).value;
                 if (mode === "files") {
                   this.loadFiles();
                 } else {
@@ -2766,7 +3133,9 @@
               }
 
               handleCompare() {
-                const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
+                const mode = document.querySelector(
+                  'input[name="comparisonMode"]:checked',
+                ).value;
                 if (mode === "files") {
                   this.compareFiles();
                 } else if (mode === "git") {
@@ -2778,11 +3147,14 @@
 
               async compareSelectedHistoryRows() {
                 if (this.selectedHistoryRows.length !== 2) {
-                  this.showError("Please select exactly two commits to compare");
+                  this.showError(
+                    "Please select exactly two commits to compare",
+                  );
                   return;
                 }
 
-                const fileName = document.getElementById("historyFileName").textContent;
+                const fileName =
+                  document.getElementById("historyFileName").textContent;
                 if (!fileName) {
                   this.showError("No file selected for comparison");
                   return;
@@ -2793,8 +3165,12 @@
                   // Assume the order in the timeline is chronological (newer first)
                   const aElement = a.element;
                   const bElement = b.element;
-                  const aIndex = Array.from(aElement.parentNode.children).indexOf(aElement);
-                  const bIndex = Array.from(bElement.parentNode.children).indexOf(bElement);
+                  const aIndex = Array.from(
+                    aElement.parentNode.children,
+                  ).indexOf(aElement);
+                  const bIndex = Array.from(
+                    bElement.parentNode.children,
+                  ).indexOf(bElement);
                   return bIndex - aIndex; // Reverse order for chronological
                 });
 
@@ -2804,25 +3180,28 @@
                 this.showLoading();
 
                 try {
-                  const diffData = await window.authManager.apiRequest("/api/git/diff", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      commit1: olderCommit.hash,
-                      commit2: newerCommit.hash,
-                      file_path: fileName,
-                    }),
-                  });
+                  const diffData = await window.authManager.apiRequest(
+                    "/api/git/diff",
+                    {
+                      method: "POST",
+                      body: JSON.stringify({
+                        commit1: olderCommit.hash,
+                        commit2: newerCommit.hash,
+                        file_path: fileName,
+                      }),
+                    },
+                  );
 
                   const formattedDiff = this.formatGitDiff(
                     diffData,
                     fileName,
                     olderCommit.shortHash,
-                    newerCommit.shortHash
+                    newerCommit.shortHash,
                   );
 
                   this.displayComparison(
                     formattedDiff,
-                    `Compare ${olderCommit.shortHash} vs ${newerCommit.shortHash}: ${fileName}`
+                    `Compare ${olderCommit.shortHash} vs ${newerCommit.shortHash}: ${fileName}`,
                   );
 
                   document.getElementById("comparisonSection").scrollIntoView({
@@ -2836,7 +3215,8 @@
 
               async populateGitBranches() {
                 try {
-                  const data = await window.authManager.apiRequest("/api/git/branches");
+                  const data =
+                    await window.authManager.apiRequest("/api/git/branches");
                   console.log("Git branches data:", data);
 
                   // Handle different response formats
@@ -2847,7 +3227,7 @@
                   } else if (data.branches && Array.isArray(data.branches)) {
                     // Array of branch objects with name property
                     branches = data.branches.map((branch) =>
-                      typeof branch === "string" ? branch : branch.name
+                      typeof branch === "string" ? branch : branch.name,
                     );
                   } else {
                     // Fallback to empty array
@@ -2856,9 +3236,11 @@
 
                   this.gitData.branches = branches;
 
-                  const branchSelect = document.getElementById("gitBranchSelect");
+                  const branchSelect =
+                    document.getElementById("gitBranchSelect");
 
-                  branchSelect.innerHTML = '<option value="">Select branch...</option>';
+                  branchSelect.innerHTML =
+                    '<option value="">Select branch...</option>';
                   branches.forEach((branch) => {
                     const option = new Option(branch, branch);
                     branchSelect.add(option);
@@ -2879,15 +3261,18 @@
 
               populateGitCommits() {
                 const leftSelect = document.getElementById("leftCommitSelect");
-                const rightSelect = document.getElementById("rightCommitSelect");
+                const rightSelect =
+                  document.getElementById("rightCommitSelect");
 
                 if (!leftSelect || !rightSelect) {
                   console.error("Commit select elements not found");
                   return;
                 }
 
-                leftSelect.innerHTML = '<option value="">Select commit...</option>';
-                rightSelect.innerHTML = '<option value="">Select commit...</option>';
+                leftSelect.innerHTML =
+                  '<option value="">Select commit...</option>';
+                rightSelect.innerHTML =
+                  '<option value="">Select commit...</option>';
 
                 if (this.gitData.commits && this.gitData.commits.length > 0) {
                   this.gitData.commits.forEach((commit) => {
@@ -2923,7 +3308,7 @@
               async loadCommitsForBranch(branch) {
                 try {
                   this.gitData.commits = await window.authManager.apiRequest(
-                    `/api/git/commits/${branch}`
+                    `/api/git/commits/${branch}`,
                   );
                   this.populateGitCommits();
                 } catch (error) {
@@ -2933,8 +3318,10 @@
 
               async populateGitFiles() {
                 try {
-                  const leftCommit = document.getElementById("leftCommitSelect").value;
-                  const rightCommit = document.getElementById("rightCommitSelect").value;
+                  const leftCommit =
+                    document.getElementById("leftCommitSelect").value;
+                  const rightCommit =
+                    document.getElementById("rightCommitSelect").value;
 
                   if (!leftCommit && !rightCommit) {
                     this.gitFiles = [];
@@ -2943,7 +3330,9 @@
 
                   const commitHash = rightCommit || leftCommit || "HEAD";
 
-                  const files = await window.authManager.apiRequest(`/api/git/files/${commitHash}`);
+                  const files = await window.authManager.apiRequest(
+                    `/api/git/files/${commitHash}`,
+                  );
                   // Store files for search functionality instead of populating select
                   this.gitFiles = files.map((filePath) => ({
                     path: filePath,
@@ -2965,28 +3354,39 @@
               }
 
               loadFontSizePreference() {
-                const savedSize = localStorage.getItem("diff_font_size") || "12";
+                const savedSize =
+                  localStorage.getItem("diff_font_size") || "12";
                 document.getElementById("fontSizeSelect").value = savedSize;
                 this.changeFontSize(savedSize);
               }
 
               changeFontSize(size) {
                 const fontSize = parseInt(size);
-                const lineHeight = fontSize <= 11 ? 1.0 : fontSize <= 12 ? 1.1 : 1.2;
+                const lineHeight =
+                  fontSize <= 11 ? 1.0 : fontSize <= 12 ? 1.1 : 1.2;
 
                 // Update CSS custom properties
-                document.documentElement.style.setProperty("--diff-font-size", fontSize + "px");
-                document.documentElement.style.setProperty("--diff-line-height", lineHeight);
+                document.documentElement.style.setProperty(
+                  "--diff-font-size",
+                  fontSize + "px",
+                );
+                document.documentElement.style.setProperty(
+                  "--diff-line-height",
+                  lineHeight,
+                );
 
                 // Save preference
                 localStorage.setItem("diff_font_size", size);
 
-                console.log(`Font size changed to ${fontSize}px with line-height ${lineHeight}`);
+                console.log(
+                  `Font size changed to ${fontSize}px with line-height ${lineHeight}`,
+                );
               }
 
               async loadFiles() {
                 try {
-                  const data = await window.authManager.apiRequest("/api/files/list");
+                  const data =
+                    await window.authManager.apiRequest("/api/files/list");
 
                   this.files = data.files || data;
                   this.populateFileSelects();
@@ -2998,10 +3398,14 @@
 
               async loadFileHistory(side) {
                 const historyContent = document.getElementById(
-                  side === "left" ? "leftFileHistoryContent" : "rightFileHistoryContent"
+                  side === "left"
+                    ? "leftFileHistoryContent"
+                    : "rightFileHistoryContent",
                 );
                 const selectedFile =
-                  side === "left" ? this.selectedLeftFile : this.selectedRightFile;
+                  side === "left"
+                    ? this.selectedLeftFile
+                    : this.selectedRightFile;
 
                 if (!selectedFile || !selectedFile.path) {
                   historyContent.innerHTML =
@@ -3016,7 +3420,7 @@
 
                 try {
                   const data = await window.authManager.apiRequest(
-                    `/api/git/file-history/${encodeURIComponent(selectedFile.path)}`
+                    `/api/git/file-history/${encodeURIComponent(selectedFile.path)}`,
                   );
 
                   const commit = data.last_commit;
@@ -3041,13 +3445,22 @@
               }
 
               updateFileHistoryVisibility() {
-                const leftFile = this.selectedLeftFile ? this.selectedLeftFile.path : "";
-                const rightFile = this.selectedRightFile ? this.selectedRightFile.path : "";
-                const historySection = document.getElementById("fileHistorySection");
+                const leftFile = this.selectedLeftFile
+                  ? this.selectedLeftFile.path
+                  : "";
+                const rightFile = this.selectedRightFile
+                  ? this.selectedRightFile.path
+                  : "";
+                const historySection =
+                  document.getElementById("fileHistorySection");
 
                 // Reset headers for file mode
-                const leftHeader = document.querySelector("#leftFileHistory h6");
-                const rightHeader = document.querySelector("#rightFileHistory h6");
+                const leftHeader = document.querySelector(
+                  "#leftFileHistory h6",
+                );
+                const rightHeader = document.querySelector(
+                  "#rightFileHistory h6",
+                );
                 leftHeader.textContent = "Source File";
                 rightHeader.textContent = "Target File";
 
@@ -3060,13 +3473,21 @@
               }
 
               async loadGitFileHistory() {
-                const leftCommit = document.getElementById("leftCommitSelect").value;
-                const rightCommit = document.getElementById("rightCommitSelect").value;
-                const gitFile = this.selectedGitFile ? this.selectedGitFile.path : null;
+                const leftCommit =
+                  document.getElementById("leftCommitSelect").value;
+                const rightCommit =
+                  document.getElementById("rightCommitSelect").value;
+                const gitFile = this.selectedGitFile
+                  ? this.selectedGitFile.path
+                  : null;
 
                 // Update the section headers for Git mode
-                const leftHeader = document.querySelector("#leftFileHistory h6");
-                const rightHeader = document.querySelector("#rightFileHistory h6");
+                const leftHeader = document.querySelector(
+                  "#leftFileHistory h6",
+                );
+                const rightHeader = document.querySelector(
+                  "#rightFileHistory h6",
+                );
                 leftHeader.textContent = leftCommit
                   ? `Source Commit (${leftCommit.substring(0, 8)})`
                   : "Source Commit";
@@ -3085,10 +3506,18 @@
 
                 // Load history for both commits if they're selected
                 if (leftCommit) {
-                  await this.loadGitCommitFileHistory("left", leftCommit, gitFile);
+                  await this.loadGitCommitFileHistory(
+                    "left",
+                    leftCommit,
+                    gitFile,
+                  );
                 }
                 if (rightCommit) {
-                  await this.loadGitCommitFileHistory("right", rightCommit, gitFile);
+                  await this.loadGitCommitFileHistory(
+                    "right",
+                    rightCommit,
+                    gitFile,
+                  );
                 }
 
                 this.updateGitFileHistoryVisibility();
@@ -3096,7 +3525,9 @@
 
               async loadGitCommitFileHistory(side, commitHash, filePath) {
                 const historyContent = document.getElementById(
-                  side === "left" ? "leftFileHistoryContent" : "rightFileHistoryContent"
+                  side === "left"
+                    ? "leftFileHistoryContent"
+                    : "rightFileHistoryContent",
                 );
 
                 // Show loading state
@@ -3105,7 +3536,7 @@
 
                 try {
                   const data = await window.authManager.apiRequest(
-                    `/api/git/file-history/${encodeURIComponent(filePath)}`
+                    `/api/git/file-history/${encodeURIComponent(filePath)}`,
                   );
 
                   const commit = data.last_commit;
@@ -3115,14 +3546,17 @@
                   // Check if the selected commit is the same as the last commit that modified the file
                   // Compare both full hash and short hash, handling both directions
                   const selectedShort = commitHash.substring(0, 8);
-                  const lastCommitShort = commit.short_hash || commit.hash.substring(0, 8);
+                  const lastCommitShort =
+                    commit.short_hash || commit.hash.substring(0, 8);
                   const isSelectedCommit =
                     commitHash === commit.hash ||
                     selectedShort === lastCommitShort ||
                     commitHash === commit.short_hash ||
                     (commit.hash && commit.hash.startsWith(commitHash));
 
-                  const commitLabel = isSelectedCommit ? "Selected Commit" : "Last Modified";
+                  const commitLabel = isSelectedCommit
+                    ? "Selected Commit"
+                    : "Last Modified";
 
                   historyContent.innerHTML = `
                     <div class="file-history-info">
@@ -3142,14 +3576,17 @@
 
               clearFileHistory(side) {
                 const historyContent = document.getElementById(
-                  side === "left" ? "leftFileHistoryContent" : "rightFileHistoryContent"
+                  side === "left"
+                    ? "leftFileHistoryContent"
+                    : "rightFileHistoryContent",
                 );
                 historyContent.innerHTML =
                   '<p class="text-muted"><i>Select a file to view its history</i></p>';
               }
 
               closeFileHistory() {
-                const historySection = document.getElementById("fileHistorySection");
+                const historySection =
+                  document.getElementById("fileHistorySection");
                 historySection.style.display = "none";
 
                 // Clear both sides
@@ -3158,7 +3595,8 @@
               }
 
               closeFileHistoryDisplay() {
-                const fileHistoryDisplay = document.getElementById("fileHistoryDisplay");
+                const fileHistoryDisplay =
+                  document.getElementById("fileHistoryDisplay");
                 fileHistoryDisplay.style.display = "none";
 
                 // Clear the selected rows if any
@@ -3168,10 +3606,14 @@
               toggleHistoryRowSelection(commitHash, event) {
                 event.stopPropagation();
 
-                const timelineItem = document.querySelector(`[data-commit-hash="${commitHash}"]`);
+                const timelineItem = document.querySelector(
+                  `[data-commit-hash="${commitHash}"]`,
+                );
                 if (!timelineItem) return;
 
-                const index = this.selectedHistoryRows.findIndex((row) => row.hash === commitHash);
+                const index = this.selectedHistoryRows.findIndex(
+                  (row) => row.hash === commitHash,
+                );
 
                 if (index === -1) {
                   // Select the row (max 2 selections)
@@ -3193,7 +3635,8 @@
               }
 
               async downloadHistoryFile(commitHash, shortHash) {
-                const fileName = document.getElementById("historyFileName").textContent;
+                const fileName =
+                  document.getElementById("historyFileName").textContent;
                 if (!fileName) {
                   this.showError("No file selected for download");
                   return;
@@ -3201,7 +3644,7 @@
 
                 try {
                   const response = await window.authManager.apiRequest(
-                    `/api/git/files/${encodeURIComponent(commitHash)}?file_path=${encodeURIComponent(fileName)}`
+                    `/api/git/files/${encodeURIComponent(commitHash)}?file_path=${encodeURIComponent(fileName)}`,
                   );
 
                   if (!response || !response.content) {
@@ -3210,7 +3653,9 @@
                   }
 
                   // Create and download the file
-                  const blob = new Blob([response.content], { type: "text/plain" });
+                  const blob = new Blob([response.content], {
+                    type: "text/plain",
+                  });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
@@ -3225,13 +3670,17 @@
               }
 
               closeComparisonResults() {
-                const comparisonSection = document.getElementById("comparisonSection");
+                const comparisonSection =
+                  document.getElementById("comparisonSection");
                 comparisonSection.style.display = "none";
               }
 
               updateGitFileHistoryVisibility() {
-                const gitFile = this.selectedGitFile ? this.selectedGitFile.path : null;
-                const historySection = document.getElementById("fileHistorySection");
+                const gitFile = this.selectedGitFile
+                  ? this.selectedGitFile.path
+                  : null;
+                const historySection =
+                  document.getElementById("fileHistorySection");
 
                 // Show history section if a Git file is selected
                 if (gitFile) {
@@ -3286,13 +3735,17 @@
               async loadHistoryBranches() {
                 console.log("Loading branches for history mode...");
                 try {
-                  const data = await window.authManager.apiRequest("/api/git/branches");
+                  const data =
+                    await window.authManager.apiRequest("/api/git/branches");
                   console.log("History branches data:", data);
 
                   const branches = this.parseBranchesData(data);
                   this.populateHistoryBranchSelect(branches);
                 } catch (error) {
-                  console.error("Error loading branches for history mode:", error);
+                  console.error(
+                    "Error loading branches for history mode:",
+                    error,
+                  );
                   console.error("Error stack:", error.stack);
                   this.addDefaultHistoryBranch();
                 }
@@ -3303,10 +3756,14 @@
                 if (Array.isArray(data)) {
                   // Direct array of strings
                   branches = data;
-                } else if (data && data.branches && Array.isArray(data.branches)) {
+                } else if (
+                  data &&
+                  data.branches &&
+                  Array.isArray(data.branches)
+                ) {
                   // Array of branch objects with name property
                   branches = data.branches.map((branch) =>
-                    typeof branch === "string" ? branch : branch.name
+                    typeof branch === "string" ? branch : branch.name,
                   );
                 } else if (Array.isArray(data)) {
                   // Sometimes the response itself is the array
@@ -3321,7 +3778,9 @@
               }
 
               populateHistoryBranchSelect(branches) {
-                const branchSelect = document.getElementById("historyBranchSelect");
+                const branchSelect = document.getElementById(
+                  "historyBranchSelect",
+                );
                 if (!branchSelect) {
                   console.error("History branch select element not found");
                   return;
@@ -3357,7 +3816,9 @@
               }
 
               addDefaultHistoryBranch() {
-                const branchSelect = document.getElementById("historyBranchSelect");
+                const branchSelect = document.getElementById(
+                  "historyBranchSelect",
+                );
                 if (branchSelect) {
                   console.warn("No branches found, adding default main option");
                   branchSelect.innerHTML = "";
@@ -3370,25 +3831,37 @@
               async loadHistoryCommitsForBranch(branch) {
                 console.log("Loading commits for branch:", branch);
                 try {
-                  const commits = await window.authManager.apiRequest(`/api/git/commits/${branch}`);
-                  console.log("Loaded commits for history mode:", commits.length);
+                  const commits = await window.authManager.apiRequest(
+                    `/api/git/commits/${branch}`,
+                  );
+                  console.log(
+                    "Loaded commits for history mode:",
+                    commits.length,
+                  );
                   this.populateHistoryCommitSelect(commits);
                 } catch (error) {
-                  console.error("Error loading commits for branch:", branch, error);
+                  console.error(
+                    "Error loading commits for branch:",
+                    branch,
+                    error,
+                  );
                   console.error("Error stack:", error.stack);
                   this.addDefaultHistoryCommit();
                 }
               }
 
               populateHistoryCommitSelect(commits) {
-                const commitSelect = document.getElementById("historyCommitSelect");
+                const commitSelect = document.getElementById(
+                  "historyCommitSelect",
+                );
                 if (!commitSelect) {
                   console.error("History commit select element not found");
                   return;
                 }
 
                 // Clear existing options
-                commitSelect.innerHTML = '<option value="">Select commit...</option>';
+                commitSelect.innerHTML =
+                  '<option value="">Select commit...</option>';
 
                 // Add commit options using the same format as Git Commits mode
                 let latestCommitHash = null;
@@ -3419,31 +3892,48 @@
               }
 
               addDefaultHistoryCommit() {
-                const commitSelect = document.getElementById("historyCommitSelect");
+                const commitSelect = document.getElementById(
+                  "historyCommitSelect",
+                );
                 if (commitSelect) {
                   console.warn("No commits found, adding placeholder option");
-                  commitSelect.innerHTML = '<option value="">No commits available</option>';
+                  commitSelect.innerHTML =
+                    '<option value="">No commits available</option>';
                 }
               }
 
               updateShowHistoryButton() {
-                const branch = document.getElementById("historyBranchSelect").value;
-                const commit = document.getElementById("historyCommitSelect").value;
-                const file = this.selectedHistoryFile ? this.selectedHistoryFile.path : null;
+                const branch = document.getElementById(
+                  "historyBranchSelect",
+                ).value;
+                const commit = document.getElementById(
+                  "historyCommitSelect",
+                ).value;
+                const file = this.selectedHistoryFile
+                  ? this.selectedHistoryFile.path
+                  : null;
                 const button = document.getElementById("showHistoryBtn");
 
                 button.disabled = !(branch && commit && file);
               }
 
               async showFileHistory() {
-                const branch = document.getElementById("historyBranchSelect").value;
-                const commit = document.getElementById("historyCommitSelect").value;
-                const filePath = this.selectedHistoryFile ? this.selectedHistoryFile.path : null;
+                const branch = document.getElementById(
+                  "historyBranchSelect",
+                ).value;
+                const commit = document.getElementById(
+                  "historyCommitSelect",
+                ).value;
+                const filePath = this.selectedHistoryFile
+                  ? this.selectedHistoryFile.path
+                  : null;
 
                 if (!branch || !commit || !filePath) return;
 
-                const historyDisplay = document.getElementById("fileHistoryDisplay");
-                const historyContent = document.getElementById("historyContent");
+                const historyDisplay =
+                  document.getElementById("fileHistoryDisplay");
+                const historyContent =
+                  document.getElementById("historyContent");
                 const fileName = document.getElementById("historyFileName");
 
                 fileName.textContent = filePath;
@@ -3456,7 +3946,7 @@
                   if (window.authManager) {
                     console.log("Using authManager for file history...");
                     const response = await window.authManager.apiRequest(
-                      `/api/git/file-complete-history/${encodeURIComponent(filePath)}?from_commit=${encodeURIComponent(commit)}`
+                      `/api/git/file-complete-history/${encodeURIComponent(filePath)}?from_commit=${encodeURIComponent(commit)}`,
                     );
 
                     if (response && response.success) {
@@ -3467,9 +3957,11 @@
                   }
 
                   // Fallback to direct API request using the correct API endpoint
-                  console.log("Falling back to direct API request for file history...");
+                  console.log(
+                    "Falling back to direct API request for file history...",
+                  );
                   const data = await window.authManager.apiRequest(
-                    `/api/git/file-complete-history/${encodeURIComponent(filePath)}?from_commit=${encodeURIComponent(commit)}`
+                    `/api/git/file-complete-history/${encodeURIComponent(filePath)}?from_commit=${encodeURIComponent(commit)}`,
                   );
                   this.renderFileHistory(data, commit);
                 } catch (error) {
@@ -3479,7 +3971,8 @@
               }
 
               renderFileHistory(history, selectedCommitHash) {
-                const historyContent = document.getElementById("historyContent");
+                const historyContent =
+                  document.getElementById("historyContent");
 
                 if (!history.commits || history.commits.length === 0) {
                   historyContent.innerHTML =
@@ -3594,7 +4087,8 @@
 
               async compareHistoryCommit(commitHash, shortHash) {
                 // Get the current file path from the history display
-                const fileName = document.getElementById("historyFileName").textContent;
+                const fileName =
+                  document.getElementById("historyFileName").textContent;
                 if (!fileName) {
                   this.showError("No file selected for comparison");
                   return;
@@ -3606,7 +4100,7 @@
                 try {
                   // Get the file history to find the parent commit
                   const historyData = await window.authManager.apiRequest(
-                    `/api/git/file-complete-history/${encodeURIComponent(fileName)}?from_commit=${encodeURIComponent(commitHash)}`
+                    `/api/git/file-complete-history/${encodeURIComponent(fileName)}?from_commit=${encodeURIComponent(commitHash)}`,
                   );
 
                   // Find the current commit and the next one (parent) in the history
@@ -3636,25 +4130,31 @@
                   }
 
                   // Use the existing diff API
-                  const diffData = await window.authManager.apiRequest("/api/git/diff", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      commit1: parentCommit, // Parent (older)
-                      commit2: commitHash, // Current (newer)
-                      file_path: fileName,
-                    }),
-                  });
+                  const diffData = await window.authManager.apiRequest(
+                    "/api/git/diff",
+                    {
+                      method: "POST",
+                      body: JSON.stringify({
+                        commit1: parentCommit, // Parent (older)
+                        commit2: commitHash, // Current (newer)
+                        file_path: fileName,
+                      }),
+                    },
+                  );
 
                   // Format the diff data for display
                   const formattedDiff = this.formatGitDiff(
                     diffData,
                     fileName,
                     parentCommit || "empty",
-                    commitHash
+                    commitHash,
                   );
 
                   // Display the comparison
-                  this.displayComparison(formattedDiff, `Commit ${shortHash}: ${fileName}`);
+                  this.displayComparison(
+                    formattedDiff,
+                    `Commit ${shortHash}: ${fileName}`,
+                  );
 
                   // Scroll to comparison section
                   document.getElementById("comparisonSection").scrollIntoView({
@@ -3668,7 +4168,8 @@
 
               async viewHistoryFile(commitHash, shortHash) {
                 // Get the current file path from the history display
-                const fileName = document.getElementById("historyFileName").textContent;
+                const fileName =
+                  document.getElementById("historyFileName").textContent;
                 if (!fileName) {
                   this.showError("No file selected to view");
                   return;
@@ -3679,7 +4180,7 @@
 
                 try {
                   const fileData = await window.authManager.apiRequest(
-                    `/api/git/files/${commitHash}?file_path=${encodeURIComponent(fileName)}`
+                    `/api/git/files/${commitHash}?file_path=${encodeURIComponent(fileName)}`,
                   );
 
                   // Display file content using a simple approach
@@ -3691,7 +4192,9 @@
                   };
 
                   // Convert file content to lines for display
-                  const lines = fileData.content ? fileData.content.split("\n") : ["<empty file>"];
+                  const lines = fileData.content
+                    ? fileData.content.split("\n")
+                    : ["<empty file>"];
                   lines.forEach((line, index) => {
                     displayData.left_lines.push({
                       line_number: index + 1,
@@ -3706,7 +4209,10 @@
                     });
                   });
 
-                  this.displayComparison(displayData, `File Content: ${fileName} (${shortHash})`);
+                  this.displayComparison(
+                    displayData,
+                    `File Content: ${fileName} (${shortHash})`,
+                  );
 
                   // Scroll to comparison section
                   document.getElementById("comparisonSection").scrollIntoView({
@@ -3714,14 +4220,18 @@
                     block: "start",
                   });
                 } catch (error) {
-                  this.showError(`Error loading file content: ${error.message}`);
+                  this.showError(
+                    `Error loading file content: ${error.message}`,
+                  );
                 }
               }
 
               populateFileSelects() {
                 // This method is now used to initialize the search functionality
                 // Files are stored in this.files and used by the search inputs
-                console.log(`Loaded ${this.files.length} files for search functionality`);
+                console.log(
+                  `Loaded ${this.files.length} files for search functionality`,
+                );
 
                 // Initialize file search for both sides
                 this.initializeFileSearch("leftFileSearch", "left", (file) => {
@@ -3729,15 +4239,23 @@
                   this.updateCompareButton();
                 });
 
-                this.initializeFileSearch("rightFileSearch", "right", (file) => {
-                  this.selectedRightFile = file;
-                  this.updateCompareButton();
-                });
+                this.initializeFileSearch(
+                  "rightFileSearch",
+                  "right",
+                  (file) => {
+                    this.selectedRightFile = file;
+                    this.updateCompareButton();
+                  },
+                );
               }
 
               async compareFiles() {
-                const leftFile = this.selectedLeftFile ? this.selectedLeftFile.path : null;
-                const rightFile = this.selectedRightFile ? this.selectedRightFile.path : null;
+                const leftFile = this.selectedLeftFile
+                  ? this.selectedLeftFile.path
+                  : null;
+                const rightFile = this.selectedRightFile
+                  ? this.selectedRightFile.path
+                  : null;
 
                 if (!leftFile || !rightFile) {
                   this.showError("Please select both files to compare");
@@ -3748,13 +4266,16 @@
                 this.showLoading();
 
                 try {
-                  const data = await window.authManager.apiRequest("/api/files/compare", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      left_file: leftFile,
-                      right_file: rightFile,
-                    }),
-                  });
+                  const data = await window.authManager.apiRequest(
+                    "/api/files/compare",
+                    {
+                      method: "POST",
+                      body: JSON.stringify({
+                        left_file: leftFile,
+                        right_file: rightFile,
+                      }),
+                    },
+                  );
 
                   this.displayComparison(data, `${leftFile} vs ${rightFile}`);
                 } catch (error) {
@@ -3763,12 +4284,18 @@
               }
 
               async compareGitCommits() {
-                const leftCommit = document.getElementById("leftCommitSelect").value;
-                const rightCommit = document.getElementById("rightCommitSelect").value;
-                const gitFile = this.selectedGitFile ? this.selectedGitFile.path : null;
+                const leftCommit =
+                  document.getElementById("leftCommitSelect").value;
+                const rightCommit =
+                  document.getElementById("rightCommitSelect").value;
+                const gitFile = this.selectedGitFile
+                  ? this.selectedGitFile.path
+                  : null;
 
                 if (!leftCommit || !rightCommit || !gitFile) {
-                  this.showError("Please select both commits and a file to compare");
+                  this.showError(
+                    "Please select both commits and a file to compare",
+                  );
                   return;
                 }
 
@@ -3776,30 +4303,35 @@
                 this.showLoading();
 
                 try {
-                  const result = await window.authManager.apiRequest("/api/git/diff", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      commit1: leftCommit,
-                      commit2: rightCommit,
-                      file_path: gitFile,
-                    }),
-                  });
+                  const result = await window.authManager.apiRequest(
+                    "/api/git/diff",
+                    {
+                      method: "POST",
+                      body: JSON.stringify({
+                        commit1: leftCommit,
+                        commit2: rightCommit,
+                        file_path: gitFile,
+                      }),
+                    },
+                  );
 
                   // Convert Git diff format to comparison format
                   const formattedResult = this.formatGitDiff(
                     result,
                     gitFile,
                     leftCommit,
-                    rightCommit
+                    rightCommit,
                   );
                   const leftCommitShort = leftCommit.substring(0, 8);
                   const rightCommitShort = rightCommit.substring(0, 8);
                   this.displayComparison(
                     formattedResult,
-                    `${gitFile}: ${leftCommitShort} → ${rightCommitShort}`
+                    `${gitFile}: ${leftCommitShort} → ${rightCommitShort}`,
                   );
                 } catch (error) {
-                  this.showError("Error comparing Git commits: " + error.message);
+                  this.showError(
+                    "Error comparing Git commits: " + error.message,
+                  );
                 }
               }
 
@@ -3820,7 +4352,10 @@
                 const leftLines = [];
                 const rightLines = [];
 
-                if (gitResult.diff_lines && Array.isArray(gitResult.diff_lines)) {
+                if (
+                  gitResult.diff_lines &&
+                  Array.isArray(gitResult.diff_lines)
+                ) {
                   let leftLineNum = 1;
                   let rightLineNum = 1;
 
@@ -3888,7 +4423,9 @@
               populateFileSelects() {
                 // This method is now used to initialize the search functionality
                 // Files are stored in this.files and used by the search inputs
-                console.log(`Loaded ${this.files.length} files for search functionality`);
+                console.log(
+                  `Loaded ${this.files.length} files for search functionality`,
+                );
 
                 // Initialize file search for both sides
                 this.initializeFileSearch("leftFileSearch", "left", (file) => {
@@ -3896,35 +4433,58 @@
                   this.updateCompareButton();
                 });
 
-                this.initializeFileSearch("rightFileSearch", "right", (file) => {
-                  this.selectedRightFile = file;
-                  this.updateCompareButton();
-                });
+                this.initializeFileSearch(
+                  "rightFileSearch",
+                  "right",
+                  (file) => {
+                    this.selectedRightFile = file;
+                    this.updateCompareButton();
+                  },
+                );
               }
 
               updateCompareButton() {
-                const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
+                const mode = document.querySelector(
+                  'input[name="comparisonMode"]:checked',
+                ).value;
                 const compareBtn = document.getElementById("compareBtn");
-                const historyCompareBtn = document.getElementById("historyCompareBtn");
-                const historyExportBtn = document.getElementById("historyExportBtn");
+                const historyCompareBtn =
+                  document.getElementById("historyCompareBtn");
+                const historyExportBtn =
+                  document.getElementById("historyExportBtn");
                 let canCompare = false;
 
                 if (mode === "files") {
-                  const leftFile = this.selectedLeftFile ? this.selectedLeftFile.path : null;
-                  const rightFile = this.selectedRightFile ? this.selectedRightFile.path : null;
+                  const leftFile = this.selectedLeftFile
+                    ? this.selectedLeftFile.path
+                    : null;
+                  const rightFile = this.selectedRightFile
+                    ? this.selectedRightFile.path
+                    : null;
                   canCompare = leftFile && rightFile && leftFile !== rightFile;
-                  compareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare Files';
+                  compareBtn.innerHTML =
+                    '<i class="fas fa-exchange-alt"></i> Compare Files';
                 } else if (mode === "git") {
-                  const leftCommit = document.getElementById("leftCommitSelect").value;
-                  const rightCommit = document.getElementById("rightCommitSelect").value;
-                  const gitFile = this.selectedGitFile ? this.selectedGitFile.path : null;
-                  canCompare = leftCommit && rightCommit && gitFile && leftCommit !== rightCommit;
-                  compareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare Commits';
+                  const leftCommit =
+                    document.getElementById("leftCommitSelect").value;
+                  const rightCommit =
+                    document.getElementById("rightCommitSelect").value;
+                  const gitFile = this.selectedGitFile
+                    ? this.selectedGitFile.path
+                    : null;
+                  canCompare =
+                    leftCommit &&
+                    rightCommit &&
+                    gitFile &&
+                    leftCommit !== rightCommit;
+                  compareBtn.innerHTML =
+                    '<i class="fas fa-exchange-alt"></i> Compare Commits';
                 } else if (mode === "history") {
                   // In history mode, check if we have selected rows for comparison
                   canCompare = this.selectedHistoryRows.length === 2;
                   if (historyCompareBtn) {
-                    historyCompareBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> Compare';
+                    historyCompareBtn.innerHTML =
+                      '<i class="fas fa-exchange-alt"></i> Compare';
                     historyCompareBtn.disabled = !canCompare;
                   }
                   if (historyExportBtn) {
@@ -3939,8 +4499,12 @@
               }
 
               async compareFiles() {
-                const leftFile = this.selectedLeftFile ? this.selectedLeftFile.path : null;
-                const rightFile = this.selectedRightFile ? this.selectedRightFile.path : null;
+                const leftFile = this.selectedLeftFile
+                  ? this.selectedLeftFile.path
+                  : null;
+                const rightFile = this.selectedRightFile
+                  ? this.selectedRightFile.path
+                  : null;
 
                 if (!leftFile || !rightFile) {
                   this.showError("Please select both files to compare");
@@ -3951,13 +4515,16 @@
                 this.showLoading();
 
                 try {
-                  const data = await window.authManager.apiRequest("/api/files/compare", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      left_file: leftFile,
-                      right_file: rightFile,
-                    }),
-                  });
+                  const data = await window.authManager.apiRequest(
+                    "/api/files/compare",
+                    {
+                      method: "POST",
+                      body: JSON.stringify({
+                        left_file: leftFile,
+                        right_file: rightFile,
+                      }),
+                    },
+                  );
 
                   this.displayComparison(data);
                 } catch (error) {
@@ -3971,7 +4538,9 @@
                   ? title.split(" vs ")[0] || title.split(": ")[0]
                   : comparison.left_file;
                 document.getElementById("rightFileName").textContent = title
-                  ? title.split(" vs ")[1] || title.split(": ")[1] || title.split(" → ")[1]
+                  ? title.split(" vs ")[1] ||
+                    title.split(": ")[1] ||
+                    title.split(" → ")[1]
                   : comparison.right_file;
 
                 // Calculate stats from the data
@@ -3992,7 +4561,8 @@
                 this.renderDiff(comparison);
 
                 // Show comparison section
-                document.getElementById("comparisonSection").style.display = "block";
+                document.getElementById("comparisonSection").style.display =
+                  "block";
 
                 // Enable export button
                 document.getElementById("exportBtn").disabled = false;
@@ -4003,7 +4573,9 @@
 
               async showGitStatus() {
                 if (!this.selectedRepository) {
-                  alert("No repository selected. Please select a repository first.");
+                  alert(
+                    "No repository selected. Please select a repository first.",
+                  );
                   return;
                 }
 
@@ -4041,15 +4613,19 @@
                             <div class="col-md-6">
                               <h6>Available Branches:</h6>
                               ${
-                                this.gitData.branches && this.gitData.branches.length > 0
+                                this.gitData.branches &&
+                                this.gitData.branches.length > 0
                                   ? `
                                 <ul class="list-unstyled">
                                   ${this.gitData.branches
                                     .map((branch) => {
                                       const branchName =
-                                        typeof branch === "string" ? branch : branch.name;
+                                        typeof branch === "string"
+                                          ? branch
+                                          : branch.name;
                                       const isCurrent =
-                                        branchName === this.gitData.status?.current_branch;
+                                        branchName ===
+                                        this.gitData.status?.current_branch;
                                       return `<li class="${isCurrent ? "text-primary fw-bold" : ""}">${branchName}${isCurrent ? " (current)" : ""}</li>`;
                                     })
                                     .join("")}
@@ -4095,7 +4671,8 @@
                           }
                           
                           ${
-                            this.gitData.commits && this.gitData.commits.length > 0
+                            this.gitData.commits &&
+                            this.gitData.commits.length > 0
                               ? `
                             <div class="row mt-3">
                               <div class="col-md-12">
@@ -4121,7 +4698,7 @@
                                           <td>${typeof commit.author === "object" ? commit.author.name : commit.author}</td>
                                           <td>${new Date(commit.date).toLocaleDateString()}</td>
                                         </tr>
-                                      `
+                                      `,
                                         )
                                         .join("")}
                                     </tbody>
@@ -4148,7 +4725,8 @@
                 }
 
                 // Remove any existing backdrop
-                const existingBackdrop = document.querySelector(".modal-backdrop");
+                const existingBackdrop =
+                  document.querySelector(".modal-backdrop");
                 if (existingBackdrop) {
                   existingBackdrop.remove();
                 }
@@ -4168,11 +4746,19 @@
 
                 // Add event listeners for close functionality
                 const closeBtn = document.getElementById("closeGitStatusModal");
-                const closeFooterBtn = document.getElementById("closeGitStatusModalBtn");
+                const closeFooterBtn = document.getElementById(
+                  "closeGitStatusModalBtn",
+                );
 
-                closeBtn.addEventListener("click", () => this.closeGitStatusModal());
-                closeFooterBtn.addEventListener("click", () => this.closeGitStatusModal());
-                backdrop.addEventListener("click", () => this.closeGitStatusModal());
+                closeBtn.addEventListener("click", () =>
+                  this.closeGitStatusModal(),
+                );
+                closeFooterBtn.addEventListener("click", () =>
+                  this.closeGitStatusModal(),
+                );
+                backdrop.addEventListener("click", () =>
+                  this.closeGitStatusModal(),
+                );
 
                 // Close on escape key
                 const escapeHandler = (e) => {
@@ -4197,7 +4783,8 @@
                 }
 
                 // Also remove any other modal backdrops that might be left behind
-                const allBackdrops = document.querySelectorAll(".modal-backdrop");
+                const allBackdrops =
+                  document.querySelectorAll(".modal-backdrop");
                 allBackdrops.forEach((bd) => bd.remove());
 
                 // Remove the modal-open class from body if it exists
@@ -4214,7 +4801,10 @@
                 this.currentDiffs = [];
 
                 // Render side-by-side comparison
-                const maxLines = Math.max(diffData.left_lines.length, diffData.right_lines.length);
+                const maxLines = Math.max(
+                  diffData.left_lines.length,
+                  diffData.right_lines.length,
+                );
 
                 for (let i = 0; i < maxLines; i++) {
                   const leftLine = diffData.left_lines[i] || {
@@ -4238,7 +4828,7 @@
                     leftLine.line_number,
                     leftLine.content,
                     leftLine.type,
-                    "left"
+                    "left",
                   );
 
                   // Right side
@@ -4248,7 +4838,7 @@
                     rightLine.line_number,
                     rightLine.content,
                     rightLine.type,
-                    "right"
+                    "right",
                   );
 
                   row.appendChild(leftDiv);
@@ -4257,7 +4847,10 @@
 
                   // Track diff locations for navigation and export
                   // Store all lines for export, including unchanged ones
-                  const diffType = this.getDiffType(leftLine.type, rightLine.type);
+                  const diffType = this.getDiffType(
+                    leftLine.type,
+                    rightLine.type,
+                  );
                   this.currentDiffs.push({
                     element: row,
                     type: diffType,
@@ -4332,7 +4925,9 @@
 
               navigateDiff(direction) {
                 // Get only the changed lines (not unchanged ones) for navigation
-                const changedDiffs = this.currentDiffs.filter((diff) => diff.type !== "unchanged");
+                const changedDiffs = this.currentDiffs.filter(
+                  (diff) => diff.type !== "unchanged",
+                );
 
                 if (changedDiffs.length === 0) return;
 
@@ -4346,7 +4941,10 @@
 
                 // Scroll to current diff
                 const diff = changedDiffs[this.currentDiffIndex];
-                diff.element.scrollIntoView({ behavior: "smooth", block: "center" });
+                diff.element.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
 
                 // Highlight current diff temporarily
                 diff.element.style.outline = "2px solid #007bff";
@@ -4362,7 +4960,9 @@
                 const nextBtn = document.getElementById("nextDiffBtn");
 
                 // Use only changed diffs for navigation count
-                const changedDiffs = this.currentDiffs.filter((diff) => diff.type !== "unchanged");
+                const changedDiffs = this.currentDiffs.filter(
+                  (diff) => diff.type !== "unchanged",
+                );
                 const hasDeltas = changedDiffs.length > 0;
 
                 prevBtn.disabled = !hasDeltas;
@@ -4384,7 +4984,8 @@
                 `;
 
                 // Show the comparison section
-                document.getElementById("comparisonSection").style.display = "block";
+                document.getElementById("comparisonSection").style.display =
+                  "block";
               }
 
               showError(message) {
@@ -4397,22 +4998,28 @@
                 `;
 
                 // Show the comparison section
-                document.getElementById("comparisonSection").style.display = "block";
+                document.getElementById("comparisonSection").style.display =
+                  "block";
               }
 
               toggleUnchanged() {
                 this.hideUnchanged = !this.hideUnchanged;
                 const toggleBtn = document.getElementById("toggleUnchangedBtn");
-                const unchangedLines = document.querySelectorAll(".diff-unchanged");
+                const unchangedLines =
+                  document.querySelectorAll(".diff-unchanged");
 
                 if (this.hideUnchanged) {
-                  unchangedLines.forEach((line) => line.parentElement.classList.add("diff-hidden"));
-                  toggleBtn.innerHTML = '<i class="fas fa-eye"></i> Show Unchanged';
+                  unchangedLines.forEach((line) =>
+                    line.parentElement.classList.add("diff-hidden"),
+                  );
+                  toggleBtn.innerHTML =
+                    '<i class="fas fa-eye"></i> Show Unchanged';
                 } else {
                   unchangedLines.forEach((line) =>
-                    line.parentElement.classList.remove("diff-hidden")
+                    line.parentElement.classList.remove("diff-hidden"),
                   );
-                  toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> Hide Unchanged';
+                  toggleBtn.innerHTML =
+                    '<i class="fas fa-eye-slash"></i> Hide Unchanged';
                 }
               }
 
@@ -4420,12 +5027,16 @@
                 try {
                   // Check if we have diff content to export
                   if (!this.currentDiffs || this.currentDiffs.length === 0) {
-                    this.showError("No diff content to export. Please run a comparison first.");
+                    this.showError(
+                      "No diff content to export. Please run a comparison first.",
+                    );
                     return;
                   }
 
                   // Get the file names for the export
-                  const mode = document.querySelector('input[name="comparisonMode"]:checked').value;
+                  const mode = document.querySelector(
+                    'input[name="comparisonMode"]:checked',
+                  ).value;
                   let leftFileName = "source";
                   let rightFileName = "target";
                   let exportFileName = "diff.patch";
@@ -4435,12 +5046,17 @@
                       ? this.selectedLeftFile.name || this.selectedLeftFile.path
                       : "source";
                     rightFileName = this.selectedRightFile
-                      ? this.selectedRightFile.name || this.selectedRightFile.path
+                      ? this.selectedRightFile.name ||
+                        this.selectedRightFile.path
                       : "target";
                   } else if (mode === "git") {
-                    const leftCommit = document.getElementById("leftCommitSelect").value;
-                    const rightCommit = document.getElementById("rightCommitSelect").value;
-                    const gitFile = this.selectedGitFile ? this.selectedGitFile.path : null;
+                    const leftCommit =
+                      document.getElementById("leftCommitSelect").value;
+                    const rightCommit =
+                      document.getElementById("rightCommitSelect").value;
+                    const gitFile = this.selectedGitFile
+                      ? this.selectedGitFile.path
+                      : null;
 
                     leftFileName = gitFile
                       ? `${gitFile}@${leftCommit?.substring(0, 8) || "source"}`
@@ -4451,11 +5067,17 @@
                   }
 
                   // Create a meaningful filename
-                  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").substring(0, 19);
+                  const timestamp = new Date()
+                    .toISOString()
+                    .replace(/[:.]/g, "-")
+                    .substring(0, 19);
                   exportFileName = `diff_${leftFileName.replace(/[^\w.-]/g, "_")}_vs_${rightFileName.replace(/[^\w.-]/g, "_")}_${timestamp}.patch`;
 
                   // Generate unified diff format from current diff data
-                  let unifiedDiff = this.generateUnifiedDiff(leftFileName, rightFileName);
+                  let unifiedDiff = this.generateUnifiedDiff(
+                    leftFileName,
+                    rightFileName,
+                  );
 
                   if (!unifiedDiff.trim()) {
                     this.showError("No differences found to export.");
@@ -4463,7 +5085,9 @@
                   }
 
                   // Create and download the file
-                  const blob = new Blob([unifiedDiff], { type: "text/plain;charset=utf-8" });
+                  const blob = new Blob([unifiedDiff], {
+                    type: "text/plain;charset=utf-8",
+                  });
                   const url = window.URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
@@ -4524,7 +5148,7 @@
                         hunkStart,
                         hunkLines,
                         leftLineNum,
-                        rightLineNum
+                        rightLineNum,
                       );
                       hunkStart = null;
                       hunkLines = [];
@@ -4539,9 +5163,12 @@
                       // Add context lines before the change
                       const contextBefore = Math.max(0, i - 3);
                       for (let j = contextBefore; j < i; j++) {
-                        if (this.currentDiffs[j] && this.currentDiffs[j].type === "unchanged") {
+                        if (
+                          this.currentDiffs[j] &&
+                          this.currentDiffs[j].type === "unchanged"
+                        ) {
                           hunkLines.push(
-                            ` ${this.currentDiffs[j].left || this.currentDiffs[j].right || ""}`
+                            ` ${this.currentDiffs[j].left || this.currentDiffs[j].right || ""}`,
                           );
                         }
                       }
@@ -4565,7 +5192,12 @@
 
                 // Output any remaining hunk
                 if (hunkStart !== null) {
-                  unifiedDiff += this.formatHunk(hunkStart, hunkLines, leftLineNum, rightLineNum);
+                  unifiedDiff += this.formatHunk(
+                    hunkStart,
+                    hunkLines,
+                    leftLineNum,
+                    rightLineNum,
+                  );
                 }
 
                 return unifiedDiff;
@@ -4589,7 +5221,8 @@
                     <p class="mt-3">Comparing files...</p>
                   </div>
                 `;
-                document.getElementById("comparisonSection").style.display = "block";
+                document.getElementById("comparisonSection").style.display =
+                  "block";
               }
 
               showError(message) {
@@ -4600,7 +5233,8 @@
                     <p class="mt-3 text-danger">${message}</p>
                   </div>
                 `;
-                document.getElementById("comparisonSection").style.display = "block";
+                document.getElementById("comparisonSection").style.display =
+                  "block";
               }
             }
 
@@ -4617,25 +5251,31 @@
                 setTimeout(() => {
                   console.log(
                     "GitManager: Checking if authManager is ready...",
-                    !!window.authManager
+                    !!window.authManager,
                   );
                   if (window.authManager) {
-                    console.log("GitManager: AuthManager ready, checking repository status...");
+                    console.log(
+                      "GitManager: AuthManager ready, checking repository status...",
+                    );
                     this.checkRepositoryStatus();
                   } else {
-                    console.warn("GitManager: AuthManager not ready, retrying in 1 second...");
+                    console.warn(
+                      "GitManager: AuthManager not ready, retrying in 1 second...",
+                    );
                     setTimeout(() => {
                       console.log(
                         "GitManager: Retrying repository status check...",
-                        !!window.authManager
+                        !!window.authManager,
                       );
                       if (window.authManager) {
                         this.checkRepositoryStatus();
                       } else {
-                        console.error("GitManager: AuthManager still not ready after 1.5 seconds");
+                        console.error(
+                          "GitManager: AuthManager still not ready after 1.5 seconds",
+                        );
                         this.updateStatusMessage(
                           "danger",
-                          '<i class="fas fa-times-circle"></i> Authentication system not ready. Please refresh the page.'
+                          '<i class="fas fa-times-circle"></i> Authentication system not ready. Please refresh the page.',
                         );
                       }
                     }, 1000);
@@ -4645,26 +5285,32 @@
 
               initializeEventListeners() {
                 // Refresh status button
-                document.getElementById("refreshGitStatus").addEventListener("click", () => {
-                  this.checkRepositoryStatus();
-                });
+                document
+                  .getElementById("refreshGitStatus")
+                  .addEventListener("click", () => {
+                    this.checkRepositoryStatus();
+                  });
 
                 // Sync repository button
-                document.getElementById("syncRepository").addEventListener("click", () => {
-                  this.syncRepository();
-                });
+                document
+                  .getElementById("syncRepository")
+                  .addEventListener("click", () => {
+                    this.syncRepository();
+                  });
 
                 // Clone repository button
-                document.getElementById("cloneRepository").addEventListener("click", () => {
-                  this.cloneRepository();
-                });
+                document
+                  .getElementById("cloneRepository")
+                  .addEventListener("click", () => {
+                    this.cloneRepository();
+                  });
               }
 
               async checkRepositoryStatus() {
                 this.updateStatusMessage(
                   "info",
                   '<i class="fas fa-spinner fa-spin"></i> Checking repository status...',
-                  true
+                  true,
                 );
                 this.setButtonsDisabled(true);
 
@@ -4674,7 +5320,9 @@
                     throw new Error("Authentication manager not initialized");
                   }
 
-                  const response = await window.authManager.apiRequest("/api/git/repo/status");
+                  const response = await window.authManager.apiRequest(
+                    "/api/git/repo/status",
+                  );
 
                   if (response.success) {
                     const status = response.data;
@@ -4684,45 +5332,47 @@
                       if (status.has_configs) {
                         this.updateStatusMessage(
                           "success",
-                          '<i class="fas fa-check-circle"></i> Repository is ready with configuration files.'
+                          '<i class="fas fa-check-circle"></i> Repository is ready with configuration files.',
                         );
 
                         // Auto-collapse the Git Repository Status panel when ready
                         setTimeout(() => {
                           const gitStatusPanel = document.querySelector(
-                            "#gitStatusSection .collapse-link"
+                            "#gitStatusSection .collapse-link",
                           );
                           if (gitStatusPanel) {
                             gitStatusPanel.click();
                             console.log(
-                              "GitManager: Auto-collapsed Git Repository Status panel (status: ready)"
+                              "GitManager: Auto-collapsed Git Repository Status panel (status: ready)",
                             );
                           }
                         }, 1500); // Wait 1.5 seconds to let user see the success message
                       } else {
                         this.updateStatusMessage(
                           "warning",
-                          '<i class="fas fa-exclamation-triangle"></i> Repository exists but no configuration files found.'
+                          '<i class="fas fa-exclamation-triangle"></i> Repository exists but no configuration files found.',
                         );
                       }
                       this.setButtonsDisabled(false);
                     } else if (!status.is_empty) {
                       this.updateStatusMessage(
                         "warning",
-                        '<i class="fas fa-exclamation-triangle"></i> Directory exists but is not a Git repository.'
+                        '<i class="fas fa-exclamation-triangle"></i> Directory exists but is not a Git repository.',
                       );
-                      document.getElementById("cloneRepository").disabled = false;
+                      document.getElementById("cloneRepository").disabled =
+                        false;
                     } else {
                       this.updateStatusMessage(
                         "info",
-                        '<i class="fas fa-info-circle"></i> Repository not initialized. Click "Sync Repository" to clone.'
+                        '<i class="fas fa-info-circle"></i> Repository not initialized. Click "Sync Repository" to clone.',
                       );
-                      document.getElementById("syncRepository").disabled = false;
+                      document.getElementById("syncRepository").disabled =
+                        false;
                     }
                   } else {
                     this.updateStatusMessage(
                       "danger",
-                      `<i class="fas fa-times-circle"></i> Error: ${response.message}`
+                      `<i class="fas fa-times-circle"></i> Error: ${response.message}`,
                     );
                   }
                 } catch (error) {
@@ -4737,14 +5387,15 @@
                   } else if (error.message.includes("Failed to fetch")) {
                     errorMessage += " Backend server not available.";
                   } else if (error.message.includes("401")) {
-                    errorMessage += " Authentication failed. Please log in again.";
+                    errorMessage +=
+                      " Authentication failed. Please log in again.";
                   } else {
                     errorMessage += ` Check your settings and try again. (Error: ${error.message})`;
                   }
 
                   this.updateStatusMessage(
                     "danger",
-                    `<i class="fas fa-times-circle"></i> ${errorMessage}`
+                    `<i class="fas fa-times-circle"></i> ${errorMessage}`,
                   );
                 }
               }
@@ -4753,7 +5404,7 @@
                 if (!this.selectedRepository) {
                   this.updateStatusMessage(
                     "danger",
-                    '<i class="fas fa-exclamation-triangle"></i> No repository selected'
+                    '<i class="fas fa-exclamation-triangle"></i> No repository selected',
                   );
                   return;
                 }
@@ -4761,7 +5412,7 @@
                 this.updateStatusMessage(
                   "info",
                   '<i class="fas fa-spinner fa-spin"></i> Synchronizing repository...',
-                  true
+                  true,
                 );
                 this.setButtonsDisabled(true);
 
@@ -4770,13 +5421,13 @@
                     `/api/git-repositories/${this.selectedRepository.id}/sync`,
                     {
                       method: "POST",
-                    }
+                    },
                   );
 
                   if (response.success) {
                     this.updateStatusMessage(
                       "success",
-                      `<i class="fas fa-check-circle"></i> ${response.message}`
+                      `<i class="fas fa-check-circle"></i> ${response.message}`,
                     );
 
                     // Update repository state after sync
@@ -4785,7 +5436,7 @@
                   } else {
                     this.updateStatusMessage(
                       "danger",
-                      `<i class="fas fa-times-circle"></i> Sync failed: ${response.message}`
+                      `<i class="fas fa-times-circle"></i> Sync failed: ${response.message}`,
                     );
                     this.setButtonsDisabled(false);
                   }
@@ -4793,7 +5444,7 @@
                   console.error("Error syncing repository:", error);
                   this.updateStatusMessage(
                     "danger",
-                    '<i class="fas fa-times-circle"></i> Sync failed. Check your Git settings.'
+                    '<i class="fas fa-times-circle"></i> Sync failed. Check your Git settings.',
                   );
                   this.setButtonsDisabled(false);
                 }
@@ -4803,13 +5454,15 @@
                 if (!this.selectedRepository) {
                   this.updateStatusMessage(
                     "danger",
-                    '<i class="fas fa-exclamation-triangle"></i> No repository selected'
+                    '<i class="fas fa-exclamation-triangle"></i> No repository selected',
                   );
                   return;
                 }
 
                 if (
-                  !confirm("This will backup any existing repository and clone fresh. Continue?")
+                  !confirm(
+                    "This will backup any existing repository and clone fresh. Continue?",
+                  )
                 ) {
                   return;
                 }
@@ -4817,7 +5470,7 @@
                 this.updateStatusMessage(
                   "info",
                   '<i class="fas fa-spinner fa-spin"></i> Cloning repository...',
-                  true
+                  true,
                 );
                 this.setButtonsDisabled(true);
 
@@ -4826,13 +5479,13 @@
                     `/api/git-repositories/${this.selectedRepository.id}/sync`,
                     {
                       method: "POST",
-                    }
+                    },
                   );
 
                   if (response.success) {
                     this.updateStatusMessage(
                       "success",
-                      `<i class="fas fa-check-circle"></i> ${response.message}`
+                      `<i class="fas fa-check-circle"></i> ${response.message}`,
                     );
 
                     // Update repository state after clone
@@ -4841,7 +5494,7 @@
                   } else {
                     this.updateStatusMessage(
                       "danger",
-                      `<i class="fas fa-times-circle"></i> Clone failed: ${response.message}`
+                      `<i class="fas fa-times-circle"></i> Clone failed: ${response.message}`,
                     );
                     this.setButtonsDisabled(false);
                   }
@@ -4849,7 +5502,7 @@
                   console.error("Error cloning repository:", error);
                   this.updateStatusMessage(
                     "danger",
-                    '<i class="fas fa-times-circle"></i> Clone failed. Check your Git settings.'
+                    '<i class="fas fa-times-circle"></i> Clone failed. Check your Git settings.',
                   );
                   this.setButtonsDisabled(false);
                 }
@@ -4871,11 +5524,16 @@
 
             // Initialize when DOM is loaded
             document.addEventListener("DOMContentLoaded", function () {
-              console.log("Compare page: DOM loaded, initializing components...");
+              console.log(
+                "Compare page: DOM loaded, initializing components...",
+              );
 
               // Delay ConfigCompare initialization to ensure authManager is fully ready
               setTimeout(() => {
-                console.log("Compare page: Creating ConfigCompare...", !!window.authManager);
+                console.log(
+                  "Compare page: Creating ConfigCompare...",
+                  !!window.authManager,
+                );
                 configCompare = new ConfigCompare();
               }, 800);
 

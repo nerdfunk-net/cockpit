@@ -117,7 +117,9 @@ Then inject environment variables during build:
 const apiUrl = CockpitConfig.getApiUrl("/api/nautobot/locations");
 
 // Use predefined endpoints
-const locationsUrl = CockpitConfig.getApiUrl(CockpitConfig.api.endpoints.nautobot.locations);
+const locationsUrl = CockpitConfig.getApiUrl(
+  CockpitConfig.api.endpoints.nautobot.locations,
+);
 ```
 
 ### Environment Checks

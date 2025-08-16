@@ -14,15 +14,19 @@
       async function testGitStatus() {
         try {
           if (!window.authManager) {
-            document.getElementById("results").innerHTML = "AuthManager not ready";
+            document.getElementById("results").innerHTML =
+              "AuthManager not ready";
             return;
           }
 
-          const response = await window.authManager.apiRequest("/api/git/status");
+          const response =
+            await window.authManager.apiRequest("/api/git/status");
           console.log("Git Status Response:", response);
 
           document.getElementById("results").innerHTML =
-            "<h2>Git Status Response:</h2><pre>" + JSON.stringify(response, null, 2) + "</pre>";
+            "<h2>Git Status Response:</h2><pre>" +
+            JSON.stringify(response, null, 2) +
+            "</pre>";
 
           if (response.commits) {
             document.getElementById("results").innerHTML +=
@@ -30,22 +34,28 @@
           }
         } catch (error) {
           console.error("Git Status Error:", error);
-          document.getElementById("results").innerHTML = "Error: " + error.message;
+          document.getElementById("results").innerHTML =
+            "Error: " + error.message;
         }
       }
 
       async function testGitCommits() {
         try {
           if (!window.authManager) {
-            document.getElementById("results").innerHTML = "AuthManager not ready";
+            document.getElementById("results").innerHTML =
+              "AuthManager not ready";
             return;
           }
 
-          const response = await window.authManager.apiRequest("/api/git/commits/main");
+          const response = await window.authManager.apiRequest(
+            "/api/git/commits/main",
+          );
           console.log("Git Commits Response:", response);
 
           document.getElementById("results").innerHTML =
-            "<h2>Git Commits Response:</h2><pre>" + JSON.stringify(response, null, 2) + "</pre>";
+            "<h2>Git Commits Response:</h2><pre>" +
+            JSON.stringify(response, null, 2) +
+            "</pre>";
 
           if (Array.isArray(response)) {
             document.getElementById("results").innerHTML +=
@@ -53,7 +63,8 @@
           }
         } catch (error) {
           console.error("Git Commits Error:", error);
-          document.getElementById("results").innerHTML = "Error: " + error.message;
+          document.getElementById("results").innerHTML =
+            "Error: " + error.message;
         }
       }
 

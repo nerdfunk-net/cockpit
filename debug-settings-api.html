@@ -22,15 +22,22 @@
 
           // Test Git settings API
           console.log("Fetching Git settings...");
-          const gitResponse = await window.authManager.apiRequest("/api/settings/git");
+          const gitResponse =
+            await window.authManager.apiRequest("/api/settings/git");
           console.log("Git API Response:", gitResponse);
 
           resultsDiv.innerHTML += "<h2>Git Settings API Response:</h2>";
-          resultsDiv.innerHTML += "<pre>" + JSON.stringify(gitResponse, null, 2) + "</pre>";
+          resultsDiv.innerHTML +=
+            "<pre>" + JSON.stringify(gitResponse, null, 2) + "</pre>";
 
           // Test specific value
           const sslValue = gitResponse.data?.verify_ssl;
-          console.log("Git SSL Verification value:", sslValue, "Type:", typeof sslValue);
+          console.log(
+            "Git SSL Verification value:",
+            sslValue,
+            "Type:",
+            typeof sslValue,
+          );
           resultsDiv.innerHTML +=
             "<p><strong>Git SSL Verification:</strong> " +
             sslValue +
@@ -40,11 +47,14 @@
 
           // Test Nautobot settings API
           console.log("Fetching Nautobot settings...");
-          const nautobotResponse = await window.authManager.apiRequest("/api/settings/nautobot");
+          const nautobotResponse = await window.authManager.apiRequest(
+            "/api/settings/nautobot",
+          );
           console.log("Nautobot API Response:", nautobotResponse);
 
           resultsDiv.innerHTML += "<h2>Nautobot Settings API Response:</h2>";
-          resultsDiv.innerHTML += "<pre>" + JSON.stringify(nautobotResponse, null, 2) + "</pre>";
+          resultsDiv.innerHTML +=
+            "<pre>" + JSON.stringify(nautobotResponse, null, 2) + "</pre>";
 
           // Test specific value
           const nautobotSSLValue = nautobotResponse.data?.verify_ssl;
@@ -52,7 +62,7 @@
             "Nautobot SSL Verification value:",
             nautobotSSLValue,
             "Type:",
-            typeof nautobotSSLValue
+            typeof nautobotSSLValue,
           );
           resultsDiv.innerHTML +=
             "<p><strong>Nautobot SSL Verification:</strong> " +

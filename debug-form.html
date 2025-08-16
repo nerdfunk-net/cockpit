@@ -8,7 +8,12 @@
 
     <div>
       <h2>Test IP Validation</h2>
-      <input type="text" id="test-ip" placeholder="Enter IP" value="192.168.1.100" />
+      <input
+        type="text"
+        id="test-ip"
+        placeholder="Enter IP"
+        value="192.168.1.100"
+      />
       <button onclick="testIP()">Test IP Validation</button>
       <div id="ip-result"></div>
     </div>
@@ -30,7 +35,7 @@
       // Set auth token first
       localStorage.setItem(
         "auth_token",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MzQ2MDkyN30.n58MeEeNzlrouNgCH3z34kPY73aBOkQ4z3GtMHdypRw"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MzQ2MDkyN30.n58MeEeNzlrouNgCH3z34kPY73aBOkQ4z3GtMHdypRw",
       );
 
       function testIP() {
@@ -38,20 +43,24 @@
         const regex =
           /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
         const isValid = regex.test(ip);
-        document.getElementById("ip-result").innerHTML = `<p>IP: ${ip} - Valid: ${isValid}</p>`;
+        document.getElementById("ip-result").innerHTML =
+          `<p>IP: ${ip} - Valid: ${isValid}</p>`;
       }
 
       async function testCheckIP() {
         const token = localStorage.getItem("auth_token");
         try {
-          const response = await fetch("http://localhost:8000/api/nautobot/check-ip", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
+          const response = await fetch(
+            "http://localhost:8000/api/nautobot/check-ip",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ ip_address: "192.168.1.100" }),
             },
-            body: JSON.stringify({ ip_address: "192.168.1.100" }),
-          });
+          );
 
           const result = await response.json();
           document.getElementById("api-result").innerHTML =
@@ -65,12 +74,15 @@
       async function testDropdowns() {
         const token = localStorage.getItem("auth_token");
         try {
-          const response = await fetch("http://localhost:8000/api/nautobot/locations", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
+          const response = await fetch(
+            "http://localhost:8000/api/nautobot/locations",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
             },
-          });
+          );
 
           const result = await response.json();
           document.getElementById("api-result").innerHTML =
@@ -83,7 +95,10 @@
 
       function checkFormFields() {
         // Open the onboard page in a new window and check its form
-        const newWindow = window.open("http://localhost:3000/onboard-device.html", "_blank");
+        const newWindow = window.open(
+          "http://localhost:3000/onboard-device.html",
+          "_blank",
+        );
 
         setTimeout(() => {
           try {

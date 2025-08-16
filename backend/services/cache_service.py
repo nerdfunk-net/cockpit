@@ -41,6 +41,11 @@ class CacheService:
             for k in keys:
                 del self._cache[k]
 
+    def clear_all(self) -> None:
+        """Remove all cache entries."""
+        with self._lock:
+            self._cache.clear()
+
     def stats(self) -> Dict[str, Any]:
         with self._lock:
             return {

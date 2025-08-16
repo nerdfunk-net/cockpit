@@ -38,7 +38,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const myDropzone = new Dropzone(dropzoneElement, {
         url: "#", // Since this is a demo, we'll use a dummy URL
         maxFilesize: 20, // MB
-        acceptedFiles: "image/*,application/pdf,.psd,.doc,.docx,.xls,.xlsx,.ppt,.pptx",
+        acceptedFiles:
+          "image/*,application/pdf,.psd,.doc,.docx,.xls,.xlsx,.ppt,.pptx",
         addRemoveLinks: true,
         dictDefaultMessage: `
                     <div class="text-center">
@@ -50,8 +51,10 @@ document.addEventListener("DOMContentLoaded", function () {
         dictRemoveFile: "Remove file",
         dictCancelUpload: "Cancel upload",
         dictUploadCanceled: "Upload canceled",
-        dictCancelUploadConfirmation: "Are you sure you want to cancel this upload?",
-        dictRemoveFileConfirmation: "Are you sure you want to remove this file?",
+        dictCancelUploadConfirmation:
+          "Are you sure you want to cancel this upload?",
+        dictRemoveFileConfirmation:
+          "Are you sure you want to remove this file?",
 
         // Custom styling
         previewTemplate: `

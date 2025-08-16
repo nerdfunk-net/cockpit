@@ -20,19 +20,25 @@
 ```html
 <!-- Nautobot SSL -->
 <input type="checkbox" id="nautobot-verify-ssl" class="form-check-input" />
-<label for="nautobot-verify-ssl" class="form-check-label">Verify SSL certificates</label>
+<label for="nautobot-verify-ssl" class="form-check-label"
+  >Verify SSL certificates</label
+>
 
 <!-- Git SSL -->
 <input type="checkbox" id="git-verify-ssl" class="form-check-input" />
-<label for="git-verify-ssl" class="form-check-label">Verify SSL certificates</label>
+<label for="git-verify-ssl" class="form-check-label"
+  >Verify SSL certificates</label
+>
 ```
 
 ### JavaScript Logic (Simplified)
 
 ```javascript
 // Load from database
-document.getElementById("nautobot-verify-ssl").checked = settings.nautobot.verify_ssl === true;
-document.getElementById("git-verify-ssl").checked = settings.git.verify_ssl === true;
+document.getElementById("nautobot-verify-ssl").checked =
+  settings.nautobot.verify_ssl === true;
+document.getElementById("git-verify-ssl").checked =
+  settings.git.verify_ssl === true;
 
 // Save to database
 verify_ssl: document.getElementById("nautobot-verify-ssl").checked;

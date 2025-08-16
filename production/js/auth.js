@@ -21,13 +21,20 @@ class AuthManager {
 
     // Check for container override
     if (window.COCKPIT_API_URL) {
-      console.log("🔐 AuthManager: Found COCKPIT_API_URL override:", window.COCKPIT_API_URL);
-      console.log("🔐 AuthManager: Container mode active:", !!window.COCKPIT_CONTAINER_MODE);
+      console.log(
+        "🔐 AuthManager: Found COCKPIT_API_URL override:",
+        window.COCKPIT_API_URL,
+      );
+      console.log(
+        "🔐 AuthManager: Container mode active:",
+        !!window.COCKPIT_CONTAINER_MODE,
+      );
     }
 
     // Determine if we're in development mode (Vite dev server)
     // Check multiple indicators: port, baseURL, and whether container config was bypassed
-    const portBasedDev = window.location.port === "3000" || window.location.port === "3001";
+    const portBasedDev =
+      window.location.port === "3000" || window.location.port === "3001";
     const baseURLEmpty = this.baseURL === "";
     const containerModeBypassed = !window.COCKPIT_CONTAINER_MODE; // If no container mode, we're likely in Vite
 
@@ -46,6 +53,15 @@ class AuthManager {
     this.user = JSON.parse(localStorage.getItem("user_info") || "null");
     this.tokenExpiry = localStorage.getItem("token_expiry");
 
+    // Refresh configuration
+    this.refreshThresholdMs = 2 * 60 * 1000; // 2 minutes before expiry
+    // Consider user active within last 10 minutes for keeping session alive
+    this.activityWindowMs = 10 * 60 * 1000;
+    // Max idle timeout: logout after 10 minutes of no activity
+    this.idleTimeoutMs = 10 * 60 * 1000;
+    this.lastActivity = Date.now();
+    this._refreshInFlight = false;
+
     console.log("🔐 AuthManager: Auth state:", {
       hasToken: !!this.token,
       hasUser: !!this.user,
@@ -57,6 +73,13 @@ class AuthManager {
       // Use a small delay to ensure DOM is ready
       setTimeout(() => this.updateUserDisplay(), 100);
     }
+
+    // Track user activity to keep session alive when user is active
+    this._attachActivityListeners();
+
+    // Periodically check and refresh if near expiry
+    this._startRefreshScheduler();
+    this._startIdleWatcher();
 
     console.log("🔐 AuthManager: Constructor complete. Final config:", {
       baseURL: this.baseURL,
@@ -77,7 +100,9 @@ class AuthManager {
 
     try {
       // Use relative URL in development mode (Vite proxy handles routing)
-      const url = this.isDevelopment ? "/auth/login" : `${this.baseURL}/auth/login`;
+      const url = this.isDevelopment
+        ? "/auth/login"
+        : `${this.baseURL}/auth/login`;
       console.log("🔐 AuthManager: Login URL constructed:", url);
       console.log("🔐 AuthManager: Request details:", {
         url,
@@ -130,7 +155,9 @@ class AuthManager {
   async register(username, password, email, fullName) {
     try {
       // Use relative URL in development mode (Vite proxy handles routing)
-      const url = this.isDevelopment ? "/auth/register" : `${this.baseURL}/auth/register`;
+      const url = this.isDevelopment
+        ? "/auth/register"
+        : `${this.baseURL}/auth/register`;
 
       const response = await fetch(url, {
         method: "POST",
@@ -194,9 +221,8 @@ class AuthManager {
       return false;
     }
 
-    // Check if token is expired (with 5-minute buffer)
-    const fiveMinutes = 5 * 60 * 1000;
-    if (Date.now() > parseInt(this.tokenExpiry) - fiveMinutes) {
+    // Only consider the token invalid once it's actually expired
+    if (Date.now() > parseInt(this.tokenExpiry)) {
       this.logout();
       return false;
     }
@@ -215,6 +241,9 @@ class AuthManager {
    * Make authenticated API request
    */
   async apiRequest(endpoint, options = {}) {
+    // Try refreshing if we're close to expiry and the user is active
+    await this._maybeRefresh();
+
     if (!this.isAuthenticated()) {
       throw new Error("Not authenticated");
     }
@@ -263,8 +292,15 @@ class AuthManager {
                 msg = errBody.detail
                   .map((d) => {
                     if (typeof d === "string") return d;
-                    const loc = Array.isArray(d.loc) ? d.loc.join(".") : d.loc || "";
-                    const m = d.msg || d.message || d.detail || d.type || JSON.stringify(d);
+                    const loc = Array.isArray(d.loc)
+                      ? d.loc.join(".")
+                      : d.loc || "";
+                    const m =
+                      d.msg ||
+                      d.message ||
+                      d.detail ||
+                      d.type ||
+                      JSON.stringify(d);
                     return loc ? `${loc}: ${m}` : String(m);
                   })
                   .join("\n");
@@ -315,6 +351,9 @@ class AuthManager {
    * Protect page - redirect to login if not authenticated
    */
   requireAuth() {
+    // Try refreshing before redirecting if near expiry
+    // Note: this is fire-and-forget; requireAuth callers run at DOMContentLoaded
+    this._maybeRefresh();
     if (!this.isAuthenticated()) {
       window.location.href = "login.html";
       return false;
@@ -346,7 +385,9 @@ class AuthManager {
       }
 
       // Legacy support for existing selectors (in case other pages use them)
-      const profileNameElements = document.querySelectorAll(".profile_info h2, .user-profile");
+      const profileNameElements = document.querySelectorAll(
+        ".profile_info h2, .user-profile",
+      );
       profileNameElements.forEach((element) => {
         // Skip elements we've already handled with specific IDs
         if (element.id === "sidebar-username") return;
@@ -356,16 +397,23 @@ class AuthManager {
           const img = element.querySelector("img");
           element.innerHTML = "";
           if (img) element.appendChild(img);
-          element.appendChild(document.createTextNode(this.user.full_name || this.user.username));
+          element.appendChild(
+            document.createTextNode(this.user.full_name || this.user.username),
+          );
         } else {
           element.textContent = this.user.full_name || this.user.username;
         }
       });
 
       // Legacy welcome message support
-      const welcomeElements = document.querySelectorAll(".profile_info span:not(#welcome-message)");
+      const welcomeElements = document.querySelectorAll(
+        ".profile_info span:not(#welcome-message)",
+      );
       welcomeElements.forEach((element) => {
-        if (element.textContent === "Welcome," || element.textContent.startsWith("Welcome,")) {
+        if (
+          element.textContent === "Welcome," ||
+          element.textContent.startsWith("Welcome,")
+        ) {
           element.textContent = `Welcome, ${this.user.username}!`;
         }
       });
@@ -386,6 +434,92 @@ class AuthManager {
         welcomeMessage.textContent = "Welcome,";
       }
     }
+  }
+
+  // ----- Refresh & Activity helpers -----
+  _attachActivityListeners() {
+    const mark = () => (this.lastActivity = Date.now());
+    [
+      "mousemove",
+      "keydown",
+      "click",
+      "scroll",
+      "touchstart",
+      "visibilitychange",
+    ].forEach((evt) => window.addEventListener(evt, mark, { passive: true }));
+  }
+
+  _startRefreshScheduler() {
+    // Check every 30 seconds
+    setInterval(() => {
+      this._maybeRefresh();
+    }, 30 * 1000);
+  }
+
+  async _maybeRefresh() {
+    try {
+      if (!this.token || !this.tokenExpiry || this._refreshInFlight) return;
+      const now = Date.now();
+      const exp = parseInt(this.tokenExpiry);
+      const timeLeft = exp - now;
+      const recentlyActive = now - this.lastActivity <= this.activityWindowMs;
+
+      if (
+        timeLeft > 0 &&
+        timeLeft <= this.refreshThresholdMs &&
+        recentlyActive
+      ) {
+        await this._refreshToken();
+      }
+    } catch (err) {
+      console.warn("Token refresh attempt failed:", err);
+    }
+  }
+
+  async _refreshToken() {
+    if (this._refreshInFlight) return;
+    this._refreshInFlight = true;
+    try {
+      const endpoint = "/auth/refresh";
+      const url = this.isDevelopment ? endpoint : `${this.baseURL}${endpoint}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Refresh failed: HTTP ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Update token and expiry (reuse existing user object)
+      this.token = data.access_token;
+      this.tokenExpiry = Date.now() + data.expires_in * 1000;
+      localStorage.setItem("auth_token", this.token);
+      localStorage.setItem("token_expiry", this.tokenExpiry);
+
+      // Optionally update user from response if present
+      if (data.user) {
+        this.user = data.user;
+        localStorage.setItem("user_info", JSON.stringify(this.user));
+      }
+    } finally {
+      this._refreshInFlight = false;
+    }
+  }
+
+  _startIdleWatcher() {
+    setInterval(() => {
+      if (!this.token || !this.tokenExpiry) return;
+      const now = Date.now();
+      if (now - this.lastActivity > this.idleTimeoutMs) {
+        console.log("Logging out due to inactivity");
+        this.logout();
+      }
+    }, 30 * 1000);
   }
 }
 
@@ -431,7 +565,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   logoutSelectors.forEach((selector) => {
     const logoutLinks = document.querySelectorAll(selector);
-    console.log(`Auth.js: Found ${logoutLinks.length} elements for selector '${selector}'`); // Debug log
+    console.log(
+      `Auth.js: Found ${logoutLinks.length} elements for selector '${selector}'`,
+    ); // Debug log
 
     logoutLinks.forEach((link) => {
       // Check if link text contains logout-related words or has logout attributes

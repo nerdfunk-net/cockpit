@@ -161,15 +161,23 @@
               (function () {
                 function updateSidebar() {
                   try {
-                    const userInfo = JSON.parse(localStorage.getItem("user_info") || "null");
+                    const userInfo = JSON.parse(
+                      localStorage.getItem("user_info") || "null",
+                    );
                     console.log("Updating sidebar with user info:", userInfo);
 
-                    const usernameElement = document.getElementById("sidebar-username");
+                    const usernameElement =
+                      document.getElementById("sidebar-username");
                     if (usernameElement && userInfo && userInfo.username) {
                       usernameElement.textContent = userInfo.username;
-                      console.log("Updated sidebar username:", userInfo.username);
+                      console.log(
+                        "Updated sidebar username:",
+                        userInfo.username,
+                      );
                     } else {
-                      console.log("Could not update sidebar - missing element or user info");
+                      console.log(
+                        "Could not update sidebar - missing element or user info",
+                      );
                     }
                   } catch (error) {
                     console.error("Error updating sidebar:", error);
@@ -190,7 +198,10 @@
             <br />
 
             <!-- sidebar menu -->
-            <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+            <div
+              id="sidebar-menu"
+              class="main_menu_side hidden-print main_menu"
+            >
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
@@ -209,7 +220,9 @@
                         >
                       </li>
                       <li>
-                        <a href="sync_devices.html"><i class="fas fa-sync"></i> Sync Devices</a>
+                        <a href="sync_devices.html"
+                          ><i class="fas fa-sync"></i> Sync Devices</a
+                        >
                       </li>
                       <li>
                         <a href="scan-and-add.html"
@@ -220,7 +233,8 @@
                   </li>
                   <li>
                     <a
-                      ><i class="fas fa-cogs"></i> Configs <span class="fas fa-chevron-down"></span
+                      ><i class="fas fa-cogs"></i> Configs
+                      <span class="fas fa-chevron-down"></span
                     ></a>
                     <ul class="nav child_menu">
                       <li>
@@ -229,17 +243,22 @@
                         >
                       </li>
                       <li>
-                        <a href="compare.html"><i class="fas fa-exchange-alt"></i> Compare</a>
+                        <a href="compare.html"
+                          ><i class="fas fa-exchange-alt"></i> Compare</a
+                        >
                       </li>
                     </ul>
                   </li>
                   <li>
                     <a
-                      ><i class="fas fa-cogs"></i> Ansible <span class="fas fa-chevron-down"></span
+                      ><i class="fas fa-cogs"></i> Ansible
+                      <span class="fas fa-chevron-down"></span
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="ansible-inventory.html"><i class="fas fa-list"></i> Inventory</a>
+                        <a href="ansible-inventory.html"
+                          ><i class="fas fa-list"></i> Inventory</a
+                        >
                       </li>
                     </ul>
                   </li>
@@ -250,7 +269,9 @@
                     ></a>
                     <ul class="nav child_menu">
                       <li>
-                        <a href="settings-nautobot.html"><i class="fas fa-server"></i> Nautobot</a>
+                        <a href="settings-nautobot.html"
+                          ><i class="fas fa-server"></i> Nautobot</a
+                        >
                       </li>
                       <li>
                         <a href="settings-templates.html"
@@ -263,7 +284,9 @@
                         >
                       </li>
                       <li>
-                        <a href="settings-cache.html"><i class="fas fa-bolt"></i> Cache</a>
+                        <a href="settings-cache.html"
+                          ><i class="fas fa-bolt"></i> Cache</a
+                        >
                       </li>
                       <li>
                         <a href="settings-credentials.html"
@@ -290,13 +313,22 @@
               >
                 <span class="fas fa-cog" aria-hidden="true"></span>
               </a>
-              <a data-bs-toggle="tooltip" data-bs-placement="top" title="FullScreen">
+              <a
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="FullScreen"
+              >
                 <span class="fas fa-expand" aria-hidden="true"></span>
               </a>
               <a data-bs-toggle="tooltip" data-bs-placement="top" title="Lock">
                 <span class="fas fa-eye-slash" aria-hidden="true"></span>
               </a>
-              <a data-bs-toggle="tooltip" data-bs-placement="top" title="Logout" href="login.html">
+              <a
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Logout"
+                href="login.html"
+              >
                 <span class="fas fa-power-off" aria-hidden="true"></span>
               </a>
             </div>
@@ -368,8 +400,13 @@
                     <!-- Status Panel -->
                     <div class="row mb-4">
                       <div class="col-md-12">
-                        <div class="alert alert-info" role="alert" id="status-panel">
-                          <i class="fas fa-info-circle"></i> Ready to perform backup operations.
+                        <div
+                          class="alert alert-info"
+                          role="alert"
+                          id="status-panel"
+                        >
+                          <i class="fas fa-info-circle"></i> Ready to perform
+                          backup operations.
                         </div>
                       </div>
                     </div>
@@ -387,7 +424,9 @@
                         </button>
                       </div>
                       <div class="col-md-6 col-sm-12">
-                        <div class="d-flex justify-content-md-end flex-wrap gap-2">
+                        <div
+                          class="d-flex justify-content-md-end flex-wrap gap-2"
+                        >
                           <div class="form-group mb-0 me-2">
                             <label for="backup-date-filter" class="form-label"
                               >Last Backup Date</label
@@ -400,7 +439,9 @@
                             />
                           </div>
                           <div class="form-group mb-0 me-2">
-                            <label for="date-comparison" class="form-label">Date Comparison</label>
+                            <label for="date-comparison" class="form-label"
+                              >Date Comparison</label
+                            >
                             <select class="form-control" id="date-comparison">
                               <option value="">No Date Filter</option>
                               <option value="lte">≤ (Less/Equal)</option>
@@ -408,7 +449,9 @@
                             </select>
                           </div>
                           <div class="form-group mb-0" style="min-width: 42px">
-                            <label class="form-label d-block" style="visibility: hidden"
+                            <label
+                              class="form-label d-block"
+                              style="visibility: hidden"
                               >Clear</label
                             >
                             <button
@@ -444,7 +487,10 @@
                             <th class="column-title">
                               Role
                               <div class="header-filter mt-1">
-                                <select class="form-control form-control-sm" id="role-filter">
+                                <select
+                                  class="form-control form-control-sm"
+                                  id="role-filter"
+                                >
                                   <option value="">All Roles</option>
                                 </select>
                               </div>
@@ -452,7 +498,10 @@
                             <th class="column-title">
                               Location
                               <div class="header-filter mt-1">
-                                <select class="form-control form-control-sm" id="location-filter">
+                                <select
+                                  class="form-control form-control-sm"
+                                  id="location-filter"
+                                >
                                   <option value="">All Locations</option>
                                 </select>
                               </div>
@@ -471,7 +520,10 @@
                             <th class="column-title">
                               Status
                               <div class="header-filter mt-1">
-                                <select class="form-control form-control-sm" id="status-filter">
+                                <select
+                                  class="form-control form-control-sm"
+                                  id="status-filter"
+                                >
                                   <option value="">All Statuses</option>
                                 </select>
                               </div>
@@ -496,15 +548,18 @@
                           <!-- Loading state -->
                           <tr>
                             <td colspan="8" class="text-center">
-                              <i class="fas fa-spinner fa-spin"></i> Loading devices from
-                              Nautobot...
+                              <i class="fas fa-spinner fa-spin"></i> Loading
+                              devices from Nautobot...
                             </td>
                           </tr>
                         </tbody>
                       </table>
 
                       <!-- Pagination Container -->
-                      <div id="backup-pagination" class="pagination-container"></div>
+                      <div
+                        id="backup-pagination"
+                        class="pagination-container"
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -526,7 +581,9 @@
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="backupHistoryModalLabel">Backup History</h5>
+                <h5 class="modal-title" id="backupHistoryModalLabel">
+                  Backup History
+                </h5>
                 <button
                   type="button"
                   class="btn-close"
@@ -552,7 +609,11 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
                   Close
                 </button>
               </div>
@@ -572,7 +633,9 @@
           <div class="modal-dialog" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="scheduleBackupModalLabel">Schedule Backup</h5>
+                <h5 class="modal-title" id="scheduleBackupModalLabel">
+                  Schedule Backup
+                </h5>
                 <button
                   type="button"
                   class="btn-close"
@@ -602,15 +665,23 @@
                       <option value="custom">Custom</option>
                     </select>
                   </div>
-                  <div class="form-group mb-3" id="custom-schedule-group" style="display: none">
-                    <label for="custom-schedule">Custom Schedule (Cron Expression)</label>
+                  <div
+                    class="form-group mb-3"
+                    id="custom-schedule-group"
+                    style="display: none"
+                  >
+                    <label for="custom-schedule"
+                      >Custom Schedule (Cron Expression)</label
+                    >
                     <input
                       type="text"
                       class="form-control"
                       id="custom-schedule"
                       placeholder="0 2 * * *"
                     />
-                    <small class="form-text text-muted">Enter a valid cron expression</small>
+                    <small class="form-text text-muted"
+                      >Enter a valid cron expression</small
+                    >
                   </div>
                   <div class="form-group mb-3">
                     <label for="retention-days">Retention (Days)</label>
@@ -626,10 +697,18 @@
                 </form>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
                   Cancel
                 </button>
-                <button type="button" class="btn btn-primary" id="save-schedule-btn">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  id="save-schedule-btn"
+                >
                   Save Schedule
                 </button>
               </div>
@@ -688,7 +767,7 @@
           deviceNameFilter = "",
           useBackendPagination = false,
           limit = null,
-          offset = 0
+          offset = 0,
         ) {
           try {
             if (isLoading) {
@@ -707,8 +786,14 @@
             if (!window.authManager) {
               console.warn("AuthManager not available, retrying in 500ms...");
               setTimeout(
-                () => loadDevices(deviceNameFilter, useBackendPagination, limit, offset),
-                500
+                () =>
+                  loadDevices(
+                    deviceNameFilter,
+                    useBackendPagination,
+                    limit,
+                    offset,
+                  ),
+                500,
               );
               return;
             }
@@ -732,7 +817,10 @@
             }
 
             console.log("API URL:", apiUrl);
-            updateStatusPanel(`<i class="fas fa-spinner fa-spin"></i> Loading devices...`, "info");
+            updateStatusPanel(
+              `<i class="fas fa-spinner fa-spin"></i> Loading devices...`,
+              "info",
+            );
 
             const response = await window.authManager.apiRequest(apiUrl);
             console.log("API response:", response);
@@ -753,7 +841,7 @@
                 // Backend pagination mode - display current page of devices
                 allDevices = response.devices;
                 console.log(
-                  `Loaded ${allDevices.length} devices (page ${Math.floor(offset / limit) + 1})`
+                  `Loaded ${allDevices.length} devices (page ${Math.floor(offset / limit) + 1})`,
                 );
 
                 // For backend pagination, we work with the current page data
@@ -765,12 +853,14 @@
 
                 updateStatusPanel(
                   `<i class="fas fa-check-circle"></i> Loaded ${allDevices.length} devices (${paginationState.totalCount} total).`,
-                  "success"
+                  "success",
                 );
               } else {
                 // Full data load mode - load all devices for client-side filtering
                 allDevices = response.devices;
-                console.log(`Loaded ${allDevices.length} devices from Nautobot`);
+                console.log(
+                  `Loaded ${allDevices.length} devices from Nautobot`,
+                );
 
                 // Extract filter options from loaded devices
                 extractFilterOptions(allDevices);
@@ -780,12 +870,17 @@
                 renderDevicesTable(allDevices);
                 updateStatusPanel(
                   `<i class="fas fa-check-circle"></i> Successfully loaded ${allDevices.length} devices from Nautobot.`,
-                  "success"
+                  "success",
                 );
               }
             } else {
-              console.error("Failed to load devices - invalid response:", response);
-              showError("Failed to load devices from Nautobot: Invalid response format");
+              console.error(
+                "Failed to load devices - invalid response:",
+                response,
+              );
+              showError(
+                "Failed to load devices from Nautobot: Invalid response format",
+              );
             }
           } catch (error) {
             console.error("Error loading devices:", error);
@@ -807,9 +902,12 @@
 
           devices.forEach((device) => {
             if (device.role?.name) filterOptions.roles.add(device.role.name);
-            if (device.location?.name) filterOptions.locations.add(device.location.name);
-            if (device.device_type?.model) filterOptions.deviceTypes.add(device.device_type.model);
-            if (device.status?.name) filterOptions.statuses.add(device.status.name);
+            if (device.location?.name)
+              filterOptions.locations.add(device.location.name);
+            if (device.device_type?.model)
+              filterOptions.deviceTypes.add(device.device_type.model);
+            if (device.status?.name)
+              filterOptions.statuses.add(device.status.name);
           });
 
           console.log("Filter options extracted:", {
@@ -841,7 +939,8 @@
           // Populate location filter
           const locationFilter = document.getElementById("location-filter");
           if (locationFilter) {
-            locationFilter.innerHTML = '<option value="">All Locations</option>';
+            locationFilter.innerHTML =
+              '<option value="">All Locations</option>';
             Array.from(filterOptions.locations)
               .sort()
               .forEach((location) => {
@@ -853,7 +952,8 @@
           }
 
           // Populate device type filter
-          const deviceTypeFilter = document.getElementById("device-type-filter");
+          const deviceTypeFilter =
+            document.getElementById("device-type-filter");
           if (deviceTypeFilter) {
             deviceTypeFilter.innerHTML = '<option value="">All Types</option>';
             Array.from(filterOptions.deviceTypes)
@@ -888,10 +988,12 @@
 
         // Initialize header filter event listeners
         function initializeHeaderFilterListeners() {
-          const deviceNameFilter = document.getElementById("device-name-filter");
+          const deviceNameFilter =
+            document.getElementById("device-name-filter");
           const roleFilter = document.getElementById("role-filter");
           const locationFilter = document.getElementById("location-filter");
-          const deviceTypeFilter = document.getElementById("device-type-filter");
+          const deviceTypeFilter =
+            document.getElementById("device-type-filter");
           const statusFilter = document.getElementById("status-filter");
 
           // Device name filter with debouncing and backend search
@@ -909,7 +1011,9 @@
                   loadDevices(deviceName, true, pageSize, 0);
                 } else if (deviceName.length === 0) {
                   // Clear filter - load all devices in full mode
-                  console.log("Clearing device name filter, loading all devices");
+                  console.log(
+                    "Clearing device name filter, loading all devices",
+                  );
                   loadDevices("", false);
                 } else {
                   // Less than 3 characters - apply client-side filtering only
@@ -1016,12 +1120,23 @@
             }
 
             // Header filters
-            if (currentRoleFilter && device.role?.name !== currentRoleFilter) return false;
-            if (currentLocationFilter && device.location?.name !== currentLocationFilter)
+            if (currentRoleFilter && device.role?.name !== currentRoleFilter)
               return false;
-            if (currentDeviceTypeFilter && device.device_type?.model !== currentDeviceTypeFilter)
+            if (
+              currentLocationFilter &&
+              device.location?.name !== currentLocationFilter
+            )
               return false;
-            if (currentStatusFilter && device.status?.name !== currentStatusFilter) return false;
+            if (
+              currentDeviceTypeFilter &&
+              device.device_type?.model !== currentDeviceTypeFilter
+            )
+              return false;
+            if (
+              currentStatusFilter &&
+              device.status?.name !== currentStatusFilter
+            )
+              return false;
 
             // Date filter
             if (currentDateFilter && currentDateComparison) {
@@ -1030,11 +1145,16 @@
                 const backupDate = new Date(deviceBackupDate);
                 const filterDate = new Date(currentDateFilter);
 
-                if (currentDateComparison === "lte" && backupDate > filterDate) return false;
-                if (currentDateComparison === "lt" && backupDate >= filterDate) return false;
+                if (currentDateComparison === "lte" && backupDate > filterDate)
+                  return false;
+                if (currentDateComparison === "lt" && backupDate >= filterDate)
+                  return false;
               } else if (deviceBackupDate === "Never" || !deviceBackupDate) {
                 // Handle devices with no backup date based on filter logic
-                if (currentDateComparison === "lte" || currentDateComparison === "lt") {
+                if (
+                  currentDateComparison === "lte" ||
+                  currentDateComparison === "lt"
+                ) {
                   return false; // Exclude devices with no backup when filtering by date
                 }
               }
@@ -1045,7 +1165,11 @@
 
           // Apply sorting if a column is selected
           if (currentSortColumn && currentSortOrder !== "none") {
-            filtered = sortDevices(filtered, currentSortColumn, currentSortOrder);
+            filtered = sortDevices(
+              filtered,
+              currentSortColumn,
+              currentSortOrder,
+            );
           }
 
           currentPage = 0; // Reset to first page
@@ -1072,7 +1196,7 @@
           } else {
             updateStatusPanel(
               `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices`,
-              "success"
+              "success",
             );
           }
         }
@@ -1113,13 +1237,22 @@
               element: document.getElementById("device-name-filter"),
               value: currentDeviceNameFilter,
             },
-            { element: document.getElementById("role-filter"), value: currentRoleFilter },
-            { element: document.getElementById("location-filter"), value: currentLocationFilter },
+            {
+              element: document.getElementById("role-filter"),
+              value: currentRoleFilter,
+            },
+            {
+              element: document.getElementById("location-filter"),
+              value: currentLocationFilter,
+            },
             {
               element: document.getElementById("device-type-filter"),
               value: currentDeviceTypeFilter,
             },
-            { element: document.getElementById("status-filter"), value: currentStatusFilter },
+            {
+              element: document.getElementById("status-filter"),
+              value: currentStatusFilter,
+            },
           ];
 
           filters.forEach((filter) => {
@@ -1148,12 +1281,14 @@
           currentPage = 0;
 
           // Reset form inputs
-          const deviceNameFilter = document.getElementById("device-name-filter");
+          const deviceNameFilter =
+            document.getElementById("device-name-filter");
           const dateInput = document.getElementById("backup-date-filter");
           const comparisonSelect = document.getElementById("date-comparison");
           const roleFilter = document.getElementById("role-filter");
           const locationFilter = document.getElementById("location-filter");
-          const deviceTypeFilter = document.getElementById("device-type-filter");
+          const deviceTypeFilter =
+            document.getElementById("device-type-filter");
           const statusFilter = document.getElementById("status-filter");
 
           if (deviceNameFilter) deviceNameFilter.value = "";
@@ -1172,8 +1307,11 @@
 
           // Reset page size selectors to default value (50)
           pageSize = 50;
-          const pageSizeSelector = document.getElementById("page-size-selector");
-          const backendPageSizeSelector = document.getElementById("backend-page-size-selector");
+          const pageSizeSelector =
+            document.getElementById("page-size-selector");
+          const backendPageSizeSelector = document.getElementById(
+            "backend-page-size-selector",
+          );
           if (pageSizeSelector) pageSizeSelector.value = "50";
           if (backendPageSizeSelector) backendPageSizeSelector.value = "50";
 
@@ -1181,7 +1319,7 @@
           renderDevicesTable(allDevices);
           updateStatusPanel(
             `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`,
-            "success"
+            "success",
           );
         }
 
@@ -1195,7 +1333,7 @@
             renderDevicesTable(allDevices);
             updateStatusPanel(
               `<i class="fas fa-check-circle"></i> Showing all ${allDevices.length} devices.`,
-              "success"
+              "success",
             );
             return;
           }
@@ -1218,20 +1356,26 @@
             );
           });
 
-          console.log(`Found ${filtered.length} devices matching "${searchTerm}"`);
+          console.log(
+            `Found ${filtered.length} devices matching "${searchTerm}"`,
+          );
           currentPage = 0;
           currentSearchTerm = searchTerm;
           renderDevicesTable(filtered);
           updateStatusPanel(
             `<i class="fas fa-search"></i> Found ${filtered.length} devices matching "${searchTerm}".`,
-            "info"
+            "info",
           );
         }
 
         // Filter devices with combined filters (client-side filtering)
-        function filterDevices(searchTerm = "", dateFilter = "", dateComparison = "") {
+        function filterDevices(
+          searchTerm = "",
+          dateFilter = "",
+          dateComparison = "",
+        ) {
           console.log(
-            `Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}"`
+            `Filtering devices - Search: "${searchTerm}", Date: "${dateFilter}", Comparison: "${dateComparison}"`,
           );
 
           // Update global filter variables
@@ -1265,8 +1409,14 @@
 
           // Calculate start and end indices for current page
           const startIndex = currentPage * pageSize;
-          const endIndex = Math.min(startIndex + pageSize, filteredDevices.length);
-          const currentPageDevices = filteredDevices.slice(startIndex, endIndex);
+          const endIndex = Math.min(
+            startIndex + pageSize,
+            filteredDevices.length,
+          );
+          const currentPageDevices = filteredDevices.slice(
+            startIndex,
+            endIndex,
+          );
 
           tableBody.innerHTML = currentPageDevices
             .map((device, index) => {
@@ -1297,7 +1447,8 @@
               }
 
               const isOffline =
-                status.toLowerCase().includes("offline") || status.toLowerCase().includes("failed");
+                status.toLowerCase().includes("offline") ||
+                status.toLowerCase().includes("failed");
 
               return `
               <tr class="${rowClass}">
@@ -1336,7 +1487,8 @@
 
         // Render pagination controls for backup page
         function renderBackupPagination(totalItems, totalPages) {
-          const paginationContainer = document.getElementById("backup-pagination");
+          const paginationContainer =
+            document.getElementById("backup-pagination");
 
           if (!paginationContainer) {
             console.error("Pagination container not found");
@@ -1454,7 +1606,10 @@
 
           // Remove any existing event listeners by cloning and replacing the container
           const newPaginationContainer = paginationContainer.cloneNode(true);
-          paginationContainer.parentNode.replaceChild(newPaginationContainer, paginationContainer);
+          paginationContainer.parentNode.replaceChild(
+            newPaginationContainer,
+            paginationContainer,
+          );
 
           // Add event listeners for pagination controls to the new container
           newPaginationContainer.addEventListener("click", function (e) {
@@ -1485,11 +1640,15 @@
           });
 
           // Add event listener for page size selector to the new container
-          const pageSizeSelector = newPaginationContainer.querySelector("#page-size-selector");
+          const pageSizeSelector = newPaginationContainer.querySelector(
+            "#page-size-selector",
+          );
           if (pageSizeSelector) {
             pageSizeSelector.addEventListener("change", function () {
               const newPageSize = parseInt(this.value);
-              console.log(`Changing page size from ${pageSize} to ${newPageSize}`);
+              console.log(
+                `Changing page size from ${pageSize} to ${newPageSize}`,
+              );
 
               // Calculate the current first item index
               const currentFirstItem = currentPage * pageSize;
@@ -1508,7 +1667,8 @@
 
         // Render pagination controls for backend pagination
         function renderBackendPagination() {
-          const paginationContainer = document.getElementById("backup-pagination");
+          const paginationContainer =
+            document.getElementById("backup-pagination");
 
           if (!paginationContainer) {
             console.error("Pagination container not found");
@@ -1519,19 +1679,21 @@
             // Fall back to regular pagination
             renderBackupPagination(
               filteredDevices.length,
-              Math.ceil(filteredDevices.length / pageSize)
+              Math.ceil(filteredDevices.length / pageSize),
             );
             return;
           }
 
-          const currentPageNum = Math.floor(paginationState.currentOffset / pageSize);
+          const currentPageNum = Math.floor(
+            paginationState.currentOffset / pageSize,
+          );
           const totalPages = Math.ceil(paginationState.totalCount / pageSize);
           const showPaginationControls = totalPages > 1;
 
           const startItem = paginationState.currentOffset + 1;
           const endItem = Math.min(
             paginationState.currentOffset + pageSize,
-            paginationState.totalCount
+            paginationState.totalCount,
           );
 
           let paginationHtml = `
@@ -1635,15 +1797,35 @@
             }
 
             if (target.id === "backend-previous") {
-              const newOffset = Math.max(0, paginationState.currentOffset - pageSize);
-              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+              const newOffset = Math.max(
+                0,
+                paginationState.currentOffset - pageSize,
+              );
+              loadDevices(
+                paginationState.filterValue || "",
+                true,
+                pageSize,
+                newOffset,
+              );
             } else if (target.id === "backend-next") {
               const newOffset = paginationState.currentOffset + pageSize;
-              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+              loadDevices(
+                paginationState.filterValue || "",
+                true,
+                pageSize,
+                newOffset,
+              );
             } else if (target.hasAttribute("data-backend-page")) {
-              const pageNum = parseInt(target.getAttribute("data-backend-page"));
+              const pageNum = parseInt(
+                target.getAttribute("data-backend-page"),
+              );
               const newOffset = pageNum * pageSize;
-              loadDevices(paginationState.filterValue || "", true, pageSize, newOffset);
+              loadDevices(
+                paginationState.filterValue || "",
+                true,
+                pageSize,
+                newOffset,
+              );
             } else if (target.id === "load-all-devices-btn") {
               // Switch to full data mode
               loadDevices("", false);
@@ -1651,11 +1833,15 @@
           });
 
           // Add event listener for backend page size selector
-          const backendPageSizeSelector = document.getElementById("backend-page-size-selector");
+          const backendPageSizeSelector = document.getElementById(
+            "backend-page-size-selector",
+          );
           if (backendPageSizeSelector) {
             backendPageSizeSelector.addEventListener("change", function () {
               const newPageSize = parseInt(this.value);
-              console.log(`Changing backend page size from ${pageSize} to ${newPageSize}`);
+              console.log(
+                `Changing backend page size from ${pageSize} to ${newPageSize}`,
+              );
 
               // Update page size
               pageSize = newPageSize;
@@ -1696,7 +1882,7 @@
         async function performDeviceBackup(deviceName, deviceId) {
           updateStatusPanel(
             `<i class="fas fa-spinner fa-spin"></i> Backing up ${deviceName}...`,
-            "info"
+            "info",
           );
 
           try {
@@ -1704,7 +1890,7 @@
             await new Promise((resolve) => setTimeout(resolve, 2000));
             updateStatusPanel(
               `<i class="fas fa-check-circle"></i> Backup completed for ${deviceName}.`,
-              "success"
+              "success",
             );
 
             // Refresh devices data to update last backup time
@@ -1715,7 +1901,7 @@
             console.error("Backup failed:", error);
             updateStatusPanel(
               `<i class="fas fa-exclamation-triangle"></i> Backup failed for ${deviceName}: ${error.message}`,
-              "danger"
+              "danger",
             );
           }
         }
@@ -1744,7 +1930,9 @@
             </tr>
           `;
 
-          const modal = new bootstrap.Modal(document.getElementById("backupHistoryModal"));
+          const modal = new bootstrap.Modal(
+            document.getElementById("backupHistoryModal"),
+          );
           modal.show();
         }
 
@@ -1753,7 +1941,7 @@
           // Placeholder for restore functionality
           updateStatusPanel(
             `<i class="fas fa-info-circle"></i> Restore functionality for ${deviceName} - Integration needed.`,
-            "info"
+            "info",
           );
         }
 
@@ -1782,7 +1970,7 @@
           updateStatusPanel(
             `<i class="fas fa-exclamation-triangle"></i> ${message}`,
             "danger",
-            false
+            false,
           );
         }
 
@@ -1793,14 +1981,22 @@
         if (dateInput) {
           dateInput.addEventListener("change", () => {
             const newDateFilter = dateInput.value;
-            filterDevices(currentSearchTerm, newDateFilter, currentDateComparison);
+            filterDevices(
+              currentSearchTerm,
+              newDateFilter,
+              currentDateComparison,
+            );
           });
         }
 
         if (comparisonSelect) {
           comparisonSelect.addEventListener("change", () => {
             const newDateComparison = comparisonSelect.value;
-            filterDevices(currentSearchTerm, currentDateFilter, newDateComparison);
+            filterDevices(
+              currentSearchTerm,
+              currentDateFilter,
+              newDateComparison,
+            );
           });
         }
 
@@ -1827,8 +2023,11 @@
         // Update navbar username display
         function updateNavbarUsername() {
           try {
-            const userInfo = JSON.parse(localStorage.getItem("user_info") || "null");
-            const navbarUsernameElement = document.getElementById("navbar-username");
+            const userInfo = JSON.parse(
+              localStorage.getItem("user_info") || "null",
+            );
+            const navbarUsernameElement =
+              document.getElementById("navbar-username");
 
             if (navbarUsernameElement && userInfo && userInfo.username) {
               navbarUsernameElement.textContent = userInfo.username;
@@ -1850,32 +2049,38 @@
         const statusPanel = document.getElementById("status-panel");
 
         // Custom schedule toggle
-        document.getElementById("backup-schedule").addEventListener("change", function () {
-          const customGroup = document.getElementById("custom-schedule-group");
-          if (this.value === "custom") {
-            customGroup.style.display = "block";
-          } else {
-            customGroup.style.display = "none";
-          }
-        });
+        document
+          .getElementById("backup-schedule")
+          .addEventListener("change", function () {
+            const customGroup = document.getElementById(
+              "custom-schedule-group",
+            );
+            if (this.value === "custom") {
+              customGroup.style.display = "block";
+            } else {
+              customGroup.style.display = "none";
+            }
+          });
 
         // Save schedule
-        document.getElementById("save-schedule-btn").addEventListener("click", function () {
-          const form = document.getElementById("schedule-backup-form");
-          if (form.checkValidity()) {
-            updateStatusPanel(
-              '<i class="fas fa-check-circle"></i> Backup schedule saved successfully.',
-              "success"
-            );
+        document
+          .getElementById("save-schedule-btn")
+          .addEventListener("click", function () {
+            const form = document.getElementById("schedule-backup-form");
+            if (form.checkValidity()) {
+              updateStatusPanel(
+                '<i class="fas fa-check-circle"></i> Backup schedule saved successfully.',
+                "success",
+              );
 
-            const modal = bootstrap.Modal.getInstance(
-              document.getElementById("scheduleBackupModal")
-            );
-            modal.hide();
-          } else {
-            form.reportValidity();
-          }
-        });
+              const modal = bootstrap.Modal.getInstance(
+                document.getElementById("scheduleBackupModal"),
+              );
+              modal.hide();
+            } else {
+              form.reportValidity();
+            }
+          });
 
         console.log("Backup page initialized successfully");
       });

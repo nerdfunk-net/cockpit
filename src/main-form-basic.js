@@ -54,7 +54,10 @@ window.waitForLibraries = function (libraries, callback, timeout = 5000) {
 
   function check() {
     const allAvailable = libraries.every((lib) => {
-      return typeof window[lib] !== "undefined" || typeof globalThis[lib] !== "undefined";
+      return (
+        typeof window[lib] !== "undefined" ||
+        typeof globalThis[lib] !== "undefined"
+      );
     });
 
     if (allAvailable) {
@@ -83,7 +86,7 @@ window.dispatchEvent(
         Switchery: typeof window.Switchery,
       },
     },
-  })
+  }),
 );
 
 // Also immediately trigger initialization when DOM is ready
@@ -109,7 +112,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!previewEl) return;
       const currentSel = cropperInstance.getCropperSelection();
       if (!currentSel || currentSel.hidden) {
-        previewEl.innerHTML = '<span class="text-muted small">No selection</span>';
+        previewEl.innerHTML =
+          '<span class="text-muted small">No selection</span>';
         return;
       }
       currentSel
@@ -170,13 +174,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Listen for any selection change events on the canvas
-    cropperInstance.getCropperCanvas()?.addEventListener("change", refreshPreview);
+    cropperInstance
+      .getCropperCanvas()
+      ?.addEventListener("change", refreshPreview);
 
     // Initial preview render after load
     setTimeout(refreshPreview, 600);
   } else {
     console.warn(
-      "⚠️ Cropper source image or library not found. Skipping Cropper.js v2 initialization"
+      "⚠️ Cropper source image or library not found. Skipping Cropper.js v2 initialization",
     );
   }
 });

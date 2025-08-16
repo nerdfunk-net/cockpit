@@ -10,7 +10,9 @@ class BasicManager {
     if (this.config) {
       this.init();
     } else {
-      console.warn("BasicManager: CockpitConfig not available, deferring initialization");
+      console.warn(
+        "BasicManager: CockpitConfig not available, deferring initialization",
+      );
     }
   }
 
@@ -72,7 +74,9 @@ window.initializeOfflineManager = function () {
 
     console.log("✅ BasicManager initialized with config");
   } else {
-    console.warn("⚠️ CockpitConfig not available, cannot initialize BasicManager");
+    console.warn(
+      "⚠️ CockpitConfig not available, cannot initialize BasicManager",
+    );
   }
 };
 
@@ -80,7 +84,10 @@ window.initializeOfflineManager = function () {
 if (typeof window !== "undefined") {
   if (document.readyState === "loading") {
     // DOM is still loading, wait for it
-    document.addEventListener("DOMContentLoaded", window.initializeOfflineManager);
+    document.addEventListener(
+      "DOMContentLoaded",
+      window.initializeOfflineManager,
+    );
   } else {
     // DOM is already loaded, try to initialize
     window.initializeOfflineManager();

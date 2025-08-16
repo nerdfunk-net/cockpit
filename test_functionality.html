@@ -19,27 +19,36 @@
         var results = [];
 
         // Test if jQuery is loaded
-        results.push("jQuery loaded: " + (typeof $ !== "undefined" ? "✅ YES" : "❌ NO"));
+        results.push(
+          "jQuery loaded: " + (typeof $ !== "undefined" ? "✅ YES" : "❌ NO"),
+        );
 
         // Test if our custom functions are available
         results.push(
-          "init_sidebar function: " + (typeof init_sidebar === "function" ? "✅ YES" : "❌ NO")
+          "init_sidebar function: " +
+            (typeof init_sidebar === "function" ? "✅ YES" : "❌ NO"),
         );
 
         // Test menu toggle element
         results.push(
           "Menu toggle element: " +
-            ($("#menu_toggle").length > 0 ? "✅ YES" : "❌ NO (element not found)")
+            ($("#menu_toggle").length > 0
+              ? "✅ YES"
+              : "❌ NO (element not found)"),
         );
 
         // Test sidebar menu element
         results.push(
           "Sidebar menu element: " +
-            ($("#sidebar-menu").length > 0 ? "✅ YES" : "❌ NO (element not found)")
+            ($("#sidebar-menu").length > 0
+              ? "✅ YES"
+              : "❌ NO (element not found)"),
         );
 
         // Display results
-        $("#results").html("<ul><li>" + results.join("</li><li>") + "</li></ul>");
+        $("#results").html(
+          "<ul><li>" + results.join("</li><li>") + "</li></ul>",
+        );
 
         console.log("=== FUNCTIONALITY TEST RESULTS ===");
         results.forEach(function (result) {

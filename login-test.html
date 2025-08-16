@@ -49,7 +49,7 @@
 
         try {
           const result = await window.authManager.apiRequest(
-            "/api/nautobot/devices?filter_type=name&filter_value=LAB"
+            "/api/nautobot/devices?filter_type=name&filter_value=LAB",
           );
           console.log("[DEBUG] Device search result:", result);
 
@@ -64,7 +64,9 @@
         } catch (error) {
           console.error("[ERROR] Device search failed:", error);
           document.getElementById("results").innerHTML =
-            '<p style="color: red;">Device search failed: ' + error.message + "</p>";
+            '<p style="color: red;">Device search failed: ' +
+            error.message +
+            "</p>";
         }
       }
     </script>

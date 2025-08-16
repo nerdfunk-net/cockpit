@@ -22,13 +22,17 @@ globalThis.Switchery = Switchery;
 // Initialize Bootstrap tooltips
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize all tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  const tooltipTriggerList = [].slice.call(
+    document.querySelectorAll('[data-bs-toggle="tooltip"]'),
+  );
   const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl);
   });
 
   // Initialize all popovers
-  const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+  const popoverTriggerList = [].slice.call(
+    document.querySelectorAll('[data-bs-toggle="popover"]'),
+  );
   const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
     return new bootstrap.Popover(popoverTriggerEl);
   });
@@ -160,7 +164,10 @@ window.waitForLibraries = function (libraries, callback, timeout = 5000) {
 
   function check() {
     const allAvailable = libraries.every((lib) => {
-      return typeof window[lib] !== "undefined" || typeof globalThis[lib] !== "undefined";
+      return (
+        typeof window[lib] !== "undefined" ||
+        typeof globalThis[lib] !== "undefined"
+      );
     });
 
     if (allAvailable) {
@@ -171,8 +178,10 @@ window.waitForLibraries = function (libraries, callback, timeout = 5000) {
       console.warn(
         "Timeout waiting for libraries:",
         libraries.filter(
-          (lib) => typeof window[lib] === "undefined" && typeof globalThis[lib] === "undefined"
-        )
+          (lib) =>
+            typeof window[lib] === "undefined" &&
+            typeof globalThis[lib] === "undefined",
+        ),
       );
       callback(); // Call anyway to prevent hanging
     }
