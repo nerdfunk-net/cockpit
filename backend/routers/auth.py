@@ -4,7 +4,7 @@ Authentication router for login and token management.
 
 from __future__ import annotations
 from datetime import timedelta
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from models.auth import UserLogin, LoginResponse
 from core.auth import create_access_token, verify_token
 
@@ -63,7 +63,7 @@ async def login(user_data: UserLogin):
 
 
 @router.post("/refresh", response_model=LoginResponse)
-async def refresh_token(current_user: str = verify_token):
+async def refresh_token(current_user: str = Depends(verify_token)):
     """Issue a new access token for the currently authenticated user.
 
     Uses the same expiration policy as login. Since we don't have a user DB,
