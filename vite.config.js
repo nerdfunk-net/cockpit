@@ -112,9 +112,21 @@ export default defineConfig({
         map: "production/map.html",
         xx: "production/xx.html",
 
-        // New additions
+        // Cockpit Applications
         compare: "production/compare.html",
         sync_devices: "production/sync_devices.html",
+        backup: "production/backup.html",
+        onboard_device: "production/onboard-device.html",
+        scan_and_add: "production/scan-and-add.html",
+        ansible_inventory: "production/ansible-inventory.html",
+        
+        // Settings Applications
+        settings: "production/settings.html",
+        settings_nautobot: "production/settings-nautobot.html",
+        settings_templates: "production/settings-templates.html",
+        settings_git: "production/settings-git.html",
+        settings_cache: "production/settings-cache.html",
+        settings_credentials: "production/settings-credentials.html",
       },
     },
     minify: "terser",
