@@ -5765,4 +5765,106 @@ docker scout cves
 
 This comprehensive dependency management ensures Cockpit maintains security, performance, and compatibility across all deployment scenarios while providing rich functionality through carefully selected external libraries.
 
+## 23. Implementation Scope and Known Limitations
+
+### 23.1 Hobby Project Context
+
+**Project Classification:** Cockpit is designed as a **hobby/personal project** for network engineers and small teams. The implementation scope reflects this focus on core functionality rather than enterprise-grade operational requirements.
+
+### 23.2 Intentionally Out of Scope
+
+The following implementation areas are **intentionally excluded** from this PRD as they exceed the requirements of a hobby project:
+
+#### Production Infrastructure (Not Implemented)
+- **Reverse Proxy Configuration** (Nginx/Apache setup)
+- **SSL Certificate Management** (Let's Encrypt automation, certificate rotation)
+- **Load Balancing** and high-availability deployment
+- **Container Orchestration** (Kubernetes, Docker Swarm)
+
+#### Enterprise Testing Framework (Not Implemented)
+- **Comprehensive Unit Test Suite** with high coverage requirements
+- **Integration Test Framework** (Playwright/Cypress end-to-end testing)
+- **Performance Testing** and load testing suites
+- **CI/CD Pipeline Configuration** (GitHub Actions, Jenkins)
+
+#### Advanced Security Features (Not Implemented)
+- **Rate Limiting Middleware** for API endpoints
+- **CSRF Protection** mechanisms
+- **Input Sanitization Framework** beyond basic validation
+- **Security Audit Logging** and intrusion detection
+
+#### Enterprise Monitoring (Not Implemented)
+- **Application Performance Monitoring** (APM solutions)
+- **Metrics Collection** (Prometheus, Grafana)
+- **Centralized Logging** (ELK stack, Splunk)
+- **Alerting and Notification Systems**
+
+#### Advanced Database Features (Not Implemented)
+- **Database Clustering** and replication
+- **Advanced Migration Framework** with rollback capabilities
+- **Automated Backup Systems** with retention policies
+- **Database Performance Tuning** and indexing optimization
+
+#### Operational Tooling (Not Implemented)
+- **Health Check Endpoints** beyond basic connectivity
+- **Background Job Processing** (Celery, Redis queues)
+- **API Versioning Strategy** for backwards compatibility
+- **Webhook Support** for external integrations
+
+### 23.3 What IS Implemented
+
+The PRD provides **complete implementation guidance** for:
+
+✅ **Core Application Architecture**
+- Full-stack application structure (FastAPI + Vite)
+- Database schemas and relationships
+- Authentication and session management
+
+✅ **Business Logic Implementation**
+- Configuration comparison engine
+- Git integration and repository management
+- Nautobot API integration
+- Device discovery and onboarding
+- Template management system
+
+✅ **Development Experience**
+- Docker containerization for easy setup
+- Development server configuration
+- Hot reload and proxy setup
+- Environment variable management
+
+✅ **Basic Deployment**
+- Docker Compose configuration
+- Environment-specific settings
+- Container health checks
+- Basic security (JWT, bcrypt)
+
+### 23.4 Migration Path for Production Use
+
+Should Cockpit evolve beyond hobby project scope, the following migration path is recommended:
+
+**Phase 1: Basic Production Hardening**
+1. Implement reverse proxy (Nginx) with SSL termination
+2. Add basic monitoring and health checks
+3. Implement rate limiting and input validation
+4. Set up automated backups
+
+**Phase 2: Operational Excellence**
+5. Add comprehensive testing framework
+6. Implement CI/CD pipeline
+7. Add centralized logging and monitoring
+8. Implement disaster recovery procedures
+
+**Phase 3: Enterprise Features**
+9. Add high availability and load balancing
+10. Implement advanced security features
+11. Add performance monitoring and optimization
+12. Implement API versioning and webhooks
+
+### 23.5 Conclusion
+
+This PRD intentionally focuses on **developer productivity** and **core functionality** rather than enterprise operational requirements. The implementation provides a **solid foundation** that can be extended as needs evolve, while maintaining simplicity for hobby and small-team usage.
+
+The documented architecture and implementation details enable **rapid development** and **easy maintenance** without the overhead of enterprise-grade infrastructure that would be overkill for the intended use case.
+
 This comprehensive PRD provides detailed implementation guidance for rebuilding Cockpit while maintaining its architecture, functionality, and developer experience.
