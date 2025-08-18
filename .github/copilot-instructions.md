@@ -1,5 +1,30 @@
 # Cockpit - Network Device Management Dashboard
 
+## Stack
+
+### Major frontend libraries used
+  - Frontend**: Vite, Gentelella Bootstrap
+  - Bootstrap 5
+  - jQuery (legacy widgets)
+  - Charting: Chart.js, ECharts
+  - Form/UI: Select2, Switchery, Ion Range Slider, Tempus Dominus (datetime), Pickr, Cropper.js
+  - Maps: Leaflet
+  - NProgress, jQuery UI, autosize, jquery-sparkline
+  - Styles: SCSS entry
+### Tooling
+  - Vite for frontend development
+  - FastAPI for backend development
+  - Docker for containerization
+  - Git for version control
+  - SQLite for lightweight database management
+### Integration
+  - Nautobot API for network device inventory
+  - Git for version control and configuration management
+### backend
+  - python 3.13.5
+  - FastAPI
+  - SQLite
+
 ## Architecture Overview
 
 **Cockpit** is a network device management dashboard built as a dual-stack application:

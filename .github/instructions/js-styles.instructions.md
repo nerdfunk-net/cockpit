@@ -1,3 +1,7 @@
+---
+applyTo: "**/*.{js,tsx,ts}"
+---
+
 ## JavaScript style & best practices (short)
 
 Keep code small, predictable and defensive. Follow these lightweight rules which match the patterns used across the frontend (for example `production/settings-cache.html`) and the Vite-based build:

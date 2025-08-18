@@ -1,3 +1,7 @@
+---
+applyTo: "**/*.py"
+---
+
 # Code Style & Formatting
 
 - **Follow PEP 8** style guidelines strictly
